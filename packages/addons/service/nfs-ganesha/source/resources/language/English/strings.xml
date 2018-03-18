@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+
+    <!-- nfs-ganesha -->
+    <string id="32000">General</string>
+    <string id="32001">Number of Folders to Share</string>
+    <string id="32002">Share Folder 1</string>
+    <string id="32003">Read Write or Read Only</string>
+    <string id="32004">Share Folder 2</string>
+    <string id="32005">Read Write or Read Only</string>
+    <string id="32006">Share Folder 3</string>
+    <string id="32007">Read Write or Read Only</string>
+    <string id="32008">Share Folder 4</string>
+    <string id="32009">Read Write or Read Only</string>
+    <string id="32010">Share Folder 5</string>
+    <string id="32011">Read Write or Read Only</string>
+    <string id="32012">Share Folder 6</string>
+    <string id="32013">Read Write or Read Only</string>
+    <string id="32014">Share Folder 7</string>
+    <string id="32015">Read Write or Read Only</string>
+    <string id="32016">Share Folder 8</string>
+    <string id="32017">Read Write or Read Only</string>
+    <string id="32018">Share Folder 9</string>
+    <string id="32019">Read Write or Read Only</string>
+    <string id="32020">Share Folder 10</string>
+    <string id="32021">Read Write or Read Only</string>
+</strings>
