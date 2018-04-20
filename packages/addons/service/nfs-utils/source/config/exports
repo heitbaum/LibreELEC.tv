@@ -1,0 +1,12 @@
+# https://linux.die.net/man/5/exports
+# all shares deactivated by default
+
+# /storage/backup/      192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/downloads/   192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/music/       192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/picons/      192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/pictures/    192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/screenshots/ 192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/recordings/  192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/tvshows/     192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
+# /storage/videos/      192.168.0.0/24(ro,insecure,anonuid=0,anongid=0,all_squash)
