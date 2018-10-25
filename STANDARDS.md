@@ -1,0 +1,27 @@
+## Project Coding Standards
+
+### Build system scripts and config:
+
+* All LibreELEC build system scripts are bash scripts (`/bin/bash`)
+* Avoid backticks. Use `$()` instead
+* Shell variables do not use braces ie. `${FOO}` unless required (string substitution etc.)
+* Use `. config/blah` to source a file, don't use `source config/blah`
+* To be efficient, avoid forking child processes (`sed`, `cut`, etc.) when a shell built-in can be used instead
+* Avoid long lines (> 90 columns) unless it aids maintainability/processing (eg. `LINUX_DEPENDS`, `PKG_DEPENDS_TARGET` etc.)
+* Indent using 2 spaces within comments:
+```
+# include helper functions
+  . config/functions
+
+# include versioning
+  . config/version
+```
+
+### Within `package.mk`:
+
+* Prefix package specific variables with `PKG_` as they are automatically unset before `package.mk` is sourced
+* When creating a directory, related lines are indented:
+```
+  cd $INSTALL/blah
+    cp -P foo $INSTALL/blah
+```
