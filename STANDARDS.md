@@ -19,6 +19,7 @@
 
 ### Within `package.mk`:
 
+* When using git revisions, the full 40-char revision is to be used
 * Prefix package specific variables with `PKG_` as they are automatically unset before `package.mk` is sourced
 * When creating a directory, related lines are indented:
 ```
