@@ -4,7 +4,9 @@
 
 * All LibreELEC build system scripts are bash scripts (`/bin/bash`)
 * Avoid backticks. Use `$()` instead
-* Shell variables do not use braces ie. `${FOO}` unless required (string substitution etc.)
+* String comparison: use `=` not `==`
+* Numeric comparison: use `-eq` not `=` etc.
+* Shell variables do not use braces ie. use `$FOO` unless braces are required (string substitution etc.)
 * Use double-quotes (") around variables (or sequences that include variables) when possible to avoid issues with special characters, eg. `cd "$PKG_DIR/scripts"`. See [quoting variables](https://www.tldp.org/LDP/abs/html/quotingvar.html)
 * Use `. config/blah` to source a file, don't use `source config/blah`
 * To be efficient, avoid forking child processes (`sed`, `cut`, etc.) when a shell built-in can be used instead
