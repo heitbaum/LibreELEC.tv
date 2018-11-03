@@ -6,6 +6,7 @@
 * Avoid backticks. Use `$()` instead
 * String comparison: use `=` not `==`
 * Numeric comparison: use `-eq` not `=` etc.
+* Use `[ test 1 -o test2 ]/[ test1 -a test2 ]` rather than `[[ test1 ]] || [[ test2 ]]`/`[[ test1 ]] && [[ test2 ]]` etc. See [test constructs](https://www.tldp.org/LDP/abs/html/testconstructs.html)
 * Shell variables do not use braces ie. use `$FOO` unless braces are required (string substitution etc.)
 * Use double-quotes (") around variables (or sequences that include variables) when possible to avoid issues with special characters, eg. `cd "$PKG_DIR/scripts"`. See [quoting variables](https://www.tldp.org/LDP/abs/html/quotingvar.html)
 * Use `. config/blah` to source a file, don't use `source config/blah`
