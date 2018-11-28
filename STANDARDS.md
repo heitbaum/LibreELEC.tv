@@ -31,3 +31,5 @@
   cd $INSTALL/blah
     cp -P foo $INSTALL/blah
 ```
+* The use of `foo && bar` is allowed, but care should be taken so that package functions do not unintentionally exit with a non-zero exit code in which case `foo && bar || true` may be required, or alternatively use the multi-line `if foo then; bar fi` pattern in place of `foo && bar`
+
