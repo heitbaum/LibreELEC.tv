@@ -4,11 +4,19 @@
 
 PKG_NAME="xf86-video-intel"
 PKG_VERSION="5ca3ac1a90af177eb111a965e9b4dd8a27cc58fc"
+<<<<<<< HEAD
 PKG_SHA256="1b1e27fa1fd8c8979fbb4aac78865e09b984b998f8330fa01b7e1cf789685507"
 PKG_ARCH="x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://intellinuxgraphics.org/"
 PKG_URL="https://gitlab.freedesktop.org/xorg/driver/$PKG_NAME/-/archive/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
+=======
+PKG_SHA256="40f531827210ae4184aed81c57d6994e662036ff5a8808305a276c96c70f11b6"
+PKG_ARCH="x86_64"
+PKG_LICENSE="OSS"
+PKG_SITE="http://intellinuxgraphics.org/"
+PKG_URL="https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel/-/archive/$PKG_VERSION.tar.gz"
+>>>>>>> first commit
 PKG_DEPENDS_TARGET="toolchain libXcomposite libXxf86vm libXdamage libdrm util-macros systemd xorg-server"
 PKG_LONGDESC="The Xorg driver for Intel i810, i815, 830M, 845G, 852GM, 855GM, 865G, 915G, 915GM and 965G."
 PKG_TOOLCHAIN="autotools"

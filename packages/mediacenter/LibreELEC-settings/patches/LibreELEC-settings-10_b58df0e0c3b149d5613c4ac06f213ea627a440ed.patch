@@ -1,0 +1,121 @@
+diff --git a/skins/Default/1080i/service-LibreELEC-Settings-mainWindow.xml b/skins/Default/1080i/service-LibreELEC-Settings-mainWindow.xml
+index d929000..1fced9c 100644
+--- a/skins/Default/1080i/service-LibreELEC-Settings-mainWindow.xml
++++ b/skins/Default/1080i/service-LibreELEC-Settings-mainWindow.xml
+@@ -90,7 +90,7 @@
+                 <top>770</top>
+                 <width>400</width>
+                 <height>3</height>
+-                <texture colordiffuse="FF12B2E7" border="2">dialogs/separator-grey.png</texture>
++                <texture colordiffuse="FF12B2E7" border="2">separator-grey.png</texture>
+             </control>
+             <control type="image">
+                 <description>LOGO</description>
+@@ -1142,8 +1142,8 @@
+             <top>940</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+@@ -1156,8 +1156,8 @@
+             <top>105</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+@@ -1172,8 +1172,8 @@
+             <top>940</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+@@ -1186,8 +1186,8 @@
+             <top>105</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+@@ -1202,8 +1202,8 @@
+             <top>940</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+@@ -1216,8 +1216,8 @@
+             <top>105</top>
+             <width>48</width>
+             <height>24</height>
+-            <texturefocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturefocus>
+-            <texturenofocus colordiffuse="button_focus" flipy="true">overlays/arrowdown.png</texturenofocus>
++            <texturefocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturefocus>
++            <texturenofocus colordiffuse="FF12A0C7" flipy="true">arrowdown.png</texturenofocus>
+             <animation effect="zoom" start="100,0" end="100,100" center="auto" time="200" delay="10">VisibleChange</animation>
+             <animation effect="zoom" start="100,0" end="100,100" delay="500" center="auto" time="200">WindowOpen</animation>
+             <animation effect="zoom" start="100,100" end="100,0" center="auto" time="200">WindowClose</animation>
+diff --git a/skins/Default/1080i/service-LibreELEC-Settings-wizard.xml b/skins/Default/1080i/service-LibreELEC-Settings-wizard.xml
+index 70a3473..012ff75 100644
+--- a/skins/Default/1080i/service-LibreELEC-Settings-wizard.xml
++++ b/skins/Default/1080i/service-LibreELEC-Settings-wizard.xml
+@@ -66,7 +66,7 @@
+                 <top>575</top>
+                 <width>1050</width>
+                 <height>3</height>
+-                <texture colordiffuse="button_focus" border="2">separator-grey.png</texture>
++                <texture colordiffuse="FF12A0C7" border="2">separator-grey.png</texture>
+             </control>
+             <control type="group" id="1398">
+                 <visible>String.IsEmpty(Control.GetLabel(1390))</visible>
+diff --git a/textures/LibreELEC/arrowdown.png b/textures/LibreELEC/arrowdown.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..2be1c60aeee3666ce54dbf259f29c173e70247d1
+GIT binary patch
+literal 929
+zcmV;S177@zP)<h;3K|Lk000e1NJLTq003YB001xu1ONa4L?5?A0000WV@Og>004R=
+z004l4008;_004mL004C`008P>0026e000+nl3&F}00002VoOIv0RM-N%)bBt010qN
+zS#tmY3ljhU3ljkVnw%H_000McNliru-w6c(90>j1Lv{cF0|rS%K~!kowV2sTRdE<c
+zziykHXD#aqDvBae6ipGu5*tJju|&iY5vfE9iimoEUL%S^l)|zy%hIyx1+vj0&Dk7Q
+z7v^yC4Ex*r|KHyF{nlFNc+Q2wEi_LbTM&ys;e1m0R0_gP)yZu(Thrf8tIDMXSw6g>
+zI=f@(T?nI1<<X3+1PIqvr+3+E;g6?X<#2KNZf)S2>iizt4C_Bo@z1YZt{=Ionz(N;
+zA%cer@)AvJx4uJHR0*wYH=-X&hf2S3{q_H2msJUEgn8DF;*m<f!S{aS;3ZW;JK>)6
+zqv=%87ODS#!QW_$D&YYUuJvPhqS8ONal`*`vnt^sk*@S(d8VK&Q0H$Y(D(&aLWhfl
+zIJ#8&wf=Vk1J0`w9uuX~kEdI)K2J@crC^XImK2aqq8;le@Is|u9e67^s8N;hlo&_)
+ziS#H||8OSQS}0h9D&ZNiA@!4ZrP8koz8CuSs%KFFd`?`@wPbn~YjaeF@^kW*pJhP-
+z?Iu3pQVM-4{ff|b&OUT?s)Uy$_+8n-8^y{j<xbq3es9#O5_(A7u&|SUm42BsGp7MU
+z4f6_t*ChE|r}9p5JwvHeFXsV5wJM>P<kibvyjNUKbIQ4uCO|mNAB9LCDG0)DKC1Lj
+zXq<EbLX|4vEs3P6{!ubTiOxtHAXGA^5bEcH;<qO$*81oJgbHRAQqG?Vj_GaO1PJ98
+z5+*2e<KiwrC}YN`{y2s1Oxy+tr3MpzQ{dLaeSmP1X(Re$<h!@<5+EEmkT6D`7YA<v
+zLJ3oz^he3{X5ckIC}z^N{x5R8^1TNLM_ne2knNprB0wl&LajecmI=0*0HKg^mHrT!
+zX2_-jgaUp$)*mFp6xUpUkk6Py{d99wlL11WgM^=?nPi#`5ONs}s{ez-W{IW)gdBba
+z)c?*Q(>(J5LN+6Q^}lh@Jk3Uckj3x@{jVIb!Lkz|WHRKV|AqZ_NVWom3<g*A2iRwe
+zV=q8R|CjKYz4j<J1B5h&8DNi1#wNt-b3|sO%O>D2G3Xj+ObFHK00000NkvXXu0mjf
+D^HH80
+
+literal 0
+HcmV?d00001
+
+
