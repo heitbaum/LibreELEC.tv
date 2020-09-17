@@ -1,0 +1,486 @@
+[1;36mUNPACK[0m      mesa-demos
+    [1;33mFIXCONFIG[0m      /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/
+[1;33mBUILD[0m      mesa-demos [1;37m(target)[0m
+    [1;35mTOOLCHAIN[0m      autotools
+    [1;35mAUTORECONF[0m      mesa-demos
+autoreconf: Entering directory `/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0'
+autoreconf: configure.ac: not using Gettext
+autoreconf: running: /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/aclocal -I /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal -I /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal --force -I m4
+autoreconf: configure.ac: tracing
+autoreconf: running: /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/libtoolize --copy --force
+libtoolize: putting auxiliary files in '.'.
+libtoolize: copying file './ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIRS, 'm4'.
+libtoolize: copying file 'm4/libtool.m4'
+libtoolize: copying file 'm4/ltoptions.m4'
+libtoolize: copying file 'm4/ltsugar.m4'
+libtoolize: copying file 'm4/ltversion.m4'
+libtoolize: copying file 'm4/lt~obsolete.m4'
+autoreconf: running: /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/autoconf --include=/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal --force
+autoreconf: configure.ac: not using Autoheader
+autoreconf: running: /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/automake --add-missing --copy --force-missing
+configure.ac:35: installing './compile'
+configure.ac:32: installing './missing'
+src/demos/Makefile.am: installing './depcomp'
+src/egl/opengl/Makefile.am:82: warning: eglgears_x11_LDFLAGS multiply defined in condition TRUE ...
+src/egl/opengl/Makefile.am:71: ... 'eglgears_x11_LDFLAGS' previously defined here
+src/egl/opengl/Makefile.am:83: warning: egltri_x11_LDFLAGS multiply defined in condition TRUE ...
+src/egl/opengl/Makefile.am:72: ... 'egltri_x11_LDFLAGS' previously defined here
+autoreconf: Leaving directory `/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0'
+Executing (target): /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/configure --host=x86_64-libreelec-linux-gnu --build=x86_64-linux-gnu --prefix=/usr --bindir=/usr/bin --sbindir=/usr/sbin --sysconfdir=/etc --libdir=/usr/lib --libexecdir=/usr/lib --localstatedir=/var --disable-static --enable-shared --without-glut
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-libreelec-linux-gnu
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for x86_64-libreelec-linux-gnu-strip... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-strip
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking for style of include used by make... GNU
+checking for x86_64-libreelec-linux-gnu-gcc... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... yes
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc accepts -g... yes
+checking for /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc option to accept ISO C89... none needed
+checking whether /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc understands -c and -o together... yes
+checking dependency style of /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc... gcc3
+checking how to run the C preprocessor... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-cpp
+checking for x86_64-libreelec-linux-gnu-gcc... (cached) /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc
+checking whether we are using the GNU C compiler... (cached) yes
+checking whether /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc accepts -g... (cached) yes
+checking for /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc option to accept ISO C89... (cached) none needed
+checking whether /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc understands -c and -o together... (cached) yes
+checking dependency style of /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc... (cached) gcc3
+checking whether we are using the GNU C++ compiler... yes
+checking whether /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ accepts -g... yes
+checking dependency style of /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++... gcc3
+checking how to print strings... printf
+checking for a sed that does not truncate output... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/sed
+checking for grep that handles long lines and -e... /bin/grep
+checking for egrep... /bin/grep -E
+checking for fgrep... /bin/grep -F
+checking for ld used by /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld
+checking if the linker (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-nm
+checking the name lister (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-libreelec-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld option to reload object files... -r
+checking for x86_64-libreelec-linux-gnu-objdump... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-objdump
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-libreelec-linux-gnu-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-libreelec-linux-gnu-ar... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ar
+checking for archiver @FILE support... @
+checking for x86_64-libreelec-linux-gnu-strip... (cached) /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-strip
+checking for x86_64-libreelec-linux-gnu-ranlib... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ranlib
+checking command to parse /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-nm output from /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc object... ok
+checking for sysroot... no
+checking for a working dd... /bin/dd
+checking how to truncate binary pipes... /bin/dd bs=4096 count=1
+checking for x86_64-libreelec-linux-gnu-mt... no
+checking for mt... no
+checking if : is a manifest tool... no
+checking for ANSI C header files... yes
+checking for sys/types.h... yes
+checking for sys/stat.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for memory.h... yes
+checking for strings.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking for objdir... .libs
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc supports -fno-rtti -fno-exceptions... no
+checking for /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc option to produce PIC... -fPIC -DPIC
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc PIC flag -fPIC -DPIC works... yes
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc static flag -static works... yes
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc supports -c -o file.o... yes
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc supports -c -o file.o... (cached) yes
+checking whether the /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-gcc linker (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld -m elf_x86_64) supports shared libraries... yes
+checking whether -lc should be explicitly linked in... no
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... yes
+checking whether to build static libraries... no
+checking how to run the C++ preprocessor... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ -E
+checking for ld used by /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++... /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld -m elf_x86_64
+checking if the linker (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld -m elf_x86_64) is GNU ld... yes
+checking whether the /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ linker (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld -m elf_x86_64) supports shared libraries... yes
+checking for /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ option to produce PIC... -fPIC -DPIC
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ PIC flag -fPIC -DPIC works... yes
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ static flag -static works... no
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ supports -c -o file.o... yes
+checking if /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ supports -c -o file.o... (cached) yes
+checking whether the /home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-g++ linker (/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/toolchain/bin/x86_64-libreelec-linux-gnu-ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking whether make supports nested variables... (cached) yes
+checking pkg-config is at least version 0.9.0... yes
+checking for gl... yes
+checking for glew >= 1.5.4... yes
+checking for glu... yes
+checking for egl... yes
+checking for glesv1_cm... yes
+checking for glesv2... yes
+checking for vg... no
+checking for osmesa... no
+checking for libdrm... yes
+checking for x11 xext... yes
+checking for wayland-client wayland-egl... no
+checking for gbm... yes
+checking for freetype2... yes
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating src/demos/Makefile
+config.status: creating src/egl/Makefile
+config.status: creating src/egl/eglut/Makefile
+config.status: creating src/egl/opengl/Makefile
+config.status: creating src/egl/opengles1/Makefile
+config.status: creating src/egl/opengles2/Makefile
+config.status: creating src/egl/openvg/Makefile
+config.status: creating src/egl/openvg/trivial/Makefile
+config.status: creating src/egl/oes_vg/Makefile
+config.status: creating src/fp/Makefile
+config.status: creating src/fpglsl/Makefile
+config.status: creating src/glsl/Makefile
+config.status: creating src/gs/Makefile
+config.status: creating src/data/Makefile
+config.status: creating src/objviewer/Makefile
+config.status: creating src/osdemos/Makefile
+config.status: creating src/perf/Makefile
+config.status: creating src/rbug/Makefile
+config.status: creating src/redbook/Makefile
+config.status: creating src/samples/Makefile
+config.status: creating src/slang/Makefile
+config.status: creating src/tests/Makefile
+config.status: creating src/tools/Makefile
+config.status: creating src/trivial/Makefile
+config.status: creating src/util/Makefile
+config.status: creating src/vp/Makefile
+config.status: creating src/vpglsl/Makefile
+config.status: creating src/wgl/Makefile
+config.status: creating src/xdemos/Makefile
+config.status: executing depfiles commands
+config.status: executing libtool commands
+Executing (target): make 
+Making all in src
+make[1]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src'
+Making all in util
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/util'
+  CC       readtex.lo
+  CC       showbuffer.lo
+  CC       trackball.lo
+  CCLD     libutil.la
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/util'
+Making all in data
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/data'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/data'
+Making all in demos
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/demos'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/demos'
+Making all in egl
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl'
+Making all in eglut
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/eglut'
+  CC       libeglut_x11_la-eglut.lo
+  CC       libeglut_x11_la-eglut_x11.lo
+  CCLD     libeglut_x11.la
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/eglut'
+Making all in opengl
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengl'
+  CC       eglinfo.o
+  CC       peglgears.o
+  CC       eglkms-eglkms.o
+  CC       eglgears.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c: In function 'main':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c:288:11: warning: 'ret' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  288 |    return ret;
+      |           ^~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c:92:17: warning: 'encoder' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   92 |    kms->encoder = encoder;
+      |    ~~~~~~~~~~~~~^~~~~~~~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c:53:20: note: 'encoder' was declared here
+   53 |    drmModeEncoder *encoder;
+      |                    ^~~~~~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c:93:25: warning: 'connector' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   93 |    kms->mode = connector->modes[0];
+      |                ~~~~~~~~~^~~~~~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/eglkms.c:52:22: note: 'connector' was declared here
+   52 |    drmModeConnector *connector;
+      |                      ^~~~~~~~~
+  CC       egltri.o
+  CC       xeglgears.o
+  CC       xeglthreads.o
+  CCLD     eglinfo
+  CCLD     peglgears
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/xeglgears.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/xeglgears.c:658:20: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  658 |                int r, code;
+      |                    ^
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/xeglgears.c: In function 'main':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengl/xeglgears.c:919:9: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  919 |         (EGLClientBuffer) color_rb, NULL);
+      |         ^
+  CCLD     eglgears_x11
+  CCLD     eglkms
+  CCLD     egltri_x11
+  CCLD     xeglgears
+  CCLD     xeglthreads
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengl'
+Making all in openvg
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg'
+Making all in trivial
+make[4]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg/trivial'
+make[4]: Nothing to be done for 'all'.
+make[4]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg/trivial'
+make[4]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg'
+make[4]: Nothing to be done for 'all-am'.
+make[4]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg'
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/openvg'
+Making all in opengles1
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengles1'
+  CC       bindtex.o
+  CC       clear.o
+  CC       drawtex.o
+  CC       eglfbdev.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/bindtex.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/bindtex.c:382:20: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  382 |                int r, code;
+      |                    ^
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/eglfbdev.c: In function 'egl_init_for_fbdev':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/eglfbdev.c:201:28: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
+  201 |    egl_dpy = eglGetDisplay((EGLNativeDisplayType) fd);
+      |                            ^
+  CC       es1_info.o
+  CC       gears.o
+  CC       msaa.o
+  CC       pbuffer.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/es1_info.c: In function 'info':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/es1_info.c:88:11: warning: too many arguments for format [-Wformat-extra-args]
+   88 |    printf("EGL_EXTENSIONS:\n", s);
+      |           ^~~~~~~~~~~~~~~~~~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/msaa.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/msaa.c:276:17: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  276 |             int r, code;
+      |                 ^
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/pbuffer.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/pbuffer.c:453:20: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  453 |                int r, code;
+      |                    ^
+  CC       render_tex.o
+  CC       texture_from_pixmap.o
+  CC       torus.o
+  CC       tri.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/render_tex.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/render_tex.c:504:20: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  504 |                int r, code;
+      |                    ^
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/tri.c: In function 'test_query_matrix':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/tri.c:141:19: warning: typedef 'voidproc' locally defined but not used [-Wunused-local-typedefs]
+  141 |    typedef void (*voidproc)();
+      |                   ^~~~~~~~
+  CC       two_win.o
+  CCLD     bindtex
+  CCLD     clear
+  CCLD     drawtex_x11
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/two_win.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles1/two_win.c:255:17: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  255 |             int r, code;
+      |                 ^
+  CCLD     eglfbdev
+  CCLD     es1_info
+  CCLD     gears_x11
+  CCLD     msaa
+  CCLD     pbuffer
+  CCLD     render_tex
+  CCLD     texture_from_pixmap
+  CCLD     torus_x11
+  CCLD     tri_x11
+  CCLD     two_win
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengles1'
+Making all in opengles2
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengles2'
+  CC       es2_info.o
+  CC       es2gears.o
+  CC       es2tri.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles2/es2_info.c: In function 'info':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles2/es2_info.c:88:11: warning: too many arguments for format [-Wformat-extra-args]
+   88 |    printf("EGL_EXTENSIONS:\n", s);
+      |           ^~~~~~~~~~~~~~~~~~~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles2/es2tri.c: In function 'event_loop':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/egl/opengles2/es2tri.c:385:17: warning: variable 'r' set but not used [-Wunused-but-set-variable]
+  385 |             int r, code;
+      |                 ^
+  CCLD     es2_info
+  CCLD     es2tri
+  CCLD     es2gears_x11
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/opengles2'
+Making all in oes_vg
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/oes_vg'
+make[3]: Nothing to be done for 'all'.
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl/oes_vg'
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl'
+make[3]: Nothing to be done for 'all-am'.
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl'
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/egl'
+Making all in fp
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/fp'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/fp'
+Making all in fpglsl
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/fpglsl'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/fpglsl'
+Making all in glsl
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/glsl'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/glsl'
+Making all in gs
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/gs'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/gs'
+Making all in objviewer
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/objviewer'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/objviewer'
+Making all in osdemos
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/osdemos'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/osdemos'
+Making all in perf
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/perf'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/perf'
+Making all in rbug
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/rbug'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/rbug'
+Making all in redbook
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/redbook'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/redbook'
+Making all in samples
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/samples'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/samples'
+Making all in slang
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/slang'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/slang'
+Making all in tests
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tests'
+make  all-am
+make[3]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tests'
+make[3]: Nothing to be done for 'all-am'.
+make[3]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tests'
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tests'
+Making all in tools
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tools'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/tools'
+Making all in trivial
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/trivial'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/trivial'
+Making all in vp
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/vp'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/vp'
+Making all in vpglsl
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/vpglsl'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/vpglsl'
+Making all in wgl
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/wgl'
+make[2]: Nothing to be done for 'all'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/wgl'
+Making all in xdemos
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/xdemos'
+  CC       pbutil.lo
+  CC       glsync.o
+  CC       glthreads.o
+  CC       glxdemo.o
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/xdemos/glsync.c: In function 'main':
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/xdemos/glsync.c:253:10: warning: iteration 2147483646 invokes undefined behavior [-Waggressive-loop-optimizations]
+  253 |  while (i++) {
+      |         ~^~
+/home/rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/src/xdemos/glsync.c:253:8: note: within this loop
+  253 |  while (i++) {
+      |        ^
+  CC       glxgears.o
+  CC       glxgears_fbconfig.o
+  CC       glxgears_pixmap.o
+  CC       glxcontexts.o
+  CC       glxheads.o
+  CC       glxinfo.o
+  CC       glxpixmap.o
+  CC       glinfo_common.o
+  CC       glxpbdemo.o
+  CC       glxswapcontrol.o
+  CC       glxsnoop.o
+  CC       manywin.o
+  CC       multictx.o
+  CC       offset.o
+  CC       overlay.o
+  CC       pbinfo.o
+  CC       pbdemo.o
+  CC       shape.o
+  CC       sharedtex.o
+  CC       sharedtex_mt.o
+  CC       texture_from_pixmap.o
+  CC       wincopy.o
+  CC       xfont.o
+  CC       xrotfontdemo.o
+  CC       xuserotfont.o
+  CCLD     glsync
+  CCLD     glthreads
+  CCLD     glxdemo
+  CCLD     glxgears
+  CCLD     glxgears_pixmap
+  CCLD     glxcontexts
+  CCLD     glxheads
+  CCLD     glxinfo
+  CCLD     glxpixmap
+  CCLD     glxpbdemo
+  CCLD     glxsnoop
+  CCLD     glxswapcontrol
+  CCLD     manywin
+  CCLD     multictx
+  CCLD     offset
+  CCLD     overlay
+  CCLD     shape
+  CCLD     sharedtex
+  CCLD     sharedtex_mt
+  CCLD     texture_from_pixmap
+  CCLD     wincopy
+  CCLD     xfont
+  CCLD     xrotfontdemo
+  CCLD     libpbutil.la
+  CCLD     glxgears_fbconfig
+  CCLD     pbinfo
+  CCLD     pbdemo
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src/xdemos'
+make[2]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src'
+make[2]: Nothing to be done for 'all-am'.
+make[2]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src'
+make[1]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu/src'
+make[1]: Entering directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu'
+make[1]: Nothing to be done for 'all-am'.
+make[1]: Leaving directory '/media/sdb1-ata-WDC_WDS500G1B0B-/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-9.80-devel/build/mesa-demos-8.4.0/.x86_64-libreelec-linux-gnu'

@@ -1,0 +1,14 @@
+diff --git a/src/resources/lib/modules/system.py b/src/resources/lib/modules/system.py
+index 3bfbb8d..90a6186 100644
+--- a/src/resources/lib/modules/system.py
++++ b/src/resources/lib/modules/system.py
+@@ -409,7 +409,7 @@ class system:
+                 arrLayouts.sort()
+                 arrTypes = None
+             elif os.path.exists(self.KEYBOARD_INFO):
+-                objXmlFile = open(self.KEYBOARD_INFO, 'r')
++                objXmlFile = open(self.KEYBOARD_INFO, 'r', encoding='utf-8')
+                 strXmlText = objXmlFile.read()
+                 objXmlFile.close()
+                 xml_conf = minidom.parseString(strXmlText)
+

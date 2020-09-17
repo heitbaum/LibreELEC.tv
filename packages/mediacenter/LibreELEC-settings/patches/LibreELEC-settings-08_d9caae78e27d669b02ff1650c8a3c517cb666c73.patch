@@ -1,0 +1,14 @@
+diff --git a/src/resources/lib/oeWindows.py b/src/resources/lib/oeWindows.py
+index 38c9f52..f5dd670 100644
+--- a/src/resources/lib/oeWindows.py
++++ b/src/resources/lib/oeWindows.py
+@@ -507,7 +507,7 @@ def wizard_set_language(self):
+                     break
+                 else:
+                     pass
+-            selLanguage = xbmcDialog.select(self.oe._(32193), languagesList, preselect=langIndex)
++            selLanguage = xbmcDialog.select(self.oe._(32310), languagesList, preselect=langIndex)
+             if selLanguage >= 0:
+                 langKey = languagesList[selLanguage]
+                 lang_new = langCodes[langKey]
+
