@@ -1,0 +1,72 @@
+diff --git a/src/oe.py b/src/oe.py
+index 6ecbd26..8b9fa9d 100644
+--- a/src/oe.py
++++ b/src/oe.py
+@@ -34,6 +34,8 @@
+ __media__ = '%s/resources/skins/Default/media' % __cwd__
+ xbmcDialog = xbmcgui.Dialog()
+ 
++xbmcm = xbmc.Monitor()
++
+ is_service = False
+ conf_lock = False
+ __busy__ = 0
+@@ -483,7 +485,7 @@ def download_file(source, destination, silent=False):
+ 
+         last_percent = 0
+ 
+-        while not (xbmc.abortRequested or progress.iscanceled()):
++        while not (progress.iscanceled() or xbmcm.abortRequested()):
+             part = response.read(32768)
+ 
+             progress.sample(part)
+@@ -504,7 +506,7 @@ def download_file(source, destination, silent=False):
+         local_file.close()
+         response.close()
+ 
+-        if progress.iscanceled() or xbmc.abortRequested:
++        if progress.iscanceled() or xbmcm.abortRequested():
+             os.remove(destination)
+             return None
+ 
+@@ -530,7 +532,7 @@ def copy_file(source, destination, silent=False):
+ 
+         last_percent = 0
+ 
+-        while not (xbmc.abortRequested or progress.iscanceled()):
++        while not (progress.iscanceled() or xbmcm.abortRequested()):
+             part = source_file.read(32768)
+ 
+             progress.sample(part)
+@@ -551,7 +553,7 @@ def copy_file(source, destination, silent=False):
+         source_file.close()
+         destination_file.close()
+ 
+-        if progress.iscanceled() or xbmc.abortRequested:
++        if progress.iscanceled() or xbmcm.abortRequested():
+             os.remove(destination)
+             return None
+ 
+diff --git a/src/resources/lib/modules/bluetooth.py b/src/resources/lib/modules/bluetooth.py
+index 1de063a..6431f98 100644
+--- a/src/resources/lib/modules/bluetooth.py
++++ b/src/resources/lib/modules/bluetooth.py
+@@ -1127,7 +1127,7 @@ def stop(self):
+     def run(self):
+         try:
+             self.oe.dbg_log('bluetooth::discoveryThread::run', 'enter_function', 0)
+-            while not self.stopped and not xbmc.abortRequested:
++            while not self.stopped and not self.oe.xbmcm.abortRequested():
+                 current_time = time.time()
+                 if current_time > self.last_run + 5:
+                     if self.main_menu.getSelectedItem().getProperty('modul') != 'bluetooth' or not hasattr(self.oe.dictModules['bluetooth'], 'discovery_thread'):
+@@ -1164,7 +1164,7 @@ def run(self):
+         try:
+             self.oe.dbg_log('bluetooth::pinkeyTimer::run', 'enter_function', 0)
+             self.endtime = self.start_time + self.runtime
+-            while not self.stopped and not xbmc.abortRequested:
++            while not self.stopped and not self.oe.xbmcm.abortRequested():
+                 current_time = time.time()
+                 percent = round(100 / self.runtime * (self.endtime - current_time), 0)
+                 self.parent.pinkey_window.getControl(1704).setPercent(percent)
+
