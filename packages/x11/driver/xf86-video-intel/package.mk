@@ -13,6 +13,7 @@ PKG_ARCH="x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://intellinuxgraphics.org/"
 <<<<<<< HEAD
+<<<<<<< HEAD
 PKG_URL="https://gitlab.freedesktop.org/xorg/driver/$PKG_NAME/-/archive/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
 =======
 PKG_SHA256="40f531827210ae4184aed81c57d6994e662036ff5a8808305a276c96c70f11b6"
@@ -24,6 +25,9 @@ PKG_URL="https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel/-/archive/$
 =======
 PKG_URL=PKG_URL="https://gitlab.freedesktop.org/xorg/driver/$PKG_NAME/-/archive/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
 >>>>>>> kernel update + latest libreelec changes
+=======
+PKG_URL="https://gitlab.freedesktop.org/xorg/driver/$PKG_NAME/-/archive/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.bz2"
+>>>>>>> fix type in intel driver package.mk
 PKG_DEPENDS_TARGET="toolchain libXcomposite libXxf86vm libXdamage libdrm util-macros systemd xorg-server"
 PKG_LONGDESC="The Xorg driver for Intel i810, i815, 830M, 845G, 852GM, 855GM, 865G, 915G, 915GM and 965G."
 PKG_TOOLCHAIN="autotools"
