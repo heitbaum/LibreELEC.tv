@@ -1,0 +1,6 @@
+[Unit]
+Description=inputattach for rainshadow-cec device on %I
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/inputattach --rainshadow-cec /dev/%I
