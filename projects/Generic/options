@@ -62,6 +62,9 @@
   # KODI Player implementation to use (default / bcm2835-driver / libfslvpuwrap)
     KODIPLAYER_DRIVER="default"
 
+  # use the kernel CEC framework for libcec (yes / no)
+    CEC_FRAMEWORK_SUPPORT="yes"
+
   # additional Firmware to use (dvb-firmware, misc-firmware, wlan-firmware)
   # Space separated list is supported,
   # e.g. FIRMWARE="dvb-firmware misc-firmware wlan-firmware"

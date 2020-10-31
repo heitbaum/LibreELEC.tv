@@ -1,0 +1,6 @@
+[Unit]
+Description=inputattach for pulse8-cec device on %I
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/inputattach --pulse8-cec /dev/%I
