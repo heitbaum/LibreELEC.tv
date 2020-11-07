@@ -1,6 +1,5 @@
 130
 - Update to docker 19.03.13
-- Fix "docker run --init"
 
 129
 - Fix "docker run --init"
