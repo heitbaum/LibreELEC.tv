@@ -17,7 +17,7 @@ PKG_LONGDESC="Docker containers can encapsulate any payload, and will run consis
 PKG_TOOLCHAIN="manual"
 
 # Git commit of the matching release https://github.com/docker/docker-ce/releases
-export PKG_GIT_COMMIT="6a30dfca03664a0b6bf0646a7d389ee7d0318e6e"
+export PKG_GIT_COMMIT="4484c46d9d1a2d10b8fc662923ad586daeedb04f"
 
 PKG_IS_ADDON="yes"
 PKG_ADDON_NAME="Docker"
@@ -60,7 +60,7 @@ configure_target() {
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/moby/buildkit/util/progress/*          ${PKG_GOPATH_CLI}/src/github.com/moby/buildkit/util/progress
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/docker/swarmkit/manager/*              ${PKG_GOPATH_CLI}/src/github.com/docker/swarmkit/manager
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/coreos/etcd/raft/*                     ${PKG_GOPATH_CLI}/src/github.com/coreos/etcd/raft
-  cp -rf ${PKG_GOPATH_ENGINE}/src/golang.org/x/*                                    ${PKG_GOPATH_CLI}/src/golang.org/x
+  cp -rf ${PKG_GOPATH_ENGINE}/src/golang.org/x/crypto/*                                    ${PKG_GOPATH_CLI}/src/golang.org/x/crypto
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/opencontainers/runtime-spec/specs-go/* ${PKG_GOPATH_CLI}/src/github.com/opencontainers/runtime-spec/specs-go
 
   rm -rf   ${PKG_GOPATH_CLI}/src/github.com/containerd/containerd
