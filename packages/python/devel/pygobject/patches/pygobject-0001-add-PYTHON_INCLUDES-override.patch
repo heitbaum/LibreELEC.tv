@@ -30,3 +30,4 @@ Index: python-gobject-2.28.6/m4/python.m4
  AC_SUBST(PYTHON_INCLUDES)
  dnl check if the headers exist:
  save_CPPFLAGS="$CPPFLAGS"
+

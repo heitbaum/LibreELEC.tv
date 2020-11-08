@@ -18,3 +18,4 @@ diff -Naur pygobject-2.28.6/configure.ac pygobject-2.28.6.patch/configure.ac
  AM_PROG_CC_C_O
  
  # check that we have the minimum version of python necisary to build
+
