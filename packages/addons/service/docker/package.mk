@@ -60,7 +60,7 @@ configure_target() {
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/moby/buildkit/util/progress/*          ${PKG_GOPATH_CLI}/src/github.com/moby/buildkit/util/progress
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/docker/swarmkit/manager/*              ${PKG_GOPATH_CLI}/src/github.com/docker/swarmkit/manager
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/coreos/etcd/raft/*                     ${PKG_GOPATH_CLI}/src/github.com/coreos/etcd/raft
-  cp -rf ${PKG_GOPATH_ENGINE}/src/golang.org/x/crypto/*                                    ${PKG_GOPATH_CLI}/src/golang.org/x/crypto
+  cp -rf ${PKG_GOPATH_ENGINE}/src/golang.org/x/crypto/*                             ${PKG_GOPATH_CLI}/src/golang.org/x/crypto
   cp -rf ${PKG_GOPATH_ENGINE}/src/github.com/opencontainers/runtime-spec/specs-go/* ${PKG_GOPATH_CLI}/src/github.com/opencontainers/runtime-spec/specs-go
 
   rm -rf   ${PKG_GOPATH_CLI}/src/github.com/containerd/containerd
