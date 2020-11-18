@@ -10,7 +10,7 @@ Subject: [PATCH] silence crond startup logging
 diff -Naur busybox-1.23.0/miscutils/crond.c busybox-1.23.0.patch/miscutils/crond.c
 --- busybox-1.23.0/miscutils/crond.c	2014-10-04 22:35:59.000000000 +0200
 +++ busybox-1.23.0.patch/miscutils/crond.c	2014-12-26 23:07:53.386118290 +0100
-@@ -1054,7 +1054,6 @@
+@@ -1052,7 +1052,6 @@
  	/* Useful on Android where DEFAULT_SHELL /bin/sh may not exist */
  	G.default_shell = xstrdup(get_shell_name());
 

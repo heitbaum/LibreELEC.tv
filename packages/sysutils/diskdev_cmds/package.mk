@@ -27,3 +27,4 @@ makeinstall_target() {
 make_init() {
   : # we reuse make_target()
 }
+
