@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glib"
-PKG_VERSION="2.63.4"
-PKG_SHA256="d6ba2b0cde747367f43ad64751221d5beb95de1739a89856316df804e3447618"
+PKG_VERSION="2.67.0"
+PKG_SHA256="0b15e57ab6c2bb90ced4e24a1b0d8d6e9a13af8a70266751aa3a45baffeed7c1"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.gtk.org/"
 PKG_URL="http://ftp.gnome.org/pub/gnome/sources/glib/$(get_pkg_version_maj_min)/$PKG_NAME-$PKG_VERSION.tar.xz"
@@ -16,7 +16,7 @@ PKG_TOOLCHAIN="meson"
 PKG_MESON_OPTS_HOST="-Ddefault_library=static \
                      -Dinternal_pcre=true \
                      -Dinstalled_tests=false \
-                     -Dlibmount=false"
+                     -Dlibmount=disabled"
 
 PKG_MESON_OPTS_TARGET="-Ddefault_library=shared \
                        -Dinternal_pcre=false \
