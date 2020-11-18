@@ -29,7 +29,8 @@ PKG_MESON_OPTS_TARGET="-Dbackend-drm-screencast-vaapi=false \
                        -Dsimple-clients=egl \
                        -Dresize-pool=false \
                        -Dwcap-decode=false \
-                       -Dtest-junit-xml=false"
+                       -Dtest-junit-xml=false \
+                       -Dpipewire=false"
 
 post_makeinstall_target() {
   mkdir -p ${INSTALL}/usr/lib/weston
