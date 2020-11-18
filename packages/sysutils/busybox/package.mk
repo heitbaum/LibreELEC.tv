@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="busybox"
-PKG_VERSION="9aa751b08ab03d6396f86c3df77937a19687981b"
-PKG_SHA256="41d6f6ad37d21bace07ec596e72c1aa0874b8ccd1d9ef9a609a07b37cabea657"
+PKG_VERSION="e16f7eb5967b9a960f4600c20690af63fb830b60"
+PKG_SHA256="b2f9506fa1fbd2729894e83f02ed013b9ba3e7f4bff8a4d802555c24a20f5561"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.busybox.net"
 PKG_URL="https://git.busybox.net/busybox/snapshot/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
