@@ -8,7 +8,7 @@ PKG_SHA256="fe0c49d8468249000bda75bcfdf9e30ff7e9a86d35f1a21f428d79c389d55675"
 PKG_LICENSE="MIT"
 PKG_SITE="http://curl.haxx.se"
 PKG_URL="http://curl.haxx.se/download/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-PKG_DEPENDS_TARGET="toolchain zlib gnutls rtmpdump libidn2 nghttp2"
+PKG_DEPENDS_TARGET="toolchain zlib openssl rtmpdump libidn2 nghttp2"
 PKG_LONGDESC="Client and library for (HTTP, HTTPS, FTP, ...) transfers."
 PKG_TOOLCHAIN="configure"
 
@@ -58,8 +58,8 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_lib_rtmp_RTMP_Init=yes \
                            --without-egd-socket \
                            --enable-thread \
                            --with-random=/dev/urandom \
-                           --with-gnutls \
-                           --without-ssl \
+                           --without-gnutls \
+                           --with-ssl \
                            --without-mbedtls \
                            --without-nss \
                            --with-ca-bundle=/run/libreelec/cacert.pem \
