@@ -14,7 +14,7 @@ PKG_LONGDESC="debug is a Metapackage for installing debugging tools"
   get_graphicdrivers
 
 if [ "${VAAPI_SUPPORT}" = "yes" ]; then
-  PKG_DEPENDS_TARGET+=" libva-utils"
+  PKG_DEPENDS_TARGET+=" libva-utils vadumpcaps"
 fi
 
 if [ "${VALGRIND}" = "yes" ]; then
