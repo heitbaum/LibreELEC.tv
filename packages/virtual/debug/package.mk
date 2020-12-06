@@ -18,7 +18,7 @@ if [ "${VDPAU_SUPPORT}" = "yes" -a "${DISPLAYSERVER}" = "x11" ]; then
 fi
 
 if [ "${VAAPI_SUPPORT}" = "yes" ]; then
-  PKG_DEPENDS_TARGET+=" libva-utils"
+  PKG_DEPENDS_TARGET+=" libva-utils vadumpcaps"
 fi
 
 if [ "${VALGRIND}" = "yes" ]; then
