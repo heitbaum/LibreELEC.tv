@@ -1,0 +1,71 @@
+From 6d09efe8686de824adf3d8810bbe0d5c386643e4 Mon Sep 17 00:00:00 2001
+From: Azat Khuzhin <azat@libevent.org>
+Date: Sat, 15 Jan 2022 22:06:58 +0300
+Subject: [PATCH] Set RPATH only if installation is done into non system
+ directory
+
+v2: use CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES
+
+Fixes: #1245
+---
+ CMakeLists.txt              | 20 ++++++++++++++++++++
+ cmake/AddEventLibrary.cmake |  3 +--
+ 2 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fd01994a1..ffe7aa582 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -168,6 +168,24 @@ if (NOT DEFINED CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+ endif()
+ 
++# The RPATH to be used when installing, but only if it's not a system directory
++#
++# Refs: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
++macro(Configure_RPATH)
++    # NOTE: that CMAKE_INSTALL_PREFIX not always normalized correctly, i.e.:
++    # - "///" -> "/"
++    # - "/////usr///" -> "//usr"
++    # So it should be normalized again.
++    file(REAL_PATH "${CMAKE_INSTALL_PREFIX}" CMAKE_INSTALL_PREFIX_NORMALIZED)
++
++    list(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX_NORMALIZED}/lib" isSystemDir)
++
++    if("${isSystemDir}" STREQUAL "-1")
++        set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX_NORMALIZED}/lib")
++    endif()
++endmacro()
++Configure_RPATH()
++
+ if (EVENT__ENABLE_VERBOSE_DEBUG)
+     add_definitions(-DUSE_DEBUG=1)
+ endif()
+@@ -1652,11 +1670,13 @@ message(STATUS "CMAKE_SYSTEM_NAME:        ${CMAKE_SYSTEM_NAME}")
+ message(STATUS "CMAKE_SYSTEM_VERSION:     ${CMAKE_SYSTEM_VERSION}")
+ message(STATUS "CMAKE_SYSTEM_PROCESSOR:   ${CMAKE_SYSTEM_PROCESSOR}")
+ message(STATUS "CMAKE_SKIP_RPATH:         ${CMAKE_SKIP_RPATH}")
++message(STATUS "CMAKE_INSTALL_RPATH:      ${CMAKE_INSTALL_RPATH}")
+ message(STATUS "CMAKE_VERBOSE_MAKEFILE:   ${CMAKE_VERBOSE_MAKEFILE}")
+ message(STATUS "CMAKE_C_FLAGS:            ${CMAKE_C_FLAGS}")
+ message(STATUS "CMAKE_BUILD_TYPE:         ${CMAKE_BUILD_TYPE}")
+ message(STATUS "CMAKE_C_COMPILER:         ${CMAKE_C_COMPILER} (id ${CMAKE_C_COMPILER_ID}, clang ${CLANG}, GNUC ${GNUC})")
+ message(STATUS "CMAKE_AR:                 ${CMAKE_AR}")
+ message(STATUS "CMAKE_RANLIB:             ${CMAKE_RANLIB}")
++message(STATUS "CMAKE_INSTALL_PREFIX:     ${CMAKE_INSTALL_PREFIX}")
+ message(STATUS "")
+ 
+diff --git a/cmake/AddEventLibrary.cmake b/cmake/AddEventLibrary.cmake
+index 374b774f3..9af394413 100644
+--- a/cmake/AddEventLibrary.cmake
++++ b/cmake/AddEventLibrary.cmake
+@@ -159,8 +159,7 @@ macro(add_event_library LIB_NAME)
+                 "${LIB_NAME}_shared" PROPERTIES
+                 OUTPUT_NAME "${LIB_NAME}-${EVENT_PACKAGE_RELEASE}"
+                 VERSION "${CURRENT_MINUS_AGE}.${EVENT_ABI_LIBVERSION_AGE}.${EVENT_ABI_LIBVERSION_REVISION}"
+-                SOVERSION "${CURRENT_MINUS_AGE}"
+-                INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
++                SOVERSION "${CURRENT_MINUS_AGE}")
+         endif()
+ 
+         if (NOT WIN32)
