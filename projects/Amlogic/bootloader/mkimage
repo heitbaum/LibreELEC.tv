@@ -52,6 +52,8 @@ mkimage_dtb(){
       mcopy -s -o "${RELEASE_DIR}/3rdparty/bootloader/dtb/meson-g12b-odroid-n2-plus.dtb" ::
     elif [ "$DTB" = "meson-gxl-s905x-libretech-cc.dtb" ]; then
       mcopy -s -o "${RELEASE_DIR}/3rdparty/bootloader/dtb/meson-gxl-s905x-libretech-cc-v2.dtb" ::
+    elif [ "$DTB" = "meson-sm1-odroid-c4.dtb" ]; then
+      mcopy -s -o "${RELEASE_DIR}/3rdparty/bootloader/dtb/meson-sm1-odroid-hc4.dtb" ::
     fi
   else
     echo "image: copying device trees"
