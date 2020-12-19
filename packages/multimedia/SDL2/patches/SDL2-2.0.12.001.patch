@@ -1,0 +1,34 @@
+
+# HG changeset patch
+# User Fabrice Fontaine <fontaine.fabrice@gmail.com>
+# Date 1585154325 25200
+# Node ID 389ce8cfa2a31f765c3d751c911c73abf5c60e33
+# Parent  769f800952179633ec6c3e6bc1bc1d40e401750a
+src/video/kmsdrm/SDL_kmsdrmvideo.c: fix build
+Build is broken without EGL since version 2.0.12 and
+https://hg.libsdl.org/SDL/rev/9761858bd6a3:
+
+/home/giuliobenetti/autobuild/run/instance-1/output-1/build/sdl2-2.0.12/src/video/kmsdrm/SDL_kmsdrmvideo.c: In function 'KMSDRM_CreateSurfaces':
+/home/giuliobenetti/autobuild/run/instance-1/output-1/build/sdl2-2.0.12/src/video/kmsdrm/SDL_kmsdrmvideo.c:394:5: error: unknown type name 'EGLContext'
+     EGLContext egl_context;
+     ^
+
+Fixes:
+ - http://autobuild.buildroot.org/results/fafd20a01591032662f9ca025fcea3478239cf3c
+
+Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+diff -r 769f80095217 -r 389ce8cfa2a3 src/video/kmsdrm/SDL_kmsdrmvideo.c
+--- a/src/video/kmsdrm/SDL_kmsdrmvideo.c	Tue Mar 24 10:05:51 2020 -0700
++++ b/src/video/kmsdrm/SDL_kmsdrmvideo.c	Wed Mar 25 09:38:45 2020 -0700
+@@ -391,7 +391,9 @@
+     Uint32 height = dispdata->mode.vdisplay;
+     Uint32 surface_fmt = GBM_FORMAT_XRGB8888;
+     Uint32 surface_flags = GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING;
++#if SDL_VIDEO_OPENGL_EGL
+     EGLContext egl_context;
++#endif
+ 
+     if (!KMSDRM_gbm_device_is_format_supported(viddata->gbm, surface_fmt, surface_flags)) {
+         SDL_LogWarn(SDL_LOG_CATEGORY_VIDEO, "GBM surface format not supported. Trying anyway.");
+
