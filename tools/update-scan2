@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e
+
+. config/options ""
+
+# global vars
+PACKAGES_CURRENT=""
+PACKAGES_UNKNOWN=""
+PACKAGES_BAD_REGEX=""
+
+PACKAGE_LIST=$(find packages/ -type f -name package.mk ! -path "packages/mediacenter/*" ! -path "packages/emulation/*" ! -path "packages/addons/addon-depends/adafruit-libraries-depends/*" ! -path "packages/lang/Python3/*" | sort)
+
+check_for_update() {
+  # wipe key variables between uses
+  local PKG_NAME PKG_WATCH PKG_VERSION
+
+  # source package.mk
+  unset PKG_NAME
+  . "${1}" &> /dev/null
+
+  if [ -z "${PKG_VERSION}" ]; then
+    PACKAGES_CURRENT+=" ${PKG_NAME}"
+    return
+  else
+    #upstream_version="$(curl -s -L https://repology.org/project/${PKG_NAME,,}/information | grep -Po -m 1 '(?<=<span class="version version-big version-newest">)([^</span>]*)')"
+    upstream_version="$(curl -s https://repology.org/badge/latest-versions/${PKG_NAME,,}.svg | grep -Po -m1 '(?<=text-anchor="middle">)[0-9.]+([^</text>]*)' | tail -1)"
+  fi
+
+if [ -z "${upstream_version}" ]; then
+  PACKAGES_BAD_REGEX+=" ${PKG_NAME}"
+elif [ "${PKG_VERSION}" != "${upstream_version}" ]; then
+  printf "%-30s | %-40s | %-20s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"; printf '\n'
+else
+  PACKAGES_CURRENT+=" ${PKG_NAME}"
+fi
+}
+
+echo -e "\nUpdates found:\n"
+printf "%-30s | %-40s | %-20s" "Package" "master" "upstream"; printf '\n'
+echo "-------------------------------------------------------------------------------------------"
+
+for build_file in ${PACKAGE_LIST}; do
+  check_for_update "${build_file}"
+done
+
+echo ""
+
+if [ -n "${PACKAGES_BAD_REGEX}" ]; then
+  echo -e "\nBad info in PKG_WATCH $(echo ${PACKAGES_BAD_REGEX} | wc -w):\n${PACKAGES_BAD_REGEX}\n"
+fi
+if [ -n "${PACKAGES_CURRENT}" ]; then
+  echo -e "\nCurrent $(echo ${PACKAGES_CURRENT} | wc -w):\n${PACKAGES_CURRENT}\n"
+fi
+if [ -n "${PACKAGES_GITHASH}" ]; then
+  echo -e "\nPackages using githash $(echo ${PACKAGES_GITHASH} | wc -w):\n${PACKAGES_GITHASH}"
+fi
+if [ -n "${PACKAGES_NOURL}" ]; then
+  echo -e "\nNo PKG_URL $(echo ${PACKAGES_NOURL} | wc -w):\n${PACKAGES_NOURL}"
+fi
+if [ -n "${PACKAGES_UNKNOWN}" ]; then
+  echo -e "\nUnknown $(echo ${PACKAGES_UNKNOWN} | wc -w):\n${PACKAGES_UNKNOWN}"
+fi
+
