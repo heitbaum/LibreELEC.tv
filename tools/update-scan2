@@ -1,15 +1,52 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-2.0
+# Portions (comparedate) Copyright (C) 2013 https://gist.github.com/ashrithr/5614283
+# Copyright (C) 2020-present Team LibreELEC (https://libreelec.tv)
 
 set -e
 
 . config/options ""
 
+mkdir -p pkg_version
+if [ ! -d "pkg_version" ]; then
+  echo "no pkg_version directory and unable to create one."
+  exit 2
+fi
+
 # global vars
 PACKAGES_CURRENT=""
 PACKAGES_UNKNOWN=""
 PACKAGES_BAD_REGEX=""
+PACKAGES_BAD_REGEX_SKIP=""
 
-PACKAGE_LIST=$(find packages/ -type f -name package.mk ! -path "packages/mediacenter/*" ! -path "packages/emulation/*" ! -path "packages/addons/addon-depends/adafruit-libraries-depends/*" ! -path "packages/lang/Python3/*" | sort)
+PACKAGE_LIST=$(find packages/ -type f -name package.mk ! -path "packages/mediacenter/*" ! -path "packages/emulation/*" ! -path "packages/addons/addon-depends/adafruit-libraries-depends/*" ! -path "packages/lang/Python3/*" ! -path "packages/graphics/kmscube/*" | awk '{FS="/" ; $0=$0 ; print $(NF-1)"|"$0}' | sort | cut -d"|" -f2)
+
+# This checks that the specified file is less than 28 hours old.
+# returns 0 if younger than 28 hours.
+# returns 1 if older than 28 hours.
+#funtion arguments -> filename to comapre against curr time
+function comparedate() {
+  if [ ! -f "$1" ]; then
+    echo "file $1 does not exist"
+    exit 2
+  fi
+  MAXAGE=$(bc <<< '7*24*60*60') # seconds in 7 days
+  # file age in seconds = current_time - file_modification_time.
+  FILEAGE=$(($(date +%s) - $(stat -c '%Y' "$1")))
+  test $FILEAGE -lt $MAXAGE && {
+    #echo "$1 is less than 28 hours old."
+    return 0
+  }
+  #echo "$1 is older than 7 days."
+  return 1
+
+  #sample usage of function test if file /tmp/test.sh is older than 7 days or not
+  #comparedate /tmp/test.sh
+}
+     
+noop() {
+  :
+}
 
 check_for_update() {
   # wipe key variables between uses
@@ -18,22 +55,61 @@ check_for_update() {
   # source package.mk
   unset PKG_NAME
   . "${1}" &> /dev/null
+  # TODO - need to remove exit from the sourced files (e.g. kmscube)
+  #(cat ${1} | sed 's/exit /noop /') | source /dev/stdin
 
+  if [ -f pkg_version/BAD_REGEX.${PKG_NAME} ]; then
+    if [ "${1}" -nt pkg_version/BAD_REGEX.${PKG_NAME} ]; then
+      # check the date on the BAD_REGEX.* and that the package.mk is not newer
+      rm pkg_version/BAD_REGEX.${PKG_NAME}
+    fi
+    # check the date on the BAD_REGEX.* file and that it is current ( < 7 days old )
+    comparedate pkg_version/BAD_REGEX.${PKG_NAME}
+    if [ $? -eq 1 ]; then
+      rm pkg_version/BAD_REGEX.${PKG_NAME}
+    fi
+  fi
+
+  # go get the PKG_GERSION from repology.org
   if [ -z "${PKG_VERSION}" ]; then
     PACKAGES_CURRENT+=" ${PKG_NAME}"
     return
+  elif [ -f pkg_version/BAD_REGEX.${PKG_NAME} ]; then
+    PACKAGES_BAD_REGEX_SKIP+=" ${PKG_NAME}"
+    return
   else
-    #upstream_version="$(curl -s -L https://repology.org/project/${PKG_NAME,,}/information | grep -Po -m 1 '(?<=<span class="version version-big version-newest">)([^</span>]*)')"
-    upstream_version="$(curl -s https://repology.org/badge/latest-versions/${PKG_NAME,,}.svg | grep -Po -m1 '(?<=text-anchor="middle">)[0-9.]+([^</text>]*)' | tail -1)"
+    pkg_version_file=0
+    if [ -f pkg_version/${PKG_NAME} ]; then
+      # check the date on the pkg_version file is current ( < 7 days old )
+      comparedate pkg_version/${PKG_NAME}
+      if [ $? -eq 1 ]; then
+        rm pkg_version/${PKG_NAME}
+      fi
+    fi
+
+    if [ -f pkg_version/${PKG_NAME} ]; then
+      upstream_version="$(cat pkg_version/${PKG_NAME})"
+      pkg_version_file=1
+    else
+      #upstream_version="$(curl -s -L https://repology.org/project/${PKG_NAME,,}/information | grep -Po -m 1 '(?<=<span class="version version-big version-newest">)([^</span>]*)')"
+      upstream_version="$(curl -s https://repology.org/badge/latest-versions/${PKG_NAME,,}.svg | grep -Po -m1 '(?<=text-anchor="middle">)[0-9.]+([^</text>]*)' | tail -1)"
+    fi
   fi
 
-if [ -z "${upstream_version}" ]; then
-  PACKAGES_BAD_REGEX+=" ${PKG_NAME}"
-elif [ "${PKG_VERSION}" != "${upstream_version}" ]; then
-  printf "%-30s | %-40s | %-20s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"; printf '\n'
-else
-  PACKAGES_CURRENT+=" ${PKG_NAME}"
-fi
+  if [ -z "${upstream_version}" ]; then
+    PACKAGES_BAD_REGEX+=" ${PKG_NAME}"
+    touch pkg_version/BAD_REGEX.${PKG_NAME}
+  elif [ "${PKG_VERSION}" != "${upstream_version}" ]; then
+    printf "%-30s | %-40s | %-20s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"; printf '\n'
+    if [ "${pkg_version_file}" == "0" ]; then
+      echo ${upstream_version} > pkg_version/${PKG_NAME}
+    fi
+  else
+    PACKAGES_CURRENT+=" ${PKG_NAME}"
+    if [ "${pkg_version_file}" == "0" ]; then
+      echo ${upstream_version} > pkg_version/${PKG_NAME}
+    fi
+  fi
 }
 
 echo -e "\nUpdates found:\n"
@@ -46,6 +122,10 @@ done
 
 echo ""
 
+if [ -n "${PACKAGES_BAD_REGEX_SKIP}" ]; then
+  echo -e "\nSkipped in this run (checked in the last 7 days.)"
+  echo -e "Bad info in PKG_WATCH $(echo ${PACKAGES_BAD_REGEX_SKIP} | wc -w):\n${PACKAGES_BAD_REGEX_SKIP}\n"
+fi
 if [ -n "${PACKAGES_BAD_REGEX}" ]; then
   echo -e "\nBad info in PKG_WATCH $(echo ${PACKAGES_BAD_REGEX} | wc -w):\n${PACKAGES_BAD_REGEX}\n"
 fi
@@ -61,4 +141,3 @@ fi
 if [ -n "${PACKAGES_UNKNOWN}" ]; then
   echo -e "\nUnknown $(echo ${PACKAGES_UNKNOWN} | wc -w):\n${PACKAGES_UNKNOWN}"
 fi
-
