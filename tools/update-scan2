@@ -62,11 +62,12 @@ check_for_update() {
     if [ "${1}" -nt pkg_version/BAD_REGEX.${PKG_NAME} ]; then
       # check the date on the BAD_REGEX.* and that the package.mk is not newer
       rm pkg_version/BAD_REGEX.${PKG_NAME}
-    fi
-    # check the date on the BAD_REGEX.* file and that it is current ( < 7 days old )
-    comparedate pkg_version/BAD_REGEX.${PKG_NAME}
-    if [ $? -eq 1 ]; then
-      rm pkg_version/BAD_REGEX.${PKG_NAME}
+    else
+      # check the date on the BAD_REGEX.* file and that it is current ( < 7 days old )
+      comparedate pkg_version/BAD_REGEX.${PKG_NAME}
+      if [ $? -eq 1 ]; then
+        rm pkg_version/BAD_REGEX.${PKG_NAME}
+      fi
     fi
   fi
 
