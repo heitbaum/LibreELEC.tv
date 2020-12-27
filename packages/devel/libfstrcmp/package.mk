@@ -7,6 +7,7 @@ PKG_SHA256="e4018e850f80700acee8da296e56e15b1eef711ab15157e542e7d7e1237c3476"
 PKG_LICENSE="GPL"
 PKG_SITE="http://fstrcmp.sourceforge.net/"
 PKG_URL="https://downloads.sourceforge.net/project/fstrcmp/fstrcmp/$(get_pkg_version_maj_min)/fstrcmp-$PKG_VERSION.tar.gz"
+PKG_ID="7320"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="The fstrcmp project provides a library that is used to make fuzzy comparisons of strings and byte arrays, including multi-byte character strings."
 

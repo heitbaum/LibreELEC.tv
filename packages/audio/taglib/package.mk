@@ -7,6 +7,7 @@ PKG_SHA256="b6d1a5a610aae6ff39d93de5efd0fdc787aa9e9dc1e7026fa4c961b26563526b"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://taglib.github.com/"
 PKG_URL="http://taglib.github.io/releases/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="1982"
 PKG_DEPENDS_TARGET="toolchain cmake:host zlib"
 PKG_LONGDESC="TagLib is a library for reading and editing the meta-data of several popular audio formats."
 

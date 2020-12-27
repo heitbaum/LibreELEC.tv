@@ -7,6 +7,7 @@ PKG_SHA256="17363eb35eece2e08144da5f060c70103b59d0972b4f4d77fd84c9a7a2dba635"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.X.org"
 PKG_URL="http://xorg.freedesktop.org/archive/individual/font/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="17210"
 PKG_DEPENDS_TARGET="toolchain util-macros font-util:host"
 PKG_LONGDESC="X11 cursor fonts."
 

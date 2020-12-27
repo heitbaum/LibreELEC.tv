@@ -6,6 +6,7 @@
 PKG_NAME="jre-libXinerama"
 PKG_LONGDESC="libXinerama for JRE"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libXinerama"
 PKG_BUILD_FLAGS="-sysroot"
 

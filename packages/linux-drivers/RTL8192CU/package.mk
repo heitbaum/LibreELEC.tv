@@ -8,6 +8,7 @@ PKG_SHA256="93cd979956ab3f60618707cd11395549ecff17135fa969e25f031a1f06453a7d"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/pvaret/rtl8192cu-fixes"
 PKG_URL="$PKG_SITE/archive/$PKG_VERSION.tar.gz"
+PKG_ID=""
 PKG_LONGDESC="Realtek RTL81xxCU Linux 3.x driver"
 PKG_IS_KERNEL_PKG="yes"
 

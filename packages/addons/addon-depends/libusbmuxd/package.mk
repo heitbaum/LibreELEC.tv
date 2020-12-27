@@ -7,6 +7,7 @@ PKG_SHA256="cc6a808553da4efa9fa5638be256d5ae020498795d9d260d280b87074e799b20"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.libimobiledevice.org"
 PKG_URL="https://github.com/libimobiledevice/libusbmuxd/releases/download/${PKG_VERSION}/libusbmuxd-${PKG_VERSION}.tar.bz2"
+PKG_ID="11678"
 PKG_DEPENDS_TARGET="toolchain libplist"
 PKG_LONGDESC="A USB multiplex daemon."
 

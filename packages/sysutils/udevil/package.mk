@@ -7,6 +7,7 @@ PKG_SHA256="ce8c51fd4d589cda7be56e75b42188deeb258c66fc911a9b3a70a3945c157739"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/IgnorantGuru/udevil"
 PKG_URL="https://github.com/IgnorantGuru/udevil/raw/pkg/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_ID="13735"
 PKG_DEPENDS_TARGET="toolchain systemd glib"
 PKG_LONGDESC="Mounts and unmounts removable devices and networks without a password."
 

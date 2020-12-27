@@ -8,6 +8,7 @@ PKG_SHA256="377c4491593c417946efcd2c7600d1e62639f7a8bbca391887e2c4679807d773"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.X.org"
 PKG_URL="http://xorg.freedesktop.org/archive/individual/lib/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="13440"
 PKG_DEPENDS_TARGET="toolchain util-macros"
 PKG_LONGDESC="Abstract network code for X."
 

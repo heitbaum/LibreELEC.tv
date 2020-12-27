@@ -7,6 +7,7 @@ PKG_SHA256="f1d14a12d700b9650562f8ec8ca593e6033f2e18b3d1fd1f44af29875152547e"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/HiassofT/evrepeat"
 PKG_URL="https://github.com/HiassofT/evrepeat/archive/$PKG_VERSION.tar.gz"
+PKG_ID=""
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="Tool to view and change linux input device repeat settings"
 

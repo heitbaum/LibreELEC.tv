@@ -8,6 +8,7 @@ PKG_SHA256="87ba3622d655277f29cc568fe74d9daef40ccfbf6b9ef2a40776252888d21e82"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/Mange/rtl8192eu-linux-driver"
 PKG_URL="https://github.com/Mange/rtl8192eu-linux-driver/archive/$PKG_VERSION.tar.gz"
+PKG_ID=""
 PKG_LONGDESC="Realtek RTL8192EU Linux 3.x driver"
 PKG_IS_KERNEL_PKG="yes"
 

@@ -6,6 +6,7 @@ PKG_VERSION="1.0"
 PKG_LICENSE="GPL"
 PKG_SITE=""
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A simple tool and systemd service to wait until NTP time is synced"
 

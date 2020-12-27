@@ -8,6 +8,7 @@ PKG_SHA256="cf285395a679f0b68c0acde2cb2480e8ead6ca07ff14c1bc52ae65a1243aa377"
 PKG_LICENSE="GPL"
 PKG_SITE="https://openvpn.net"
 PKG_URL="https://swupdate.openvpn.org/community/releases/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_ID="2567"
 PKG_DEPENDS_TARGET="toolchain lzo openssl"
 PKG_LONGDESC="A full featured SSL VPN software solution that integrates OpenVPN server capabilities."
 

@@ -7,6 +7,7 @@ PKG_SHA256="b8e77940e4e1769dc47ef1805918d8c9be37c708735832a07204258bacc11794"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.X.org"
 PKG_URL="http://xorg.freedesktop.org/archive/individual/font/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="17214"
 PKG_DEPENDS_TARGET="toolchain util-macros font-util font-cursor-misc"
 PKG_LONGDESC="A misc. public domain font."
 

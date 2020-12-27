@@ -7,6 +7,7 @@ PKG_SHA256="b62eb846fd8af15b402c8f6615a74405fe4448cf16663efd0358d4124db0829f"
 PKG_LICENSE="BSD"
 PKG_SITE="http://www.jbkempf.com/blog/post/2018/Introducing-dav1d"
 PKG_URL="https://code.videolan.org/videolan/dav1d/-/archive/${PKG_VERSION}/dav1d-${PKG_VERSION}.tar.bz2"
+PKG_ID="18920"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="dav1d is an AV1 decoder :)"
 

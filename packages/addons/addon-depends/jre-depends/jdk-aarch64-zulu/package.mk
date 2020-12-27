@@ -7,6 +7,7 @@ PKG_SHA256="2afa6b9a86fea6f9275856506b5cc1efd8420f674c5e2dc3e1b04e140d6ad852"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://www.azul.com/products/zulu-embedded/"
 PKG_URL="http://cdn.azul.com/zulu-embedded/bin/zulu${PKG_VERSION%%-*}-ca-jdk${PKG_VERSION##*-}-linux_aarch64.tar.gz"
+PKG_ID=""
 PKG_LONGDESC="Zulu, the open Java(TM) platform from Azul Systems."
 PKG_TOOLCHAIN="manual"
 

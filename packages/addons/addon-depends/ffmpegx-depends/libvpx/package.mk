@@ -7,6 +7,7 @@ PKG_SHA256="8735d9fcd1a781ae6917f28f239a8aa358ce4864ba113ea18af4bb2dc8b474ac"
 PKG_LICENSE="BSD"
 PKG_SITE="https://www.webmproject.org"
 PKG_URL="https://github.com/webmproject/libvpx/archive/v${PKG_VERSION}.tar.gz"
+PKG_ID="11083"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="WebM VP8/VP9 Codec"
 

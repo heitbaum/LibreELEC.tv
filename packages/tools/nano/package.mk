@@ -8,6 +8,7 @@ PKG_SHA256="fe993408b22286355809ce48ebecc4444d19af8203ed4959d269969112ed86e9"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.nano-editor.org/"
 PKG_URL="http://ftpmirror.gnu.org/nano/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_ID="2046"
 PKG_DEPENDS_TARGET="toolchain ncurses"
 PKG_LONGDESC="Nano is an enhanced clone of the Pico text editor."
 

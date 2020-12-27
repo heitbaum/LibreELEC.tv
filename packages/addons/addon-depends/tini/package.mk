@@ -8,6 +8,7 @@ PKG_SHA256="20ee672afa8be72f5a8334044d8c2ce31bc6f2347fa240cac9c84b6c7dbc684c"
 PKG_LICENSE="MIT"
 PKG_SITE="https://github.com/krallin/tini"
 PKG_URL="https://github.com/krallin/tini/archive/${PKG_VERSION}.tar.gz"
+PKG_ID="13826"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="Tini is a simplest init system."
 

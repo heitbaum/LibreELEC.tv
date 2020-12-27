@@ -8,6 +8,7 @@ PKG_LICENSE="GPL"
 PKG_DEPENDS_TARGET="toolchain cairo procps-ng"
 PKG_SITE="https://github.com/freedesktop/xorg-intel-gpu-tools"
 PKG_URL="https://github.com/freedesktop/xorg-intel-gpu-tools/archive/igt-gpu-tools-$PKG_VERSION.tar.gz"
+PKG_ID="12378"
 PKG_LONGDESC="Test suite and tools for DRM/KMS drivers"
 PKG_TOOLCHAIN="meson"
 

@@ -8,6 +8,7 @@ PKG_SHA256="5a8d69e9d998156bcebb5b7eabf7c2541b2ba39740b3e838a04fd6b8e67c5d35"
 PKG_LICENSE="Public Domain"
 PKG_SITE="http://www.iana.org/time-zones"
 PKG_URL="https://github.com/eggert/tz/archive/$PKG_VERSION.tar.gz"
+PKG_ID="5021"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="Time zone and daylight-saving time data."
 

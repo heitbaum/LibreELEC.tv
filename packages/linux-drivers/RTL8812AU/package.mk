@@ -8,6 +8,7 @@ PKG_SHA256="a79f06b1b2d9fd880cddebe7723b7e46abf9a8ba1c40c1eee6498c623913cadb"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/aircrack-ng/rtl8812au"
 PKG_URL="https://github.com/aircrack-ng/rtl8812au/archive/$PKG_VERSION.tar.gz"
+PKG_ID=""
 PKG_LONGDESC="Realtek RTL8812AU Linux 3.x driver"
 PKG_IS_KERNEL_PKG="yes"
 

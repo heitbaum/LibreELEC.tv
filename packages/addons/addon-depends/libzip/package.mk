@@ -8,6 +8,7 @@ PKG_SHA256="705dac7a671b3f440181481e607b0908129a9cf1ddfcba75d66436c0e7d33641"
 PKG_LICENSE="GPL"
 PKG_SITE="https://libzip.org/"
 PKG_URL="https://libzip.org/download/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_ID="10649"
 PKG_DEPENDS_TARGET="toolchain zlib bzip2"
 PKG_LONGDESC="A C library for reading, creating, and modifying zip archives."
 

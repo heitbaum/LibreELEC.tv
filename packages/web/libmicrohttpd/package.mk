@@ -8,6 +8,7 @@ PKG_SHA256="e8f445e85faf727b89e9f9590daea4473ae00ead38b237cf1eda55172b89b182"
 PKG_LICENSE="LGPLv2.1"
 PKG_SITE="http://www.gnu.org/software/libmicrohttpd/"
 PKG_URL="http://ftpmirror.gnu.org/libmicrohttpd/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="1658"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A small C library that is supposed to make it easy to run an HTTP server as part of another application."
 

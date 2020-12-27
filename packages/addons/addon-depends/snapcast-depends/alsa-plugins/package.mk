@@ -8,6 +8,7 @@ PKG_SHA256="1c0f06450c928d711719686c9dbece2d480184f36fab11b8f0534cb7b41e337d"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.alsa-project.org/"
 PKG_URL="ftp://ftp.alsa-project.org/pub/plugins/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="41"
 PKG_DEPENDS_TARGET="toolchain alsa-lib"
 PKG_LONGDESC="Alsa plugins."
 

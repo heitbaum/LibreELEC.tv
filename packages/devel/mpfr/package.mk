@@ -8,6 +8,7 @@ PKG_SHA256="1d3be708604eae0e42d578ba93b390c2a145f17743a744d8f3f8c2ad5855a38a"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.mpfr.org/"
 PKG_URL="http://ftpmirror.gnu.org/mpfr/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_ID="2019"
 PKG_DEPENDS_HOST="ccache:host gmp:host"
 PKG_LONGDESC="A C library for multiple-precision floating-point computations with exact rounding."
 

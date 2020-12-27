@@ -10,6 +10,7 @@ PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.tvheadend.org"
 PKG_URL="https://github.com/tvheadend/tvheadend/archive/$PKG_VERSION.tar.gz"
+PKG_ID="11227"
 PKG_DEPENDS_TARGET="toolchain avahi comskip curl dvb-apps ffmpegx libdvbcsa libhdhomerun \
                     libiconv openssl pngquant:host Python3:host tvh-dtv-scan-tables"
 PKG_DEPENDS_CONFIG="ffmpegx"

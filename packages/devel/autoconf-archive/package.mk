@@ -8,6 +8,7 @@ PKG_SHA256="17195c833098da79de5778ee90948f4c5d90ed1a0cf8391b4ab348e2ec511e3f"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.gnu.org/software/autoconf-archive/"
 PKG_URL="http://ftpmirror.gnu.org/autoconf-archive/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_ID="142"
 PKG_DEPENDS_HOST="ccache:host"
 PKG_LONGDESC="autoconf-archive is an package of m4 macros"
 

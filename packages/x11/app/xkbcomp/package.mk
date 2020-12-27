@@ -8,6 +8,7 @@ PKG_SHA256="59cce603a607a17722a0a1cf99010f4894e7812beb5d695abbc08474d59af27e"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.X.org"
 PKG_URL="http://xorg.freedesktop.org/archive/individual/app/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="15018"
 PKG_DEPENDS_TARGET="toolchain util-macros libX11 libxkbfile"
 PKG_LONGDESC="The xkbcomp keymap compiler converts a description of an XKB keymap into one of several output formats."
 

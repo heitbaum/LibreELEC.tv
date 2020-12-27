@@ -8,6 +8,7 @@ PKG_SHA256="3406a05b83a42231e3df68d02bc0a0cf47b3f2e8f11c8ede62267daf5f130016"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.fontconfig.org"
 PKG_URL="http://www.freedesktop.org/software/fontconfig/release/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="827"
 PKG_DEPENDS_TARGET="toolchain util-linux util-macros freetype libxml2 zlib expat"
 PKG_LONGDESC="Fontconfig is a library for font customization and configuration."
 

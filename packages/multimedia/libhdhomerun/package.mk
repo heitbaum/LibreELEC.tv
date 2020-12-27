@@ -8,6 +8,7 @@ PKG_SHA256="bd2601ccbf78a15310f28e2b4384477fb124490688dd4177f8bb9e689d0b2fd8"
 PKG_LICENSE="LGPL"
 PKG_SITE="http://www.silicondust.com"
 PKG_URL="https://github.com/Silicondust/libhdhomerun/archive/${PKG_VERSION}.tar.gz"
+PKG_ID="18397"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="The library provides functionality to setup the HDHomeRun."
 

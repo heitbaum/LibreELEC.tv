@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libxkbcommon"
 PKG_LONGDESC="libxkbcommon for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libxkbcommon"
 PKG_BUILD_FLAGS="-sysroot"
 

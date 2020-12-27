@@ -7,6 +7,7 @@ PKG_SHA256="70fe1c9ba4f2c509e8166c0ca2351000237da573bb6c82092339207a9715ba6b"
 PKG_LICENSE="MIT"
 PKG_SITE="https://github.com/libuv/libuv"
 PKG_URL="https://github.com/libuv/libuv/archive/v${PKG_VERSION}.tar.gz"
+PKG_ID="10784"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="Multi-platform support library with a focus on asynchronous I/O"
 

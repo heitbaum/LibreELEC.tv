@@ -7,6 +7,7 @@ PKG_SHA256="0148d403137124552c5d0f10f8cdab2cbb8dfc7c6ce75e018faf667be34f2ef9"
 PKG_LICENSE="GPL"
 PKG_SITE="https://pcsclite.apdu.fr"
 PKG_URL="https://pcsclite.apdu.fr/files/pcsc-lite-${PKG_VERSION}.tar.bz2"
+PKG_ID="2611"
 PKG_DEPENDS_TARGET="toolchain libusb"
 PKG_LONGDESC="Middleware to access a smart card using SCard API (PC/SC)."
 

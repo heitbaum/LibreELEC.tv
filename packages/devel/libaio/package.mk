@@ -8,6 +8,7 @@ PKG_SHA256="f69e5800425f4ea957426693ac09f9896bb993db5490fa021644454adcc72a32"
 PKG_LICENSE="GPL"
 PKG_SITE="http://lse.sourceforge.net/io/aio.html"
 PKG_URL="http://http.debian.net/debian/pool/main/liba/libaio/${PKG_NAME}_${PKG_VERSION}.orig.tar.xz"
+PKG_ID="1557"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="Kernel Asynchronous I/O (AIO) Support for Linux."
 

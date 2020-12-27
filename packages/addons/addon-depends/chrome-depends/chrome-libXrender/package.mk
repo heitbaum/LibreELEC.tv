@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libXrender"
 PKG_LONGDESC="libXrender for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libXrender"
 PKG_BUILD_FLAGS="-sysroot"
 

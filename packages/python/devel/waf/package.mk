@@ -7,6 +7,7 @@ PKG_SHA256="7cebf2c5efe53cbb9a4b5bdc4b49ae90ecd64a8fce7a3222d58e591b58215306"
 PKG_LICENSE="MIT"
 PKG_SITE="https://waf.io"
 PKG_URL="https://waf.io/$PKG_NAME-$PKG_VERSION"
+PKG_ID="5116"
 PKG_LONGDESC="The Waf build system"
 PKG_TOOLCHAIN="manual"
 

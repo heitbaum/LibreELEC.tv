@@ -7,6 +7,7 @@ PKG_SHA256="6640d76b043bc658139c8903e293d5978309bf0f408107146505eca701e67cf6"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/m4/"
 PKG_URL="http://ftpmirror.gnu.org/m4/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="1871"
 PKG_DEPENDS_HOST="ccache:host"
 PKG_LONGDESC="The m4 macro processor."
 

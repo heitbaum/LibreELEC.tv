@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libXcomposite"
 PKG_LONGDESC="libXcomposite for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libXcomposite"
 PKG_BUILD_FLAGS="-sysroot"
 

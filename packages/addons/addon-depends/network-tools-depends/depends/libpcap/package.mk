@@ -7,6 +7,7 @@ PKG_SHA256="7ad3112187e88328b85e46dce7a9b949632af18ee74d97ffc3f2b41fe7f448b0"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.tcpdump.org/"
 PKG_URL="http://www.tcpdump.org/release/libpcap-${PKG_VERSION}.tar.gz"
+PKG_ID="1702"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A portable framework for low-level network monitoring."
 

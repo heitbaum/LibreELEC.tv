@@ -7,6 +7,7 @@ PKG_SHA256="59d41ddb0c7a92d8ac155a82ed2875b7880c8957ea4308afa633c8b81e5b8887"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.alpinelinux.org"
 PKG_URL="http://dev.alpinelinux.org/archive/bkeymaps/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="141456"
 PKG_DEPENDS_TARGET="toolchain busybox"
 PKG_LONGDESC="bkeymaps: binary keyboard maps for busybox"
 

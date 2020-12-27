@@ -7,6 +7,7 @@ PKG_SHA256="7cd7111349cdc227c64d5ab68de4a03eacbea26441c7781ccd548491994f0320"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/01org/libva-utils"
 PKG_URL="https://github.com/intel/libva-utils/archive/$PKG_VERSION.tar.gz"
+PKG_ID="16334"
 PKG_LONGDESC="Libva-utils is a collection of tests for VA-API (VIdeo Acceleration API)"
 PKG_TOOLCHAIN="meson"
 

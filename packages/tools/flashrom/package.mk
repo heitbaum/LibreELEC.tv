@@ -7,6 +7,7 @@ PKG_SHA256="e1f8d95881f5a4365dfe58776ce821dfcee0f138f75d0f44f8a3cd032d9ea42b"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.flashrom.org/Flashrom"
 PKG_URL="https://download.flashrom.org/releases/${PKG_NAME}-v${PKG_VERSION}.tar.bz2"
+PKG_ID="10202"
 PKG_DEPENDS_TARGET="toolchain libusb-compat"
 PKG_LONGDESC="flashrom is a utility for identifying, reading, writing, verifying and erasing flash chips. It is designed to flash BIOS/EFI/coreboot/firmware/optionROM images on mainboards, network/graphics/storage controller cards, and various other programmer devices."
 

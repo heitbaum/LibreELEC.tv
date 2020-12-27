@@ -9,6 +9,7 @@ PKG_ARCH="x86_64"
 PKG_LICENSE="GPL"
 PKG_SITE="https://01.org/linuxmedia"
 PKG_URL="https://github.com/intel/libva/archive/$PKG_VERSION.tar.gz"
+PKG_ID="1752"
 PKG_LONGDESC="Libva is an implementation for VA-API (VIdeo Acceleration API)."
 PKG_TOOLCHAIN="meson"
 

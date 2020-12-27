@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libxcb"
 PKG_LONGDESC="libxcb for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libxcb"
 PKG_BUILD_FLAGS="-sysroot"
 

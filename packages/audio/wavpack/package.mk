@@ -7,6 +7,7 @@ PKG_SHA256="b444379a0bee0330f137cb3e9a100e6a12a63a6d01987ba66b3729f85e282307"
 PKG_LICENSE="BSD"
 PKG_SITE="http://www.wavpack.com"
 PKG_URL="http://www.wavpack.com/wavpack-${PKG_VERSION}.tar.xz"
+PKG_ID="5121"
 PKG_DEPENDS_TARGET="toolchain libiconv"
 PKG_LONGDESC="Audio compression format providing lossless, high-quality lossy and hybrid compression mode."
 

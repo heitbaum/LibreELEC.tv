@@ -8,6 +8,7 @@ PKG_ARCH="x86_64"
 PKG_LICENSE="BSD"
 PKG_SITE="http://glfw.org"
 PKG_URL="$SOURCEFORGE_SRC/glfw/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="1180"
 PKG_DEPENDS_TARGET="toolchain mesa glu"
 PKG_LONGDESC="provides a simple API for creating windows, contexts and surfaces, receiving input and events"
 

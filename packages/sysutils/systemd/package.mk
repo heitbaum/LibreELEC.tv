@@ -8,6 +8,7 @@ PKG_SHA256="77146f7b27334aa69ef6692bed92c3c893685150f481e7254b81d4ea0f66c640"
 PKG_LICENSE="LGPL2.1+"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
 PKG_URL="https://github.com/systemd/systemd/archive/v$PKG_VERSION.tar.gz"
+PKG_ID="5440"
 PKG_DEPENDS_TARGET="toolchain libcap kmod util-linux entropy libidn2 wait-time-sync"
 PKG_LONGDESC="A system and session manager for Linux, compatible with SysV and LSB init scripts."
 

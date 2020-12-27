@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libXi"
 PKG_LONGDESC="libXi for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libXi"
 PKG_BUILD_FLAGS="-sysroot"
 

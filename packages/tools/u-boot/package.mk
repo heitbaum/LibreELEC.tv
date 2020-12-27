@@ -6,6 +6,7 @@ PKG_NAME="u-boot"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.denx.de/wiki/U-Boot"
+PKG_ID="5022"
 PKG_DEPENDS_TARGET="toolchain Python3:host swig:host"
 PKG_LONGDESC="Das U-Boot is a cross-platform bootloader for embedded systems."
 

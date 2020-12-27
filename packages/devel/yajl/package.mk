@@ -7,6 +7,7 @@ PKG_SHA256="020f55a2dfc979ad63dc99b629b3fea7e7e4b9f20d8b10b856cfcb8850f03c61"
 PKG_LICENSE="ISC"
 PKG_SITE="http://lloyd.github.com/yajl/"
 PKG_URL="$DISTRO_SRC/$PKG_NAME-$PKG_VERSION.tar.xz"
+PKG_ID="5283"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A small event-driven (SAX-style) JSON parser."
 

@@ -7,6 +7,7 @@ PKG_SHA256="e7f486165d3568c3558b5c7099133aea4a285b82820eeafad329fc10271c654d"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/NilsBrause/waylandpp"
 PKG_URL="https://github.com/NilsBrause/waylandpp/archive/${PKG_VERSION}.tar.gz"
+PKG_ID="16969"
 PKG_DEPENDS_TARGET="toolchain pugixml:host waylandpp:host"
 PKG_LONGDESC="Wayland C++ bindings"
 

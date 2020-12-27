@@ -7,6 +7,7 @@ PKG_SHA256="c91f3a2f7b02db0f3bc99479861656154d241d2fdb265614ba918cc6720a33ca"
 PKG_LICENSE="GPL"
 PKG_SITE="http://valgrind.org/"
 PKG_URL="ftp://sourceware.org/pub/valgrind/$PKG_NAME-$PKG_VERSION.tar.bz2"
+PKG_ID="13639"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A tool to help find memory-management problems in programs"
 

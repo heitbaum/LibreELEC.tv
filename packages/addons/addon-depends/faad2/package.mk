@@ -8,6 +8,7 @@ PKG_SHA256="985c3fadb9789d2815e50f4ff714511c79c2710ac27a4aaaf5c0c2662141426d"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.audiocoding.com"
 PKG_URL="https://downloads.sourceforge.net/sourceforge/faac/faad2-$PKG_VERSION.tar.gz"
+PKG_ID="13755"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="An MPEG-4 AAC decoder."
 

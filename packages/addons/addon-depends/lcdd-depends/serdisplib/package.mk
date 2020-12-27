@@ -8,6 +8,7 @@ PKG_SHA256="fe82ebe72731e91509083569dfe41a09e21632cc1211cdc4f76274f83ed218fa"
 PKG_LICENSE="GPL"
 PKG_SITE="http://serdisplib.sourceforge.net/"
 PKG_URL="$SOURCEFORGE_SRC/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_ID="141471"
 PKG_DEPENDS_TARGET="toolchain libusb-compat"
 PKG_LONGDESC="Library to drive serial/parallel/usb displays with built-in controllers."
 

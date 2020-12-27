@@ -6,6 +6,7 @@
 PKG_NAME="chrome-libXtst"
 PKG_LONGDESC="libXtst for chrome"
 PKG_URL=""
+PKG_ID=""
 PKG_DEPENDS_UNPACK+=" libXtst"
 PKG_BUILD_FLAGS="-sysroot"
 
