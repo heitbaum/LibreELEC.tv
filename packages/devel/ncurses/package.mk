@@ -3,11 +3,11 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="ncurses"
-PKG_VERSION="6.1-20181215"
-PKG_SHA256="08b07c3e792961f300829512c283d5fefc0b1c421a57b76922c3d13303ed677d"
+PKG_VERSION="6.2-20210508"
+PKG_SHA256="ca0f20b11a8fe0a1835f6aa7ab53b88b9d76d1d930023112987a7d09565c5c17"
 PKG_LICENSE="MIT"
-PKG_SITE="http://www.gnu.org/software/ncurses/"
-PKG_URL="http://invisible-mirror.net/archives/ncurses/current/ncurses-${PKG_VERSION}.tgz"
+PKG_SITE="https://invisible-island.net/ncurses/announce.html"
+PKG_URL="https://invisible-mirror.net/archives/ncurses/current/ncurses-${PKG_VERSION}.tgz"
 PKG_DEPENDS_HOST="ccache:host"
 PKG_DEPENDS_TARGET="toolchain zlib ncurses:host"
 PKG_LONGDESC="A library is a free software emulation of curses in System V Release 4.0, and more."
@@ -30,6 +30,7 @@ PKG_CONFIGURE_OPTS_TARGET="--without-ada \
                            --without-gpm \
                            --without-dbmalloc \
                            --without-dmalloc \
+                           --disable-leaks \
                            --disable-rpath \
                            --disable-database \
                            --with-fallbacks=linux,screen,xterm,xterm-color,dumb,st-256color \
@@ -62,7 +63,9 @@ PKG_CONFIGURE_OPTS_TARGET="--without-ada \
 
 PKG_CONFIGURE_OPTS_HOST="--enable-termcap \
                          --with-termlib \
+			 --without-tests \
                          --with-shared \
+                         --disable-leaks \
                          --enable-pc-files \
                          --without-manpages"
 
