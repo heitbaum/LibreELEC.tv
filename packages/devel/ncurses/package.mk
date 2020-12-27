@@ -3,8 +3,8 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="ncurses"
-PKG_VERSION="6.1-20181215"
-PKG_SHA256="08b07c3e792961f300829512c283d5fefc0b1c421a57b76922c3d13303ed677d"
+PKG_VERSION="6.2-20201219"
+PKG_SHA256="5ba81f92e4f1d4cdec40fca4bf642c9a9773ac2459ec25f2157825df736ba7e2"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.gnu.org/software/ncurses/"
 PKG_URL="http://invisible-mirror.net/archives/ncurses/current/ncurses-${PKG_VERSION}.tgz"
@@ -62,6 +62,7 @@ PKG_CONFIGURE_OPTS_TARGET="--without-ada \
 
 PKG_CONFIGURE_OPTS_HOST="--enable-termcap \
                          --with-termlib \
+			 --without-tests \
                          --with-shared \
                          --enable-pc-files \
                          --without-manpages"
