@@ -14,7 +14,7 @@ command -v jq >/dev/null 2>&1 || { echo >&2 "please install jq"; exit 1; }
 # global vars
 PACKAGES_CURRENT=""
 PACKAGES_IGNORED=""
-PACKAGES_NO_ID=""
+PACKAGES_NOT_REGISTERED=""
 
 # check for github user and token present at ~/.libreelec/options to activate github api checks
 if [[ ! -z "${github_token}" || ! -z "${github_user}" ]]; then
@@ -47,25 +47,29 @@ EOF
 fi
 
 check_for_update() {
-  local PKG_ID PKG_NAME PKG_URL PKG_VERSION
+  local PKG_NAME PKG_URL PKG_VERSION
 
   # source variables from package.mk
-  PKG_ID="$(grep -oP -m 1 '(?<=PKG_ID=\").*(?=\")' ${1} || true)"
   PKG_NAME="$(grep -oP -m 1 '(?<=PKG_NAME=\").*(?=\")' ${1} || true)"
   PKG_VERSION="$(grep -oP -m 1 '(?<=PKG_VERSION=\").*(?=\")' ${1} || true)"
   eval PKG_URL="$(grep -oP -m 1 '(?<=PKG_URL=\").*(?=\")' ${1} || true)"
 
-  # check if version and id is present and get version from release tracker
-  if [ -z "${PKG_VERSION}" ]; then
+  # check if version and url are empty or self hosted by us and ignore those packages
+  if [ -z "${PKG_VERSION}" ] || [ -z "${PKG_URL}" ] || [[ "${PKG_URL}" == "$DISTRO_SRC"* ]]; then
     PACKAGES_IGNORED+="${PKG_NAME} "
     return
   else
-    if [ -z "${PKG_ID}" ]; then
-      PACKAGES_NO_ID+="${PKG_NAME} "
-      return
-    else
-      upstream_version="$(curl -sL https://release-monitoring.org/api/project/${PKG_ID} | jq -r '.version')"
-      if [ "${upstream_version}" == "null" ]; then
+    # check if package exist at tracker
+    upstream_version="$(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.version')"
+    if [ "${upstream_version}" == "null" ]; then
+      if [[ $(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.error') =~ "No package" ]]; then
+        # if no package at tracker check if we can use github api
+        if [[ ! ${PKG_URL} =~ ^.*(github\.com).*$ ]]; then
+          PACKAGES_NOT_REGISTERED+="${PKG_NAME} "
+          return
+        fi
+      else
+        # package exist at tracker but has no version
         upstream_version="! broken at release tracker !"
       fi
     fi
@@ -136,10 +140,9 @@ echo ""
 if [ -n "${PACKAGES_CURRENT}" ]; then
   echo -e "\nCurrent $(echo ${PACKAGES_CURRENT} | wc -w):\n${PACKAGES_CURRENT}\n"
 fi
-if [ -n "${PACKAGES_NO_ID}" ]; then
-  echo -e "\nNo ID $(echo ${PACKAGES_NO_ID} | wc -w):\n${PACKAGES_NO_ID}"
-fi
 if [ -n "${PACKAGES_IGNORED}" ]; then
   echo -e "\nIgnored $(echo ${PACKAGES_IGNORED} | wc -w):\n${PACKAGES_IGNORED}"
 fi
- 
+if [ -n "${PACKAGES_NOT_REGISTERED}" ]; then
+  echo -e "\nPackages not known at tracker $(echo ${PACKAGES_NOT_REGISTERED} | wc -w):\n${PACKAGES_NOT_REGISTERED}\n"
+fi
