@@ -7,7 +7,6 @@ PKG_SHA256="f3698b81fec401dc9b20c32896aab884e8dded1b1e7a5e595060fe3cbce7a5d3"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/LibreELEC/brcmfmac_sdio-firmware"
 PKG_URL="https://github.com/LibreELEC/brcmfmac_sdio-firmware/archive/$PKG_VERSION.tar.gz"
-PKG_ID="115697"
 PKG_LONGDESC="Broadcom SDIO firmware used with LibreELEC"
 PKG_TOOLCHAIN="manual"
 

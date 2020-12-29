@@ -7,7 +7,6 @@ PKG_SHA256="83adb589317d3295e73e86f6816f6670d7f089344538f9f516ce25bfb5fd3a0b"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/bash/bash.html"
 PKG_URL="ftp://ftp.cwru.edu/pub/$PKG_NAME/$PKG_NAME-$PKG_VERSION.tar.gz"
-PKG_ID="166"
 PKG_DEPENDS_TARGET="toolchain ncurses"
 PKG_LONGDESC="The GNU Bourne Again shell."
 
