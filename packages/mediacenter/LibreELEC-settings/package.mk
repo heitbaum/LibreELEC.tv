@@ -8,7 +8,7 @@ PKG_SHA256="d2cc4ba9a9aa19c3c79a9bba80bad22e9378d202d327f6765331e20960680090"
 PKG_LICENSE="GPL"
 PKG_SITE="https://libreelec.tv"
 PKG_URL="https://github.com/LibreELEC/service.libreelec.settings/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain Python3 connman dbus-python dbussy"
+PKG_DEPENDS_TARGET="toolchain Python3 connman dbussy"
 PKG_LONGDESC="LibreELEC-settings: is a settings dialog for LibreELEC"
 
 PKG_MAKE_OPTS_TARGET="DISTRONAME=$DISTRONAME ROOT_PASSWORD=$ROOT_PASSWORD"
