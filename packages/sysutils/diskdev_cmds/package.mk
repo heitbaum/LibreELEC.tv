@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="diskdev_cmds"
-PKG_VERSION="332.14"
-PKG_SHA256="a46bec392661a02d9683355baf4442d494e2bcde0ffb094aacc1e57ddc03b3d4"
+PKG_VERSION="540.1"
+PKG_SHA256="f3edbc31841cad17ca6985b008602aa4335e8c723558bea4726b30c9a909cdc8"
 PKG_LICENSE="APSL"
 PKG_SITE="http://src.gnu-darwin.org/DarwinSourceArchive/expanded/diskdev_cmds/"
 PKG_URL="http://www.opensource.apple.com/tarballs/diskdev_cmds/${PKG_NAME}-${PKG_VERSION}.tar.gz"
