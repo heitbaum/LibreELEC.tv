@@ -2,7 +2,7 @@
 # Copyright (C) 2009-2012 Stephan Raue (stephan@openelec.tv)
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
-PKG_NAME="harfbuzz"
+PKG_NAME="harfbuzz-icu"
 PKG_VERSION="2.7.4"
 PKG_SHA256="6ad11d653347bd25d8317589df4e431a2de372c0cf9be3543368e07ec23bb8e7"
 PKG_LICENSE="GPL"
