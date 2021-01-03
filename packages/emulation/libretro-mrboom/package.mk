@@ -2,12 +2,12 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libretro-mrboom"
-PKG_VERSION="e074bafa1fe9480df1ba412752912a2c2c454958"
-PKG_SHA256="ac337b339cb1da9d013745c72b59b84ee64d94ada8f303be671e680d50061c15"
+PKG_VERSION="5d45efd7842c617568b98b20f6da8e04b1961cf6"
+PKG_SHA256="c6694565ad137504d6f5360184508646b4c451ec8201e3c9503a61a1654e53ff"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://github.com/libretro/mrboom-libretro"
 PKG_URL="https://github.com/libretro/mrboom-libretro/archive/$PKG_VERSION.tar.gz"
-PKG_DEPENDS_TARGET="toolchain kodi-platform"
+PKG_DEPENDS_TARGET="toolchain kodi-platform libretro-common"
 PKG_LONGDESC="game.libretro.mrboom: mrboom for Kodi"
 
 PKG_LIBNAME="mrboom_libretro.so"
@@ -22,6 +22,9 @@ pre_make_target() {
 }
 
 make_target() {
+  LIBRETRO_PKG_VERSION=$(get_pkg_version libretro-common)
+  tar --strip-components=1 -xf $SOURCES/libretro-common/libretro-common-$LIBRETRO_PKG_VERSION.tar.gz -C $PKG_BUILD/libretro-common
+  make clean
   make
 }
 
