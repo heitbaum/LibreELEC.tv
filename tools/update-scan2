@@ -5,16 +5,17 @@
 
 set -e
 
-# check if depends are available
-command -v curl >/dev/null 2>&1 || { echo >&2 "please install curl"; exit 1; }
-command -v jq >/dev/null 2>&1 || { echo >&2 "please install jq"; exit 1; }
+. config/options ""
 
-. config/options
+# check if depends are available
+command -v curl >/dev/null 2>&1 || die "please install curl"
+command -v jq >/dev/null 2>&1 || die "please install jq"
 
 # global vars
 PACKAGES_CURRENT=""
 PACKAGES_IGNORED=""
 PACKAGES_NOT_REGISTERED=""
+github_api="no"
 
 # check for github user and token present at ~/.libreelec/options to activate github api checks
 if [[ ! -z "${github_token}" || ! -z "${github_user}" ]]; then
@@ -29,11 +30,9 @@ if [[ ! -z "${github_token}" || ! -z "${github_user}" ]]; then
     echo " github_token=${github_token}"
     echo " github_user=${github_user}"
     echo ""
-    github_api="no"
-    exit 1
+    die
   fi
 else
-  github_api="no"
 cat << EOF
 
  | Github API not in use, some features are disabled
@@ -76,7 +75,7 @@ check_for_update() {
   fi
 
   # use github api if it is available
-  if [ "$github_api" = "yes" ]; then 
+  if [ "$github_api" = "yes" ]; then
     # check if version is a githash
     if [[ ${PKG_VERSION} =~ ^[a-z0-9]{40} ]]; then
       # check if url contains github
@@ -114,8 +113,11 @@ check_for_update() {
 }
 
 # create list of packages
-if [ ! -z "$1" ]; then
+if [ -n "${1}" ]; then
   PACKAGE_LIST="$(find packages/ -type d -name ${1})/package.mk"
+  if [ ! -f "${PACKAGE_LIST}" ]; then
+    die "Package not found: ${1}"
+  fi
 else
   PACKAGE_LIST="$(find packages/ -type f -name package.mk \
     ! -path "packages/addons/addon-depends/adafruit-libraries-depends/*" \
