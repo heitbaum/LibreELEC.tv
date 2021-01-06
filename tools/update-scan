@@ -15,35 +15,33 @@ command -v jq >/dev/null 2>&1 || die "please install jq"
 PACKAGES_CURRENT=""
 PACKAGES_IGNORED=""
 PACKAGES_NOT_REGISTERED=""
+github_api_token=""
 github_api="no"
 
+test_github_api() {
 # check for github user and token present at ~/.libreelec/options to activate github api checks
-if [[ ! -z "${github_token}" || ! -z "${github_user}" ]]; then
-  # check if token works
-  if curl -sL -I -u ${github_user}:${github_token} https://api.github.com/user | grep -q "Status: 200"; then
-    echo "Github api usage activated"
-    github_api="yes"
+  if [[ -n "${github_token}" || -n "${github_user}" ]]; then
     github_api_token="-u ${github_user}:${github_token}"
+    # check if token works
+    if curl -sL -I ${github_api_token} https://api.github.com/user | grep -q "Status: 200"; then
+      echo "Github api usage activated"
+      github_api="yes"
+    else
+      message="\n your Github token is not working\n"
+      message+=" github_token=${github_token}\n"
+      message+=" github_user=${github_user}\n"
+      die "${message}"
+    fi
   else
-    echo ""
-    echo " your Github token is not working"
-    echo " github_token=${github_token}"
-    echo " github_user=${github_user}"
-    echo ""
-    die
+    message="\n | Github API not in use. Some features are disabled.\n"
+    message+=" |==============================================================================\n"
+    message+=" | Create your \"Personal access token\" here: https://github.com/settings/tokens\n"
+    message+=" | Add your token and username to ~/.libreelec/options\n"
+    message+=" | github_token=\"your_github_token_here\"\n"
+    message+=" | github_user=\"your_github_username_here\"\n"
+    echo -e "${message}"
   fi
-else
-cat << EOF
-
- | Github API not in use, some features are disabled
- |==============================================================================
- | create your "Personal access token" here https://github.com/settings/tokens
- | add your token and username to ~/.libreelec/options
- | github_token="your_github_token_here"
- | github_user="your_github_username_here"
-
-EOF
-fi
+}
 
 check_for_update() {
   local PKG_NAME PKG_URL PKG_VERSION
@@ -128,6 +126,9 @@ else
     )"
 fi
 
+# test github api availability
+test_github_api
+
 # output
 echo -e "\nUpdates found:\n"
 printf "%-35s | %-40s | %-20s" "Package" "LE git master" "upstream location"; printf '\n'
@@ -138,7 +139,6 @@ for check_version in ${PACKAGE_LIST}; do
 done
 
 echo ""
-
 if [ -n "${PACKAGES_CURRENT}" ]; then
   echo -e "\nCurrent $(echo ${PACKAGES_CURRENT} | wc -w):\n${PACKAGES_CURRENT}\n"
 fi
