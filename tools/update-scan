@@ -55,20 +55,20 @@ check_for_update() {
   if [ -z "${PKG_VERSION}" ] || [ -z "${PKG_URL}" ] || [[ "${PKG_URL}" == "$DISTRO_SRC"* ]]; then
     PACKAGES_IGNORED+="${PKG_NAME} "
     return
-  else
-    # check if package exist at tracker
-    upstream_version="$(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.version')"
-    if [ "${upstream_version}" == "null" ]; then
-      if [[ $(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.error') =~ "No package" ]]; then
-        # if no package at tracker check if we can use github api
-        if [[ ! ${PKG_URL} =~ ^.*(github\.com).*$ ]]; then
-          PACKAGES_NOT_REGISTERED+="${PKG_NAME} "
-          return
-        fi
-      else
-        # package exist at tracker but has no version
-        upstream_version="! broken at release tracker !"
+  fi
+
+  # check if package exists at tracker
+  upstream_version="$(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.version')"
+  if [ "${upstream_version}" == "null" ]; then
+    if [[ $(curl -sL https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME} | jq -r '.error') =~ "No package" ]]; then
+      # if no package at tracker check if we can use github api
+      if [[ ! ${PKG_URL} =~ ^.*(github\.com).*$ ]]; then
+        PACKAGES_NOT_REGISTERED+="${PKG_NAME} "
+        return
       fi
+    else
+      # package exist at tracker but has no version
+      upstream_version="! broken at release tracker !"
     fi
   fi
 
