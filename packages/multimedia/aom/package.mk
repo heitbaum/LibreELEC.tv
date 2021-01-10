@@ -2,7 +2,7 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="aom"
-PKG_VERSION="7ddc21b28468b9e8d0f189bb46a2467de4e09e12"
+PKG_VERSION="7ddc21b28468b9e8d0f189bb46a2467de4e09e12" # 2020-12-17
 PKG_SHA256="995349787105db62daba924f22f7a90c4825575fe24d2b87c4b183d8ac99f5b3"
 PKG_LICENSE="BSD"
 PKG_SITE="https://www.webmproject.org"
