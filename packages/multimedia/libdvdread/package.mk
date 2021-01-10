@@ -3,8 +3,9 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libdvdread"
-PKG_VERSION="bd6b329f0137ab6a9f779a28dd96f04713735e17"
-PKG_SHA256="2d9d6d185dd25a983d6dfc2a00207cafdc396a969c227d5edd84b6215b2fba89"
+# From https://github.com/howie-f/libdvdread/releases/tag/6.1.1-Matrix-Beta-2
+PKG_VERSION="ec3b447bb9f2ef4bb64b8e9ebd71ea377a1f4783" # 2020-12-12
+PKG_SHA256="7bc6206a771b5cd4977dcf009793b8f6f4b9ac16e5368c5175f7584e304e53bf"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/libdvdread"
 PKG_URL="https://github.com/xbmc/libdvdread/archive/${PKG_VERSION}.tar.gz"
