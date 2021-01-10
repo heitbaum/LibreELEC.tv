@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xf86-video-nvidia-legacy"
-PKG_VERSION="340.108"
-PKG_SHA256="995d44fef587ff5284497a47a95d71adbee0c13020d615e940ac928f180f5b77"
+PKG_VERSION="390.141"
+PKG_SHA256="d7d763aa52574b554dd3d8cbb93a6a63572a9c2bfd3bc3873ec5338c067f70ba"
 PKG_ARCH="x86_64"
 PKG_LICENSE="nonfree"
 PKG_SITE="http://www.nvidia.com/"
@@ -49,7 +49,7 @@ makeinstall_target() {
       ln -sf /var/lib/libnvidia-ml.so.1 ${INSTALL}/usr/lib/libnvidia-ml.so.1
     cp -P tls/libnvidia-tls.so.${PKG_VERSION} ${INSTALL}/usr/lib
   # rename to not conflicting with Mesa libGL.so
-    cp -P libGL.so* ${INSTALL}/usr/lib/libGL_nvidia-legacy.so.1
+    cp -P libGL.so.1* ${INSTALL}/usr/lib/libGL_nvidia-legacy.so.1
 
   mkdir -p ${INSTALL}/$(get_full_module_dir)/nvidia
     ln -sf /var/lib/nvidia.ko ${INSTALL}/$(get_full_module_dir)/nvidia/nvidia.ko
