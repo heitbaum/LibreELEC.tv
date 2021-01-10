@@ -3,8 +3,9 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libdvdnav"
-PKG_VERSION="9277007ce2263b908e9ce3091cc31b3dd87c351c"
-PKG_SHA256="e50db40a823ddc795d1fe5f18db2517fb3e05fe0c4a88abf1578d95d7a1cce63"
+# From https://github.com/howie-f/libdvdnav/releases/tag/6.1.0-Matrix-Beta-2
+PKG_VERSION="724039332ab2d1dab342a279afd74bd436b4a78f" # 2020-12-12
+PKG_SHA256="48469044e38740706d91b738e6233b584a65dfb72b3e7a6c76903c07332046c2"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/libdvdnav"
 PKG_URL="https://github.com/xbmc/libdvdnav/archive/${PKG_VERSION}.tar.gz"
