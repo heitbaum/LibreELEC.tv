@@ -2,7 +2,7 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="dvbsnoop"
-PKG_VERSION="badf61fcdab1177c1162747be06d035a2b671e9b"
+PKG_VERSION="badf61fcdab1177c1162747be06d035a2b671e9b" # 2018-01-12
 PKG_SHA256="7f0f5d9ca15c5caae3ca249d95a5fc30cececd16f63e00a1404e0d2368ce56fa"
 PKG_LICENSE="GPL"
 PKG_SITE="http://dvbsnoop.sourceforge.net/"
