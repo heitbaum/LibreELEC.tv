@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="dotnet-runtime"
-PKG_VERSION="3.1.10"
-PKG_REV="112"
+PKG_VERSION="3.1.12"
+PKG_REV="113"
 PKG_ARCH="any"
 PKG_LICENSE="MIT"
 PKG_SITE="https://dotnet.github.io/"
