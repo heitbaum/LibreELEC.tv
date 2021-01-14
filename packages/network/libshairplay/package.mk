@@ -3,7 +3,7 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libshairplay"
-PKG_VERSION="096b61ad14c90169f438e690d096e3fcf87e504e"
+PKG_VERSION="096b61ad14c90169f438e690d096e3fcf87e504e" # 2018-08-24
 PKG_SHA256="7e2b013ffe75ea2f13fb12b1aa38b8e2e8b1899ac292d57f05d7b352a3a181cf"
 PKG_LICENSE="MIT"
 PKG_SITE="https://github.com/juhovh/shairplay"
