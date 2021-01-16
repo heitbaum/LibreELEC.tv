@@ -25,7 +25,7 @@ index 294c99a76f..11d304662d 100644
  #include "AddonManager.h"
  #include "addons/settings/AddonSettings.h"
  #include "filesystem/Directory.h"
-@@ -380,6 +384,28 @@ void OnPreInstall(const AddonPtr& addon)
+@@ -385,6 +389,28 @@ void OnPreInstall(const AddonPtr& addon)
  
  void OnPostInstall(const AddonPtr& addon, bool update, bool modal)
  {

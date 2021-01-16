@@ -26,7 +26,7 @@ diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
 index 35de935a74..1754152782 100644
 --- a/xbmc/Application.cpp
 +++ b/xbmc/Application.cpp
-@@ -2060,12 +2060,12 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
+@@ -2112,12 +2112,12 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
    switch (msg)
    {
    case TMSG_POWERDOWN:
@@ -41,7 +41,7 @@ index 35de935a74..1754152782 100644
      break;
  
    case TMSG_SHUTDOWN:
-@@ -2086,12 +2086,13 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
+@@ -2138,12 +2138,13 @@ void CApplication::OnApplicationMessage(ThreadMessage* pMsg)
  
    case TMSG_RESTART:
    case TMSG_RESET:
@@ -56,7 +56,7 @@ index 35de935a74..1754152782 100644
      Stop(EXITCODE_RESTARTAPP);
  #endif
      break;
-@@ -2570,6 +2571,17 @@ bool CApplication::Cleanup()
+@@ -2622,6 +2623,17 @@ bool CApplication::Cleanup()
    }
  }
  
@@ -74,7 +74,7 @@ index 35de935a74..1754152782 100644
  void CApplication::Stop(int exitCode)
  {
    CLog::Log(LOGINFO, "Stopping player");
-@@ -2596,7 +2608,7 @@ void CApplication::Stop(int exitCode)
+@@ -2648,7 +2660,7 @@ void CApplication::Stop(int exitCode)
      m_frameMoveGuard.unlock();
  
      CVariant vExitCode(CVariant::VariantTypeObject);
@@ -83,7 +83,7 @@ index 35de935a74..1754152782 100644
      CServiceBroker::GetAnnouncementManager()->Announce(ANNOUNCEMENT::System, "OnQuit", vExitCode);
  
      // Abort any active screensaver
-@@ -2628,7 +2640,6 @@ void CApplication::Stop(int exitCode)
+@@ -2680,7 +2692,6 @@ void CApplication::Stop(int exitCode)
      // Needs cleaning up
      CApplicationMessenger::GetInstance().Stop();
      m_AppFocused = false;
@@ -91,7 +91,7 @@ index 35de935a74..1754152782 100644
      CLog::Log(LOGINFO, "Stopping all");
  
      // cancel any jobs from the jobmanager
-@@ -4210,7 +4221,7 @@ void CApplication::ProcessSlow()
+@@ -4327,7 +4338,7 @@ void CApplication::ProcessSlow()
    if (CPlatformPosix::TestQuitFlag())
    {
      CLog::Log(LOGINFO, "Quitting due to POSIX signal");

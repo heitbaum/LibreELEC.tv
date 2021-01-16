@@ -11,7 +11,7 @@ diff --git a/xbmc/Application.cpp b/xbmc/Application.cpp
 index 35de935a74..5e2bfad695 100644
 --- a/xbmc/Application.cpp
 +++ b/xbmc/Application.cpp
-@@ -4681,7 +4681,6 @@ bool CApplication::SwitchToFullScreen(bool force /* = false */)
+@@ -4798,7 +4798,6 @@ bool CApplication::SwitchToFullScreen(bool force /* = false */)
  
  void CApplication::Minimize()
  {
