@@ -1,0 +1,13 @@
+--- a/libebml/inc/ebml/EbmlElement.h	2023-05-29 21:06:31.000000000 +0000
++++ b/libebml/inc/ebml/EbmlElement.h	2023-08-12 07:36:54.299866394 +0000
+@@ -392,7 +392,10 @@
+     */
+     virtual EbmlElement * Clone() const = 0;
+ 
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Woverloaded-virtual="
+     virtual operator const EbmlId &() const = 0;
++#pragma GCC diagnostic pop
+ #if defined(EBML_STRICT_API)
+         virtual const char *DebugName() const = 0;
+         virtual const EbmlSemanticContext &Context() const = 0;
