@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libgcrypt"
-PKG_VERSION="1.8.7"
-PKG_SHA256="03b70f028299561b7034b8966d7dd77ef16ed139c43440925fe8782561974748"
+PKG_VERSION="1.10.1"
+PKG_SHA256="ef14ae546b0084cd84259f61a55e07a38c3b53afc0f546bffcef2f01baffe9de"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://www.gnupg.org/"
 PKG_URL="https://www.gnupg.org/ftp/gcrypt/libgcrypt/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
