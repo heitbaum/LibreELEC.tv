@@ -23,7 +23,7 @@ test_github_api() {
   if [[ -n "${github_token}" || -n "${github_user}" ]]; then
     github_api_token="-u ${github_user}:${github_token}"
     # check if token works
-    if curl -sL -I "${github_api_token}" https://api.github.com/user | grep -q "Status: 200"; then
+    if curl -sL -I "${github_api_token}" https://api.github.com/user | grep -q "^[Ss]tatus: 200"; then
       echo "Github api usage activated"
       github_api="yes"
     else
