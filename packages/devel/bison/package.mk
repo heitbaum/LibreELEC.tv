@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="bison"
-PKG_VERSION="3.7.4"
-PKG_SHA256="a3b5813f48a11e540ef26f46e4d288c0c25c7907d9879ae50e430ec49f63c010"
+PKG_VERSION="3.7.5"
+PKG_SHA256="e8c53bc5bc396d636622d0f25e31ca92fd53f00b09629f13ef540d564a6b31ab"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/bison/"
 PKG_URL="http://ftpmirror.gnu.org/bison/${PKG_NAME}-${PKG_VERSION}.tar.xz"
