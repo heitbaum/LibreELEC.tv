@@ -1,7 +1,7 @@
-From b3b5e711f8408ceef812201cd956025be2ab4542 Mon Sep 17 00:00:00 2001
+From 676ea739629db02d97c1a8c1cad6a2a56a46ef6c Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Fri, 18 Dec 2020 11:13:38 +0000
-Subject: [PATCH 18/21] boards: amlogic: update documentation for WeTek
+Subject: [PATCH 18/22] boards: amlogic: update documentation for WeTek
  Hub/Play2
 
 Update the device matrix and add build instructions.

@@ -1,7 +1,7 @@
-From 8849236317c68808262cb02e086c5a83520a8724 Mon Sep 17 00:00:00 2001
+From 305cd16bad46a61b212c5369d6a6df5dd3eacf9d Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <narmstrong@baylibre.com>
 Date: Wed, 30 Sep 2020 11:55:50 +0200
-Subject: [PATCH 05/21] FROMGIT: power: domain: meson-ee-pwrc: add support for
+Subject: [PATCH 05/22] FROMGIT: power: domain: meson-ee-pwrc: add support for
  the Meson AXG SoCs
 
 This syncs with the linux meson-ee-pwrc driver from Linux 5.10-rc1.

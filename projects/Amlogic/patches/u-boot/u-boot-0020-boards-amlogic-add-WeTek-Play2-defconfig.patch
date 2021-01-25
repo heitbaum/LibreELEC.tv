@@ -1,7 +1,7 @@
-From 9e0867d82f5438d1c1d963782a011d4eb16463c9 Mon Sep 17 00:00:00 2001
+From 7bad2173cd09f3fbdc40dcf378cf934ae0dbb433 Mon Sep 17 00:00:00 2001
 From: chewitt <christianshewitt@gmail.com>
 Date: Sat, 28 Dec 2019 04:53:49 +0000
-Subject: [PATCH 20/21] boards: amlogic: add WeTek Play2 defconfig
+Subject: [PATCH 20/22] boards: amlogic: add WeTek Play2 defconfig
 
 Signed-off-by: Christian Hewittt <christianshewitt@gmail.com>
 ---

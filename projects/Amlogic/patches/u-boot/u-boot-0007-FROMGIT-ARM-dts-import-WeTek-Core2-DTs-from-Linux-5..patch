@@ -1,7 +1,7 @@
-From 6974cd60b954cbd3b5288333384e763aad326c45 Mon Sep 17 00:00:00 2001
+From 0feca9251251ee3bd9ee5940e060a27bd61c51da Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Tue, 3 Nov 2020 02:30:18 +0000
-Subject: [PATCH 07/21] FROMGIT: ARM: dts: import WeTek Core2 DTs from Linux
+Subject: [PATCH 07/22] FROMGIT: ARM: dts: import WeTek Core2 DTs from Linux
  5.10
 
 Import the WeTek Core2 and supporting meson-gx-p23x-q20x.dtsi files

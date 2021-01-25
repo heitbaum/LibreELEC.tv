@@ -1,7 +1,7 @@
-From 71c65979ded70b70ae537f426f4c08a387682a79 Mon Sep 17 00:00:00 2001
+From 1b64e01ceb1340bc00930def80362a7eabad7a4c Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Tue, 3 Nov 2020 02:48:41 +0000
-Subject: [PATCH 08/21] FROMGIT: boards: amlogic: add WeTek Core2 support
+Subject: [PATCH 08/22] FROMGIT: boards: amlogic: add WeTek Core2 support
 
 Add a config for the WeTek Core2, largely based on the VIM2 config.
 

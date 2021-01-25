@@ -1,7 +1,7 @@
-From 8a360b7e18feff6e16fdec7af46fe45b43340a23 Mon Sep 17 00:00:00 2001
+From fcd4bd99ff868288e3f68e49850078be7db5e42c Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <narmstrong@baylibre.com>
 Date: Fri, 2 Oct 2020 09:47:37 +0200
-Subject: [PATCH 03/21] FROMGIT: ARM: dts: sync Amlogic GX & AXG from Linux
+Subject: [PATCH 03/22] FROMGIT: ARM: dts: sync Amlogic GX & AXG from Linux
  5.10-rc1
 
 Synced from Linux commit 3650b228f83a ("Linux 5.10-rc1")

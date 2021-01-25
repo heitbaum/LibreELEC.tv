@@ -1,7 +1,7 @@
-From af8d2d9e6ae2e50b19b9d41979704a0b33efb74b Mon Sep 17 00:00:00 2001
+From b8a4bcad2407452184e2ea289efb402e3fc83fef Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Sat, 28 Dec 2019 07:45:11 +0000
-Subject: [PATCH 19/21] boards: amlogic: add WeTek Hub defconfig
+Subject: [PATCH 19/22] boards: amlogic: add WeTek Hub defconfig
 
 Signed-of-by: Christian Hewitt <christianshewitt@gmail.com>
 ---

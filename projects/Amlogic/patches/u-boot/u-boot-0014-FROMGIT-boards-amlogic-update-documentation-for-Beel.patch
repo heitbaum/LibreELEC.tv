@@ -1,7 +1,7 @@
-From 1c4431cf75268c4d5813411045d3e3dd310cc0d7 Mon Sep 17 00:00:00 2001
+From b5626808a83a91f5ddbe9ebbca34fe355db36e41 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Fri, 18 Dec 2020 02:39:38 +0000
-Subject: [PATCH 14/21] FROMGIT: boards: amlogic: update documentation for
+Subject: [PATCH 14/22] FROMGIT: boards: amlogic: update documentation for
  Beelink GT-King/Pro
 
 Update the device matrix and add build instructions.

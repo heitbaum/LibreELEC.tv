@@ -1,7 +1,7 @@
-From ba156073da5a34441657fef6d36ccc0767e1a3e8 Mon Sep 17 00:00:00 2001
+From 92a2897a17742d0398a884393fed22b773f19b8d Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <narmstrong@baylibre.com>
 Date: Fri, 6 Nov 2020 11:11:08 +0100
-Subject: [PATCH 06/21] FROMGIT: configs: use the new MESON_EE_POWER_DOMAIN
+Subject: [PATCH 06/22] FROMGIT: configs: use the new MESON_EE_POWER_DOMAIN
  driver for Amlogic GXBB/GXL/GXM boards
 
 Linux 5.10-rc1 uses the new generic driver, so switch to it since GXBB and

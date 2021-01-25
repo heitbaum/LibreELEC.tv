@@ -1,7 +1,7 @@
-From 239659a0a90ca7763970c3764726a606755e1ae9 Mon Sep 17 00:00:00 2001
+From cb92c72185ef63b43c4dc3ac672c166da88561d9 Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <narmstrong@baylibre.com>
 Date: Wed, 30 Sep 2020 11:52:49 +0200
-Subject: [PATCH 04/21] FROMGIT: power: domain: meson-ee-pwrc: add support for
+Subject: [PATCH 04/22] FROMGIT: power: domain: meson-ee-pwrc: add support for
  the Meson GX SoCs
 
 This syncs with the linux meson-ee-pwrc driver from Linux 5.10-rc1.

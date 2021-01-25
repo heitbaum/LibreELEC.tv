@@ -1,7 +1,7 @@
-From 45783c1c41307527a84ecbed78eb11e72ecbfadb Mon Sep 17 00:00:00 2001
+From 04576c665b79530bb8bae4b5bf7a9d3462d03d18 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Thu, 17 Dec 2020 13:16:18 +0000
-Subject: [PATCH 10/21] FROMGIT: ARM: dts: import Beelink GT-King/Pro DTs from
+Subject: [PATCH 10/22] FROMGIT: ARM: dts: import Beelink GT-King/Pro DTs from
  Linux 5.10
 
 Import the Beelink GT-King/Pro and supporting meson-g12b-w400.dtsi file

@@ -1,7 +1,7 @@
-From 4e781d8567168a132282c4153736fe16621e12c3 Mon Sep 17 00:00:00 2001
+From 9997171102823b4cc61534863108a2891bcb43cb Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Thu, 17 Dec 2020 13:24:47 +0000
-Subject: [PATCH 13/21] FROMGIT: boards: amlogic: add Beelink GT-King Pro
+Subject: [PATCH 13/22] FROMGIT: boards: amlogic: add Beelink GT-King Pro
  defconfig
 
 Add a defconfig for the Beelink GT-King Pro Android STB, which is based

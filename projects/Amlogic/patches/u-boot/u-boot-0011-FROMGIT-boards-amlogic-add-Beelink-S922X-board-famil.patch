@@ -1,7 +1,7 @@
-From 028be6ea0ba9197a9bcd6bfeb613df2412d73217 Mon Sep 17 00:00:00 2001
+From 9296f31c56a8358450ee018a4b9aff42f755e393 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Fri, 18 Dec 2020 03:16:17 +0000
-Subject: [PATCH 11/21] FROMGIT: boards: amlogic: add Beelink S922X board
+Subject: [PATCH 11/22] FROMGIT: boards: amlogic: add Beelink S922X board
  family support
 
 Copied from Odroid N2. Add myself as maintainer.

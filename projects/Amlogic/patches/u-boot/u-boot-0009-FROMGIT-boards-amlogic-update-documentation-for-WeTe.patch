@@ -1,7 +1,7 @@
-From d8bdcbf312e0cd740ead1dd2a590e179b5092c6a Mon Sep 17 00:00:00 2001
+From b553182a7f61a8b0b54f21aca78b0a0523cbe77c Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Tue, 3 Nov 2020 03:06:57 +0000
-Subject: [PATCH 09/21] FROMGIT: boards: amlogic: update documentation for
+Subject: [PATCH 09/22] FROMGIT: boards: amlogic: update documentation for
  WeTek Core2
 
 Update the device matrix and add build instructions.

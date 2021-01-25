@@ -1,7 +1,7 @@
-From a53bdf37555976897766f21003c9fb63b3e01ba3 Mon Sep 17 00:00:00 2001
+From b936c99ea6a31b16547eed3dd40441315dba50f0 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Mon, 16 Nov 2020 19:02:20 +0000
-Subject: [PATCH 16/21] ARM: dts: import WeTek Hub/Play2 DTs from Linux 5.10
+Subject: [PATCH 16/22] ARM: dts: import WeTek Hub/Play2 DTs from Linux 5.10
 
 Import the WeTek dtsi and Hub/Play2 device-trees from Linux 5.10.
 

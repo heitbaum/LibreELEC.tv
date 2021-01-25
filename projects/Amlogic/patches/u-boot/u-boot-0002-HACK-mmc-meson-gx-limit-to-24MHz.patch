@@ -1,7 +1,7 @@
-From f9af8e2b20d319dc49f0732d0619dd622f2bf02d Mon Sep 17 00:00:00 2001
+From 59b6f16313f0926650aab110b7713fc0cc94c862 Mon Sep 17 00:00:00 2001
 From: chewitt <christianshewitt@gmail.com>
 Date: Fri, 24 Apr 2020 15:15:04 +0000
-Subject: [PATCH 02/21] HACK: mmc: meson-gx: limit to 24MHz
+Subject: [PATCH 02/22] HACK: mmc: meson-gx: limit to 24MHz
 
 ---
  drivers/mmc/meson_gx_mmc.c | 2 +-

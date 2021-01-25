@@ -1,7 +1,7 @@
-From 7a0a86a0a7e82b616ed25a0513432605953217fd Mon Sep 17 00:00:00 2001
+From 31480845270016da5fb8a333a8140eea7a3af1b4 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Thu, 17 Dec 2020 13:23:09 +0000
-Subject: [PATCH 12/21] FROMGIT: boards: amlogic: add Beelink GT-King defconfig
+Subject: [PATCH 12/22] FROMGIT: boards: amlogic: add Beelink GT-King defconfig
 
 Add a defconfig for the Beelink GT-King Android STB, which is based
 on the Amlogic W400 reference design.

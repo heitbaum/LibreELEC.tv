@@ -1,7 +1,7 @@
-From 917ebcd4f6fc93fdfe4d08b51c39c50ef00c2b71 Mon Sep 17 00:00:00 2001
+From 3ca4621400738701574693a530a05a5efd1394f8 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Tue, 29 Dec 2020 06:45:02 +0000
-Subject: [PATCH 17/21] ARM: dts: backport gpio binding and ethernet assert
+Subject: [PATCH 17/22] ARM: dts: backport gpio binding and ethernet assert
  timing fixes for meson-gxbb-wetek.dtsi
 
 These changes are not in the Linux 5.10 device tree files.

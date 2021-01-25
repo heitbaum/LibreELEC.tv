@@ -1,7 +1,7 @@
-From 7b1b86f67f42bc79017fab0798b3fa5f98135ea4 Mon Sep 17 00:00:00 2001
+From e12221f7e32c6a657f78ffb3099ad5f3d550e3a5 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Fri, 18 Dec 2020 14:15:14 +0000
-Subject: [PATCH 15/21] ARM: dts: meson: switch TFLASH_VDD_EN pin to open drain
+Subject: [PATCH 15/22] ARM: dts: meson: switch TFLASH_VDD_EN pin to open drain
  on Odroid-N2
 
 Experimental copying the fix from C4.
