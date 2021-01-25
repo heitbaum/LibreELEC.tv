@@ -3,11 +3,11 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="binutils"
-PKG_VERSION="2.35.1"
-PKG_SHA256="3ced91db9bf01182b7e420eab68039f2083aed0a214c0424e257eae3ddee8607"
+PKG_VERSION="2.36"
+PKG_SHA256="5788292cc5bbcca0848545af05986f6b17058b105be59e99ba7d0f9eb5336fb8"
 PKG_LICENSE="GPL"
-PKG_SITE="http://www.gnu.org/software/binutils/"
-PKG_URL="http://ftp.gnu.org/gnu/binutils/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_SITE="https://www.gnu.org/software/binutils/"
+PKG_URL="https://ftp.gnu.org/gnu/binutils/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="ccache:host bison:host flex:host linux:host"
 PKG_DEPENDS_TARGET="toolchain zlib binutils:host"
 PKG_LONGDESC="A GNU collection of binary utilities."
