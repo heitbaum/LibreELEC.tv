@@ -180,6 +180,34 @@ pre_make_target() {
     ${PKG_BUILD}/scripts/config --set-str CONFIG_EXTRA_FIRMWARE_DIR "external-firmware"
   fi
 
+  if [ -f "${DISTRO_DIR}/${DISTRO}/required_kernel_options" ]; then
+    while read OPTION; do
+      [ -z "$OPTION" -o -n "$(echo "$OPTION" | grep '^#')" ] && continue
+
+      if [ "$($PKG_BUILD/scripts/config --state ${OPTION%%=*})" != "${OPTION##*=}" ]; then
+        MISSING_OPTIONS+="\t$OPTION\n"
+      fi
+    done < ${DISTRO_DIR}/${DISTRO}/required_kernel_options
+
+    if [ -n "$MISSING_OPTIONS" ]; then
+      die "LINUX: required kernel options not enabled: \n${MISSING_OPTIONS%%}\nPlease run ./scripts/check_kernel_config"
+    fi
+  fi
+
+  if [ -f "${DISTRO_DIR}/${DISTRO}/optional_kernel_options" ]; then
+    while read OPTION; do
+      [ -z "$OPTION" -o -n "$(echo "$OPTION" | grep '^#')" ] && continue
+
+      if [ "$($PKG_BUILD/scripts/config --state ${OPTION%%=*})" != "${OPTION##*=}" ]; then
+        MISSING_OPTIONS+="\t$OPTION\n"
+      fi
+    done < ${DISTRO_DIR}/${DISTRO}/optional_kernel_options
+
+    if [ -n "$MISSING_OPTIONS" ]; then
+      echo -e "LINUX: optional kernel options not enabled: \n${MISSING_OPTIONS%%}\nPlease run ./scripts/check_kernel_config"
+    fi
+  fi
+
   kernel_make oldconfig
 
   if [ -f "${DISTRO_DIR}/${DISTRO}/kernel_options" ]; then
