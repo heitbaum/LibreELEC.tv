@@ -2,13 +2,31 @@
 # setup device defaults
 ################################################################################
 
+  # Graphic drivers to use
+    GRAPHIC_DRIVERS="lima panfrost"
+
+  # Mali GPU family
+    MALI_FAMILY="450 t820 g31 g52"
+
   # The TARGET_CPU variable controls which processor should be targeted for
   # generated code.
+
     case $TARGET_ARCH in
       aarch64)
-        TARGET_CPU="cortex-a53"
-        TARGET_CPU_FLAGS="+crc+fp+simd"
-        TARGET_FEATURES="64bit"
+        case "${UBOOT_SYSTEM}" in
+          odroid-n2)
+            TARGET_CPU="cortex-a73.cortex-a53"
+            TARGET_CPU_FLAGS="+crc+fp+simd"
+            TARGET_FEATURES="64bit"
+            GRAPHIC_DRIVERS="panfrost"
+            MALI_FAMILY="g52"
+            ;;
+          *)
+            TARGET_CPU="cortex-a53"
+            TARGET_CPU_FLAGS="+crc+fp+simd"
+            TARGET_FEATURES="64bit"
+            ;;
+        esac
         ;;
       arm)
         TARGET_KERNEL_ARCH="arm64"
@@ -24,14 +42,8 @@
   # OpenGL-ES implementation to use
     OPENGLES="mesa"
 
-  # Graphic drivers to use
-    GRAPHIC_DRIVERS="lima panfrost"
-
   # KODI Player implementation to use
     KODIPLAYER_DRIVER="$OPENGLES"
-
-  # Mali GPU family
-    MALI_FAMILY="450 t820 g31 g52"
 
   # Set the addon project
     ADDON_PROJECT="ARMv8"
