@@ -32,6 +32,10 @@ PKG_MESON_OPTS_TARGET="-Dbroadway_backend=false \
 
 pre_configure_target() {
   # ${TOOLCHAIN}/bin/glib-compile-resources requires ${TOOLCHAIN}/lib/libffi.so.6
+  # export XDG_DATA_DIRS=.../usr/share
+  # -k0
+  #  https://source.puri.sm/Librem5/OS-issues/-/issues/17
+  #  https://www.linuxtopia.org/online_books/linux_desktop_guides/gnome_2.14_admin_guide/mimetypes-database.html
   export LD_LIBRARY_PATH="${TOOLCHAIN}/lib:${LD_LIBRARY_PATH}"
   export GLIB_COMPILE_RESOURCES=glib-compile-resources GLIB_MKENUMS=glib-mkenums GLIB_GENMARSHAL=glib-genmarshal
 
@@ -39,4 +43,5 @@ echo
 echo hi
 echo $LD_LIBRARY_PATH=
 set
+  export XDG_DATA_DIRS=${TOOLCHAIN}/share/:/usr/local/share/:/usr/share/
 }
