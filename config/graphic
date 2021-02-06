@@ -72,12 +72,12 @@ get_graphicdrivers() {
 
   if listcontains "${GRAPHIC_DRIVERS}" "nvidia"; then
     XORG_DRIVERS+=" nvidia"
-    VDPAU_SUPPORT="yes"
+    VDPAU_SUPPORT="no"
   fi
 
   if listcontains "${GRAPHIC_DRIVERS}" "nvidia-legacy"; then
     XORG_DRIVERS+=" nvidia-legacy"
-    VDPAU_SUPPORT="yes"
+    VDPAU_SUPPORT="no"
   fi
 
   if listcontains "${GRAPHIC_DRIVERS}" "panfrost"; then
