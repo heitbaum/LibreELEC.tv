@@ -15,7 +15,7 @@ index bd8926b..1733937 100644
 @@ -27,7 +27,11 @@
  pkginclude_HEADERS = version.h
  
- SUBDIRS = config m4 lib libelf libcpu backends libebl libdwelf libdwfl libdw \
+ SUBDIRS = config lib libelf libcpu backends libebl libdwelf libdwfl libdw \
 -	  libasm debuginfod src po doc tests
 +	  libasm debuginfod po doc tests
 +
