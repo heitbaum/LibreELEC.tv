@@ -1,3 +1,9 @@
+122
+- added bottom (successor to ytop) - all arch except Generic
+- mc: update to 4.8.26
+- stress-ng: update to 0.12.03
+- vim: update to 8.2.2505
+
 121
 - remove strace
 
