@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libprojectM"
-PKG_VERSION="3.1.8"
-PKG_SHA256="cb52e7f4e72b1b60e7a2a5e1a7b110b909c42b622a9fb328b4e7b186614f51a0"
+PKG_VERSION="3.1.12"
+PKG_SHA256="62b5b1b543b25cb8ad392d879378cfdc5c129165cf4d4f33fb159e364d42f135"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/projectM-visualizer/projectm"
 PKG_URL="https://github.com/projectM-visualizer/projectm/archive/v${PKG_VERSION}.tar.gz"
