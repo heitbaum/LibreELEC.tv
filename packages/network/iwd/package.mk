@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="iwd"
-PKG_VERSION="1.11"
-PKG_SHA256="db854f569cfa94dc32120d8cf2e7d483a16679f238e1a4794837d0e455ea7aa9"
+PKG_VERSION="1.14"
+PKG_SHA256="21be6ad59ba666ba1e50e01889d647472b9b2f96f4941123db036fd33c257f0b"
 PKG_LICENSE="GPL"
 PKG_SITE="https://git.kernel.org/cgit/network/wireless/iwd.git/about/"
 PKG_URL="https://www.kernel.org/pub/linux/network/wireless/iwd-${PKG_VERSION}.tar.xz"
