@@ -11,5 +11,5 @@ PKG_DEPENDS_TARGET="toolchain glib libxml2 gettext itstool:host"
 PKG_LONGDESC="The shared-mime-info package contains the core database of common types."
 PKG_BUILD_FLAGS="-parallel -sysroot"
 
-PKG_CONFIGURE_OPTS_TARGET="--disable-update-mimedb"
-#PKG_MESON_OPTS_TARGET="-Dupdate-mimedb=false"
+#PKG_CONFIGURE_OPTS_TARGET="--disable-update-mimedb"
+PKG_MESON_OPTS_TARGET="-Dupdate-mimedb=false"
