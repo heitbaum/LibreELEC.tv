@@ -7,11 +7,10 @@ Remove recent xterm terminfo features to be compatible with other emulations
  # This version reflects the current xterm features.
  xterm-new|modern xterm terminal emulator,
  	npc,
--	kcbt=\E[Z, kent=\EOM, use=ecma+index, use=ansi+rep,
-+	kcbt=\E[Z, kent=\EOM, use=ecma+index,
- 	use=ecma+strikeout, use=xterm+keypad, use=vt420+lrmm,
--	use=xterm+sm+1006, use=xterm+pcfkeys, use=xterm+tmux,
-+	use=xterm+sm+1005, use=xterm+pcfkeys, use=xterm+tmux,
- 	use=xterm-basic,
+ 	kcbt=\E[Z, kent=\EOM, nel=\EE, use=ecma+index,
+-	use=ansi+rep, use=ecma+strikeout, use=xterm+pcfkeys,
++	use=ecma+strikeout, use=xterm+pcfkeys,
+ 	use=xterm+nofkeys,
  
  # This fragment is for people who cannot agree on what the backspace key
+ # should send.
