@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="stress-ng"
-PKG_VERSION="0.12.03"
-PKG_SHA256="f27ff439b76a17641291d4234c73655cddcb0a5a588441d6ade290b06ca4b805"
+PKG_VERSION="0.12.04"
+PKG_SHA256="b4e34bda8db4ed37e33b7a861bc06ad77cbbd234d63236da2cb58f02e3f3218e"
 PKG_LICENSE="GPLv2"
 PKG_SITE="https://kernel.ubuntu.com/~cking/stress-ng/"
 PKG_URL="https://kernel.ubuntu.com/~cking/tarballs/stress-ng/stress-ng-${PKG_VERSION}.tar.xz"
