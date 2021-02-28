@@ -1,0 +1,41 @@
+From patchwork Mon Jan 25 22:02:47 2021
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: drm/i915/gt: Flush before changing register state
+From: Chris Wilson <chris@chris-wilson.co.uk>
+X-Patchwork-Id: 415932
+Message-Id: <20210125220247.31701-1-chris@chris-wilson.co.uk>
+To: intel-gfx@lists.freedesktop.org
+Cc: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Mon, 25 Jan 2021 22:02:47 +0000
+
+Flush; invalidate; change registers; invalidate; flush.
+
+Will this finally work on every device? Or will Baytrail complain again?
+
+On the positive side, we immediate see the benefit of having hsw-gt1 in
+CU.
+
+Fixes: ace44e13e577 ("drm/i915/gt: Clear CACHE_MODE prior to clearing residuals")
+Testcase: igt/gem_render_tiled_blits # hsw-gt1
+Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Mika Kuoppala <mika.kuoppala@linux.intel.com>
+Cc: Akeem G Abodunrin <akeem.g.abodunrin@intel.com>
+Acked-by: Mika Kuoppala <mika.kuoppala@linux.intel.com>
+---
+ drivers/gpu/drm/i915/gt/gen7_renderclear.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/i915/gt/gen7_renderclear.c b/drivers/gpu/drm/i915/gt/gen7_renderclear.c
+index 8551e6de50e8..e403eb046a43 100644
+--- a/drivers/gpu/drm/i915/gt/gen7_renderclear.c
++++ b/drivers/gpu/drm/i915/gt/gen7_renderclear.c
+@@ -393,6 +393,7 @@ static void emit_batch(struct i915_vma * const vma,
+ 						     desc_count);
+ 
+ 	/* Reset inherited context registers */
++	gen7_emit_pipeline_flush(&cmds);
+ 	gen7_emit_pipeline_invalidate(&cmds);
+ 	batch_add(&cmds, MI_LOAD_REGISTER_IMM(2));
+ 	batch_add(&cmds, i915_mmio_reg_offset(CACHE_MODE_0_GEN7));
