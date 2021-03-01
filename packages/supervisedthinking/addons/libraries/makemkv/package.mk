@@ -2,10 +2,10 @@
 # Copyright (C) 2018-present Frank Hartung (supervisedthinking (@) gmail.com)
 
 PKG_NAME="makemkv"
-PKG_VERSION="1.15.4"
-PKG_SHA256="82d062d4844d17901293f65dce40e63ae1084fd81accd6913427eda9b2c43fe3"
-PKG_REV="112"
-PKG_ARCH="x86_64"
+PKG_VERSION="1.16.1"
+PKG_SHA256="32e0ee2708527ce22a961c7249c607d11d88f5ffdb41809a7b7ed8003af48845"
+PKG_REV="113"
+PKG_ARCH="aarch64 arm x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://makemkv.com/"
 PKG_URL="http://www.makemkv.com/download/makemkv-oss-$PKG_VERSION.tar.gz"
@@ -21,6 +21,18 @@ PKG_ADDON_TYPE="xbmc.python.script"
 
 PKG_CONFIGURE_OPTS_TARGET="--disable-gui"
 
+case ${TARGET_ARCH} in
+  aarch64)
+    export MKVARCH=arm64
+    ;;
+  arm)
+    export MKVARCH=armel
+    ;;
+  x86_64)
+    export MKVARCH=amd64
+    ;;
+esac
+
 pre_configure_target() {
   cd ..
   safe_remove .$TARGET_NAME
@@ -33,7 +45,7 @@ makeinstall_target() {
 addon() {
   # Install makemkv binary
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/bin
-  install -m 0755 $(get_build_dir makemkv-bin)/bin/amd64/makemkvcon $ADDON_BUILD/$PKG_ADDON_ID/bin/makemkvcon.bin
+  install -m 0755 $(get_build_dir makemkv-bin)/bin/${MKVARCH}/makemkvcon $ADDON_BUILD/$PKG_ADDON_ID/bin/makemkvcon.bin
 
   # Copy licence file
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/license
