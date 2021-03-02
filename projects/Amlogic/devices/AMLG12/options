@@ -35,3 +35,19 @@
 
   # Set the addon project
     ADDON_PROJECT="ARMv8"
+
+  # Odroid N2+ Stuff
+    case $TARGET_ARCH in
+      aarch64)
+        case "${UBOOT_SYSTEM}" in
+          odroid-n2)
+            OPENGLES="mesa"
+            TARGET_CPU="cortex-a73.cortex-a53"
+            TARGET_CPU_FLAGS="+crc+fp+simd"
+            TARGET_FEATURES="64bit"
+            GRAPHIC_DRIVERS="panfrost"
+            MALI_FAMILY="g52"
+            ;;
+        esac
+        ;;
+    esac
