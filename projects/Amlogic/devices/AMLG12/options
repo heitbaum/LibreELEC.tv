@@ -8,27 +8,30 @@
       aarch64)
         TARGET_CPU="cortex-a53"
         TARGET_CPU_FLAGS="+crc+fp+simd"
+        TARGET_FEATURES="64bit"
         ;;
       arm)
         TARGET_KERNEL_ARCH="arm64"
-        TARGET_FLOAT="hard"
+        TARGET_PATCH_ARCH="aarch64"
+        TARGET_FLOAT=hard
         TARGET_CPU="cortex-a53"
         TARGET_CPU_FLAGS="+crc"
         TARGET_FPU="neon-fp-armv8"
+        TARGET_FEATURES="32bit"
         ;;
     esac
 
   # OpenGL-ES implementation to use
-    OPENGLES="mesa"
+    OPENGLES="libmali"
 
   # Graphic drivers to use
-    GRAPHIC_DRIVERS="lima panfrost"
+    GRAPHIC_DRIVERS="mali"
 
   # KODI Player implementation to use
     KODIPLAYER_DRIVER="$OPENGLES"
 
   # Mali GPU family
-    MALI_FAMILY="450 t820"
+    MALI_FAMILY="g31 g52"
 
   # Set the addon project
     ADDON_PROJECT="ARMv8"
