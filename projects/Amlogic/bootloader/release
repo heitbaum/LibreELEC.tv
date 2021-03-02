@@ -18,6 +18,16 @@ mkdir -p "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*gxbb*.dtb "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*gxl*.dtb "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*gxm*.dtb "$DSTDIR/amlogic"
+      ;;
+    AMLG12)
+      cp -a "$SRCDIR"/*g12a*.dtb "$DSTDIR/amlogic"
+      cp -a "$SRCDIR"/*g12b*.dtb "$DSTDIR/amlogic"
+      cp -a "$SRCDIR"/*sm1*.dtb "$DSTDIR/amlogic"
+      ;;
+    *)
+      cp -a "$SRCDIR"/*gxbb*.dtb "$DSTDIR/amlogic"
+      cp -a "$SRCDIR"/*gxl*.dtb "$DSTDIR/amlogic"
+      cp -a "$SRCDIR"/*gxm*.dtb "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*g12a*.dtb "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*g12b*.dtb "$DSTDIR/amlogic"
       cp -a "$SRCDIR"/*sm1*.dtb "$DSTDIR/amlogic"
