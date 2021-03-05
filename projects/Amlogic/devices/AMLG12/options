@@ -42,6 +42,7 @@
         case "${UBOOT_SYSTEM}" in
           odroid-n2)
             OPENGLES="mesa"
+            KODIPLAYER_DRIVER="$OPENGLES"
             TARGET_CPU="cortex-a73.cortex-a53"
             TARGET_CPU_FLAGS="+crc+fp+simd"
             TARGET_FEATURES="64bit"
