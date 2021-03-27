@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
+# Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libinput"
-PKG_VERSION="1.17.0"
-PKG_SHA256="c560cfca14cb5c50d2a1b7551df06bc5d4306e32c128f3e3d37e137285dedbad"
+PKG_VERSION="1.17.1"
+PKG_SHA256="e51c50f3ce253961bed452d9f93102cc26128406975ab88ff9ec9e6c3b875137"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/libinput/"
 PKG_URL="http://www.freedesktop.org/software/libinput/${PKG_NAME}-${PKG_VERSION}.tar.xz"
