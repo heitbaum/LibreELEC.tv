@@ -1,3 +1,4 @@
+# Reference https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html
 # determines TARGET_CPU, if not forced by user
   if [ -z "$TARGET_CPU" ]; then
     TARGET_CPU=core2
@@ -14,4 +15,4 @@
   TARGET_LDFLAGS="-march=$TARGET_CPU -m64"
 
 # build with SIMD support ( yes / no )
-  TARGET_FEATURES+=" mmx sse sse2"
+  TARGET_FEATURES+=" mmx sse sse2 sse3 ssse3"
