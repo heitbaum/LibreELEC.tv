@@ -1,0 +1,11 @@
+#https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/stable-review/patch-5.10.28-rc1.xz
+##https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git/patch/?id=linux-5.12.y&id2=v5.12.14
+#
+file=$1
+
+cd /var/media/DATA/home-rudi/LibreELEC.tv/packages/linux/patches/default
+wget https://mirrors.edge.kernel.org/pub/linux/kernel/v6.x/stable-review/patch-${file}.xz
+unxz patch-${file}.xz
+mv patch-${file} patch-${file}.patch
+ls -la patch*.patch
+cd /var/media/DATA/home-rudi/LibreELEC.tv
