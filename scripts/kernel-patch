@@ -1,0 +1,9 @@
+#https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/stable-review/patch-5.10.28-rc1.xz
+file=$1
+
+cd /storage/home-rudi/LibreELEC.tv/packages/linux/patches/default
+wget https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/stable-review/patch-${file}.xz
+unxz patch-${file}.xz
+mv patch-${file} patch-${file}.patch
+ls -la patch*.patch
+cd ~/LibreELEC.tv
