@@ -50,3 +50,25 @@ export RUSTUP_HOME="${CARGO_HOME}"
 unset CFLAGS
 EOF
 }
+
+make_host() {
+  export CARGO_HOME="${PKG_BUILD}/cargo"
+  export RUSTUP_HOME="${CARGO_HOME}"
+  export PATH="${CARGO_HOME}/bin:${PATH}"
+  "$(get_build_dir rustup.rs)/rustup-init.sh" \
+    --default-toolchain "${PKG_VERSION}" \
+    --no-modify-path \
+    --profile minimal \
+    -y
+
+  cat <<EOF >"${CARGO_HOME}/config"
+EOF
+
+  cat <<EOF >"${CARGO_HOME}/env"
+export CARGO_HOME="${CARGO_HOME}"
+export PATH="${CARGO_HOME}/bin:${PATH}"
+export PKG_CONFIG_PATH="${PKG_CONFIG_LIBDIR}"
+export RUSTUP_HOME="${CARGO_HOME}"
+unset CFLAGS
+EOF
+}
