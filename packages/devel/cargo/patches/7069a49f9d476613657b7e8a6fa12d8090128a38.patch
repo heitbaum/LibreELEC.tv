@@ -1,0 +1,383 @@
+From 7069a49f9d476613657b7e8a6fa12d8090128a38 Mon Sep 17 00:00:00 2001
+From: James Hilliard <james.hilliard1@gmail.com>
+Date: Thu, 1 Apr 2021 21:06:31 -0600
+Subject: [PATCH] Configure hosts separately from targets when --target is
+ specified.
+
+This prevents target configs from accidentally being picked up when
+cross compiling from hosts that have the same architecture as their
+targets.
+
+closes #3349
+---
+ .../compiler/build_context/target_info.rs     |  28 +-
+ src/cargo/util/config/mod.rs                  |   5 +
+ src/cargo/util/config/target.rs               |  31 ++-
+ tests/testsuite/build_script.rs               | 240 ++++++++++++++++++
+ 4 files changed, 291 insertions(+), 13 deletions(-)
+
+diff --git a/src/cargo/core/compiler/build_context/target_info.rs b/src/cargo/core/compiler/build_context/target_info.rs
+index 44a46209b0e..44abdba1325 100644
+--- a/src/cargo/core/compiler/build_context/target_info.rs
++++ b/src/cargo/core/compiler/build_context/target_info.rs
+@@ -676,10 +676,25 @@ impl RustcTargetData {
+     ) -> CargoResult<RustcTargetData> {
+         let config = ws.config();
+         let rustc = config.load_global_rustc(Some(ws))?;
+-        let host_config = config.target_cfg_triple(&rustc.host)?;
+         let host_info = TargetInfo::new(config, requested_kinds, &rustc, CompileKind::Host)?;
+         let mut target_config = HashMap::new();
+         let mut target_info = HashMap::new();
++
++        // This is a hack. The unit_dependency graph builder "pretends" that
++        // `CompileKind::Host` is `CompileKind::Target(host)` if the
++        // `--target` flag is not specified. Since the unit_dependency code
++        // needs access to the target config data, create a copy so that it
++        // can be found. See `rebuild_unit_graph_shared` for why this is done.
++        let host_config = if requested_kinds.iter().any(CompileKind::is_host) {
++            let ct = CompileTarget::new(&rustc.host)?;
++            target_info.insert(ct, host_info.clone());
++            let target_host_config = config.target_cfg_triple(&rustc.host)?;
++            target_config.insert(ct, target_host_config.clone());
++            target_host_config
++        } else {
++            config.host_cfg_triple(&rustc.host)?
++        };
++
+         for kind in requested_kinds {
+             if let CompileKind::Target(target) = *kind {
+                 let tcfg = config.target_cfg_triple(target.short_name())?;
+@@ -691,17 +706,6 @@ impl RustcTargetData {
+             }
+         }
+ 
+-        // This is a hack. The unit_dependency graph builder "pretends" that
+-        // `CompileKind::Host` is `CompileKind::Target(host)` if the
+-        // `--target` flag is not specified. Since the unit_dependency code
+-        // needs access to the target config data, create a copy so that it
+-        // can be found. See `rebuild_unit_graph_shared` for why this is done.
+-        if requested_kinds.iter().any(CompileKind::is_host) {
+-            let ct = CompileTarget::new(&rustc.host)?;
+-            target_info.insert(ct, host_info.clone());
+-            target_config.insert(ct, host_config.clone());
+-        }
+-
+         Ok(RustcTargetData {
+             rustc,
+             host_config,
+diff --git a/src/cargo/util/config/mod.rs b/src/cargo/util/config/mod.rs
+index 8d7961f2f97..0f9385d27db 100644
+--- a/src/cargo/util/config/mod.rs
++++ b/src/cargo/util/config/mod.rs
+@@ -1481,6 +1481,11 @@ impl Config {
+             .try_borrow_with(|| self.get::<RustdocExternMap>("doc.extern-map"))
+     }
+ 
++    /// Returns the `[host]` table definition for the given target triple.
++    pub fn host_cfg_triple(&self, target: &str) -> CargoResult<TargetConfig> {
++        target::load_host_triple(self, target)
++    }
++
+     /// Returns the `[target]` table definition for the given target triple.
+     pub fn target_cfg_triple(&self, target: &str) -> CargoResult<TargetConfig> {
+         target::load_target_triple(self, target)
+diff --git a/src/cargo/util/config/target.rs b/src/cargo/util/config/target.rs
+index e22cab92ee5..11f6085c7d5 100644
+--- a/src/cargo/util/config/target.rs
++++ b/src/cargo/util/config/target.rs
+@@ -19,7 +19,7 @@ pub struct TargetCfgConfig {
+     pub other: BTreeMap<String, toml::Value>,
+ }
+ 
+-/// Config definition of a `[target]` table.
++/// Config definition of a `[target]` table or `[host]`.
+ #[derive(Debug, Clone)]
+ pub struct TargetConfig {
+     /// Process to run as a wrapper for `cargo run`, `test`, and `bench` commands.
+@@ -64,6 +64,35 @@ pub(super) fn load_target_cfgs(config: &Config) -> CargoResult<Vec<(String, Targ
+     Ok(result)
+ }
+ 
++/// Loads a single `[host]` table for the given triple.
++pub(super) fn load_host_triple(config: &Config, triple: &str) -> CargoResult<TargetConfig> {
++    // This needs to get each field individually because it cannot fetch the
++    // struct all at once due to `links_overrides`. Can't use `serde(flatten)`
++    // because it causes serde to use `deserialize_map` which means the config
++    // deserializer does not know which keys to deserialize, which means
++    // environment variables would not work.
++    let host_triple_key = ConfigKey::from_str(&format!("host.{}", triple));
++    let host_prefix = match config.get_cv(&host_triple_key)? {
++        Some(_) => format!("host.{}", triple),
++        None => "host".to_string(),
++    };
++    let runner: OptValue<PathAndArgs> = config.get(&format!("{}.runner", host_prefix))?;
++    let rustflags: OptValue<StringList> = config.get(&format!("{}.rustflags", host_prefix))?;
++    let linker: OptValue<ConfigRelativePath> = config.get(&format!("{}.linker", host_prefix))?;
++    // Links do not support environment variables.
++    let target_key = ConfigKey::from_str(&host_prefix);
++    let links_overrides = match config.get_table(&target_key)? {
++        Some(links) => parse_links_overrides(&target_key, links.val, config)?,
++        None => BTreeMap::new(),
++    };
++    Ok(TargetConfig {
++        runner,
++        rustflags,
++        linker,
++        links_overrides,
++    })
++}
++
+ /// Loads a single `[target]` table for the given triple.
+ pub(super) fn load_target_triple(config: &Config, triple: &str) -> CargoResult<TargetConfig> {
+     // This needs to get each field individually because it cannot fetch the
+diff --git a/tests/testsuite/build_script.rs b/tests/testsuite/build_script.rs
+index a43856548b0..d3126e1cad5 100644
+--- a/tests/testsuite/build_script.rs
++++ b/tests/testsuite/build_script.rs
+@@ -164,6 +164,246 @@ fn custom_build_env_var_rustc_linker() {
+     p.cargo("build --target").arg(&target).run();
+ }
+ 
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_bad_host_target() {
++    let target = rustc_host();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [target.{}]
++                linker = "/path/to/linker"
++                "#,
++                target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // build.rs should fail since host == target when no target is set
++    p.cargo("build --verbose")
++        .with_status(101)
++        .with_stderr_contains(
++            "\
++[COMPILING] foo v0.0.1 ([CWD])
++[RUNNING] `rustc --crate-name build_script_build build.rs [..]--crate-type bin [..]-C linker=[..]/path/to/linker [..]`
++[ERROR] linker `[..]/path/to/linker` not found
++"
++        )
++        .run();
++}
++
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_host_target() {
++    let target = rustc_host();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [target.{}]
++                linker = "/path/to/linker"
++                "#,
++                target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // no crate type set => linker never called => build succeeds if and
++    // only if build.rs succeeds, despite linker binary not existing.
++    p.cargo("build --target").arg(&target).run();
++}
++
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_bad_host() {
++    let target = rustc_host();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [host]
++                linker = "/path/to/host/linker"
++                [target.{}]
++                linker = "/path/to/target/linker"
++                "#,
++                target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/target/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // build.rs should fail due to bad host linker being set
++    p.cargo("build --verbose --target")
++        .arg(&target)
++        .with_status(101)
++        .with_stderr_contains(
++            "\
++[COMPILING] foo v0.0.1 ([CWD])
++[RUNNING] `rustc --crate-name build_script_build build.rs [..]--crate-type bin [..]-C linker=[..]/path/to/host/linker [..]`
++[ERROR] linker `[..]/path/to/host/linker` not found
++"
++        )
++        .run();
++}
++
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_bad_host_with_arch() {
++    let target = rustc_host();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [host]
++                linker = "/path/to/host/linker"
++                [host.{}]
++                linker = "/path/to/host/arch/linker"
++                [target.{}]
++                linker = "/path/to/target/linker"
++                "#,
++                target, target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/target/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // build.rs should fail due to bad host linker being set
++    p.cargo("build --verbose --target")
++        .arg(&target)
++        .with_status(101)
++        .with_stderr_contains(
++            "\
++[COMPILING] foo v0.0.1 ([CWD])
++[RUNNING] `rustc --crate-name build_script_build build.rs [..]--crate-type bin [..]-C linker=[..]/path/to/host/arch/linker [..]`
++[ERROR] linker `[..]/path/to/host/arch/linker` not found
++"
++        )
++        .run();
++}
++
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_cross_arch_host() {
++    let target = rustc_host();
++    let cross_target = cross_compile::alternate();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [host.{}]
++                linker = "/path/to/host/arch/linker"
++                [target.{}]
++                linker = "/path/to/target/linker"
++                "#,
++                cross_target, target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/target/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // build.rs should fail due to bad host linker being set
++    p.cargo("build --verbose --target").arg(&target).run();
++}
++
++#[cargo_test]
++fn custom_build_env_var_rustc_linker_bad_cross_arch_host() {
++    let target = rustc_host();
++    let cross_target = cross_compile::alternate();
++    let p = project()
++        .file(
++            ".cargo/config",
++            &format!(
++                r#"
++                [host]
++                linker = "/path/to/host/linker"
++                [host.{}]
++                linker = "/path/to/host/arch/linker"
++                [target.{}]
++                linker = "/path/to/target/linker"
++                "#,
++                cross_target, target
++            ),
++        )
++        .file(
++            "build.rs",
++            r#"
++            use std::env;
++
++            fn main() {
++                assert!(env::var("RUSTC_LINKER").unwrap().ends_with("/path/to/target/linker"));
++            }
++            "#,
++        )
++        .file("src/lib.rs", "")
++        .build();
++
++    // build.rs should fail due to bad host linker being set
++    p.cargo("build --verbose --target")
++        .arg(&target)
++        .with_status(101)
++        .with_stderr_contains(
++            "\
++[COMPILING] foo v0.0.1 ([CWD])
++[RUNNING] `rustc --crate-name build_script_build build.rs [..]--crate-type bin [..]-C linker=[..]/path/to/host/linker [..]`
++[ERROR] linker `[..]/path/to/host/linker` not found
++"
++        )
++        .run();
++}
++
+ #[cargo_test]
+ fn custom_build_script_wrong_rustc_flags() {
+     let p = project()
