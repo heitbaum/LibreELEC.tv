@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libopenmpt"
-PKG_VERSION="0.5.7"
-PKG_SHA256="c86026c47e208f1849676d1b6c5c9a068247154f38d368628c05c1f354d72c77"
+PKG_VERSION="0.5.8"
+PKG_SHA256="29e2c21174b73f67f2ba5ee76808d62f182b130e4f704ee2d9ae8283982d8acd"
 PKG_LICENSE="BSD"
 PKG_SITE="https://lib.openmpt.org/libopenmpt/"
 PKG_URL="https://lib.openmpt.org/files/libopenmpt/src/${PKG_NAME}-${PKG_VERSION}+release.autotools.tar.gz"
