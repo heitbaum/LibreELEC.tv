@@ -1,4 +1,7 @@
 105
+- chrome: update to 90.0.4430.72
+
+105
 - at-spi2-core: update to 2.40.0
 - chrome: update to 89.0.4389.114
 - gdk-pixbuf: update to 2.42.4
