@@ -3,10 +3,11 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="util-linux"
-PKG_VERSION="2.36.2"
-PKG_SHA256="f7516ba9d8689343594356f0e5e1a5f0da34adfbc89023437735872bb5024c5f"
+PKG_VERSION="2.37-rc1"
+PKG_SHA256="cb0027dea458c51ff980d2c7a5adbf20ff7315994dd616a11f71a7c2b6f8e834"
 PKG_LICENSE="GPL"
-PKG_URL="https://www.kernel.org/pub/linux/utils/util-linux/v$(get_pkg_version_maj_min)/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+#PKG_URL="https://www.kernel.org/pub/linux/utils/util-linux/v$(get_pkg_version_maj_min)/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_URL="https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37-rc1.tar.xz"
 PKG_DEPENDS_HOST="ccache:host autoconf:host automake:host intltool:host libtool:host pkg-config:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_DEPENDS_INIT="toolchain"
