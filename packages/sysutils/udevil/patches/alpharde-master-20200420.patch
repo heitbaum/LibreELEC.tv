@@ -1,0 +1,1803 @@
+From 03920ba90239d5ff46e09541ede5b50330aca283 Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@gmx.com>
+Date: Mon, 4 May 2015 07:45:37 -0600
+Subject: [PATCH 01/11] start 0.4.4+
+
+---
+ ChangeLog                | 2 ++
+ Makefile.in              | 2 +-
+ configure                | 2 +-
+ configure.ac             | 2 +-
+ distros/debian/changelog | 4 ++--
+ 5 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/ChangeLog b/ChangeLog
+index 3ea4b6d..6fb0193 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,5 @@
++0.4.4+
++
+ 0.4.4   2015-05-04:
+     udevil.conf new default/allowed options for exfat #52
+     [devmon 1.1.8] fix no error popup on --unmount-removable #42
+diff --git a/Makefile.in b/Makefile.in
+index 8c3a65d..db49287 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -82,7 +82,7 @@ DIST_COMMON = INSTALL NEWS README AUTHORS ChangeLog \
+ 	$(srcdir)/Makefile.in $(srcdir)/Makefile.am \
+ 	$(top_srcdir)/configure $(am__configure_deps) \
+ 	$(srcdir)/config.h.in mkinstalldirs COPYING compile \
+-	config.guess config.sub install-sh missing ltmain.sh
++	config.guess config.sub depcomp install-sh missing ltmain.sh
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+ am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
+diff --git a/configure b/configure
+index a54cd64..8714a91 100755
+--- a/configure
++++ b/configure
+@@ -2811,7 +2811,7 @@ fi
+ # Define the identity of the package.
+ 
+  PACKAGE=udevil
+- VERSION=0.4.4
++ VERSION=0.4.4+
+ 
+ 
+ cat >>confdefs.h <<_ACEOF
+diff --git a/configure.ac b/configure.ac
+index f2de369..178c5b8 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -3,7 +3,7 @@ AC_PREREQ(2.52)
+ AC_INIT(src/udevil.c)
+ AC_CONFIG_HEADERS(config.h)
+ AC_CONFIG_SRCDIR(src)
+-AM_INIT_AUTOMAKE(udevil, 0.4.4)
++AM_INIT_AUTOMAKE(udevil, 0.4.4+)
+ 
+ AC_PROG_INTLTOOL([0.21])
+ 
+diff --git a/distros/debian/changelog b/distros/debian/changelog
+index c1ccdeb..97e8afc 100644
+--- a/distros/debian/changelog
++++ b/distros/debian/changelog
+@@ -1,5 +1,5 @@
+-udevil (0.4.4-1) unstable; urgency=low
++udevil (0.4.4+-1) unstable; urgency=low
+ 
+   * release
+ 
+- -- IgnorantGuru <ignorantguru@gmx.com>  Mon, 04 May 2015 13:34:16 +0000
++ -- IgnorantGuru <ignorantguru@gmx.com>  Mon, 04 May 2015 13:44:16 +0000
+
+From d0ba7419173e467233b14c62227b6b4b84e3a2e2 Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@gmx.com>
+Date: Wed, 2 Sep 2015 08:40:26 -0600
+Subject: [PATCH 02/11] include sys/stat.h in device-info.h for gcc 5.x #59
+
+---
+ ChangeLog         | 2 +-
+ src/device-info.h | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ChangeLog b/ChangeLog
+index 6fb0193..cb396f5 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,5 +1,5 @@
+ 0.4.4+
+-
++    include sys/stat.h in device-info.h for gcc 5.x #59
+ 0.4.4   2015-05-04:
+     udevil.conf new default/allowed options for exfat #52
+     [devmon 1.1.8] fix no error popup on --unmount-removable #42
+diff --git a/src/device-info.h b/src/device-info.h
+index 6cb3683..bcada22 100644
+--- a/src/device-info.h
++++ b/src/device-info.h
+@@ -6,6 +6,7 @@
+ #include <unistd.h>
+ #include <string.h>
+ #include <limits.h>
++#include <sys/stat.h>
+ 
+ // glib
+ #include <glib.h>
+
+From 6ac69ed255626192758ee851594928498d9c10de Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@gmx.com>
+Date: Fri, 16 Oct 2015 09:03:30 -0600
+Subject: [PATCH 03/11] add --always-exec option for exec during
+ startup/--mount-all #48
+
+---
+ ChangeLog  |  1 +
+ src/devmon | 34 ++++++++++++++++++++++++++--------
+ 2 files changed, 27 insertions(+), 8 deletions(-)
+
+diff --git a/ChangeLog b/ChangeLog
+index cb396f5..033cc0b 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,5 +1,6 @@
+ 0.4.4+
+     include sys/stat.h in device-info.h for gcc 5.x #59
++    add --always-exec option for exec during startup/--mount-all #48
+ 0.4.4   2015-05-04:
+     udevil.conf new default/allowed options for exfat #52
+     [devmon 1.1.8] fix no error popup on --unmount-removable #42
+diff --git a/src/devmon b/src/devmon
+index bcdcda4..fe5946f 100755
+--- a/src/devmon
++++ b/src/devmon
+@@ -15,7 +15,7 @@ defaultmountoptions="noexec,nosuid,nodev,noatime"
+ help()
+ {
+ 	cat << EOF
+-devmon version 1.1.8  (distributed with udevil)
++devmon version 1.1.9  (distributed with udevil)
+ Automounts and unmounts optical and removable drives
+ Requires:    udevil bash>=4        Also Recommended: eject spacefm|zenity
+ Optional:    udisks v1 may be substituted for udevil
+@@ -64,6 +64,8 @@ UNIVERSAL OPTIONS:  (these can be used in both daemon and client modes)
+                               flush for fat & vfat (slower writing but safer)
+ --internal                    Also attempt to un/mount internal system drives
+                               (this is mostly a fix for esata issues)
++--always-exec                 Also run --exec-on-XXX commands during startup or
++                              with --mount-all
+ --no-gui | -g                 Do not show spacefm/zenity pop-up dialogs
+ Instructions and updates:
+   http://igurublog.wordpress.com/downloads/script-devmon/
+@@ -230,10 +232,13 @@ while [ "$1" != "" ]; do
+ 				test2 "$1" "$2"
+ 				ejectoptions="$2"
+ 				shift
+-				;;			
++				;;
+ 			--internal )
+ 				internal=1
+ 				;;
++			--always-exec )
++				alwaysexec=1
++				;;
+ 			--nogui | --no-gui )
+ 				nogui=1
+ 				;;
+@@ -732,7 +737,7 @@ mountdrive()   # $1=device $2=label  [$3=devtype or fstype]
+ 
+ mountalldrives()
+ {
+-	# Mount all optical drives, no exec
++	# Mount all optical drives, optional exec
+ 	x=0
+ 	while [ -e /dev/sr$x ]; do
+ 		driveinfo /dev/sr$x
+@@ -747,12 +752,22 @@ mountalldrives()
+ 				(( x++ ))
+ 				continue
+ 			fi
+-			mountdev /dev/sr$x "$label"
++			if (( alwaysexec == 1 )); then
++				if [ "$media" = "optical_dvd" ]; then
++					mountdrive /dev/sr$x "$label" dvd
++				elif (( numaudiotracks > 0 )); then
++					mountdrive /dev/sr$x "$label" audiocd
++				else
++					mountdrive /dev/sr$x "$label" optical
++				fi
++			else
++				mountdev /dev/sr$x "$label"
++			fi
+ 			eval notejectedsr$x=1
+ 		fi
+ 		(( x++ ))
+ 	done
+-	# Mount removable drives, no exec
++	# Mount removable drives, optional exec
+ 	IFSOLD="$IFS"
+ 	IFS=$'\n'
+ 	partlist=`grep " [ms]d[a-z0-9]*$" /proc/partitions | sed 's/.* \([ms]d[a-z0-9]*\)/\1/'`
+@@ -766,10 +781,13 @@ mountalldrives()
+ 		else
+ 			if [ "$systeminternal" != "1" ] && [ "$opticaldisc" != "1" ] && \
+ 					   [ "$ismounted" = "0" ] && [ "$nopolicy" != "1" ]; then
+-				if [ "$usage" = "filesystem" ]; then
+-					mountdev /dev/$p "$label" "$type"
++				if [ "$usage" != "filesystem" ]; then
++					type="nofs"
++				fi
++				if (( alwaysexec == 1 )); then
++					mountdrive /dev/$p "$label" "$type"
+ 				else
+-					mountdev /dev/$p "$label" nofs
++					mountdev /dev/$p "$label" "$type"
+ 				fi
+ 			fi
+ 		fi
+
+From 3dacdad457b3d859993709f0181021ff0c2a865a Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@gmx.com>
+Date: Fri, 16 Oct 2015 09:20:53 -0600
+Subject: [PATCH 04/11] fix misspelling priviledges #57
+
+---
+ po/udevil.pot | 6 +++---
+ src/udevil.c  | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/po/udevil.pot b/po/udevil.pot
+index 43a2769..963c420 100644
+--- a/po/udevil.pot
++++ b/po/udevil.pot
+@@ -6,9 +6,9 @@
+ #, fuzzy
+ msgid ""
+ msgstr ""
+-"Project-Id-Version: udevil 0.4.3+\n"
++"Project-Id-Version: udevil 0.4.4+\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+ "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+ "Language-Team: LANGUAGE <LL@li.org>\n"
+@@ -20,7 +20,7 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
+ msgstr ""
+ 
+ #: ../src/udevil.c:810
+diff --git a/src/udevil.c b/src/udevil.c
+index bab80e9..ab4f5c1 100644
+--- a/src/udevil.c
++++ b/src/udevil.c
+@@ -39,7 +39,7 @@
+ // environ
+ #include <paths.h>
+ 
+-// priviledges
++// privileges
+ #include <sys/param.h>
+ #include <sys/types.h>
+ 
+@@ -547,7 +547,7 @@ void spc_sanitize_environment(int preservec, char **preservev) {
+ }
+ 
+ /* *************************************************************************
+- * priviledges
++ * privileges
+ ************************************************************************** */
+ 
+ static int   orig_ngroups = -1;
+@@ -613,7 +613,7 @@ void drop_privileges( int permanent )
+ 
+     return;
+ _drop_abort:
+-    printf( _("udevil: error 1: unable to drop priviledges - please report this problem\n") );
++    printf( _("udevil: error 1: unable to drop privileges - please report this problem\n") );
+     abort();
+ }
+ 
+
+From 4f79ba4233bcbe9a2c9b8a799cd9dedba9534eaf Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@gmx.com>
+Date: Fri, 16 Oct 2015 09:31:20 -0600
+Subject: [PATCH 05/11] fix misspelling priviledges udevil.conf #57
+
+---
+ etc/udevil.conf |   2 +-
+ po/de.po        |  10 ++---
+ po/es.po        |  10 ++---
+ po/fr.po        |  23 ++++++-----
+ po/it.po        |  10 ++---
+ po/pl.po        |  10 ++---
+ po/pt_BR.po     | 107 ++++++++++++++++++++++++------------------------
+ po/ru.po        |  10 ++---
+ po/sv.po        |  12 +++---
+ 9 files changed, 98 insertions(+), 96 deletions(-)
+
+diff --git a/etc/udevil.conf b/etc/udevil.conf
+index 75a4c0d..f3ed696 100644
+--- a/etc/udevil.conf
++++ b/etc/udevil.conf
+@@ -288,7 +288,7 @@ mount_point_mode_ftpfs =
+ # validation of a mount or unmount command, beyond the checks performed by
+ # udevil.  The program is run as a normal user (if root runs udevil,
+ # validate_exec will NOT be run).  The program is NOT run if the user is
+-# mounting a device without root priviledges (a device in fstab).
++# mounting a device without root privileges (a device in fstab).
+ # The program is passed the username, a printable description of what is
+ # happening, and the entire udevil command line as the first three arguments.
+ # The program must return an exit status of 0 to allow the mount or unmount
+diff --git a/po/de.po b/po/de.po
+index 173c736..505774d 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -9,10 +9,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: German (http://www.transifex.com/projects/p/udevil/language/de/)\n"
++"Language-Team: German (http://www.transifex.com/ignorantguru/udevil/language/de/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -22,8 +22,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: Fehler 1: Berechtigungen zurücknehmen nicht möglich -- bitte dieses Problem melden\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+diff --git a/po/es.po b/po/es.po
+index 5187c40..b589b22 100644
+--- a/po/es.po
++++ b/po/es.po
+@@ -9,10 +9,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: Spanish (http://www.transifex.com/projects/p/udevil/language/es/)\n"
++"Language-Team: Spanish (http://www.transifex.com/ignorantguru/udevil/language/es/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -22,8 +22,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: error 1: no se pueden revocar los privilegios; informe de este problema\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+diff --git a/po/fr.po b/po/fr.po
+index d93ecd9..a54fbcd 100644
+--- a/po/fr.po
++++ b/po/fr.po
+@@ -4,14 +4,15 @@
+ # 
+ # Translators:
+ # appzer0, 2013
++# MerMouY, 2015
+ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: French (http://www.transifex.com/projects/p/udevil/language/fr/)\n"
++"Language-Team: French (http://www.transifex.com/ignorantguru/udevil/language/fr/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -21,8 +22,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil : erreur 1 : impossible de modifier les privilèges ; veuillez rapporter ce problème\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+@@ -52,7 +53,7 @@ msgstr "udevil : erreur 6 : %s est assigné plusieurs fois à la ligne %d :\n"
+ #: ../src/udevil.c:904
+ #, c-format
+ msgid "udevil: warning 7: cannot read config file %s\n"
+-msgstr ""
++msgstr "udevil: avertissement 7: impossible de lire le fichier de configuration %s\n"
+ 
+ #: ../src/udevil.c:916
+ #, c-format
+@@ -72,7 +73,7 @@ msgstr ""
+ #: ../src/udevil.c:1236
+ #, c-format
+ msgid "udevil: warning 125: ** wildcard not allowed in %s\n"
+-msgstr ""
++msgstr "udevil: avertissement 125: astérisque interdite dans %s\n"
+ 
+ #: ../src/udevil.c:1534 ../src/udevil.c:1576 ../src/udevil.c:1638
+ #: ../src/udevil.c:1681
+@@ -819,20 +820,20 @@ msgstr ""
+ #: ../src/udevil.c:4939
+ #, c-format
+ msgid "Usage: udevil [OPTIONS] COMMAND [COMMAND-OPTIONS] [COMMAND-ARGUMENTS]\n"
+-msgstr ""
++msgstr "Utilisation: udevil [OPTIONS] COMMANDE [OPTIONS-DE-COMMANDE] [ARGUMENTS-DE-COMMANDE]\n"
+ 
+ #: ../src/udevil.c:4940
+ #, c-format
+ msgid "OPTIONS:\n"
+-msgstr ""
++msgstr "OPTIONS:\n"
+ 
+ #: ../src/udevil.c:4941
+ msgid "print details"
+-msgstr ""
++msgstr "Imprimer les détails"
+ 
+ #: ../src/udevil.c:4942
+ msgid "minimal output"
+-msgstr ""
++msgstr "Sortie minimum"
+ 
+ #: ../src/udevil.c:4943
+ #, c-format
+diff --git a/po/it.po b/po/it.po
+index d925038..ebe277d 100644
+--- a/po/it.po
++++ b/po/it.po
+@@ -11,10 +11,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: Italian (http://www.transifex.com/projects/p/udevil/language/it/)\n"
++"Language-Team: Italian (http://www.transifex.com/ignorantguru/udevil/language/it/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -24,8 +24,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: errore 1: non posso rimuovere i privilegi - per favore segnala questo problema\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+diff --git a/po/pl.po b/po/pl.po
+index 49ce75a..a8589b8 100644
+--- a/po/pl.po
++++ b/po/pl.po
+@@ -9,10 +9,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: Polish (http://www.transifex.com/projects/p/udevil/language/pl/)\n"
++"Language-Team: Polish (http://www.transifex.com/ignorantguru/udevil/language/pl/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -22,8 +22,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: błąd 1: nie można porzucić uprawnień - prosimy zgłosić ten problem\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+diff --git a/po/pt_BR.po b/po/pt_BR.po
+index 8f01914..3200b9a 100644
+--- a/po/pt_BR.po
++++ b/po/pt_BR.po
+@@ -6,16 +6,17 @@
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+-# wandows <pressaperfeicao@yahoo.com.br>, 2014
++# wandows <pressaperfeicao@yahoo.com.br>, 2014-2015
++# wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: Portuguese (Brazil) (http://www.transifex.com/projects/p/udevil/language/pt_BR/)\n"
++"Language-Team: Portuguese (Brazil) (http://www.transifex.com/ignorantguru/udevil/language/pt_BR/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -25,18 +26,18 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: error 1: Impossível obter privilégios de administrador - por favor, relate este problema\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+ msgid "udevil: error 2: %s line %d is not valid UTF-8\n"
+-msgstr "udevil: erro 2: %s linha %d UTF-8 não é um valor válido\n"
++msgstr "udevil: erro 2: %s a linha %d não tem um valor UTF-8 válido\n"
+ 
+ #: ../src/udevil.c:815
+ #, c-format
+ msgid "udevil: error 3: %s line %d is too long\n"
+-msgstr "udevil: erro 3: %s linha %d é muito longa\n"
++msgstr "udevil: erro 3: %s a linha %d é muito longa\n"
+ 
+ #: ../src/udevil.c:824
+ #, c-format
+@@ -56,7 +57,7 @@ msgstr "udevil: erro 6: %s atribuição duplicaca na linha %d:\n"
+ #: ../src/udevil.c:904
+ #, c-format
+ msgid "udevil: warning 7: cannot read config file %s\n"
+-msgstr ""
++msgstr "udevil: aviso 7: impossível ler o arquivo de configuração %s\n"
+ 
+ #: ../src/udevil.c:916
+ #, c-format
+@@ -66,17 +67,17 @@ msgstr "udevil: ler configuração %s\n"
+ #: ../src/udevil.c:1162
+ #, c-format
+ msgid "udevil: error 8: failed writing to log file '%s'\n"
+-msgstr "udevil: erro 8: falha ao graavr arquivo de log '%s'\n"
++msgstr "udevil: erro 8: falha ao gravar arquivo de log '%s'\n"
+ 
+ #: ../src/udevil.c:1233
+ #, c-format
+ msgid "udevil: warning 124: invalid use of /** suffix in pattern '%s'\n"
+-msgstr ""
++msgstr "udevil: aviso 124: uso inválido do sufixo / ** na predefinição '%s'\n"
+ 
+ #: ../src/udevil.c:1236
+ #, c-format
+ msgid "udevil: warning 125: ** wildcard not allowed in %s\n"
+-msgstr ""
++msgstr "udevil: aviso 125: ** curinga não é permitido em %s\n"
+ 
+ #: ../src/udevil.c:1534 ../src/udevil.c:1576 ../src/udevil.c:1638
+ #: ../src/udevil.c:1681
+@@ -90,7 +91,7 @@ msgstr "udevil: erro 147: impossível obter o ciclo de um dispositivo livre\n"
+ 
+ #: ../src/udevil.c:1598
+ msgid "udevil: error 150: path changed\n"
+-msgstr "udevil: erro 150: caminho alterado\n"
++msgstr "udevil: erro 150: caminho modificado\n"
+ 
+ #: ../src/udevil.c:1738
+ #, c-format
+@@ -100,7 +101,7 @@ msgstr "udevil: alerta! 10: impossível executar losetup (%s)\n"
+ #: ../src/udevil.c:1972
+ #, c-format
+ msgid "udevil: error 11: could not open %s\n"
+-msgstr "udevil: erro 11: não pode abrir %s\n"
++msgstr "udevil: erro 11: impossível abrir %s\n"
+ 
+ #: ../src/udevil.c:1980
+ #, c-format
+@@ -110,12 +111,12 @@ msgstr "udevil: erro 12: erro ao escrever em %s\n"
+ #: ../src/udevil.c:2030
+ #, c-format
+ msgid "udevil: error 13: unable to run %s\n"
+-msgstr "udevil: erro 13: incapaz de executar %s\n"
++msgstr "udevil: erro 13: impossível executar %s\n"
+ 
+ #: ../src/udevil.c:2042
+ #, c-format
+ msgid "      %s exit status = %d\n"
+-msgstr "      %s status de saída = %d\n"
++msgstr "      %s estado da saída = %d\n"
+ 
+ #: ../src/udevil.c:2047
+ #, c-format
+@@ -130,12 +131,12 @@ msgstr "udevil: tentando desmontar como usuário atual\n"
+ #: ../src/udevil.c:2098
+ #, c-format
+ msgid "udevil: warning 15: unable to run umount (%s)\n"
+-msgstr "udevil: alerta! 15: incapaz de executar umount (%s)\n"
++msgstr "udevil: alerta! 15: impossível executar desmontagem (%s)\n"
+ 
+ #: ../src/udevil.c:2103 ../src/udevil.c:2176
+ #, c-format
+ msgid "      umount exit status = %d\n"
+-msgstr "      status de saída ao desmontar = %d\n"
++msgstr "      estado da saída ao desmontar = %d\n"
+ 
+ #. success - show output
+ #: ../src/udevil.c:2112
+@@ -159,7 +160,7 @@ msgstr "udevil: erro 17: impossível executar montagem (%s)\n"
+ #: ../src/udevil.c:2252
+ #, c-format
+ msgid "      mount exit status = %d\n"
+-msgstr "      status de saída da montagem = %d\n"
++msgstr "      estado de saída ao montar = %d\n"
+ 
+ #: ../src/udevil.c:2266
+ msgid "udevil: error 148: unable to attach file to loop device\n"
+@@ -178,12 +179,12 @@ msgstr "udevil: recusado 19: Caminho inválido\n"
+ #: ../src/udevil.c:2333
+ #, c-format
+ msgid "udevil: denied 20: mount path '%s' is not a directory\n"
+-msgstr "udevil: recusado 20: caminho de montagem '%s' não é um diretório\n"
++msgstr "udevil: recusado 20: o caminho de montagem '%s' não é um diretório\n"
+ 
+ #: ../src/udevil.c:2335
+ #, c-format
+ msgid "udevil: denied 21: mount path '%s' is already mounted\n"
+-msgstr "udevil: recusado 21: caminho de montagem '%s' já está montado\n"
++msgstr "udevil: recusado 21: o caminho de montagem '%s' já está montado\n"
+ 
+ #: ../src/udevil.c:2339
+ #, c-format
+@@ -193,7 +194,7 @@ msgstr "udevil: recusado 22: impossível obter estatísticas '%s': %s\n"
+ #: ../src/udevil.c:2341
+ #, c-format
+ msgid "udevil: denied 23: neither you nor root owns '%s'\n"
+-msgstr "udevil: recusado 23: nem você nem o administrador possui '%s'\n"
++msgstr "udevil: recusado 23: nem você nem o administrador possuem '%s'\n"
+ 
+ #: ../src/udevil.c:2376
+ #, c-format
+@@ -206,73 +207,73 @@ msgstr "udevil: aviso 24: impossível executar setfacl (%s)\n"
+ msgid ""
+ "udevil: warning 25: setfacl on %s failed, falling back to 'user:root "
+ "rwx------'\n"
+-msgstr ""
++msgstr "udevil: aviso 25: setfacl falhou em  %s, voltando para 'user:root rwx------'\n"
+ 
+ #: ../src/udevil.c:2491
+ #, c-format
+ msgid ""
+ "udevil: error 26: invalid type '%s' for SMB share - must be cifs or smbfs\n"
+-msgstr "udevil: erro 26: '%s' tipo inválido para SMB partes - deve ser cifs ou smbfs\n"
++msgstr "udevil: erro 26: '%s' não é um tipo válido para compartilhamento SMB - deve ser CIFS ou SMBF\n"
+ 
+ #: ../src/udevil.c:2506
+ #, c-format
+ msgid ""
+ "udevil: error 27: invalid type '%s' for NFS share - must be nfs or nfs4\n"
+-msgstr "udevil: error 27: '%s' tipo inválido para NFS partes - deve ser nfs ou nfs4\n"
++msgstr "udevil: error 27: '%s' é um tipo inválido para compartilhamento NFS - deve ser nfs ou NFS4\n"
+ 
+ #: ../src/udevil.c:2519
+ #, c-format
+ msgid ""
+ "udevil: error 28: invalid type '%s' for curlftpfs share - must be "
+ "curlftpfs\n"
+-msgstr "udevil: error 28: tipo inválido '%s' para curlftpfs partes - deve ser curlftpfs\n"
++msgstr "udevil: error 28: '%s' não é um tipo válido para compartilhamento - deve ser curlftpfs\n"
+ 
+ #: ../src/udevil.c:2531
+ #, c-format
+ msgid ""
+ "udevil: error 29: invalid type '%s' for FTP share - must be curlftpfs or "
+ "ftpfs\n"
+-msgstr "udevil: error 29: '%s' tipo inválido para FTP partes - deve ser curlftpfs ou ftpfs\n"
++msgstr "udevil: error 29: '%s' não é um tipo válido para compartilhamento FTP - deve ser curlftpfs ou ftpfs\n"
+ 
+ #: ../src/udevil.c:2556
+ #, c-format
+ msgid "udevil: error 30: invalid type '%s' for sshfs share - must be sshfs\n"
+-msgstr "udevil: erro 30: '%s' tipo inválido para sshfs partes - deve ser sshfs\n"
++msgstr "udevil: erro 30: '%s' não é um tipo válido para compartilhamento sshfs - deve ser sshfs\n"
+ 
+ #: ../src/udevil.c:2569
+ #, c-format
+ msgid "udevil: error 31: invalid type '%s' for sshfs share - must be sshfs\n"
+-msgstr "udevil: erro 31: '%s' tipo inválido para sshfs partes - deve ser sshfs\n"
++msgstr "udevil: erro 31: '%s' não é um tipo válido para compartilhamento sshfs - deve ser sshfs\n"
+ 
+ #: ../src/udevil.c:2581
+ #, c-format
+ msgid "udevil: error 151: invalid type '%s' for WebDAV share - must be davfs\n"
+-msgstr "udevil: erro 151: '%s' tipo inválido para WebDAV partes - deve ser davfs\n"
++msgstr "udevil: erro 151: '%s' não é um tipo válido para compartilhamento WebDAV - deve ser davfs\n"
+ 
+ #: ../src/udevil.c:2596
+ #, c-format
+ msgid "udevil: error 32: invalid type '%s' for sshfs share - must be sshfs\n"
+-msgstr "udevil: erro 32: '%s' tipo inválido para sshfs partes - deve ser sshfs\n"
++msgstr "udevil: erro 32: '%s' não é um tipo válido para compartilhamento sshfs - deve ser sshfs\n"
+ 
+ #: ../src/udevil.c:2607
+ #, c-format
+ msgid ""
+ "udevil: error 33: invalid type '%s' for NFS share - must be nfs or nfs4\n"
+-msgstr "udevil: erro 33: '%s' tipo inválido para NFS partes - deve ser nfs ou nfs4\n"
++msgstr "udevil: erro 33: '%s' não é um tipo válido para compartilhamento NFS - deve ser nfs ou nfs4\n"
+ 
+ #: ../src/udevil.c:2724
+ #, c-format
+ msgid "udevil: error 34: '%s' is not a recognized network url\n"
+-msgstr "udevil: erro 34: '%s' não é uma url rede reconhecida\n"
++msgstr "udevil: erro 34: '%s' não é uma url de rede reconhecida\n"
+ 
+ #: ../src/udevil.c:2733
+ msgid "udevil: error 35: invalid network url\n"
+-msgstr "udevil: erro 35: url rede inválida\n"
++msgstr "udevil: erro 35: url de rede inválida\n"
+ 
+ #: ../src/udevil.c:2750
+ #, c-format
+ msgid "udevil: error 36: lookup host '%s' failed\n"
+-msgstr "udevil: erro 36: pesquisar host '%s' falhou\n"
++msgstr "udevil: erro 36: falha ao pesquisar host '%s'\n"
+ 
+ #: ../src/udevil.c:2800
+ #, c-format
+@@ -289,7 +290,7 @@ msgstr "Para corrigir esse problema"
+ 
+ #: ../src/udevil.c:2820
+ msgid "udevil: error 38: mount requires DEVICE argument\n"
+-msgstr "udevil: erro 38: montagem requer argumento DISPOSITIVO\n"
++msgstr "udevil: erro 38: montagem requer argumento do DISPOSITIVO\n"
+ 
+ #: ../src/udevil.c:2822
+ msgid "udevil: error 39: unmount requires DEVICE argument\n"
+@@ -335,7 +336,7 @@ msgstr "udevil: aviso 45: opções ignoradas para o dispositivo em fstab (ou esp
+ #: ../src/udevil.c:3033
+ #, c-format
+ msgid "udevil: error 46: cannot find '%s' mounted in mtab\n"
+-msgstr "udevil: erro 46: não pode encontrar '%s' montado em mtab\n"
++msgstr "udevil: erro 46: impossível encontrar '%s' montado em mtab\n"
+ 
+ #: ../src/udevil.c:3047
+ msgid "udevil: error 47: cannot canonicalize attached loop device\n"
+@@ -348,12 +349,12 @@ msgstr "udevil: recusado 48: 'arquivo' não é um tipo permitido\n"
+ #: ../src/udevil.c:3061
+ #, c-format
+ msgid "udevil: denied 49: '%s' is not an allowed file\n"
+-msgstr "udevil: recusado 49: '%s' não é um arquivo permitido\n"
++msgstr "udevil: recusado 49: '%s' não é um arquivo autorizado\n"
+ 
+ #: ../src/udevil.c:3068
+ #, c-format
+ msgid "udevil: error 50: cannot find '%s' mounted in mtab\n"
+-msgstr "udevil: error 50: não pode encontrar '%s' montado em mtab\n"
++msgstr "udevil: error 50: impossível encontrar '%s' montado em mtab\n"
+ 
+ #: ../src/udevil.c:3087
+ #, c-format
+@@ -363,7 +364,7 @@ msgstr "udevil: alerta 51: o dispositivo conectado %s não é um dispositivo de
+ #: ../src/udevil.c:3112
+ #, c-format
+ msgid "udevil: error 52: cannot stat %s: %s\n"
+-msgstr "udevil: erro 52: impossível obter estado %s: %s\n"
++msgstr "udevil: erro 52: impossível obter estatísticas %s: %s\n"
+ 
+ #: ../src/udevil.c:3131
+ msgid "udevil: error 53: cannot canonicalize path\n"
+@@ -377,7 +378,7 @@ msgstr "udevil: erro 54: inválido caminho '%s'\n"
+ #: ../src/udevil.c:3156
+ #, c-format
+ msgid "udevil: error 55: cannot find '%s' mounted in mtab\n"
+-msgstr "udevil: erro 55: não pode encontrar '%s' montado em mtab\n"
++msgstr "udevil: erro 55: impossível encontrar '%s' montado em mtab\n"
+ 
+ #: ../src/udevil.c:3163
+ #, c-format
+@@ -424,7 +425,7 @@ msgstr "udevil: erro 63: nenhuma mídia no dispositivo %s (ou especificar tipo c
+ 
+ #: ../src/udevil.c:3260
+ msgid "udevil: error 64: unable to determine device fstype - specify with -t\n"
+-msgstr "udevil: erro 64:  impossível determinar dispositivo - especificar com -t\n"
++msgstr "udevil: erro 64:  impossível determinar o dispositivo - especificar com -t\n"
+ 
+ #: ../src/udevil.c:3320
+ #, c-format
+@@ -438,7 +439,7 @@ msgstr "udevil: recusado 66: impossível encontrar o ponto de montagem para '%s'
+ 
+ #: ../src/udevil.c:3343
+ msgid "udevil: error 67: cannot canonicalize mount point path\n"
+-msgstr "udevil: erro 67: não pode aceitar o ponto de montagem para o caminho\n"
++msgstr "udevil: erro 67: impossível aceitar o ponto de montagem para o caminho '%s'\n"
+ 
+ #: ../src/udevil.c:3354
+ #, c-format
+@@ -447,11 +448,11 @@ msgstr "udevil: erro 68: impossível obter estado '%s'\n"
+ 
+ #: ../src/udevil.c:3372
+ msgid "udevil: error 69: cannot canonicalize mount point path\n"
+-msgstr "udevil: erro 69: não pode aceitar o ponto de montagem para o caminho\n"
++msgstr "udevil: erro 69: impossível aceitar o ponto de montagem para o caminho\n"
+ 
+ #: ../src/udevil.c:3383
+ msgid "udevil: error 70: cannot canonicalize mount point path\n"
+-msgstr "udevil: erro 70: não pode aceitar o ponto de montagem para o caminho\n"
++msgstr "udevil: erro 70: impossível aceitar o ponto de montagem para o caminho\n"
+ 
+ #: ../src/udevil.c:3393
+ #, c-format
+@@ -465,11 +466,11 @@ msgstr "udevil: erro 72: vários tipos de sistema de arquivo não permitidos\n"
+ #: ../src/udevil.c:3411
+ #, c-format
+ msgid "udevil: denied 73: fstype '%s' is not an allowed type\n"
+-msgstr "udevil: recusado 73: sistema de arquivo '%s' não é um tipo permitido\n"
++msgstr "udevil: recusado 73: '%s' não é um tipo de sistema de arquivso permitido\n"
+ 
+ #: ../src/udevil.c:3420
+ msgid "udevil: error 74: could not get username\n"
+-msgstr "udevil: erro 74: não foi possível obter nome do usuário\n"
++msgstr "udevil: erro 74: impossível possível obter o nome do usuário\n"
+ 
+ #: ../src/udevil.c:3428
+ #, c-format
+@@ -489,12 +490,12 @@ msgstr "udevil: recusao 78: host '%s' (%s) não é uma rede permitida\n"
+ #: ../src/udevil.c:3468
+ #, c-format
+ msgid "udevil: denied 79: host '%s' (%s) is a forbidden network\n"
+-msgstr "udevil: recusado 79: host '%s' (%s) é uma rede proibida\n"
++msgstr "udevil: recusado 79: host '%s' (%s) é uma rede bloqueada\n"
+ 
+ #: ../src/udevil.c:3483
+ #, c-format
+ msgid "udevil: denied 80: device %s is not an allowed device\n"
+-msgstr "udevil: recusado 80: dispositivo %s não é um dispositivo permitido\n"
++msgstr "udevil: recusado 80: o dispositivo %s não possui permissão\n"
+ 
+ #: ../src/udevil.c:3490
+ #, c-format
+@@ -514,7 +515,7 @@ msgstr "udevil: recusado 83: você não tem permissão de leitura para o arquivo
+ #: ../src/udevil.c:3524
+ #, c-format
+ msgid "udevil: denied 145: cannot open '%s'\n"
+-msgstr "udevil: recusado 145: não pode abrir '%s'\n"
++msgstr "udevil: recusado 145: impossível abrir '%s'\n"
+ 
+ #: ../src/udevil.c:3537
+ msgid "udevil: error 146: path changed\n"
+@@ -547,7 +548,7 @@ msgstr "udevil: recusado 88: dispositivo %s é um dispositivo interno e você n
+ #: ../src/udevil.c:3806
+ #, c-format
+ msgid "udevil: error 89: options contain an invalid character ('%c')\n"
+-msgstr "udevil: erro 89: opções contêm um caracter inválido ('%c')\n"
++msgstr "udevil: erro 89: as opções ('%c') possuem caracter inválido\n"
+ 
+ #: ../src/udevil.c:3815
+ #, c-format
+@@ -566,7 +567,7 @@ msgstr "udevil: recusado 149: não pode usar a opção remontar com o arquivo\n"
+ #, c-format
+ msgid ""
+ "udevil: denied 92: device %s is already mounted (or specify mount point)\n"
+-msgstr "udevil: recusado 92: dispositivo %s já está montado (ou especificar o ponto de montagem)\n"
++msgstr "udevil: recusado 92: o dispositivo %s já está montado (ou especificar o ponto de montagem)\n"
+ 
+ #: ../src/udevil.c:3896
+ #, c-format
+@@ -1039,7 +1040,7 @@ msgstr "HELP  -  Mostrar esta ajuda\n"
+ 
+ #: ../src/udevil.c:5013
+ msgid "For config see"
+-msgstr ""
++msgstr "Para configuração veja"
+ 
+ #: ../src/udevil.c:5015
+ #, c-format
+diff --git a/po/ru.po b/po/ru.po
+index ab14e8c..d395ef1 100644
+--- a/po/ru.po
++++ b/po/ru.po
+@@ -13,10 +13,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-28 18:39+0000\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+ "Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
+-"Language-Team: Russian (http://www.transifex.com/projects/p/udevil/language/ru/)\n"
++"Language-Team: Russian (http://www.transifex.com/ignorantguru/udevil/language/ru/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -26,8 +26,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: ошибка 1: невозможно сбросить привилегии — сообщите об этой проблеме разработчику\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+diff --git a/po/sv.po b/po/sv.po
+index de0e857..4109f94 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -10,10 +10,10 @@ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+-"POT-Creation-Date: 2015-04-28 18:39+0000\n"
+-"PO-Revision-Date: 2015-04-29 15:26+0000\n"
+-"Last-Translator: Ingemar Karlsson <ingemar@ingk.se>\n"
+-"Language-Team: Swedish (http://www.transifex.com/projects/p/udevil/language/sv/)\n"
++"POT-Creation-Date: 2015-10-16 15:19+0000\n"
++"PO-Revision-Date: 2015-10-16 15:21+0000\n"
++"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Language-Team: Swedish (http://www.transifex.com/ignorantguru/udevil/language/sv/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+@@ -23,8 +23,8 @@ msgstr ""
+ #: ../src/udevil.c:616
+ #, c-format
+ msgid ""
+-"udevil: error 1: unable to drop priviledges - please report this problem\n"
+-msgstr "udevil: error 1: oförmögen att sänka behörigheter - vänligen rapportera problemet\n"
++"udevil: error 1: unable to drop privileges - please report this problem\n"
++msgstr ""
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+
+From 83b1254c2f1d778577324a341d43b83aca129822 Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@openmailbox.org>
+Date: Sat, 25 Mar 2017 06:14:49 -0600
+Subject: [PATCH 07/11] fix cannot mount iso file within iso file #62
+
+---
+ src/udevil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udevil.c b/src/udevil.c
+index ab4f5c1..9d95d88 100644
+--- a/src/udevil.c
++++ b/src/udevil.c
+@@ -3517,7 +3517,7 @@ static int command_mount( CommandData* data )
+                 }
+                 // test for race conditions
+                 restore_privileges();
+-                fd = open( data->device_file, O_RDWR );
++                fd = open( data->device_file, O_RDONLY );
+                 drop_privileges( 0 );
+                 if ( fd == -1 )
+                 {
+
+From d73166c9f88d72a897aceb442311acf51aa24750 Mon Sep 17 00:00:00 2001
+From: IgnorantGuru <ignorantguru@openmailbox.org>
+Date: Sat, 25 Mar 2017 06:18:35 -0600
+Subject: [PATCH 08/11] update lang pt_BR fr ru sv de it pl es
+
+---
+ po/de.po    |  2 +-
+ po/es.po    |  4 ++--
+ po/fr.po    |  2 +-
+ po/it.po    |  4 ++--
+ po/pl.po    |  4 ++--
+ po/pt_BR.po | 16 ++++++++--------
+ po/ru.po    | 18 +++++++++---------
+ po/sv.po    | 10 +++++-----
+ 8 files changed, 30 insertions(+), 30 deletions(-)
+
+diff --git a/po/de.po b/po/de.po
+index 505774d..adc1fbc 100644
+--- a/po/de.po
++++ b/po/de.po
+@@ -11,7 +11,7 @@ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Last-Translator: IgnorantGuru <ignorantguru@openmailbox.org>\n"
+ "Language-Team: German (http://www.transifex.com/ignorantguru/udevil/language/de/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+diff --git a/po/es.po b/po/es.po
+index b589b22..f80ef6d 100644
+--- a/po/es.po
++++ b/po/es.po
+@@ -3,7 +3,7 @@
+ # package.
+ # 
+ # Translators:
+-# Adolfo Jayme Barrientos, 2013
++# Adolfo Jayme-Barrientos, 2013
+ # Dorian Hawkmoon <dorian.cadenas@gmail.com>, 2013
+ msgid ""
+ msgstr ""
+@@ -11,7 +11,7 @@ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Last-Translator: IgnorantGuru <ignorantguru@openmailbox.org>\n"
+ "Language-Team: Spanish (http://www.transifex.com/ignorantguru/udevil/language/es/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+diff --git a/po/fr.po b/po/fr.po
+index a54fbcd..5a78208 100644
+--- a/po/fr.po
++++ b/po/fr.po
+@@ -11,7 +11,7 @@ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Last-Translator: IgnorantGuru <ignorantguru@openmailbox.org>\n"
+ "Language-Team: French (http://www.transifex.com/ignorantguru/udevil/language/fr/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+diff --git a/po/it.po b/po/it.po
+index ebe277d..57b0100 100644
+--- a/po/it.po
++++ b/po/it.po
+@@ -3,7 +3,7 @@
+ # package.
+ # 
+ # Translators:
+-# IgnorantGuru <ignorantguru@gmx.com>, 2013
++# IgnorantGuru <ignorantguru@openmailbox.org>, 2013
+ # Matteo Bernardini <matteo.bernardini@gmail.com>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+@@ -13,7 +13,7 @@ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Last-Translator: IgnorantGuru <ignorantguru@openmailbox.org>\n"
+ "Language-Team: Italian (http://www.transifex.com/ignorantguru/udevil/language/it/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+diff --git a/po/pl.po b/po/pl.po
+index a8589b8..fecb276 100644
+--- a/po/pl.po
++++ b/po/pl.po
+@@ -11,13 +11,13 @@ msgstr ""
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+ "PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"Last-Translator: IgnorantGuru <ignorantguru@openmailbox.org>\n"
+ "Language-Team: Polish (http://www.transifex.com/ignorantguru/udevil/language/pl/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+ "Content-Transfer-Encoding: 8bit\n"
+ "Language: pl\n"
+-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
++"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>=14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+ 
+ #: ../src/udevil.c:616
+ #, c-format
+diff --git a/po/pt_BR.po b/po/pt_BR.po
+index 3200b9a..bfebed1 100644
+--- a/po/pt_BR.po
++++ b/po/pt_BR.po
+@@ -6,7 +6,7 @@
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+-# wandows <pressaperfeicao@yahoo.com.br>, 2014-2015
++# wandows <pressaperfeicao@yahoo.com.br>, 2014-2016
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ msgid ""
+@@ -14,8 +14,8 @@ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+-"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"PO-Revision-Date: 2016-08-31 16:20+0000\n"
++"Last-Translator: wandows <pressaperfeicao@yahoo.com.br>\n"
+ "Language-Team: Portuguese (Brazil) (http://www.transifex.com/ignorantguru/udevil/language/pt_BR/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+@@ -27,7 +27,7 @@ msgstr ""
+ #, c-format
+ msgid ""
+ "udevil: error 1: unable to drop privileges - please report this problem\n"
+-msgstr ""
++msgstr "udevil: erro 1: Não é possível desconectar privilégios - informe este problema\n"
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+@@ -981,11 +981,11 @@ msgstr "    OPÇÕES DE DESMONTAGENS:\n"
+ 
+ #: ../src/udevil.c:4983 ../src/udevil.c:4995
+ msgid "lazy unmount (see man umount)"
+-msgstr "desmontagem lenta (ver man umount)"
++msgstr "desmontagem lenta (veja: man umount)"
+ 
+ #: ../src/udevil.c:4984 ../src/udevil.c:4996
+ msgid "force unmount (see man umount)"
+-msgstr "forçar desmontagem (ver man umount)"
++msgstr "forçar desmontagem (veja: man umount)"
+ 
+ #: ../src/udevil.c:4991
+ #, c-format
+@@ -1026,12 +1026,12 @@ msgstr "    udevil info|--show-info|--info [-b|--block-device] DISPOSITIVO\n"
+ #: ../src/udevil.c:5003
+ #, c-format
+ msgid "MONITOR  -  Display device events emulating udisks v1 output:\n"
+-msgstr "MONITORAR  -  Mostra eventos dos dispositivos emulando udisks v1 saída\n"
++msgstr "MONITOR  -  Mostra eventos dos dispositivos emulando udisks v1 saída\n"
+ 
+ #: ../src/udevil.c:5006
+ #, c-format
+ msgid "CLEAN  -  Remove unmounted udevil-created mount dirs in media dirs\n"
+-msgstr "CLEAN  -  Remove pastas criadas por udevil desmontado as pastas de mídia\n"
++msgstr "CLEAN  -  Remove as pastas criadas por udevil desmontando as pastas de mídia\n"
+ 
+ #: ../src/udevil.c:5008
+ #, c-format
+diff --git a/po/ru.po b/po/ru.po
+index d395ef1..4d0af8c 100644
+--- a/po/ru.po
++++ b/po/ru.po
+@@ -6,7 +6,7 @@
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # wandows <pressaperfeicao@yahoo.com.br>, 2013
+ # Vladimir Kudrya <vladimir-csp@yandex.ru>, 2012
+-# Vladimir Kudrya <vladimir-csp@yandex.ru>, 2012
++# Vladimir Kudrya <vladimir-csp@yandex.ru>, 2012,2016
+ # irk.translator <irk.translator@gmail.com>, 2012
+ # Vladimir Lomov <irk.translator@yandex.ru>, 2012-2013
+ msgid ""
+@@ -14,8 +14,8 @@ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+-"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"PO-Revision-Date: 2016-02-14 10:57+0000\n"
++"Last-Translator: Vladimir Kudrya <vladimir-csp@yandex.ru>\n"
+ "Language-Team: Russian (http://www.transifex.com/ignorantguru/udevil/language/ru/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+@@ -27,7 +27,7 @@ msgstr ""
+ #, c-format
+ msgid ""
+ "udevil: error 1: unable to drop privileges - please report this problem\n"
+-msgstr ""
++msgstr "udevil: ошибка 1: невозможно сбросить привилегии - сообщите об этой проблеме разработчику\n"
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+@@ -57,7 +57,7 @@ msgstr "udevil: ошибка 6: %s строка %d повторяющийся п
+ #: ../src/udevil.c:904
+ #, c-format
+ msgid "udevil: warning 7: cannot read config file %s\n"
+-msgstr ""
++msgstr "udevil: предупреждение 7: невозможно прочитать конфигурационный файл %s\n"
+ 
+ #: ../src/udevil.c:916
+ #, c-format
+@@ -72,12 +72,12 @@ msgstr "udevil: ошибка 8: ошибка записи в файл журна
+ #: ../src/udevil.c:1233
+ #, c-format
+ msgid "udevil: warning 124: invalid use of /** suffix in pattern '%s'\n"
+-msgstr ""
++msgstr "udevil: предупреждение 124: некорректное использование суффикса /** в шаблоне '%s'\n"
+ 
+ #: ../src/udevil.c:1236
+ #, c-format
+ msgid "udevil: warning 125: ** wildcard not allowed in %s\n"
+-msgstr ""
++msgstr "udevil: предупреждение 125: групповой символ ** недопустим в %s\n"
+ 
+ #: ../src/udevil.c:1534 ../src/udevil.c:1576 ../src/udevil.c:1638
+ #: ../src/udevil.c:1681
+@@ -207,7 +207,7 @@ msgstr "udevil: предупреждение 24: невозможно выпол
+ msgid ""
+ "udevil: warning 25: setfacl on %s failed, falling back to 'user:root "
+ "rwx------'\n"
+-msgstr ""
++msgstr "udevil: предупреждение 25: выполнение setfacl на %s неуспешно, откат к применению прав 'user:root rwx------'\n"
+ 
+ #: ../src/udevil.c:2491
+ #, c-format
+@@ -1040,7 +1040,7 @@ msgstr "HELP  —  показать эту справку\n"
+ 
+ #: ../src/udevil.c:5013
+ msgid "For config see"
+-msgstr ""
++msgstr "См. конфигурацию в"
+ 
+ #: ../src/udevil.c:5015
+ #, c-format
+diff --git a/po/sv.po b/po/sv.po
+index 4109f94..78fe494 100644
+--- a/po/sv.po
++++ b/po/sv.po
+@@ -3,16 +3,16 @@
+ # package.
+ # 
+ # Translators:
+-# IgnorantGuru <ignorantguru@gmx.com>, 2013
+-# IgnorantGuru <ignorantguru@gmx.com>, 2013
++# IgnorantGuru <ignorantguru@openmailbox.org>, 2013
++# IgnorantGuru <ignorantguru@openmailbox.org>, 2013
+ # Ingemar Karlsson <ingemar@ingk.se>, 2013,2015
+ msgid ""
+ msgstr ""
+ "Project-Id-Version: udevil\n"
+ "Report-Msgid-Bugs-To: \n"
+ "POT-Creation-Date: 2015-10-16 15:19+0000\n"
+-"PO-Revision-Date: 2015-10-16 15:21+0000\n"
+-"Last-Translator: IgnorantGuru <ignorantguru@gmx.com>\n"
++"PO-Revision-Date: 2015-10-16 16:37+0000\n"
++"Last-Translator: Ingemar Karlsson <ingemar@ingk.se>\n"
+ "Language-Team: Swedish (http://www.transifex.com/ignorantguru/udevil/language/sv/)\n"
+ "MIME-Version: 1.0\n"
+ "Content-Type: text/plain; charset=UTF-8\n"
+@@ -24,7 +24,7 @@ msgstr ""
+ #, c-format
+ msgid ""
+ "udevil: error 1: unable to drop privileges - please report this problem\n"
+-msgstr ""
++msgstr "udevil: error 1: det går inte att släppa privilegier - var vänlig rapportera detta problem\n"
+ 
+ #: ../src/udevil.c:810
+ #, c-format
+
+From 3ea6daa4915968904ab59f6523a37e19640a83a9 Mon Sep 17 00:00:00 2001
+From: ebonmts <mats.bengtsson@ericsson.com>
+Date: Thu, 30 Jan 2020 10:30:09 +0100
+Subject: [PATCH 09/11] Add --source and --target command-line options
+
+---
+ src/udevil.c | 31 +++++++++++++++++++++++++------
+ 1 file changed, 25 insertions(+), 6 deletions(-)
+
+diff --git a/src/udevil.c b/src/udevil.c
+index bab80e9..bf4d621 100644
+--- a/src/udevil.c
++++ b/src/udevil.c
+@@ -5175,7 +5175,8 @@ printf("\n-----------------------\n");
+                     }
+                 }
+                 else if ( !strcmp( arg, "unmount" ) || !strcmp( arg, "--unmount" )
+-                           || !strcmp( arg, "umount" ) || !strcmp( arg, "--umount" ) )
++                                                    || !strcmp( arg, "umount" )
++                                                    || !strcmp( arg, "--umount" ) )
+                 {
+                     data->cmd_type = CMD_UNMOUNT;
+                     if ( arg_next )
+@@ -5203,7 +5204,7 @@ printf("\n-----------------------\n");
+                     }
+                 }
+                 else if ( !strcmp( arg, "info" ) || !strcmp( arg, "--show-info" )
+-                                                    || !strcmp( arg, "--info" ) )
++                                                 || !strcmp( arg, "--info" ) )
+                 {
+                     data->cmd_type = CMD_INFO;
+                     if ( arg_next )
+@@ -5229,7 +5230,7 @@ printf("\n-----------------------\n");
+                 else if ( !strcmp( arg, "--quiet" ) )
+                     verbose = 2;
+                 else if ( !strcmp( arg, "help" ) || !strcmp( arg, "--help" )
+-                                                    || !strcmp( arg, "-h" ) )
++                                                 || !strcmp( arg, "-h" ) )
+                 {
+                     dump_log();
+                     drop_privileges( 1 );
+@@ -5250,8 +5251,8 @@ printf("\n-----------------------\n");
+                     ac += next_inc;
+                 }
+                 else if ( !strcmp( arg, "-t" ) || !strcmp( arg, "--filesystem-type" )
+-                                                || !strcmp( arg, "--types" )
+-                                                || !strcmp( arg, "--mount-fstype" ) )
++                                               || !strcmp( arg, "--types" )
++                                               || !strcmp( arg, "--mount-fstype" ) )
+                 {
+                     if ( !arg_next )
+                         goto _reject_missing_arg;
+@@ -5261,7 +5262,7 @@ printf("\n-----------------------\n");
+                     ac += next_inc;
+                 }
+                 else if ( !strcmp( arg, "-o" ) || !strcmp( arg, "--options" )
+-                                        || !strcmp( arg, "--mount-options" ) )
++                                               || !strcmp( arg, "--mount-options" ) )
+                 {
+                     if ( !arg_next )
+                         goto _reject_missing_arg;
+@@ -5288,6 +5289,24 @@ printf("\n-----------------------\n");
+                     data->uuid = g_strdup( arg_next );
+                     ac += next_inc;
+                 }
++                else if ( !strcmp( arg, "--source" ) )
++                {
++                    if ( !arg_next )
++                        goto _reject_missing_arg;
++                    if ( data->device_file )
++                        goto _reject_too_many;
++                    data->device_file = g_strdup( arg_next );
++                    ac += next_inc;
++                }
++                else if ( !strcmp( arg, "--target" ) )
++                {
++                    if ( !arg_next )
++                        goto _reject_missing_arg;
++                    if ( data->point )
++                        goto _reject_too_many;
++                    data->point = g_strdup( arg_next );
++                    ac += next_inc;
++                }
+                 else if ( !strcmp( arg, "--no-user-interaction" ) )
+                 {
+                     // ignore
+
+From 755145682402c9e1145be055299a83809e755057 Mon Sep 17 00:00:00 2001
+From: ebonmts <mats.bengtsson@ericsson.com>
+Date: Thu, 30 Jan 2020 10:55:34 +0100
+Subject: [PATCH 10/11] Allow -o option where option value follows without any
+ separating space
+
+---
+ src/udevil.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/udevil.c b/src/udevil.c
+index bf4d621..1e8416b 100644
+--- a/src/udevil.c
++++ b/src/udevil.c
+@@ -5271,6 +5271,12 @@ printf("\n-----------------------\n");
+                     data->options = g_strdup( arg_next );
+                     ac += next_inc;
+                 }
++                else if ( !strncmp( arg, "-o", 2 ) && strlen( arg ) > 2 )
++                {
++                    if ( data->options )
++                        goto _reject_too_many;
++                    data->options = g_strdup( arg + 2 );
++                }
+                 else if ( !strcmp( arg, "-L" ) )
+                 {
+                     if ( !arg_next )
+
+From cf49768b9694d66f4013d59794d8896db6a5d455 Mon Sep 17 00:00:00 2001
+From: ebonmts <mats.bengtsson@ericsson.com>
+Date: Wed, 5 Feb 2020 09:58:49 +0100
+Subject: [PATCH 11/11] Add support for mounting and unmounting of overlays.
+
+---
+ etc/udevil.conf   |   4 +-
+ src/device-info.h |   1 +
+ src/udevil.c      | 247 +++++++++++++++++++++++++++++++++++++---------
+ 3 files changed, 204 insertions(+), 48 deletions(-)
+
+diff --git a/etc/udevil.conf b/etc/udevil.conf
+index 75a4c0d..76c73e0 100644
+--- a/etc/udevil.conf
++++ b/etc/udevil.conf
+@@ -41,7 +41,7 @@ log_keep_days = 10
+ # allowed_types_jim = vfat
+ # Setting allowed_types = * does NOT allow all types, as this is a security
+ # risk, but does allow all recognized types.
+-# allowed_types = $KNOWN_FILESYSTEMS, file, cifs, smbfs, nfs, curlftpfs, ftpfs, sshfs, davfs, tmpfs, ramfs
++# allowed_types = $KNOWN_FILESYSTEMS, file, cifs, smbfs, nfs, curlftpfs, ftpfs, sshfs, davfs, tmpfs, ramfs, overlay
+ allowed_types = $KNOWN_FILESYSTEMS, file
+ 
+ 
+@@ -245,7 +245,7 @@ default_options_ramfs     = nosuid, noexec, nodev, noatime, uid=$UID, gid=$GID
+ # and GID.
+ # If you want to forbid remounts, remove 'remount' from here.
+ # WARNING:  OPTIONS HERE CAN CAUSE SERIOUS SECURITY PROBLEMS - CHOOSE CAREFULLY
+-allowed_options           = nosuid, noexec, nodev, noatime, fmask=0133, dmask=0022, uid=$UID, gid=$GID, ro, rw, sync, flush, iocharset=*, utf8, remount
++allowed_options           = nosuid, noexec, nodev, noatime, fmask=0133, dmask=0022, uid=$UID, gid=$GID, ro, rw, sync, flush, iocharset=*, utf8, remount, lowerdir=*, upperdir=*, workdir=*
+ allowed_options_nfs       = nosuid, noexec, nodev, noatime, ro, rw, sync, remount, port=*, rsize=*, wsize=*, hard, proto=*, timeo=*, retrans=*
+ allowed_options_cifs      = nosuid, noexec, nodev, ro, rw, remount, port=*, user=*, username=*, pass=*, password=*, guest, domain=*, uid=$UID, gid=$GID, credentials=*
+ allowed_options_smbfs     = nosuid, noexec, nodev, ro, rw, remount, port=*, user=*, username=*, pass=*, password=*, guest, domain=*, uid=$UID, gid=$GID, credentials=*
+diff --git a/src/device-info.h b/src/device-info.h
+index 6cb3683..101ff9d 100644
+--- a/src/device-info.h
++++ b/src/device-info.h
+@@ -14,6 +14,7 @@
+ #include <libudev.h>
+ #include <fcntl.h>
+ #include <errno.h>
++#include <sys/stat.h>
+ 
+ // intltool
+ #include <glib/gi18n.h>
+diff --git a/src/udevil.c b/src/udevil.c
+index 1e8416b..095bc84 100644
+--- a/src/udevil.c
++++ b/src/udevil.c
+@@ -62,7 +62,7 @@
+ 
+ 
+ #define ALLOWED_OPTIONS "nosuid,noexec,nodev,user=$USER,uid=$UID,gid=$GID"
+-#define ALLOWED_TYPES "$KNOWN_FILESYSTEMS,smbfs,cifs,nfs,ftpfs,curlftpfs,sshfs,file,tmpfs,ramfs"
++#define ALLOWED_TYPES "$KNOWN_FILESYSTEMS,smbfs,cifs,nfs,ftpfs,curlftpfs,sshfs,file,tmpfs,ramfs,overlay"
+ #define MAX_LOG_DAYS 60   // don't set this too high
+ 
+ // udisks2 changed its media dir from /run/media/$USER to /media/$USER
+@@ -1789,7 +1789,11 @@ static gboolean device_is_mounted_mtab( const char* device_file, char** mount_po
+             continue;
+         }
+ 
+-        file = g_strcompress( encoded_file );
++        if ( g_strcmp0( "overlay", encoded_file ) )
++            file = g_strcompress( encoded_file );
++        else
++            file = g_strcompress( encoded_point );
++
+         if ( !g_strcmp0( device_file, file ) )
+         {
+             if ( mount_point )
+@@ -2395,6 +2399,109 @@ static gboolean create_auto_media()
+     return ret;
+ }
+ 
++
++static int create_media_dir( const char* path, gboolean* created )
++{
++    int ret = 0;
++    char* str = NULL;
++    *created = FALSE;
++
++    if ( !g_utf8_validate( path, -1, NULL ) )
++    {
++        wlog( _("udevil: error 104: mount point '%s' is not a valid UTF8 string\n"), path, 2 );
++        ret = 1;
++    }
++    else
++    {
++        if ( g_file_test( path, G_FILE_TEST_EXISTS ) )
++        {
++            if ( !valid_mount_path( path, &str ) )
++            {
++                printf( str, NULL );
++                g_free( str );
++                ret = 2;
++            }
++        }
++        else
++        {
++            restore_privileges();
++            // mkdir
++            if ( mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH ) != 0 )
++            {
++                drop_privileges( 0 );
++                str = g_strdup_printf( _("udevil: error 105: mkdir '%s' failed\n"), path );
++                wlog( str, NULL, 2 );
++                g_free( str );
++                ret = 1;
++            }
++            else
++            {
++                *created = TRUE;
++                chown( path, orig_ruid, 0 );
++
++                // tag mount point created by udevil
++                str = g_build_filename( path, ".udevil-mount-point", NULL );
++                FILE* file = fopen( str, "w" );
++                fclose( file );
++                g_free( str );
++                drop_privileges( 0 );
++            }
++        }
++    }
++
++    return ret;
++}
++
++
++static void remove_mount_point( const char* path, gboolean* created )
++{
++    if ( path && *created )
++    {
++        char* str = g_build_filename( path, ".udevil-mount-point", NULL );
++        restore_privileges();
++        unlink ( str );
++        g_free( str );
++        rmdir( path );
++        drop_privileges( 0 );
++
++        *created = FALSE;
++    }
++}
++
++
++static void recursive_remove_dir( const gchar* path )
++{
++    GDir* dir;
++    gchar* entry;
++    const gchar* name;
++
++    if ( g_file_test( path, G_FILE_TEST_IS_DIR ) )
++    {
++        dir = g_dir_open( path, 0, NULL );
++        if ( dir )
++        {
++            while ( name = g_dir_read_name( dir ) )
++            {
++                entry = g_build_filename( path, name, NULL );
++                if ( g_file_test( path, G_FILE_TEST_IS_DIR ) )
++                {
++                    recursive_remove_dir( entry );  // Note recursive call
++                    wlog( "udevil: removed '%s'\n", entry, 0 );
++                }
++                else
++                {
++                    unlink( entry );
++                }
++                g_free( entry );
++            }
++
++            g_dir_close( dir );
++            rmdir( path );
++        }
++    }
++}
++
++
+ static char* get_default_mount_dir( const char* type )
+ {
+     char* list = NULL;
+@@ -2777,6 +2884,7 @@ static int command_mount( CommandData* data )
+         MOUNT_BLOCK,
+         MOUNT_NET,
+         MOUNT_FILE,
++        MOUNT_OVERLAY,
+         MOUNT_MISSING
+     };
+     struct stat64 statbuf;
+@@ -2788,6 +2896,8 @@ static int command_mount( CommandData* data )
+     char* fstype = NULL;
+     char* options = NULL;
+     char* point = NULL;
++    char* upperdir = NULL;
++    char* workdir = NULL;
+     device_t *device = NULL;
+     netmount_t *netmount = NULL;
+     int ret = 0;
+@@ -2859,6 +2969,8 @@ static int command_mount( CommandData* data )
+         {
+             if ( data->cmd_type == CMD_UNMOUNT )
+                 type = MOUNT_MISSING;
++            else if ( !g_strcmp0( data->device_file, "overlay" ) )
++                type = MOUNT_OVERLAY;
+             else if ( !g_strcmp0( data->device_file, "tmpfs" ) || 
+                                     !g_strcmp0( data->device_file, "ramfs" ) )
+                 type = MOUNT_FILE;
+@@ -3005,7 +3117,8 @@ static int command_mount( CommandData* data )
+                             && !g_file_test( data->device_file, G_FILE_TEST_IS_DIR ) )
+                 {
+                     if ( g_strcmp0( data->device_file, "tmpfs" ) &&
+-                                        g_strcmp0( data->device_file, "ramfs" ) )
++                                        g_strcmp0( data->device_file, "ramfs" ) &&
++                                        g_strcmp0( data->device_file, "overlay" ) )
+                     {
+                         // found device file of mountpoint
+                         if ( g_str_has_prefix( data->device_file, "//" ) &&
+@@ -3103,7 +3216,8 @@ static int command_mount( CommandData* data )
+     else if ( type == MOUNT_FILE )
+     {
+         if ( !g_strcmp0( data->device_file, "tmpfs" ) ||
+-                                    !g_strcmp0( data->device_file, "ramfs" ) )
++                                    !g_strcmp0( data->device_file, "ramfs" ) ||
++                                    !g_strcmp0( data->device_file, "overlay" ) )
+             fstype = g_strdup( data->device_file );
+         else
+         {
+@@ -3122,6 +3236,57 @@ static int command_mount( CommandData* data )
+                 fstype = g_strdup( "file" );
+         }
+     }
++    else if ( type == MOUNT_OVERLAY )
++    {
++        options = str = g_strdup ( data->options );
++        for( char* path = strsep(&str, ","); path != NULL; path = strsep(&str, ",") )
++        {
++            // check that all "lowerdir"(s) exist and are directories
++            if ( !strncmp( path, "lowerdir=", 9 ) )
++            {
++                char* str2 = path + 9;
++                for( path = strsep( &str2, ":" ); path != NULL; path = strsep( &str2, ":" ) )
++                {
++                    if ( !g_file_test( path, G_FILE_TEST_IS_DIR ) )
++                    {
++                        wlog( _("udevil: error XX: lowerdir '%s' does not exist, or is not a directory\n"), path, 2 );
++                        ret = 1;
++                        g_free( options );
++                        goto _finish;
++                    }
++                }
++            }
++            // check that "upperdir" is not a file, if missing it will be auto-created as a directory
++            else if ( !strncmp( path, "upperdir=", 9 ) )
++            {
++                path += strlen( "upperdir=" );
++                if ( g_file_test( path, G_FILE_TEST_EXISTS ) && !g_file_test( path, G_FILE_TEST_IS_DIR ) )
++                {
++                    wlog( _("udevil: error XX: upperdir '%s' is a file, not a directory\n"), path, 2 );
++                    ret = 1;
++                    g_free( options );
++                    goto _finish;
++                }
++                upperdir = g_strdup( path );
++            }
++            // check that "workdir" is not a file, if missing it will be auto-created as a directory
++            else if ( !strncmp( path, "workdir=", 8 ) )
++            {
++                path += strlen( "workdir=" );
++                if ( g_file_test( path, G_FILE_TEST_EXISTS ) && !g_file_test( path, G_FILE_TEST_IS_DIR ) )
++                {
++                    wlog( _("udevil: error XX: workdir '%s' is a file, not a directory\n"), path, 2 );
++                    ret = 1;
++                    g_free( options );
++                    goto _finish;
++                }
++                workdir = g_strdup( path );
++            }
++        }
++
++        g_free( options );
++        fstype = g_strdup( data->fstype );
++    }
+     else if ( type == MOUNT_MISSING )
+     {
+         // canonicalize parent
+@@ -3334,14 +3499,14 @@ static int command_mount( CommandData* data )
+         // remove trailing slashes
+         while ( ( g_str_has_suffix( data->point, "/" ) && data->point[1] != '\0' ) )
+             data->point[ strlen( data->point ) - 1] = '\0';
+-    
++
+         // canonicalize
+         if ( stat64( data->point, &statbuf ) == 0 )
+         {
+             if ( !get_realpath( &data->point ) )
+             {
+                 wlog( _("udevil: error 67: cannot canonicalize mount point path\n"), NULL, 2 );
+-                
++
+                 ret = 1;
+                 goto _finish;
+             }
+@@ -3498,7 +3663,8 @@ static int command_mount( CommandData* data )
+         if ( !g_file_test( data->device_file, G_FILE_TEST_IS_DIR ) )
+         {
+             if ( g_strcmp0( data->device_file, "tmpfs" ) &&
+-                                        g_strcmp0( data->device_file, "ramfs" ) )
++                                        g_strcmp0( data->device_file, "ramfs" ) &&
++                                        g_strcmp0( data->device_file, "overlay" ) )
+             {
+                 if ( !validate_in_list( "allowed_files", "file", data->device_file )
+                      || validate_in_list( "forbidden_files", "file", data->device_file ) )
+@@ -4154,42 +4320,31 @@ static int command_mount( CommandData* data )
+ 
+     // validate mount point
+     gboolean made_point = FALSE;
+-    if ( !g_utf8_validate( point, -1, NULL ) )
++    if ( (ret = create_media_dir( point, &made_point ) ) != 0 )
+     {
+-        wlog( _("udevil: error 104: mount point '%s' is not a valid UTF8 string\n"), point, 2 );
+-        ret = 1;
+         goto _finish;
+     }
+-    if ( g_file_test( point, G_FILE_TEST_EXISTS ) )
++
++    // validate upperdir & workdir
++    gboolean made_upperdir = FALSE;
++    gboolean made_workdir = FALSE;
++    if ( type == MOUNT_OVERLAY )
+     {
+-        if ( !valid_mount_path( point, &str ) )
++        if ( upperdir )
+         {
+-            printf( str, NULL );
+-            g_free( str );
+-            ret = 2;
+-            goto _finish;
++            if ( (ret = create_media_dir( upperdir, &made_upperdir ) ) != 0 )
++            {
++                goto _finish;
++            }
+         }
+-    }
+-    else
+-    {
+-        made_point = TRUE;
+-        restore_privileges();
+-        // mkdir
+-        if ( mkdir( point, S_IRWXU ) != 0 )
++
++        if ( workdir )
+         {
+-            drop_privileges( 0 );
+-            str = g_strdup_printf( _("udevil: error 105: mkdir '%s' failed\n"), point );
+-            wlog( str, NULL, 2 );
+-            g_free( str );
+-            ret = 1;
+-            goto _finish;
++            if ( (ret = create_media_dir( workdir, &made_workdir ) ) != 0 )
++            {
++                goto _finish;
++            }
+         }
+-        // tag mount point created by udevil
+-        str = g_build_filename( point, ".udevil-mount-point", NULL );
+-        FILE* file = fopen( str, "w" );
+-        fclose( file );
+-        g_free( str );
+-        drop_privileges( 0 );
+     }
+ 
+     // validate exec
+@@ -4249,15 +4404,13 @@ static int command_mount( CommandData* data )
+     if ( ret )
+     {
+         // remove mount point on error
+-        if ( made_point )
+-        {
+-            str = g_build_filename( point, ".udevil-mount-point", NULL );
+-            restore_privileges();
+-            unlink ( str );
+-            g_free( str );
+-            rmdir( point );
+-            drop_privileges( 0 );
+-        }
++        remove_mount_point( point, &made_point );
++
++        // remove upperdir error
++        remove_mount_point( upperdir, &made_upperdir );
++
++        // remove workdir error
++        remove_mount_point( workdir, &made_workdir );
+     }
+     else
+     {
+@@ -4313,6 +4466,8 @@ static int command_mount( CommandData* data )
+     device_free( device );
+     g_free( options );
+     g_free( point );
++    g_free( upperdir );
++    g_free( workdir );
+     if ( fd != -1 )
+     {
+         restore_privileges();
+@@ -4650,7 +4805,7 @@ static int command_clean()
+     char* element;
+     char* selement;
+     GDir* dir;
+-    char* path;
++    gchar* path;
+     const char* name;
+     struct stat statbuf;
+ 
+@@ -4714,7 +4869,7 @@ static int command_clean()
+                         unlink( path );
+                         g_free( path );
+                         path = g_build_filename( selement, name, NULL );
+-                        rmdir( path );
++                        recursive_remove_dir( path );
+                         // no translate
+                         wlog( "udevil: cleaned '%s'\n", path, 0 );
+                     }
