@@ -4,8 +4,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="open-iscsi"
-PKG_VERSION="2.1.3"
-PKG_SHA256="5410474b23552016220d04aa181903cb50ae988f29e99cb03f3e2de86a109be4"
+PKG_VERSION="2.1.4"
+PKG_SHA256="a5a73f7c795d1dc214100b1eb70647d6c2ceccf8973e584f50ee7f92c40d2a8a"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/open-iscsi/open-iscsi"
 PKG_URL="https://github.com/open-iscsi/open-iscsi/archive/${PKG_VERSION}.tar.gz"
