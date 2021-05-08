@@ -2,7 +2,7 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="cargo"
-PKG_VERSION="0.52.0"
+PKG_VERSION="0.53.0"
 #PKG_SHA256="127be796380ddbd979679f97c01e1e61e4b6d91f1a28560995a7a543bc568f21"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="https://doc.rust-lang.org/stable/cargo/"
