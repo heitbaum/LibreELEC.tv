@@ -1,3 +1,6 @@
+123
+- oniguruma: update to 6.9.7.1
+
 122
 - added bottom (successor to ytop) - all arch except Generic
 - mc: update to 4.8.26
