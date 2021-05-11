@@ -40,10 +40,26 @@ if [ -n "${PKG_DATAFILE}" -a -n "${PKG_LOADER}" ]; then
   cp -av idbloader.img ${INSTALL}/usr/share/bootloader
 fi
 
-if [ -f idbloader.img ]; then
-  cp -av idbloader.img $INSTALL/usr/share/bootloader
+if [ -n "${PKG_LOAD_ADDR}" ]; then
+  ${PKG_RKBIN}/tools/loaderimage --pack --uboot u-boot-dtb.bin uboot.img ${PKG_LOAD_ADDR}
+  cp -av uboot.img ${INSTALL}/usr/share/bootloader
 fi
 
-if [ -f uboot.img ]; then
-  cp -av uboot.img $INSTALL/usr/share/bootloader
+if [ -n "${PKG_BL31}" ]; then
+  cat >trust.ini <<EOF
+[BL30_OPTION]
+SEC=0
+[BL31_OPTION]
+SEC=1
+PATH=${PKG_BL31}
+ADDR=${PKG_BL31_ADDR}
+[BL32_OPTION]
+SEC=0
+[BL33_OPTION]
+SEC=0
+[OUTPUT]
+PATH=trust.img
+EOF
+  ${PKG_RKBIN}/tools/trust_merger --verbose trust.ini
+  cp -av trust.img ${INSTALL}/usr/share/bootloader
 fi
