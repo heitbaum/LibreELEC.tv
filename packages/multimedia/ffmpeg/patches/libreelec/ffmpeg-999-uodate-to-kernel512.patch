@@ -1,0 +1,121 @@
+--- a/libavcodec/v4l2_request_h264.c	2020-12-09 16:21:56.000000000 +0000
++++ b/libavcodec/v4l2_request_h264.c	2021-05-11 15:07:13.000000000 +0000
+@@ -19,7 +19,6 @@
+ #include "h264dec.h"
+ #include "hwconfig.h"
+ #include "v4l2_request.h"
+-#include "h264-ctrls.h"
+ 
+ typedef struct V4L2RequestControlsH264 {
+     struct v4l2_ctrl_h264_sps sps;
+@@ -266,38 +265,38 @@
+ 
+     struct v4l2_ext_control control[] = {
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
++            .id = V4L2_CID_STATELESS_H264_SPS,
+             .ptr = &controls->sps,
+             .size = sizeof(controls->sps),
+         },
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_PPS,
++            .id = V4L2_CID_STATELESS_H264_PPS,
+             .ptr = &controls->pps,
+             .size = sizeof(controls->pps),
+         },
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_SCALING_MATRIX,
++            .id = V4L2_CID_STATELESS_H264_SCALING_MATRIX,
+             .ptr = &controls->scaling_matrix,
+             .size = sizeof(controls->scaling_matrix),
+         },
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_PARAMS,
++            .id = V4L2_CID_STATELESS_H264_DECODE_PARAMS,
+             .ptr = &controls->decode_params,
+             .size = sizeof(controls->decode_params),
+         },
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_SLICE_PARAMS,
++            .id = V4L2_CID_STATELESS_H264_SLICE_PARAMS,
+             .ptr = &controls->slice_params,
+             .size = sizeof(controls->slice_params),
+         },
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_PRED_WEIGHTS,
++            .id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS,
+             .ptr = &controls->pred_weights,
+             .size = sizeof(controls->pred_weights),
+         },
+     };
+ 
+-    if (ctx->decode_mode == V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED) {
++    if (ctx->decode_mode == V4L2_STATELESS_H264_DECODE_MODE_SLICE_BASED) {
+         int count = FF_ARRAY_ELEMS(control) - (controls->pred_weights_required ? 0 : 1);
+         return ff_v4l2_request_decode_slice(avctx, h->cur_pic_ptr->f, control, count, controls->first_slice, last_slice);
+     }
+@@ -314,7 +313,7 @@
+     V4L2RequestContextH264 *ctx = avctx->internal->hwaccel_priv_data;
+     int i, ret, count;
+ 
+-    if (ctx->decode_mode == V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED && controls->num_slices) {
++    if (ctx->decode_mode == V4L2_STATELESS_H264_DECODE_MODE_SLICE_BASED && controls->num_slices) {
+         ret = v4l2_request_h264_queue_decode(avctx, 0);
+         if (ret)
+             return ret;
+@@ -323,7 +322,7 @@
+         controls->first_slice = 0;
+     }
+ 
+-    if (ctx->start_code == V4L2_MPEG_VIDEO_H264_START_CODE_ANNEX_B) {
++    if (ctx->start_code == V4L2_STATELESS_H264_START_CODE_ANNEX_B) {
+         ret = ff_v4l2_request_append_output_buffer(avctx, h->cur_pic_ptr->f, nalu_slice_start_code, 3);
+         if (ret)
+             return ret;
+@@ -333,7 +332,7 @@
+     if (ret)
+         return ret;
+ 
+-    if (ctx->decode_mode != V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED)
++    if (ctx->decode_mode != V4L2_STATELESS_H264_DECODE_MODE_SLICE_BASED)
+         return 0;
+ 
+     controls->slice_params = (struct v4l2_ctrl_h264_slice_params) {
+@@ -392,20 +391,20 @@
+     V4L2RequestContextH264 *ctx = avctx->internal->hwaccel_priv_data;
+ 
+     struct v4l2_ext_control control[] = {
+-        { .id = V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE, },
+-        { .id = V4L2_CID_MPEG_VIDEO_H264_START_CODE, },
++        { .id = V4L2_CID_STATELESS_H264_DECODE_MODE, },
++        { .id = V4L2_CID_STATELESS_H264_START_CODE, },
+     };
+ 
+-    ctx->decode_mode = ff_v4l2_request_query_control_default_value(avctx, V4L2_CID_MPEG_VIDEO_H264_DECODE_MODE);
+-    if (ctx->decode_mode != V4L2_MPEG_VIDEO_H264_DECODE_MODE_SLICE_BASED &&
+-        ctx->decode_mode != V4L2_MPEG_VIDEO_H264_DECODE_MODE_FRAME_BASED) {
++    ctx->decode_mode = ff_v4l2_request_query_control_default_value(avctx, V4L2_CID_STATELESS_H264_DECODE_MODE);
++    if (ctx->decode_mode != V4L2_STATELESS_H264_DECODE_MODE_SLICE_BASED &&
++        ctx->decode_mode != V4L2_STATELESS_H264_DECODE_MODE_FRAME_BASED) {
+         av_log(avctx, AV_LOG_ERROR, "%s: unsupported decode mode, %d\n", __func__, ctx->decode_mode);
+         return AVERROR(EINVAL);
+     }
+ 
+-    ctx->start_code = ff_v4l2_request_query_control_default_value(avctx, V4L2_CID_MPEG_VIDEO_H264_START_CODE);
+-    if (ctx->start_code != V4L2_MPEG_VIDEO_H264_START_CODE_NONE &&
+-        ctx->start_code != V4L2_MPEG_VIDEO_H264_START_CODE_ANNEX_B) {
++    ctx->start_code = ff_v4l2_request_query_control_default_value(avctx, V4L2_CID_STATELESS_H264_START_CODE);
++    if (ctx->start_code != V4L2_STATELESS_H264_START_CODE_NONE &&
++        ctx->start_code != V4L2_STATELESS_H264_START_CODE_ANNEX_B) {
+         av_log(avctx, AV_LOG_ERROR, "%s: unsupported start code, %d\n", __func__, ctx->start_code);
+         return AVERROR(EINVAL);
+     }
+@@ -424,7 +423,7 @@
+ 
+     struct v4l2_ext_control control[] = {
+         {
+-            .id = V4L2_CID_MPEG_VIDEO_H264_SPS,
++            .id = V4L2_CID_STATELESS_H264_SPS,
+             .ptr = &sps,
+             .size = sizeof(sps),
+         },
