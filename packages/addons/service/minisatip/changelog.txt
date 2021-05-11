@@ -1,5 +1,5 @@
 104
-- upgrade to minisatip 1.1.3
+- upgrade to minisatip 1.1.4
 
 103
 - upgrade to minisatip 1.0.4
