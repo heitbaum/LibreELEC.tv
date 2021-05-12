@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nss-mdns"
-PKG_VERSION="0.14.1"
-PKG_SHA256="4fe54bffd20e410fc41382dc6c4708cdfa3a65f50c3753f262dc4c78fd864a6e"
+PKG_VERSION="0.15"
+PKG_SHA256="cb9315eb0ccdc4a4f8d1c83d959816dc989c75402a1daa1772f797da3da8a6a4"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/lathiat/nss-mdns"
 PKG_URL="https://github.com/lathiat/nss-mdns/archive/v${PKG_VERSION}.tar.gz"
