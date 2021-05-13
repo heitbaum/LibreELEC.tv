@@ -2889,28 +2889,24 @@ diff --git a/drivers/staging/media/rkvdec/rkvdec.c b/drivers/staging/media/rkvde
 index f3578c5ea902..a44db1aa161e 100644
 --- a/drivers/staging/media/rkvdec/rkvdec.c
 +++ b/drivers/staging/media/rkvdec/rkvdec.c
-@@ -162,6 +162,61 @@ static const u32 rkvdec_h264_decoded_fmts[] = {
+@@ -162,6 +162,57 @@ static const u32 rkvdec_h264_decoded_fmts[] = {
  	V4L2_PIX_FMT_NV20,
  };
  
 +static const struct rkvdec_ctrl_desc rkvdec_hevc_ctrl_descs[] = {
 +	{
-+		.mandatory = true,
 +		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SLICE_PARAMS,
 +		// HACK: match ffmpeg v4l2 request api hwaccel size,
 +		//       we should support variable length up to 600 slices
 +		.cfg.dims = { 16 },
 +	},
 +	{
-+		.mandatory = true,
 +		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SPS,
 +	},
 +	{
-+		.mandatory = true,
 +		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_PPS,
 +	},
 +	{
-+		.mandatory = true,
 +		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SCALING_MATRIX,
 +	},
 +	{
