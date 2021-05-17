@@ -3,15 +3,13 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="tinyxml2"
-PKG_VERSION="8.0.0"
-PKG_SHA256="6ce574fbb46751842d23089485ae73d3db12c1b6639cda7721bf3a7ee862012c"
+PKG_VERSION="8.1.0"
+PKG_SHA256="23c95af3b981cf9a56c7f669505832c93427cb684811bcb6c9311bd18fa9bc30"
 PKG_LICENSE="zlib"
 PKG_SITE="http://www.grinninglizard.com/tinyxml2/index.html"
 PKG_URL="https://github.com/leethomason/tinyxml2/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="TinyXML2 is a simple, small, C++ XML parser."
 
-PKG_CMAKE_OPTS_TARGET="-DBUILD_SHARED_LIBS=OFF \
-                       -DBUILD_TESTING=OFF \
-                       -DCMAKE_BUILD_TYPE=Release"
-
+PKG_MESON_OPTS_TARGET="-Ddefault_library=static \
+                       -Dtests=false"
