@@ -1,0 +1,207 @@
+From 7a5d76525e530de040fad4a3013a5cca7a4d0e7c Mon Sep 17 00:00:00 2001
+From: Wolfgang Haupt <haupt.wolfgang@gmail.com>
+Date: Mon, 17 May 2021 12:00:35 +0200
+Subject: [PATCH] VideoPlayer: VAAPI - Add av1 hw decoding
+
+---
+ .../resources/strings.po                      | 11 ++++++
+ system/settings/linux.xml                     | 12 ++++++
+ .../DVDCodecs/Video/DVDVideoCodecFFmpeg.cpp   | 13 ++++++-
+ .../VideoPlayer/DVDCodecs/Video/VAAPI.cpp     | 39 ++++++++++++++-----
+ .../DVDDemuxers/DVDDemuxClient.cpp            |  2 +
+ xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp   |  5 ++-
+ 6 files changed, 69 insertions(+), 13 deletions(-)
+
+diff --git a/addons/resource.language.en_gb/resources/strings.po b/addons/resource.language.en_gb/resources/strings.po
+index 0af35e47e6288..35413c887a392 100644
+--- a/addons/resource.language.en_gb/resources/strings.po
++++ b/addons/resource.language.en_gb/resources/strings.po
+@@ -7307,6 +7307,17 @@ msgctxt "#13467"
+ msgid "Unlimited / 1080 (>30Hz)"
+ msgstr ""
+ 
++#: system/settings/settings.xml
++msgctxt "#13468"
++msgid "Use AV1 VAAPI"
++msgstr ""
++
++#. Description of setting with label #13468 "Use AV1 VAAPI"
++#: system/settings/settings.xml
++msgctxt "#13469"
++msgid "Enable this option to use hardware acceleration for the AV1 codec. If disabled the CPU will be used instead."
++msgstr ""
++
+ #empty strings from id 13468 to 13504
+ 
+ #: system/settings/settings.xml
+diff --git a/system/settings/linux.xml b/system/settings/linux.xml
+index 6d1fb9cd49ed1..fb1e0b5f7b0ad 100644
+--- a/system/settings/linux.xml
++++ b/system/settings/linux.xml
+@@ -137,6 +137,18 @@
+           <default>true</default>
+           <control type="toggle" />
+         </setting>
++        <setting id="videoplayer.usevaapiav1" type="boolean" parent="videoplayer.usevaapi" label="13468" help="13469">
++          <requirement>HAVE_LIBVA</requirement>
++          <visible>false</visible>
++          <dependencies>
++            <dependency type="enable">
++              <condition setting="videoplayer.usevaapi" operator="is">true</condition>
++            </dependency>
++          </dependencies>
++          <level>3</level>
++          <default>true</default>
++          <control type="toggle" />
++        </setting>
+         <setting id="videoplayer.prefervaapirender" type="boolean" parent="videoplayer.usevaapi" label="13457" help="36433">
+           <requirement>HAVE_LIBVA</requirement>
+           <visible>false</visible>
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecFFmpeg.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecFFmpeg.cpp
+index 1a98610eaa67d..796a3821b8aad 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecFFmpeg.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/DVDVideoCodecFFmpeg.cpp
+@@ -328,7 +328,7 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
+   m_hints = hints;
+   m_options = options;
+ 
+-  AVCodec* pCodec;
++  AVCodec* pCodec = nullptr;
+ 
+   m_iOrientation = hints.orientation;
+ 
+@@ -338,7 +338,16 @@ bool CDVDVideoCodecFFmpeg::Open(CDVDStreamInfo &hints, CDVDCodecOptions &options
+   m_processInfo.SetSwDeinterlacingMethods();
+   m_processInfo.SetVideoInterlaced(false);
+ 
+-  pCodec = avcodec_find_decoder(hints.codec);
++  // libdav1d av1 sw decoding is implemented as a separate decoder
++  // in ffmpeg which is always found first when calling `avcodec_find_decoder`.
++  // To get hwaccels we look for decoders registered for `av1`.
++  // The decoder state check is needed to succesfully fallback to sw decoding if
++  // necessary.
++  if (hints.codec == AV_CODEC_ID_AV1 && m_decoderState != STATE_HW_FAILED)
++    pCodec = avcodec_find_decoder_by_name("av1");
++
++  if (!pCodec)
++    pCodec = avcodec_find_decoder(hints.codec);
+ 
+   if(pCodec == NULL)
+   {
+diff --git a/xbmc/cores/VideoPlayer/DVDCodecs/Video/VAAPI.cpp b/xbmc/cores/VideoPlayer/DVDCodecs/Video/VAAPI.cpp
+index 76424c143ccdd..dfbc9f53982f8 100644
+--- a/xbmc/cores/VideoPlayer/DVDCodecs/Video/VAAPI.cpp
++++ b/xbmc/cores/VideoPlayer/DVDCodecs/Video/VAAPI.cpp
+@@ -52,6 +52,7 @@ using namespace VAAPI;
+ #define NUM_RENDER_PICS 7
+ 
+ constexpr auto SETTING_VIDEOPLAYER_USEVAAPI = "videoplayer.usevaapi";
++constexpr auto SETTING_VIDEOPLAYER_USEVAAPIAV1 = "videoplayer.usevaapiav1";
+ constexpr auto SETTING_VIDEOPLAYER_USEVAAPIHEVC = "videoplayer.usevaapihevc";
+ constexpr auto SETTING_VIDEOPLAYER_USEVAAPIMPEG2 = "videoplayer.usevaapimpeg2";
+ constexpr auto SETTING_VIDEOPLAYER_USEVAAPIMPEG4 = "videoplayer.usevaapimpeg4";
+@@ -530,14 +531,15 @@ bool CDecoder::Open(AVCodecContext* avctx, AVCodecContext* mainctx, const enum A
+ 
+   // check if user wants to decode this format with VAAPI
+   std::map<AVCodecID, std::string> settings_map = {
+-    { AV_CODEC_ID_H263, SETTING_VIDEOPLAYER_USEVAAPIMPEG4 },
+-    { AV_CODEC_ID_MPEG4, SETTING_VIDEOPLAYER_USEVAAPIMPEG4 },
+-    { AV_CODEC_ID_WMV3, SETTING_VIDEOPLAYER_USEVAAPIVC1 },
+-    { AV_CODEC_ID_VC1, SETTING_VIDEOPLAYER_USEVAAPIVC1 },
+-    { AV_CODEC_ID_MPEG2VIDEO, SETTING_VIDEOPLAYER_USEVAAPIMPEG2 },
+-    { AV_CODEC_ID_VP8, SETTING_VIDEOPLAYER_USEVAAPIVP8 },
+-    { AV_CODEC_ID_VP9, SETTING_VIDEOPLAYER_USEVAAPIVP9 },
+-    { AV_CODEC_ID_HEVC, SETTING_VIDEOPLAYER_USEVAAPIHEVC },
++      {AV_CODEC_ID_H263, SETTING_VIDEOPLAYER_USEVAAPIMPEG4},
++      {AV_CODEC_ID_MPEG4, SETTING_VIDEOPLAYER_USEVAAPIMPEG4},
++      {AV_CODEC_ID_WMV3, SETTING_VIDEOPLAYER_USEVAAPIVC1},
++      {AV_CODEC_ID_VC1, SETTING_VIDEOPLAYER_USEVAAPIVC1},
++      {AV_CODEC_ID_MPEG2VIDEO, SETTING_VIDEOPLAYER_USEVAAPIMPEG2},
++      {AV_CODEC_ID_VP8, SETTING_VIDEOPLAYER_USEVAAPIVP8},
++      {AV_CODEC_ID_VP9, SETTING_VIDEOPLAYER_USEVAAPIVP9},
++      {AV_CODEC_ID_HEVC, SETTING_VIDEOPLAYER_USEVAAPIHEVC},
++      {AV_CODEC_ID_AV1, SETTING_VIDEOPLAYER_USEVAAPIAV1},
+   };
+ 
+   auto entry = settings_map.find(avctx->codec_id);
+@@ -670,6 +672,20 @@ bool CDecoder::Open(AVCodecContext* avctx, AVCodecContext* mainctx, const enum A
+       if (!m_vaapiConfig.context->SupportsProfile(profile))
+         return false;
+       break;
++#if VA_CHECK_VERSION(1, 8, 0)
++    case AV_CODEC_ID_AV1:
++    {
++      if (avctx->profile == FF_PROFILE_AV1_MAIN)
++        profile = VAProfileAV1Profile0;
++      else if (avctx->profile == FF_PROFILE_AV1_HIGH)
++        profile = VAProfileAV1Profile1;
++      else
++        profile = VAProfileNone;
++      if (!m_vaapiConfig.context->SupportsProfile(profile))
++        return false;
++      break;
++    }
++#endif
+     default:
+       return false;
+   }
+@@ -694,6 +710,8 @@ bool CDecoder::Open(AVCodecContext* avctx, AVCodecContext* mainctx, const enum A
+     m_vaapiConfig.maxReferences = 16;
+   else if (avctx->codec_id == AV_CODEC_ID_VP9)
+     m_vaapiConfig.maxReferences = 8;
++  else if (avctx->codec_id == AV_CODEC_ID_AV1)
++    m_vaapiConfig.maxReferences = 16;
+   else
+     m_vaapiConfig.maxReferences = 2;
+ 
+@@ -1251,11 +1269,12 @@ void CDecoder::Register(IVaapiWinSystem *winSystem, bool deepColor)
+   if (!settings)
+     return;
+ 
+-  constexpr std::array<const char*, 8> vaapiSettings = {
++  constexpr std::array<const char*, 9> vaapiSettings = {
+       SETTING_VIDEOPLAYER_USEVAAPI,     SETTING_VIDEOPLAYER_USEVAAPIMPEG4,
+       SETTING_VIDEOPLAYER_USEVAAPIVC1,  SETTING_VIDEOPLAYER_USEVAAPIMPEG2,
+       SETTING_VIDEOPLAYER_USEVAAPIVP8,  SETTING_VIDEOPLAYER_USEVAAPIVP9,
+-      SETTING_VIDEOPLAYER_USEVAAPIHEVC, SETTING_VIDEOPLAYER_PREFERVAAPIRENDER};
++      SETTING_VIDEOPLAYER_USEVAAPIHEVC, SETTING_VIDEOPLAYER_PREFERVAAPIRENDER,
++      SETTING_VIDEOPLAYER_USEVAAPIAV1};
+ 
+   for (const auto vaapiSetting : vaapiSettings)
+   {
+diff --git a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+index 795b9c11e1ed8..1c48242b4dc45 100644
+--- a/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
++++ b/xbmc/cores/VideoPlayer/DVDDemuxers/DVDDemuxClient.cpp
+@@ -658,6 +658,8 @@ std::string CDVDDemuxClient::GetStreamCodecName(int iStreamId)
+       strName = "vp9";
+     else if (stream->codec == AV_CODEC_ID_HEVC)
+       strName = "hevc";
++    else if (stream->codec == AV_CODEC_ID_AV1)
++      strName = "av1";
+   }
+   return strName;
+ }
+diff --git a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp b/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
+index 6ebf7501ad21a..8ce89f74e2a71 100644
+--- a/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
++++ b/xbmc/cores/VideoPlayer/VideoPlayerVideo.cpp
+@@ -107,6 +107,7 @@ bool CVideoPlayerVideo::OpenStream(CDVDStreamInfo hint)
+   if (hint.extrasize == 0)
+   {
+     // codecs which require extradata
++    // clang-format off
+     if (hint.codec == AV_CODEC_ID_NONE ||
+         hint.codec == AV_CODEC_ID_MPEG1VIDEO ||
+         hint.codec == AV_CODEC_ID_MPEG2VIDEO ||
+@@ -114,7 +115,9 @@ bool CVideoPlayerVideo::OpenStream(CDVDStreamInfo hint)
+         hint.codec == AV_CODEC_ID_HEVC ||
+         hint.codec == AV_CODEC_ID_MPEG4 ||
+         hint.codec == AV_CODEC_ID_WMV3 ||
+-        hint.codec == AV_CODEC_ID_VC1)
++        hint.codec == AV_CODEC_ID_VC1 ||
++        hint.codec == AV_CODEC_ID_AV1)
++      // clang-format on
+       return false;
+   }
+ 

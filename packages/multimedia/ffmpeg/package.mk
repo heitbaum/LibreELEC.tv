@@ -5,11 +5,15 @@
 PKG_NAME="ffmpeg"
 PKG_VERSION="bf20c328b9ac8aa40b385c2b11ed49cf3d1d41f4" # dev/4.3.1/drm_prime_1 working-ish
 #PKG_VERSION="c5c4fe1af959c83ec8026a9551bf0de7678a156b" # dev/4.3.1/drm_prime_1 HEAD
+PKG_VERSION="e87e006121c513172995103c7c4df770a704d0d1" # release/4.4 HEAD 2021-05-14
+PKG_VERSION="4.4-N-Alpha1"
 PKG_SHA256=""
 PKG_LICENSE="LGPLv2.1+"
 PKG_SITE="https://ffmpeg.org"
 #PKG_URL="https://github.com/chewitt/FFmpeg/archive/${PKG_VERSION}.tar.gz"
 PKG_URL="https://github.com/jc-kynesim/rpi-ffmpeg/archive/${PKG_VERSION}.tar.gz"
+PKG_URL="https://github.com/FFmpeg/FFmpeg/archive/${PKG_VERSION}.tar.gz"
+PKG_URL="https://github.com/xbmc/FFmpeg/archive/refs/tags/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain zlib bzip2 gnutls speex"
 PKG_LONGDESC="FFmpeg is a complete, cross-platform solution to record, convert and stream audio and video."
 PKG_BUILD_FLAGS="-gold"
