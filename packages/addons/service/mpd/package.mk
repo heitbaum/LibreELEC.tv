@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="mpd"
-PKG_VERSION="0.22.6"
-PKG_SHA256="2be149a4895c3cb613477f8cf1193593e3d8a1d38a75ffa7d32da8c8316a4d5e"
+PKG_VERSION="0.22.7"
+PKG_SHA256="498668c408cece8469dfcda6dd59a471d5ee9ba2c365a7eca3165a8ac831fc41"
 PKG_REV="110"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
