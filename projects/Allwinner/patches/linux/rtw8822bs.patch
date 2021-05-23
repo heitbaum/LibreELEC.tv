@@ -1,0 +1,1588 @@
+From dd44e08220266eea579bd08c6bb54c92943920fd Mon Sep 17 00:00:00 2001
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sat, 4 Jul 2020 00:56:34 +0200
+Subject: [PATCH] rtw88: sdio: HACK
+
+HACK
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/realtek/rtw88/Kconfig  |    6 +
+ drivers/net/wireless/realtek/rtw88/Makefile |    3 +
+ drivers/net/wireless/realtek/rtw88/debug.h  |    1 +
+ drivers/net/wireless/realtek/rtw88/hci.h    |    8 +
+ drivers/net/wireless/realtek/rtw88/mac.c    |   60 +-
+ drivers/net/wireless/realtek/rtw88/mac.h    |   93 ++
+ drivers/net/wireless/realtek/rtw88/main.c   |    4 +
+ drivers/net/wireless/realtek/rtw88/sdio.c   | 1175 +++++++++++++++++++
+ drivers/net/wireless/realtek/rtw88/sdio.h   |   54 +
+ 9 files changed, 1395 insertions(+), 9 deletions(-)
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sdio.c
+ create mode 100644 drivers/net/wireless/realtek/rtw88/sdio.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/Kconfig b/drivers/net/wireless/realtek/rtw88/Kconfig
+index e3d7cb6c129027..8e456a1ccfacba 100644
+--- a/drivers/net/wireless/realtek/rtw88/Kconfig
++++ b/drivers/net/wireless/realtek/rtw88/Kconfig
+@@ -72,6 +72,12 @@ config RTW88_8821CE
+ 
+ 	  802.11ac PCIe wireless network adapter
+ 
++config RTW88_SDIO
++	tristate "Realtek 8822CS SDIO wireless network adapter"
++	depends on MMC
++	select RTW88_CORE
++	select RTW88_8822C
++
+ config RTW88_DEBUG
+ 	bool "Realtek rtw88 debug support"
+ 	depends on RTW88_CORE
+diff --git a/drivers/net/wireless/realtek/rtw88/Makefile b/drivers/net/wireless/realtek/rtw88/Makefile
+index c0e4b111c8b4e6..2d769532335122 100644
+--- a/drivers/net/wireless/realtek/rtw88/Makefile
++++ b/drivers/net/wireless/realtek/rtw88/Makefile
+@@ -45,3 +45,6 @@ rtw88_8821ce-objs		:= rtw8821ce.o
+ 
+ obj-$(CONFIG_RTW88_PCI)		+= rtw88_pci.o
+ rtw88_pci-objs			:= pci.o
++
++obj-$(CONFIG_RTW88_SDIO)	+= rtw88_sdio.o
++rtw88_sdio-objs			:= sdio.o
+diff --git a/drivers/net/wireless/realtek/rtw88/debug.h b/drivers/net/wireless/realtek/rtw88/debug.h
+index a0f36f29b4a618..8e2183e56d4488 100644
+--- a/drivers/net/wireless/realtek/rtw88/debug.h
++++ b/drivers/net/wireless/realtek/rtw88/debug.h
+@@ -19,6 +19,7 @@ enum rtw_debug_mask {
+ 	RTW_DBG_PS		= 0x00000400,
+ 	RTW_DBG_BF		= 0x00000800,
+ 	RTW_DBG_WOW		= 0x00001000,
++	RTW_DBG_SDIO		= 0x00002000,
+ 
+ 	RTW_DBG_ALL		= 0xffffffff
+ };
+diff --git a/drivers/net/wireless/realtek/rtw88/hci.h b/drivers/net/wireless/realtek/rtw88/hci.h
+index 2cba327e6218f1..c5de158dda5bd5 100644
+--- a/drivers/net/wireless/realtek/rtw88/hci.h
++++ b/drivers/net/wireless/realtek/rtw88/hci.h
+@@ -21,6 +21,8 @@ struct rtw_hci_ops {
+ 	int (*write_data_rsvd_page)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
+ 	int (*write_data_h2c)(struct rtw_dev *rtwdev, u8 *buf, u32 size);
+ 
++	void (*power_switch)(struct rtw_dev *rtwdev, bool on);
++
+ 	u8 (*read8)(struct rtw_dev *rtwdev, u32 addr);
+ 	u16 (*read16)(struct rtw_dev *rtwdev, u32 addr);
+ 	u32 (*read32)(struct rtw_dev *rtwdev, u32 addr);
+@@ -83,6 +85,12 @@ rtw_hci_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
+ 	return rtwdev->hci.ops->write_data_h2c(rtwdev, buf, size);
+ }
+ 
++static inline void rtw_hci_power_switch(struct rtw_dev *rtwdev, bool on)
++{
++	if (rtwdev->hci.ops->power_switch)
++		rtwdev->hci.ops->power_switch(rtwdev, on);
++}
++
+ static inline u8 rtw_read8(struct rtw_dev *rtwdev, u32 addr)
+ {
+ 	return rtwdev->hci.ops->read8(rtwdev, addr);
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.c b/drivers/net/wireless/realtek/rtw88/mac.c
+index 19b9b7ab016b37..e19867dbd6e76e 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.c
++++ b/drivers/net/wireless/realtek/rtw88/mac.c
+@@ -60,6 +60,7 @@ EXPORT_SYMBOL(rtw_set_channel_mac);
+ 
+ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
+ {
++	unsigned int retry;
+ 	u32 value32;
+ 	u8 value8;
+ 
+@@ -77,6 +78,24 @@ static int rtw_mac_pre_system_cfg(struct rtw_dev *rtwdev)
+ 	case RTW_HCI_TYPE_PCIE:
+ 		rtw_write32_set(rtwdev, REG_HCI_OPT_CTRL, BIT_BT_DIG_CLK_EN);
+ 		break;
++	case RTW_HCI_TYPE_SDIO:
++		rtw_write8_clr(rtwdev, REG_SDIO_HSUS_CTRL, BIT(0));
++
++		for (retry = 0; retry < RTW_PWR_POLLING_CNT; retry++) {
++			if (rtw_read8(rtwdev, REG_SDIO_HSUS_CTRL) & BIT(1))
++				break;
++
++			usleep_range(10, 50);
++		}
++
++		if (retry == RTW_PWR_POLLING_CNT) {
++			rtw_err(rtwdev, "failed to poll REG_SDIO_HSUS_CTRL[1]");
++			return -ETIMEDOUT;
++		}
++
++		/* FIXME: enable SDIO3 - make this configurable! */
++		rtw_write8_set(rtwdev, REG_HCI_OPT_CTRL + 2, BIT(2));
++		break;
+ 	case RTW_HCI_TYPE_USB:
+ 		break;
+ 	default:
+@@ -227,6 +246,9 @@ static int rtw_pwr_seq_parser(struct rtw_dev *rtwdev,
+ 	case RTW_HCI_TYPE_USB:
+ 		intf_mask = BIT(1);
+ 		break;
++	case RTW_HCI_TYPE_SDIO:
++		intf_mask = RTW_PWR_INTF_SDIO_MSK;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -265,6 +287,8 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 
+ 	if (rtw_read8(rtwdev, REG_CR) == 0xea)
+ 		cur_pwr = false;
++	else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO)
++		cur_pwr = false;
+ 	else if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_USB &&
+ 		 (rtw_read8(rtwdev, REG_SYS_STATUS1 + 1) & BIT(0)))
+ 		cur_pwr = false;
+@@ -278,6 +302,8 @@ static int rtw_mac_power_switch(struct rtw_dev *rtwdev, bool pwr_on)
+ 	if (rtw_pwr_seq_parser(rtwdev, pwr_seq))
+ 		return -EINVAL;
+ 
++	rtw_hci_power_switch(rtwdev, pwr_on);
++
+ 	return 0;
+ }
+ 
+@@ -453,6 +479,12 @@ static void download_firmware_reg_backup(struct rtw_dev *rtwdev,
+ 	tmp = (u8)((tmp & (~BIT_EN_BCN_FUNCTION)) | BIT_DIS_TSF_UDT);
+ 	rtw_write8(rtwdev, REG_BCN_CTRL, tmp);
+ 
++#if 0
++	// TODO
++	if (rtw_hci_type(rtwdev) == RTW_HCI_TYPE_SDIO)
++		rtw_read8(rtwdev, REG_SDIO_FREE_TXPG);
++#endif
++
+ 	WARN(bckp_idx != DLFW_RESTORE_REG_NUM, "wrong backup number\n");
+ }
+ 
+@@ -521,17 +553,21 @@ static int iddma_download_firmware(struct rtw_dev *rtwdev, u32 src, u32 dst,
+ 				   u32 len, u8 first)
+ {
+ 	u32 ch0_ctrl = BIT_DDMACH0_CHKSUM_EN | BIT_DDMACH0_OWN;
+-
+-	if (!check_hw_ready(rtwdev, REG_DDMA_CH0CTRL, BIT_DDMACH0_OWN, 0))
++printk(KERN_ERR "%s(): 1\n", __func__);
++	if (!check_hw_ready(rtwdev, REG_DDMA_CH0CTRL, BIT_DDMACH0_OWN, 0)) {
++		printk(KERN_ERR "%s(): 2\n", __func__);
+ 		return -EBUSY;
+-
++	}
++printk(KERN_ERR "%s(): 3\n", __func__);
+ 	ch0_ctrl |= len & BIT_MASK_DDMACH0_DLEN;
+ 	if (!first)
+ 		ch0_ctrl |= BIT_DDMACH0_CHKSUM_CONT;
+-
+-	if (iddma_enable(rtwdev, src, dst, ch0_ctrl))
++printk(KERN_ERR "%s(): 4\n", __func__);
++	if (iddma_enable(rtwdev, src, dst, ch0_ctrl)) {
++		printk(KERN_ERR "%s(): 5\n", __func__);
+ 		return -EBUSY;
+-
++	}
++printk(KERN_ERR "%s(): 6\n", __func__);
+ 	return 0;
+ }
+ 
+@@ -599,23 +635,29 @@ download_firmware_to_mem(struct rtw_dev *rtwdev, const u8 *data,
+ 
+ 		ret = send_firmware_pkt(rtwdev, (u16)(src >> 7),
+ 					data + mem_offset, pkt_size);
+-		if (ret)
++		if (ret) {
++			printk(KERN_ERR "%s(): 1\n", __func__);
+ 			return ret;
++		}
+ 
+ 		ret = iddma_download_firmware(rtwdev, OCPBASE_TXBUF_88XX +
+ 					      src + desc_size,
+ 					      dst + mem_offset, pkt_size,
+ 					      first_part);
+-		if (ret)
++		if (ret) {
++			printk(KERN_ERR "%s(): 2\n", __func__);
+ 			return ret;
++		}
+ 
+ 		first_part = 0;
+ 		mem_offset += pkt_size;
+ 		residue_size -= pkt_size;
+ 	}
+ 
+-	if (!check_fw_checksum(rtwdev, dst))
++	if (!check_fw_checksum(rtwdev, dst)) {
++		printk(KERN_ERR "%s(): 3\n", __func__);
+ 		return -EINVAL;
++	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtw88/mac.h b/drivers/net/wireless/realtek/rtw88/mac.h
+index ce64cdf7a56599..fedc7b12d1d4f4 100644
+--- a/drivers/net/wireless/realtek/rtw88/mac.h
++++ b/drivers/net/wireless/realtek/rtw88/mac.h
+@@ -7,7 +7,100 @@
+ 
+ #define RTW_HW_PORT_NUM		5
+ #define cut_version_to_mask(cut) (0x1 << ((cut) + 1))
++
+ #define SDIO_LOCAL_OFFSET	0x10250000
++/* HCI Current Power Mode */
++#define REG_SDIO_HCPWM		(SDIO_LOCAL_OFFSET + 0x0019)
++/* RXDMA Request Length */
++#define REG_SDIO_RX0_REQ_LEN	(SDIO_LOCAL_OFFSET + 0x001C)
++/* OQT Free Page */
++#define REG_SDIO_OQT_FREE_PG	(SDIO_LOCAL_OFFSET + 0x001E)
++/* Free Tx Buffer Page */
++#define REG_SDIO_FREE_TXPG	(SDIO_LOCAL_OFFSET + 0x0020)
++/* HCI Current Power Mode 1 */
++#define REG_SDIO_HCPWM1		(SDIO_LOCAL_OFFSET + 0x0024)
++/* HCI Current Power Mode 2 */
++#define REG_SDIO_HCPWM2		(SDIO_LOCAL_OFFSET + 0x0026)
++/* Free Tx Page Sequence */
++#define REG_SDIO_FREE_TXPG_SEQ	(SDIO_LOCAL_OFFSET + 0x0028)
++/* HTSF Informaion */
++#define REG_SDIO_HTSFR_INFO	(SDIO_LOCAL_OFFSET + 0x0030)
++/* H2C */
++#define REG_SDIO_H2C		(SDIO_LOCAL_OFFSET + 0x0060)
++/* HCI Request Power Mode 1 */
++#define REG_SDIO_HRPWM1		(SDIO_LOCAL_OFFSET + 0x0080)
++/* HCI Request Power Mode 2 */
++#define REG_SDIO_HRPWM2		(SDIO_LOCAL_OFFSET + 0x0082)
++/* HCI Power Save Clock */
++#define REG_SDIO_HPS_CLKR	(SDIO_LOCAL_OFFSET + 0x0084)
++/* SDIO HCI Suspend Control */
++#define REG_SDIO_HSUS_CTRL	(SDIO_LOCAL_OFFSET + 0x0086)
++/* SDIO Host Extension Interrupt Mask Always */
++#define REG_SDIO_HIMR_ON	(SDIO_LOCAL_OFFSET + 0x0090)
++/* SDIO Host Extension Interrupt Status Always */
++#define REG_SDIO_HISR_ON	(SDIO_LOCAL_OFFSET + 0x0091)
++#define REG_SDIO_HCPWM1_V2	(SDIO_LOCAL_OFFSET + 0x0038)
++
++/* SDIO Tx Control */
++#define REG_SDIO_TX_CTRL	(SDIO_LOCAL_OFFSET + 0x0000)
++/*SDIO status timeout*/
++#define REG_SDIO_TIMEOUT	(SDIO_LOCAL_OFFSET + 0x0002)
++
++/* SDIO Host Interrupt Mask */
++#define REG_SDIO_HIMR				(SDIO_LOCAL_OFFSET + 0x0014)
++#define REG_SDIO_HIMR_RX_REQUEST		BIT(0)
++#define REG_SDIO_HIMR_AVAL			BIT(1)
++#define REG_SDIO_HIMR_TXERR			BIT(2)
++#define REG_SDIO_HIMR_RXERR			BIT(3)
++#define REG_SDIO_HIMR_TXFOVW			BIT(4)
++#define REG_SDIO_HIMR_RXFOVW			BIT(5)
++#define REG_SDIO_HIMR_TXBCNOK			BIT(6)
++#define REG_SDIO_HIMR_TXBCNERR			BIT(7)
++#define REG_SDIO_HIMR_BCNERLY_INT		BIT(16)
++#define REG_SDIO_HIMR_C2HCMD			BIT(17)
++#define REG_SDIO_HIMR_CPWM1			BIT(18)
++#define REG_SDIO_HIMR_CPWM2			BIT(19)
++#define REG_SDIO_HIMR_HSISR_IND			BIT(20)
++#define REG_SDIO_HIMR_GTINT3_IND		BIT(21)
++#define REG_SDIO_HIMR_GTINT4_IND		BIT(22)
++#define REG_SDIO_HIMR_PSTIMEOUT			BIT(23)
++#define REG_SDIO_HIMR_OCPINT			BIT(24)
++#define REG_SDIO_HIMR_ATIMEND			BIT(25)
++#define REG_SDIO_HIMR_ATIMEND_E			BIT(26)
++#define REG_SDIO_HIMR_CTWEND			BIT(27)
++/* the following two are RTL8188 SDIO Specific */
++#define REG_SDIO_HIMR_MCU_ERR			BIT(28)
++#define REG_SDIO_HIMR_TSF_BIT32_TOGGLE		BIT(29)
++
++/* SDIO Host Interrupt Service Routine */
++#define REG_SDIO_HISR				(SDIO_LOCAL_OFFSET + 0x0018)
++#define REG_SDIO_HISR_RX_REQUEST		BIT(0)
++#define REG_SDIO_HISR_AVAL			BIT(1)
++#define REG_SDIO_HISR_TXERR			BIT(2)
++#define REG_SDIO_HISR_RXERR			BIT(3)
++#define REG_SDIO_HISR_TXFOVW			BIT(4)
++#define REG_SDIO_HISR_RXFOVW			BIT(5)
++#define REG_SDIO_HISR_TXBCNOK			BIT(6)
++#define REG_SDIO_HISR_TXBCNERR			BIT(7)
++#define REG_SDIO_HISR_BCNERLY_INT		BIT(16)
++#define REG_SDIO_HISR_C2HCMD			BIT(17)
++#define REG_SDIO_HISR_CPWM1			BIT(18)
++#define REG_SDIO_HISR_CPWM2			BIT(19)
++#define REG_SDIO_HISR_HSISR_IND			BIT(20)
++#define REG_SDIO_HISR_GTINT3_IND		BIT(21)
++#define REG_SDIO_HISR_GTINT4_IND		BIT(22)
++#define REG_SDIO_HISR_PSTIMEOUT			BIT(23)
++#define REG_SDIO_HISR_OCPINT			BIT(24)
++#define REG_SDIO_HISR_ATIMEND			BIT(25)
++#define REG_SDIO_HISR_ATIMEND_E			BIT(26)
++#define REG_SDIO_HISR_CTWEND			BIT(27)
++/* the following two are RTL8188 SDIO Specific */
++#define REG_SDIO_HISR_MCU_ERR			BIT(28)
++#define REG_SDIO_HISR_TSF_BIT32_TOGGLE		BIT(29)
++
++#define REG_SDIO_INDIRECT_REG_CFG		(SDIO_LOCAL_OFFSET + 0x0040)
++#define REG_SDIO_INDIRECT_REG_DATA		(SDIO_LOCAL_OFFSET + 0x0044)
++
+ #define DDMA_POLLING_COUNT	1000
+ #define C2H_PKT_BUF		256
+ #define REPORT_BUF		128
+diff --git a/drivers/net/wireless/realtek/rtw88/main.c b/drivers/net/wireless/realtek/rtw88/main.c
+index 54044abf30d7ce..1c5e222b4c21eb 100644
+--- a/drivers/net/wireless/realtek/rtw88/main.c
++++ b/drivers/net/wireless/realtek/rtw88/main.c
+@@ -1166,6 +1166,10 @@ static int rtw_chip_parameter_setup(struct rtw_dev *rtwdev)
+ 		rtwdev->hci.rpwm_addr = 0x03d9;
+ 		rtwdev->hci.cpwm_addr = 0x03da;
+ 		break;
++	case RTW_HCI_TYPE_SDIO:
++		rtwdev->hci.rpwm_addr = REG_SDIO_HRPWM1;
++		rtwdev->hci.cpwm_addr = REG_SDIO_HCPWM1_V2;
++		break;
+ 	default:
+ 		rtw_err(rtwdev, "unsupported hci type\n");
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.c b/drivers/net/wireless/realtek/rtw88/sdio.c
+new file mode 100644
+index 00000000000000..a5638a4d9782f5
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sdio.c
+@@ -0,0 +1,1175 @@
++// SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause
++/* Copyright (C) 2020 Martin Blumenstingl <martin.blumenstingl@googlemail.com>
++ *
++ * Based on rtw88/pci.c:
++ *   Copyright(c) 2018-2019  Realtek Corporation
++ */
++
++#include <linux/module.h>
++#include <linux/mmc/host.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/sdio_ids.h>
++#include "main.h"
++#include "sdio.h"
++#include "reg.h"
++#include "tx.h"
++#include "rx.h"
++#include "fw.h"
++#include "ps.h"
++#include "debug.h"
++
++#define RTW_SDIO_INDIRECT_RW_RETRIES		50
++
++extern struct rtw_chip_info rtw8822c_hw_spec;
++
++static bool rtw_sdio_is_bus_addr(u32 addr)
++{
++	return (addr & RTW_SDIO_BUS_MSK) != 0;
++}
++
++static u32 rtw_sdio_to_bus_offset(struct rtw_dev *rtwdev, u32 addr)
++{
++	switch (addr & RTW_SDIO_BUS_MSK) {
++	case WLAN_IOREG_OFFSET:
++		addr &= WLAN_IOREG_REG_MSK;
++		addr |= FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
++				   REG_SDIO_CMD_ADDR_MAC_REG);
++		break;
++	case SDIO_LOCAL_OFFSET:
++		addr &= SDIO_LOCAL_REG_MSK;
++		addr |= FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
++				   REG_SDIO_CMD_ADDR_SDIO_REG);
++		break;
++	default:
++		rtw_warn(rtwdev, "Cannot convert addr 0x%08x to bus offset",
++			 addr);
++	}
++
++	return addr;
++}
++
++static u32 rtw_sdio_mask_addr(u32 addr, bool f0)
++{
++	/*
++	 * Mask addr to remove driver defined bit and
++	 * make sure addr is in valid range
++	 */
++	if (f0)
++		return addr & 0xfff;
++	else
++		return addr & 0x1ffff;
++}
++
++static void* rtw_sdio_cmd53_safe_buffer(struct rtw_dev *rtwdev, void *buf,
++					size_t count)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	if (virt_addr_valid(buf) && (!object_is_on_stack(buf)))
++		return buf;
++
++	memcpy(rtwsdio->sdio_func->tmpbuf, buf, min_t(size_t, count, 4));
++
++	return rtwsdio->sdio_func->tmpbuf;
++}
++
++static u8 rtw_sdio_readb(struct rtw_dev *rtwdev, u32 addr, int *err_ret)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool f0 = addr & REG_SDIO_ADDR_F0_BIT;
++	u8 tmp;
++
++	addr = rtw_sdio_mask_addr(addr, f0);
++
++	if (f0)
++		tmp = sdio_f0_readb(rtwsdio->sdio_func, addr, err_ret);
++	else
++		tmp = sdio_readb(rtwsdio->sdio_func, addr, err_ret);
++
++	return tmp;
++}
++
++static void rtw_sdio_writeb(struct rtw_dev *rtwdev, u8 data, u32 addr, int *err_ret)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool f0 = addr & REG_SDIO_ADDR_F0_BIT;
++
++	addr = rtw_sdio_mask_addr(addr, f0);
++
++	if (f0)
++		sdio_f0_writeb(rtwsdio->sdio_func, data, addr, err_ret);
++	else
++		sdio_writeb(rtwsdio->sdio_func, data, addr, err_ret);
++}
++
++static void rtw_sdio_read_direct(struct rtw_dev *rtwdev, u32 addr, void *buf,
++				 size_t count, bool cmd52)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u8 *byte_buf;
++	int i, ret;
++
++	if (cmd52) {
++		byte_buf = buf;
++
++		for (i = 0; i < count; i++) {
++			byte_buf[i] = rtw_sdio_readb(rtwdev, addr + i, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed read byte %d of %lu using CMD52 from 0x%08x: %d",
++					 i + 1, count, addr + i, ret);
++		}
++	} else {
++		ret = sdio_memcpy_fromio(rtwsdio->sdio_func,
++					 rtw_sdio_cmd53_safe_buffer(rtwdev, buf, count),
++					 rtw_sdio_mask_addr(addr, false), count);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed read %lu byte(s) using CMD53 from 0x%08x: %d",
++				 count, addr, ret);
++	}
++}
++
++static void rtw_sdio_read_indirect(struct rtw_dev *rtwdev, u32 addr, void *buf,
++				   size_t count, bool cmd52)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u8 tmp, tmpbuf[8], *byte_buf;
++	u32 reg_cfg, reg_data;
++	int i, retry, ret;
++
++	reg_cfg = rtw_sdio_to_bus_offset(rtwdev, REG_SDIO_INDIRECT_REG_CFG);
++	reg_data = rtw_sdio_to_bus_offset(rtwdev, REG_SDIO_INDIRECT_REG_DATA);
++
++	if (cmd52) {
++		byte_buf = buf;
++
++		for (i = 0; i < count; i++) {
++			rtw_sdio_writeb(rtwdev, (addr + i) & 0xff, reg_cfg, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_cfg for indirect reading %d of %lu: %d",
++					 i + 1, count, ret);
++
++			rtw_sdio_writeb(rtwdev, ((addr + i) >> 8) & 0xff,
++					reg_cfg + 1, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_cfg + 1 for indirect reading %d of %lu: %d",
++					 i + 1, count, ret);
++
++			rtw_sdio_writeb(rtwdev, BIT(3) | BIT(4), reg_cfg + 2, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_cfg + 2 for indirect reading %d of %lu: %d",
++					 i + 1, count, ret);
++
++			for (retry = 0; retry < RTW_SDIO_INDIRECT_RW_RETRIES; retry++) {
++				tmp = rtw_sdio_readb(rtwdev, reg_cfg + 2, &ret);
++				if (!ret && tmp & BIT(4))
++					break;
++			}
++
++			if (retry == RTW_SDIO_INDIRECT_RW_RETRIES)
++				rtw_warn(rtwdev,
++					 "Failed to wait for indirect read %d of %lu, last status = 0x%08x",
++					 i + 1, count, tmp);
++
++			byte_buf[i] = rtw_sdio_readb(rtwdev, reg_data, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					"Failed to read indirect byte %d of %lu at 0x%08x: %d",
++					i + 1, count, addr + i, ret);
++		}
++	} else {
++		sdio_writel(rtwsdio->sdio_func, addr | BIT(19) | BIT(20),
++			    reg_cfg, &ret);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed to setup reg_cfg for indirect reading: %d",
++				 ret);
++
++		for (retry = 0; retry < RTW_SDIO_INDIRECT_RW_RETRIES; retry++) {
++			ret = sdio_readsb(rtwsdio->sdio_func, tmpbuf,
++					  reg_cfg + 2, sizeof(tmpbuf));
++			if (!ret && tmpbuf[0] & BIT(4))
++				break;
++		}
++
++		if (retry == RTW_SDIO_INDIRECT_RW_RETRIES)
++			rtw_warn(rtwdev,
++				 "Failed to wait for indirect read, last status = 0x%08x",
++				 tmpbuf[0]);
++
++		memcpy(buf, &tmpbuf[2], count);
++	}
++}
++
++static void rtw_sdio_read(struct rtw_dev *rtwdev, u32 addr, void *buf,
++			  size_t count)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool cmd52, direct;
++
++#if 0
++	if ((offset & 0xFFFF0000) == 0) {
++		if (adapter->pwr_off_flow_flag == 1 ||
++		    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF ||
++		    cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_RW ||
++		    cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_R) {
++			value8 = (u8)r_indir_sdio_88xx(adapter, offset,
++						       HALMAC_IO_BYTE);
++		} else {
++			offset |= WLAN_IOREG_OFFSET;
++			status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++			if (status != HALMAC_RET_SUCCESS) {
++				PLTFM_MSG_ERR("[ERR]convert offset\n");
++				return status;
++			}
++			value8 = (u8)PLTFM_SDIO_CMD53_R8(offset);
++		}
++	} else {
++		status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++		if (status != HALMAC_RET_SUCCESS) {
++			PLTFM_MSG_ERR("[ERR]convert offset\n");
++			return status;
++		}
++		value8 = PLTFM_SDIO_CMD52_R(offset);
++	}
++#endif
++
++	switch (count) {
++	case 1:
++		if (rtw_sdio_is_bus_addr(addr)) {
++			cmd52 = true;
++			direct = true;
++
++			addr = rtw_sdio_to_bus_offset(rtwdev, addr);
++		} else {
++			if (rtwsdio->is_powered_on) {
++				addr = rtw_sdio_to_bus_offset(rtwdev,
++							      addr | WLAN_IOREG_OFFSET);
++
++				cmd52 = false;
++				direct = true;
++			} else {
++				cmd52 = true;
++				direct = false;
++			}
++		}
++		break;
++
++	case 2:
++	case 4:
++		if (rtwsdio->is_powered_on) {
++			cmd52 = false;
++			direct = true;
++
++			if (!rtw_sdio_is_bus_addr(addr))
++				addr |= WLAN_IOREG_OFFSET;
++
++			rtw_sdio_to_bus_offset(rtwdev, addr);
++		} else {
++			if (!rtw_sdio_is_bus_addr(addr)) {
++				cmd52 = true;
++				direct = false;
++			} else {
++				cmd52 = true;
++				direct = true;
++			}
++		}
++		break;
++
++	default:
++		rtw_warn(rtwdev, "Invalid size %lu for reading", count);
++		return;
++	}
++
++	sdio_claim_host(rtwsdio->sdio_func);
++
++	if (direct)
++		rtw_sdio_read_direct(rtwdev, addr, buf, count, cmd52);
++	else
++		rtw_sdio_read_indirect(rtwdev, addr, buf, count, cmd52);
++
++	sdio_release_host(rtwsdio->sdio_func);
++}
++
++static void rtw_sdio_write_direct(struct rtw_dev *rtwdev, u32 addr, void *buf,
++				  size_t count, bool cmd52)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u8 *byte_buf;
++	int i, ret;
++
++	if (cmd52) {
++		byte_buf = buf;
++
++		for (i = 0; i < count; i++) {
++			rtw_sdio_writeb(rtwdev, byte_buf[i], addr + i, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed write byte %d of %lu using CMD52 from 0x%08x: %d",
++					 i + 1, count, addr + i, ret);
++			break;
++		}
++	} else {
++		ret = sdio_memcpy_toio(rtwsdio->sdio_func,
++				       rtw_sdio_mask_addr(addr, false),
++				       rtw_sdio_cmd53_safe_buffer(rtwdev, buf, count),
++				       count);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed write %lu byte(s) using CMD53 from 0x%08x: %d",
++				 count, addr, ret);
++	}
++}
++
++static void rtw_sdio_write_indirect(struct rtw_dev *rtwdev, u32 addr, void *buf,
++				    size_t count, bool cmd52)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u8 tmp, *byte_buf = buf;
++	u32 reg_cfg, reg_data;
++	int i, retry, ret;
++
++	if (count != 1 && count != 2 && count != 4) {
++		rtw_warn(rtwdev,
++			 "Invalid size %lu for indirect write", count);
++		return;
++	}
++
++	reg_cfg = rtw_sdio_to_bus_offset(rtwdev, REG_SDIO_INDIRECT_REG_CFG);
++	reg_data = rtw_sdio_to_bus_offset(rtwdev, REG_SDIO_INDIRECT_REG_DATA);
++
++	if (cmd52) {
++		byte_buf = buf;
++
++		rtw_sdio_writeb(rtwdev, addr & 0xff, reg_cfg, &ret);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed to setup reg_cfg for indirect writing: %d",
++				 ret);
++
++		rtw_sdio_writeb(rtwdev, (addr >> 8) & 0xff, reg_cfg + 1, &ret);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed to setup reg_cfg + 1 for indirect writing: %d",
++				 ret);
++
++		for (i = 0; i < count; i++) {
++			rtw_sdio_writeb(rtwdev, byte_buf[i], reg_data + i, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_data + %d for indirect writing: %d",
++					 i, ret);
++		}
++
++		rtw_sdio_writeb(rtwdev, (count / 2) | BIT(2) | BIT(4),
++				reg_cfg + 2, &ret);
++		if (ret)
++			rtw_warn(rtwdev,
++				 "Failed to setup reg_cfg + 2 for indirect writing: %d",
++				 ret);
++
++		for (retry = 0; retry < RTW_SDIO_INDIRECT_RW_RETRIES; retry++) {
++			tmp = rtw_sdio_readb(rtwdev, reg_cfg + 2, &ret);
++			if (!ret && tmp & BIT(4))
++				break;
++		}
++
++		if (retry == RTW_SDIO_INDIRECT_RW_RETRIES)
++			rtw_warn(rtwdev,
++				 "Failed to wait for indirect write, last status = 0x%08x",
++				 tmp);
++	} else {
++		for (i = 0; i < count; i++) {
++			sdio_writel(rtwsdio->sdio_func, byte_buf[i], reg_data,
++				    &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_data for indirect writing %d of %lu: %d",
++					 i + 1, count, ret);
++
++			sdio_writel(rtwsdio->sdio_func,
++				    addr | ((count / 2) << 16) | BIT(18) | BIT(20),
++				    reg_cfg, &ret);
++			if (ret)
++				rtw_warn(rtwdev,
++					 "Failed to setup reg_cfg for indirect writing %d of %lu: %d",
++					 i + 1, count, ret);
++
++			for (retry = 0; retry < RTW_SDIO_INDIRECT_RW_RETRIES; retry++) {
++				tmp = rtw_sdio_readb(rtwdev, reg_cfg + 2, &ret);
++				if (!ret && tmp & BIT(4))
++					break;
++			}
++
++			if (retry == RTW_SDIO_INDIRECT_RW_RETRIES)
++				rtw_warn(rtwdev,
++					 "Failed to wait for indirect write %d of %lu, last status = 0x%08x",
++					 i + 1, count, tmp);
++			}
++	}
++}
++
++static void rtw_sdio_write(struct rtw_dev *rtwdev, u32 addr, void *buf,
++			   size_t count)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	bool cmd52, direct;
++
++	switch (count) {
++	case 1:
++		if (!rtwsdio->is_powered_on && !rtw_sdio_is_bus_addr(addr)) {
++			cmd52 = true;
++			direct = false;
++		} else {
++			cmd52 = true;
++			direct = true;
++
++			if (!rtw_sdio_is_bus_addr(addr))
++				addr |= WLAN_IOREG_OFFSET;
++
++			addr = rtw_sdio_to_bus_offset(rtwdev, addr);
++		}
++		break;
++
++	case 2:
++	case 4:
++		if (!rtwsdio->is_powered_on || (addr & (count - 1)) != 0) {
++			if (!rtw_sdio_is_bus_addr(addr) && (addr & (count - 1)) == 0) {
++				cmd52 = true;
++				direct = false;
++			} else {
++				cmd52 = true;
++				direct = true;
++
++				if (!rtw_sdio_is_bus_addr(addr))
++					addr |= WLAN_IOREG_OFFSET;
++
++				addr = rtw_sdio_to_bus_offset(rtwdev, addr);
++			}
++		} else {
++			cmd52 = false;
++			direct = true;
++
++			if (!rtw_sdio_is_bus_addr(addr))
++				addr |= WLAN_IOREG_OFFSET;
++
++			addr = rtw_sdio_to_bus_offset(rtwdev, addr);
++		}
++		break;
++
++	default:
++		rtw_warn(rtwdev, "Invalid size %lu for writing", count);
++		return;
++	}
++#if 0
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	enum halmac_sdio_cmd53_4byte_mode cmd53_4byte =
++						adapter->sdio_cmd53_4byte;
++
++	if ((adapter->pwr_off_flow_flag == 1 ||
++	     adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF ||
++	     cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_RW ||
++	     cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_R) &&
++	    (offset & 0xFFFF0000) == 0) {
++		w_indir_sdio_88xx(adapter, offset, value, HALMAC_IO_BYTE);
++	} else {
++		if ((offset & 0xFFFF0000) == 0)
++			offset |= WLAN_IOREG_OFFSET;
++		status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++		if (status != HALMAC_RET_SUCCESS) {
++			PLTFM_MSG_ERR("[ERR]convert offset\n");
++			return status;
++		}
++		PLTFM_SDIO_CMD52_W(offset, value);
++	}
++	return HALMAC_RET_SUCCESS;
++#endif
++#if 0
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++
++	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF ||
++	    ((offset & (2 - 1)) != 0) ||
++	    adapter->sdio_cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_RW ||
++	    adapter->sdio_cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_W) {
++		if ((offset & 0xFFFF0000) == 0 && ((offset & (2 - 1)) == 0)) {
++			status = w_indir_sdio_88xx(adapter, offset, value,
++						   HALMAC_IO_WORD);
++		} else {
++			if ((offset & 0xFFFF0000) == 0)
++				offset |= WLAN_IOREG_OFFSET;
++
++			status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++			if (status != HALMAC_RET_SUCCESS) {
++				PLTFM_MSG_ERR("[ERR]convert offset\n");
++				return status;
++			}
++			PLTFM_SDIO_CMD52_W(offset, (u8)(value & 0xFF));
++			PLTFM_SDIO_CMD52_W(offset + 1,
++					   (u8)((value & 0xFF00) >> 8));
++		}
++	} else {
++		if ((offset & 0xFFFF0000) == 0)
++			offset |= WLAN_IOREG_OFFSET;
++
++		status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++		if (status != HALMAC_RET_SUCCESS) {
++			PLTFM_MSG_ERR("[ERR]convert offset\n");
++			return status;
++		}
++
++		PLTFM_SDIO_CMD53_W16(offset, value);
++	}
++	return status;
++#endif
++#if 0
++	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF ||
++	    (offset & (4 - 1)) !=  0) {
++		if ((offset & 0xFFFF0000) == 0 && ((offset & (4 - 1)) == 0)) {
++			status = w_indir_sdio_88xx(adapter, offset, value,
++						   HALMAC_IO_DWORD);
++		} else {
++			if ((offset & 0xFFFF0000) == 0)
++				offset |= WLAN_IOREG_OFFSET;
++
++			status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++			if (status != HALMAC_RET_SUCCESS) {
++				PLTFM_MSG_ERR("[ERR]convert offset\n");
++				return status;
++			}
++			PLTFM_SDIO_CMD52_W(offset, (u8)(value & 0xFF));
++			PLTFM_SDIO_CMD52_W(offset + 1,
++					   (u8)((value >> 8) & 0xFF));
++			PLTFM_SDIO_CMD52_W(offset + 2,
++					   (u8)((value >> 16) & 0xFF));
++			PLTFM_SDIO_CMD52_W(offset + 3,
++					   (u8)((value >> 24) & 0xFF));
++		}
++	} else {
++		if ((offset & 0xFFFF0000) == 0)
++			offset |= WLAN_IOREG_OFFSET;
++
++		status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++		if (status != HALMAC_RET_SUCCESS) {
++			PLTFM_MSG_ERR("[ERR]convert offset\n");
++			return status;
++		}
++		PLTFM_SDIO_CMD53_W32(offset, value);
++	}
++#endif
++
++	sdio_claim_host(rtwsdio->sdio_func);
++
++	if (direct)
++		rtw_sdio_write_direct(rtwdev, addr, buf, count, cmd52);
++	else
++		rtw_sdio_write_indirect(rtwdev, addr, buf, count, cmd52);
++
++	sdio_release_host(rtwsdio->sdio_func);
++}
++
++static u8 rtw_sdio_read8(struct rtw_dev *rtwdev, u32 addr)
++{
++	u8 tmp;
++
++	rtw_sdio_read(rtwdev, addr, &tmp, 1);
++
++	return tmp;
++}
++
++static u16 rtw_sdio_read16(struct rtw_dev *rtwdev, u32 addr)
++{
++	__le16 tmp;
++#if 0
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	union {
++		__le16 word;
++		u8 byte[2];
++	} value16 = { 0x0000 };
++
++	if ((offset & 0xFFFF0000) == 0 &&
++	    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF) {
++		value16.byte[0] = (u8)r_indir_sdio_88xx(adapter, offset,
++							HALMAC_IO_BYTE);
++		value16.byte[1] = (u8)r_indir_sdio_88xx(adapter, offset + 1,
++							HALMAC_IO_BYTE);
++		return rtk_le16_to_cpu(value16.word);
++	} else if ((offset & 0xFFFF0000) != 0 &&
++		   adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF) {
++		value16.byte[0] = PLTFM_SDIO_CMD52_R(offset);
++		value16.byte[1] = PLTFM_SDIO_CMD52_R(offset + 1);
++		return rtk_le16_to_cpu(value16.word);
++	}
++
++	if ((offset & 0xFFFF0000) == 0)
++		offset |= WLAN_IOREG_OFFSET;
++
++	status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++	if (status != HALMAC_RET_SUCCESS) {
++		PLTFM_MSG_ERR("[ERR]convert offset\n");
++		return status;
++	}
++
++	if (((offset & (2 - 1)) != 0) ||
++	    adapter->sdio_cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_RW ||
++	    adapter->sdio_cmd53_4byte == HALMAC_SDIO_CMD53_4BYTE_MODE_R) {
++		value16.byte[0] = (u8)PLTFM_SDIO_CMD53_R32(offset);
++		value16.byte[1] = (u8)PLTFM_SDIO_CMD53_R32(offset + 1);
++		return rtk_le16_to_cpu(value16.word);
++	}
++
++	return PLTFM_SDIO_CMD53_R16(offset);
++#endif
++
++	rtw_sdio_read(rtwdev, addr, &tmp, 2);
++
++	return le16_to_cpu(tmp);
++}
++
++static u32 rtw_sdio_read32(struct rtw_dev *rtwdev, u32 addr)
++{
++	__le32 tmp;
++#if 0
++	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
++	union {
++		__le32 dword;
++		u8 byte[4];
++	} value32 = { 0x00000000 };
++
++	if (((offset & 0xFFFF0000) == 0) &&
++	    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF) {
++		value32.byte[0] = (u8)r_indir_sdio_88xx(adapter, offset,
++							HALMAC_IO_BYTE);
++		value32.byte[1] = (u8)r_indir_sdio_88xx(adapter, offset + 1,
++							HALMAC_IO_BYTE);
++		value32.byte[2] = (u8)r_indir_sdio_88xx(adapter, offset + 2,
++							HALMAC_IO_BYTE);
++		value32.byte[3] = (u8)r_indir_sdio_88xx(adapter, offset + 3,
++							HALMAC_IO_BYTE);
++		return rtk_le32_to_cpu(value32.dword);
++	} else if (((offset & 0xFFFF0000) != 0) &&
++		   adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF) {
++		value32.byte[0] = PLTFM_SDIO_CMD52_R(offset);
++		value32.byte[1] = PLTFM_SDIO_CMD52_R(offset + 1);
++		value32.byte[2] = PLTFM_SDIO_CMD52_R(offset + 2);
++		value32.byte[3] = PLTFM_SDIO_CMD52_R(offset + 3);
++		return rtk_le32_to_cpu(value32.dword);
++	}
++
++	if (0 == (offset & 0xFFFF0000))
++		offset |= WLAN_IOREG_OFFSET;
++
++	status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
++	if (status != HALMAC_RET_SUCCESS) {
++		PLTFM_MSG_ERR("[ERR]convert offset\n");
++		return status;
++	}
++
++	if ((offset & (4 - 1)) != 0) {
++		value32.byte[0] = (u8)PLTFM_SDIO_CMD53_R32(offset);
++		value32.byte[1] = (u8)PLTFM_SDIO_CMD53_R32(offset + 1);
++		value32.byte[2] = (u8)PLTFM_SDIO_CMD53_R32(offset + 2);
++		value32.byte[3] = (u8)PLTFM_SDIO_CMD53_R32(offset + 3);
++		return rtk_le32_to_cpu(value32.dword);
++	}
++
++	return PLTFM_SDIO_CMD53_R32(offset);
++#endif
++
++	rtw_sdio_read(rtwdev, addr, &tmp, 4);
++
++	return le32_to_cpu(tmp);
++}
++
++static void rtw_sdio_write8(struct rtw_dev *rtwdev, u32 addr, u8 val)
++{
++	rtw_sdio_write(rtwdev, addr, &val, 1);
++}
++
++static void rtw_sdio_write16(struct rtw_dev *rtwdev, u32 addr, u16 val)
++{
++	__le16 tmp = cpu_to_le16(val);
++
++	rtw_sdio_write(rtwdev, addr, &tmp, 2);
++}
++
++static void rtw_sdio_write32(struct rtw_dev *rtwdev, u32 addr, u32 val)
++{
++	__le32 tmp = cpu_to_le32(val);
++
++	rtw_sdio_write(rtwdev, addr, &tmp, 4);
++}
++
++static size_t rtw_sdio_cmd53_align_size(size_t len)
++{
++	if (len < RTW_SDIO_BLOCK_SIZE)
++		return len;
++
++	return ALIGN(len, RTW_SDIO_BLOCK_SIZE);
++}
++
++static u32 rtw_sdio_get_tx_addr(struct rtw_dev *rtwdev, u8 queue)
++{
++	switch (queue) {
++	case RTW_TX_QUEUE_BCN:
++	case RTW_TX_QUEUE_H2C:
++	case RTW_TX_QUEUE_HI0:
++	case RTW_TX_QUEUE_MGMT:
++		return FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
++				  REG_SDIO_CMD_ADDR_TXFF_HIGH);
++	case RTW_TX_QUEUE_VI:
++	case RTW_TX_QUEUE_VO:
++		return FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
++				  REG_SDIO_CMD_ADDR_TXFF_NORMAL);
++	case RTW_TX_QUEUE_BE:
++	case RTW_TX_QUEUE_BK:
++		return FIELD_PREP(REG_SDIO_CMD_ADDR_MSK,
++				  REG_SDIO_CMD_ADDR_TXFF_LOW);
++	default:
++		rtw_warn(rtwdev, "Unsupported queue for TX addr: 0x%02x\n",
++			 queue);
++		return 0;
++	}
++};
++
++static void rtw_sdio_read_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	// TODO: CMD53 only so far...
++	sdio_memcpy_fromio(rtwsdio->sdio_func, buf,
++			   RTW_SDIO_ADDR_RX_RX0FF_GEN(rtwsdio->rx_addr++),
++			   count);
++}
++
++static int rtw_sdio_write_port(struct rtw_dev *rtwdev, u8 *buf, size_t count)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	size_t txsize;
++	u32 txaddr;
++	int ret;
++
++	txaddr = rtw_sdio_get_tx_addr(rtwdev, RTW_TX_QUEUE_BCN);
++	if (!txaddr)
++		return -EINVAL;
++
++	txsize = rtw_sdio_cmd53_align_size(ALIGN(count, 4));
++
++	sdio_claim_host(rtwsdio->sdio_func);
++	ret = sdio_memcpy_toio(rtwsdio->sdio_func,
++			       rtw_sdio_mask_addr(txaddr, false), buf, txsize);
++	sdio_release_host(rtwsdio->sdio_func);
++
++	if (ret)
++		rtw_warn(rtwdev,
++			 "Failed to write %lu byte(s) to SDIO port 0x%08x",
++			 txsize, txaddr);
++
++	return ret;
++}
++
++static void rtw_sdio_init(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	rtwsdio->irq_mask = REG_SDIO_HIMR_RX_REQUEST | REG_SDIO_HIMR_CPWM1;
++
++	spin_lock_init(&rtwsdio->irq_lock);
++}
++
++static void rtw_sdio_enable_interrupt(struct rtw_dev *rtwdev,
++				      struct rtw_sdio *rtwsdio)
++{
++	rtw_write32(rtwdev, REG_SDIO_HIMR, rtwsdio->irq_mask);
++}
++
++static void rtw_sdio_disable_interrupt(struct rtw_dev *rtwdev)
++{
++	rtw_write32(rtwdev, REG_SDIO_HIMR, 0x0);
++}
++
++static int rtw_sdio_tx_write(struct rtw_dev *rtwdev,
++			     struct rtw_tx_pkt_info *pkt_info,
++			     struct sk_buff *skb)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++
++	return 0;
++}
++
++static void rtw_sdio_tx_kick_off(struct rtw_dev *rtwdev)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++}
++
++static int rtw_sdio_setup(struct rtw_dev *rtwdev)
++{
++	/* nothing to do */
++	return 0;
++}
++
++static int rtw_sdio_start(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	spin_lock_bh(&rtwsdio->irq_lock);
++	rtw_sdio_enable_interrupt(rtwdev, rtwsdio);
++	spin_unlock_bh(&rtwsdio->irq_lock);
++
++	return 0;
++}
++
++static void rtw_sdio_stop(struct rtw_dev *rtwdev)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	spin_lock_bh(&rtwsdio->irq_lock);
++	rtw_sdio_disable_interrupt(rtwdev);
++	spin_unlock_bh(&rtwsdio->irq_lock);
++}
++
++static void rtw_sdio_deep_ps(struct rtw_dev *rtwdev, bool enter)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++}
++
++static void rtw_sdio_link_ps(struct rtw_dev *rtwdev, bool enter)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++}
++
++static void rtw_sdio_interface_cfg(struct rtw_dev *rtwdev)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++}
++
++static void rtw_sdio_power_switch(struct rtw_dev *rtwdev, bool on)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	rtwsdio->is_powered_on = true;
++}
++
++static int rtw_sdio_write_data_rsvd_page(struct rtw_dev *rtwdev, u8 *buf,
++					 u32 size)
++{
++	struct rtw_tx_pkt_info pkt_info = {};
++	struct sk_buff *skb;
++	int ret;
++
++	skb = rtw_tx_write_data_rsvd_page_get(rtwdev, &pkt_info, buf, size);
++	if (!skb)
++		return -ENOMEM;
++
++	pkt_info.qsel = TX_DESC_QSEL_BEACON;
++	rtw_tx_fill_tx_desc(&pkt_info, skb);
++
++	ret = rtw_sdio_write_port(rtwdev, skb->data, skb->len);
++	dev_kfree_skb_any(skb);
++
++	return ret;
++}
++
++static int rtw_sdio_write_data_h2c(struct rtw_dev *rtwdev, u8 *buf, u32 size)
++{
++	rtw_dbg(rtwdev, RTW_DBG_SDIO, "%s: not implemented yet", __func__);
++
++	return 0;
++}
++
++static void rtw_sdio_tx_err_isr(struct rtw_dev *rtwdev)
++{
++	u32 val = rtw_read32(rtwdev, REG_TXDMA_STATUS);
++
++	rtw_write32(rtwdev, REG_TXDMA_STATUS, val);
++}
++
++static void rtw_sdio_rxfifo_recv(struct rtw_dev *rtwdev, u32 rx_len)
++{
++	size_t bufsz = rtw_sdio_cmd53_align_size(rx_len);
++	struct sk_buff *new;
++
++	new = dev_alloc_skb(bufsz);
++
++	rtw_sdio_read_port(rtwdev, new->data, bufsz);
++
++	// TODO: not complete
++}
++
++static void rtw_sdio_rx_isr(struct rtw_dev *rtwdev, u32 rx_len)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++
++	if (!rx_len)
++		return;
++
++	sdio_claim_host(rtwsdio->sdio_func);
++
++	do {
++		rtw_sdio_rxfifo_recv(rtwdev, rx_len);
++
++		rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
++	} while (rx_len);
++
++	sdio_release_host(rtwsdio->sdio_func);
++
++	// TODO: not complete
++}
++
++static void rtw_sdio_handle_interrupt(struct sdio_func *sdio_func)
++{
++	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
++	struct rtw_dev *rtwdev = hw->priv;
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	u32 hisr, rx_len;
++
++	spin_lock_bh(&rtwsdio->irq_lock);
++
++	hisr = rtw_read32(rtwdev, REG_SDIO_HISR);
++	rx_len = rtw_read32(rtwdev, REG_SDIO_RX0_REQ_LEN);
++
++	rtw_write32(rtwdev, REG_SDIO_HISR, hisr);
++
++	if (hisr & REG_SDIO_HISR_TXERR)
++		rtw_sdio_tx_err_isr(rtwdev);
++	if (hisr & REG_SDIO_HISR_RX_REQUEST)
++		rtw_sdio_rx_isr(rtwdev, rx_len);
++
++	rtw_sdio_enable_interrupt(rtwdev, rtwsdio);
++
++	spin_unlock_bh(&rtwsdio->irq_lock);
++}
++
++static int __maybe_unused rtw_sdio_suspend(struct device *dev)
++{
++	return 0;
++}
++
++static int __maybe_unused rtw_sdio_resume(struct device *dev)
++{
++	return 0;
++}
++
++SIMPLE_DEV_PM_OPS(rtw_sdio_pm_ops, rtw_sdio_suspend, rtw_sdio_resume);
++
++static int rtw_sdio_claim(struct rtw_dev *rtwdev, struct sdio_func *sdio_func)
++{
++	struct rtw_sdio *rtwsdio = (struct rtw_sdio *)rtwdev->priv;
++	int ret;
++
++	sdio_claim_host(sdio_func);
++
++	ret = sdio_enable_func(sdio_func);
++	if (ret) {
++		rtw_err(rtwdev, "Failed to enable SDIO func");
++		goto err_release_host;
++	}
++
++	ret = sdio_set_block_size(sdio_func, RTW_SDIO_BLOCK_SIZE);
++	if (ret) {
++		rtw_err(rtwdev, "Failed to set SDIO block size to 512");
++		goto err_disable_func;
++	}
++
++	rtwsdio->sdio_func = sdio_func;
++
++	if (sdio_func->card->host->ios.timing >= MMC_TIMING_UHS_SDR12 &&
++	    sdio_func->card->host->ios.timing <= MMC_TIMING_UHS_DDR50)
++		rtwsdio->sdio3_bus_mode = true;
++
++	sdio_set_drvdata(sdio_func, rtwdev->hw);
++	SET_IEEE80211_DEV(rtwdev->hw, &sdio_func->dev);
++
++	sdio_release_host(sdio_func);
++
++	return 0;
++
++err_disable_func:
++	sdio_disable_func(sdio_func);
++err_release_host:
++	sdio_release_host(sdio_func);
++	return ret;
++}
++
++static void rtw_sdio_declaim(struct rtw_dev *rtwdev, struct sdio_func *sdio_func)
++{
++	sdio_disable_func(sdio_func);
++}
++
++static struct rtw_hci_ops rtw_sdio_ops = {
++	.tx_write = rtw_sdio_tx_write,
++	.tx_kick_off = rtw_sdio_tx_kick_off,
++	.setup = rtw_sdio_setup,
++	.start = rtw_sdio_start,
++	.stop = rtw_sdio_stop,
++	.deep_ps = rtw_sdio_deep_ps,
++	.link_ps = rtw_sdio_link_ps,
++	.interface_cfg = rtw_sdio_interface_cfg,
++
++	.power_switch = rtw_sdio_power_switch,
++
++	.read8 = rtw_sdio_read8,
++	.read16 = rtw_sdio_read16,
++	.read32 = rtw_sdio_read32,
++	.write8 = rtw_sdio_write8,
++	.write16 = rtw_sdio_write16,
++	.write32 = rtw_sdio_write32,
++	.write_data_rsvd_page = rtw_sdio_write_data_rsvd_page,
++	.write_data_h2c = rtw_sdio_write_data_h2c,
++};
++
++static int rtw_sdio_request_irq(struct rtw_dev *rtwdev, struct sdio_func *sdio_func)
++{
++	int ret;
++
++	sdio_claim_host(sdio_func);
++	ret = sdio_claim_irq(sdio_func, &rtw_sdio_handle_interrupt);
++	sdio_release_host(sdio_func);
++
++	if (ret) {
++		rtw_err(rtwdev, "failed to claim SDIO IRQ");
++		return ret;
++	}
++
++	return 0;
++}
++
++static void rtw_sdio_free_irq(struct rtw_dev *rtwdev, struct sdio_func *sdio_func)
++{
++	sdio_release_irq(sdio_func);
++}
++
++static int rtw_sdio_probe(struct sdio_func *sdio_func,
++			  const struct sdio_device_id *id)
++{
++	struct ieee80211_hw *hw;
++	struct rtw_dev *rtwdev;
++	int drv_data_size;
++	int ret;
++
++	drv_data_size = sizeof(struct rtw_dev) + sizeof(struct rtw_sdio);
++	hw = ieee80211_alloc_hw(drv_data_size, &rtw_ops);
++	if (!hw) {
++		dev_err(&sdio_func->dev, "failed to allocate hw");
++		return -ENOMEM;
++	}
++
++	rtwdev = hw->priv;
++	rtwdev->hw = hw;
++	rtwdev->dev = &sdio_func->dev;
++	rtwdev->chip = (struct rtw_chip_info *)id->driver_data;
++	rtwdev->hci.ops = &rtw_sdio_ops;
++	rtwdev->hci.type = RTW_HCI_TYPE_SDIO;
++
++	ret = rtw_core_init(rtwdev);
++	if (ret)
++		goto err_release_hw;
++
++	rtw_dbg(rtwdev, RTW_DBG_SDIO,
++		"rtw88 SDIO probe: vendor=0x%04x device=%04x class=%02x",
++		id->vendor, id->device, id->class);
++
++	ret = rtw_sdio_claim(rtwdev, sdio_func);
++	if (ret) {
++		rtw_err(rtwdev, "failed to claim SDIO device");
++		goto err_deinit_core;
++	}
++
++	rtw_sdio_init(rtwdev);
++
++	ret = rtw_chip_info_setup(rtwdev);
++	if (ret) {
++		rtw_err(rtwdev, "failed to setup chip information");
++		goto err_pci_declaim;
++	}
++
++	ret = rtw_register_hw(rtwdev, hw);
++	if (ret) {
++		rtw_err(rtwdev, "failed to register hw");
++		goto err_pci_declaim;
++	}
++
++	ret = rtw_sdio_request_irq(rtwdev, sdio_func);
++	if (ret)
++		goto err_unregister_hw;
++
++	return 0;
++
++err_unregister_hw:
++	rtw_unregister_hw(rtwdev, hw);
++err_pci_declaim:
++	rtw_sdio_declaim(rtwdev, sdio_func);
++err_deinit_core:
++	rtw_core_deinit(rtwdev);
++err_release_hw:
++	ieee80211_free_hw(hw);
++
++	return ret;
++}
++
++static void rtw_sdio_remove(struct sdio_func *sdio_func)
++{
++	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
++	struct rtw_dev *rtwdev;
++
++	if (!hw)
++		return;
++
++	rtwdev = hw->priv;
++
++	rtw_unregister_hw(rtwdev, hw);
++	rtw_sdio_disable_interrupt(rtwdev);
++	rtw_sdio_declaim(rtwdev, sdio_func);
++	rtw_sdio_free_irq(rtwdev, sdio_func);
++	rtw_core_deinit(rtwdev);
++	ieee80211_free_hw(hw);
++}
++
++static void rtw_sdio_shutdown(struct device *dev)
++{
++	struct sdio_func *sdio_func = dev_to_sdio_func(dev);
++	struct ieee80211_hw *hw = sdio_get_drvdata(sdio_func);
++	struct rtw_dev *rtwdev;
++	struct rtw_chip_info *chip;
++
++	if (!hw)
++		return;
++
++	rtwdev = hw->priv;
++	chip = rtwdev->chip;
++
++	if (chip->ops->shutdown)
++		chip->ops->shutdown(rtwdev);
++}
++
++static const struct sdio_device_id rtw_sdio_dev_table[] =  {
++#ifdef CONFIG_RTW88_8822C
++	{
++		.vendor = SDIO_VENDOR_ID_REALTEK,
++		.device = SDIO_DEVICE_ID_REALTEK_RTW8822CS,
++		.class = SDIO_CLASS_WLAN,
++		.driver_data = (kernel_ulong_t)&rtw8822c_hw_spec,
++	},
++#endif
++	{ /* sentinel */ }
++};
++
++static struct sdio_driver rtw_sdio_driver = {
++	.name       = "RTW-SDIO WLAN",
++	.probe      = rtw_sdio_probe,
++	.remove     = rtw_sdio_remove,
++	.id_table   = rtw_sdio_dev_table,
++	.drv = {
++		.pm = &rtw_sdio_pm_ops,
++		.shutdown   = rtw_sdio_shutdown,
++	}
++};
++module_sdio_driver(rtw_sdio_driver);
++
++MODULE_AUTHOR("Martin Blumenstingl");
++MODULE_AUTHOR("Realtek Corporation");
++MODULE_DESCRIPTION("Realtek 802.11ac wireless SDIO driver");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/realtek/rtw88/sdio.h b/drivers/net/wireless/realtek/rtw88/sdio.h
+new file mode 100644
+index 00000000000000..bf6808dd71e3d7
+--- /dev/null
++++ b/drivers/net/wireless/realtek/rtw88/sdio.h
+@@ -0,0 +1,54 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/* Copyright (C) 2020 Martin Blumenstingl <martin.blumenstingl@googlemail.com>
++ */
++
++#ifndef __REG_SDIO_H_
++#define __REG_SDIO_H_
++
++#include "mac.h"
++
++/* I/O bus domain address mapping */
++#define WLAN_IOREG_OFFSET			0x10260000
++#define FIRMWARE_FIFO_OFFSET			0x10270000
++#define TX_HIQ_OFFSET				0x10310000
++#define TX_MIQ_OFFSET				0x10320000
++#define TX_LOQ_OFFSET				0x10330000
++#define TX_EPQ_OFFSET				0x10350000
++#define RX_RX0FF_OFFSET				0x10340000
++
++#define RTW_SDIO_BUS_MSK			0xffff0000
++#define SDIO_LOCAL_REG_MSK			0x0000ffff
++#define WLAN_IOREG_REG_MSK			0x00000fff
++
++/* Sdio Address for SDIO Local Reg, TRX FIFO, MAC Reg */
++#define REG_SDIO_CMD_ADDR_MSK			GENMASK(16, 13)
++#define REG_SDIO_CMD_ADDR_SDIO_REG 		0
++#define REG_SDIO_CMD_ADDR_MAC_REG		8
++#define REG_SDIO_CMD_ADDR_TXFF_HIGH		4
++#define REG_SDIO_CMD_ADDR_TXFF_LOW		6
++#define REG_SDIO_CMD_ADDR_TXFF_NORMAL		5
++#define REG_SDIO_CMD_ADDR_TXFF_EXTRA		7
++#define REG_SDIO_CMD_ADDR_RXFF			7
++
++#define REG_SDIO_ADDR_CMD52_BIT			BIT(17)
++#define REG_SDIO_ADDR_F0_BIT			BIT(18)
++
++#define RTW_SDIO_BLOCK_SIZE			512
++#define RTW_SDIO_ADDR_RX_RX0FF_GEN(_id)		(0x0e000 | ((_id) & 0x3))
++
++struct sdio_func;
++
++struct rtw_sdio {
++	struct sdio_func *sdio_func;
++
++	/* Used for PCI TX queueing. */
++	spinlock_t irq_lock;
++
++	u32 irq_mask;
++	u8 rx_addr;
++	bool sdio3_bus_mode;
++
++	bool is_powered_on;
++};
++
++#endif
