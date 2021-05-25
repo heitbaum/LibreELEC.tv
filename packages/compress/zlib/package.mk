@@ -3,8 +3,8 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="zlib"
-PKG_VERSION="2.0.2"
-PKG_SHA256="dd37886f22ca6890e403ea6c1d60f36eab1d08d2f232a35f5b02126621149d28"
+PKG_VERSION="2.0.3"
+PKG_SHA256="30305bd1551e3454bddf574f9863caf7137dde0fdbd4dcd7094eacfbb23955a0"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/zlib-ng/zlib-ng"
 PKG_URL="https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${PKG_VERSION}.tar.gz"
