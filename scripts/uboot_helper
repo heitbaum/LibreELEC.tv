@@ -316,7 +316,7 @@ devices = \
       },
       'rock-pi-n10': {
         'dtb': 'rk3399pro-rock-pi-n10.dtb',
-        'config': 'evb-rk3399_defconfig'
+        'config': 'rock-pi-n10-rk3399pro_defconfig'
       },
       'rockpro64': {
         'dtb': 'rk3399-rockpro64.dtb',
