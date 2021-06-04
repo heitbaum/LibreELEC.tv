@@ -153,7 +153,7 @@ devices = \
     },
     'H616': {
       'tanix-tx6s' : {
-        'dtb' : 'sun50i-h6-tanix-tx6s.dtb',
+        'dtb' : 'sun50i-h616-tanix-tx6s.dtb',
         'config' : 'tanix_tx6s_defconfig',
         'crust_config' : 'tanix_tx6s_defconfig'
       },
