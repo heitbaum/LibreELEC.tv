@@ -704,7 +704,7 @@ diff -Nur a/arch/arm64/boot/dts/allwinner/sun50i-h616-tanix-tx6s.dts b/arch/arm6
 +
 +&gpu {
 +	mali-supply = <&reg_dcdcc>;
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&i2c3 {
