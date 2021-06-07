@@ -15,7 +15,8 @@
   # default:  default mainline kernel
     LINUX="default"
 
-    EXTRA_CMDLINE="console=ttyS0,115200 console=tty1"
+  # EXTRA_CMDLINE="console=ttyS0,115200 console=tty1"
+    EXTRA_CMDLINE="console=ttyS0,115200"
 
 ################################################################################
 # setup build defaults
