@@ -14,7 +14,7 @@ diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
 diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-tanix-tx6s.dts
 --- a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts	1970-01-01 01:00:00.000000000 +0100
 +++ b/arch/arm/dts/sun50i-h616-tanix-tx6s.dts	2021-05-11 20:52:30.906666606 +0200
-@@ -0,0 +1,224 @@
+@@ -0,0 +1,232 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +/*
 + * Copyright (C) 2021 Arm Ltd.
@@ -101,6 +101,14 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +	//cd-gpios = <&pio 8 16 GPIO_ACTIVE_LOW>;	/* PI16 */
 +	broken-cd;
 +	bus-width = <4>;
++	status = "okay";
++};
++
++&mmc2 {
++	vmmc-supply = <&reg_dcdce>;
++	bus-width = <8>;
++	non-removable;
++	cap-mmc-hw-reset;
 +	status = "okay";
 +};
 +
@@ -242,7 +250,7 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 diff -Naur a/configs/tanix_tx6s_defconfig b/configs/tanix_tx6s_defconfig
 --- a/configs/tanix_tx6s_defconfig	1970-01-01 01:00:00.000000000 +0100
 +++ b/configs/tanix_tx6s_defconfig	2021-05-11 20:49:24.476666604 +0200
-@@ -0,0 +1,17 @@
+@@ -0,0 +1,18 @@
 +CONFIG_ARM=y
 +CONFIG_ARCH_SUNXI=y
 +CONFIG_SPL=y
@@ -257,6 +265,7 @@ diff -Naur a/configs/tanix_tx6s_defconfig b/configs/tanix_tx6s_defconfig
 +CONFIG_R_I2C_ENABLE=y
 +CONFIG_DEFAULT_DEVICE_TREE="sun50i-h616-tanix-tx6s"
 +# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
++CONFIG_SUPPORT_EMMC_BOOT=y
 +CONFIG_SPL_I2C_SUPPORT=y
 +CONFIG_SUN8I_EMAC=y
 +CONFIG_I2C3_ENABLE=y
