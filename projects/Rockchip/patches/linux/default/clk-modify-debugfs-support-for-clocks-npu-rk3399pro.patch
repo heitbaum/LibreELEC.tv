@@ -1,0 +1,26 @@
+From cd6fa34b83d71648f06aae256dc81c7bad697db3 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 12 Jun 2021 11:30:00 +1000
+Subject: [PATCH] clk: modify debugfs support for clocks
+
+Enable clock debugfs to support the below functionalities.
+ - Allow enable/disable a clock.
+as used in BSP kernel Change-Id: Ib67b3a3409c9e7d8adb710bb524f54f543abf712
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ drivers/clk/clk.c | 2 +-
+ 1 file changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/clk/clk.c b/drivers/clk/clk.c
+index f66b24e9e18e5..090efe68af472 100644
+--- a/drivers/clk/clk.c
++++ b/drivers/clk/clk.c
+@@ -3055,7 +3055,7 @@
+ }
+ DEFINE_SHOW_ATTRIBUTE(clk_dump);
+ 
+-#undef CLOCK_ALLOW_WRITE_DEBUGFS
++#define CLOCK_ALLOW_WRITE_DEBUGFS
+ #ifdef CLOCK_ALLOW_WRITE_DEBUGFS
+ /*
+  * This can be dangerous, therefore don't provide any real compile time
