@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xkeyboard-config"
-PKG_VERSION="2.32"
-PKG_SHA256="1feee317ba39b91902b0cbd2987c0c73e6afbfc8f4c096367a5c86c216c036a8"
+PKG_VERSION="2.33"
+PKG_SHA256="657fd790d6dcf781cd395de4cf726120a5b0f93ba91dfb2628bcc70ae8b1d3bc"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.X.org"
 PKG_URL="http://www.x.org/releases/individual/data/${PKG_NAME}/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
