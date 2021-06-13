@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="aom"
-PKG_VERSION="c0f14141bd71414b004dccd66d48b27570299fa3" # 3.1.0
-PKG_SHA256="2f87ccc16585f93ec0dd8f992a8ca39c95bef97a8b5e46356575ae206d108978"
+PKG_VERSION="2929e7809ac84c43363ab6e1bada7302787af9b5" # 3.1.1
+PKG_SHA256="edcb58aa47240a10e3d9877469bcac1a3fda0a1be2ad0389fa684934cdfaa29e"
 PKG_LICENSE="BSD"
 PKG_SITE="https://www.webmproject.org"
 PKG_URL="https://repo.or.cz/aom.git/snapshot/${PKG_VERSION}.tar.gz"
