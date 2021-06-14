@@ -30,17 +30,17 @@ diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64
 +		status = "okay";
 +	};
 +
-+	/* rk_headset {
++	rk_headset {
 +		status = "okay";
 +		compatible = "rockchip_headset";
 +		headset_gpio = <&gpio2 RK_PB4 GPIO_ACTIVE_HIGH>;
 +		pinctrl-names = "default";
-+		//pinctrl-0 = <&hp_det>;
++		pinctrl-0 = <&hp_det>;
 +		io-channels = <&saradc 0>;
-+	}; */
++	};
 +
 +	/* Audio components */
-+	/* es8316-sound {
++	es8316-sound {
 +		compatible = "simple-audio-card";
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&hp_det_pin>;
@@ -48,7 +48,7 @@ diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64
 +		simple-audio-card,format = "i2s";
 +		simple-audio-card,mclk-fs = <256>;
 +
-+		status = "disabled";
++		status = "okay";
 +
 +		simple-audio-card,widgets =
 +			"Microphone", "Mic Jack",
@@ -66,7 +66,7 @@ diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64
 +		simple-audio-card,codec {
 +			sound-dai = <&es8316>;
 +		};
-+	}; */
++	};
 +
 +	wireless_wlan: wireless-wlan {
 +		compatible = "wlan-platdata";
@@ -116,6 +116,55 @@ diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64
 diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
 --- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
 +++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -375,6 +375,48 @@
+ 	status = "okay";
+ };
+ 
++&i2c4 {
++	i2c-scl-rising-time-ns = <300>;
++	i2c-scl-falling-time-ns = <15>;
++	status = "okay";
++
++	es8316: es8316@11 {
++		status = "okay";
++		#sound-dai-cells = <0>;
++		compatible = "everest,es8316";
++		reg = <0x11>;
++		clocks = <&cru SCLK_I2S_8CH_OUT>;
++		clock-names = "mclk";
++		pinctrl-names = "default";
++		pinctrl-0 = <&i2s_8ch_mclk>;
++	};
++
++	camera1: camera-module@10 {
++		compatible = "sony,imx219";
++		reg = <0x10>;
++
++		clocks = <&cru SCLK_CIF_OUT>;
++		clock-names = "clk_cif_out";
++
++		pinctrl-names = "default";
++		pinctrl-0 = <&cam_pwdn>;
++
++		rockchip,camera-module-index = <0>;
++		rockchip,camera-module-facing = "back";
++		rockchip,camera-module-name = "raspberry";
++		rockchip,camera-module-lens-name = "default";
++
++		status = "okay";
++
++		port {
++			ucam_out0: endpoint {
++				remote-endpoint = <&mipi_in_ucam0>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++};
++
+ &io_domains {
+ 	status = "okay";
+ 	bt656-supply = <&vcca_1v8>;
 @@ -405,6 +405,12 @@
  		};
  	};
@@ -129,3 +178,233 @@ diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/
  	pcie {
  		pcie_pwr: pcie-pwr {
  			rockchip,pins =	<4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_up>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+@@ -105,6 +105,122 @@
+ };
+ 
+ &pinctrl {
++	cam {
++		cam_pwdn: cam-pwdn {
++			rockchip,pins =
++				<2 RK_PA5 0 &pcfg_pull_up>;
++		};
++	};
++
++	bq2570 {
++		charger_ok_int: charger-ok-int {
++			rockchip,pins =
++				<1 RK_PA1 0 &pcfg_pull_up>;
++			};
++	};
++
++	fusb30x {
++		fusb0_int: fusb0-int {
++			rockchip,pins =
++				<1 RK_PA2 0 &pcfg_pull_up>;
++			};
++	};
++
++	hym8563 {
++		hym8563_int: hym8563-int {
++			rockchip,pins =
++				<4 RK_PD6 0 &pcfg_pull_up>;
++		};
++	};
++
++	headphone {
++		hp_det: hp-det {
++			rockchip,pins =
++				<2 RK_PB4 0 &pcfg_pull_none>;
++		};
++	};
++
++	sdio-pwrseq {
++		wifi_enable_h: wifi-enable-h {
++			rockchip,pins =
++				<2 RK_PD3 0 &pcfg_pull_none>;
++		};
++	};
++
++	host_5v {
++		usb1_en_oc: usb1-en-oc {
++			rockchip,pins =
++				<4 25 RK_FUNC_GPIO &pcfg_pull_up_10ma>;
++		};
++	};
++
++	vbus_typec {
++		usb0_en_oc: usb0-en-oc {
++			rockchip,pins =
++				<4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up_10ma>;
++		};
++	};
++
++	pcie {
++		pcie_pwr: pcie-pwr{
++			rockchip,pins =
++				<4 28 RK_FUNC_GPIO &pcfg_pull_up>;
++		};
++	};
++
++	sdmmc {
++		sdmmc_bus1: sdmmc-bus1 {
++			rockchip,pins =
++				<4 8 RK_FUNC_1 &pcfg_pull_up_10ma>;
++		};
++
++		sdmmc_bus4: sdmmc-bus4 {
++			rockchip,pins =
++				<4 8 RK_FUNC_1 &pcfg_pull_up_10ma>,
++				<4 9 RK_FUNC_1 &pcfg_pull_up_10ma>,
++				<4 10 RK_FUNC_1 &pcfg_pull_up_10ma>,
++				<4 11 RK_FUNC_1 &pcfg_pull_up_10ma>;
++		};
++
++		sdmmc_clk: sdmmc-clk {
++			rockchip,pins =
++				<4 12 RK_FUNC_1 &pcfg_pull_none_10ma>;
++		};
++
++		sdmmc_cmd: sdmmc-cmd {
++			rockchip,pins =
++				<4 13 RK_FUNC_1 &pcfg_pull_up_10ma>;
++		};
++	};
++
++	tp_irq {
++		tp_irq_gpio: tp-irq-gpio {
++			rockchip,pins =
++				<3 RK_PB0 0 &pcfg_pull_up>;
++		};
++	};
++
++	pwm3a {
++		pwm3a_pin: pwm3a-pin {
++			rockchip,pins =
++				<0 RK_PA6 RK_FUNC_1 &pcfg_pull_none>;
++		};
++	};
++
++	lcd {
++		lcd_rst_gpio: lcd-rst-gpio {
++			rockchip,pins =
++				<4 27 RK_FUNC_GPIO &pcfg_pull_none>;// eDP
++		};
++	};
++
++	backlight {
++		bl_en: bl-en {
++			rockchip,pins =
++				<1 13 RK_FUNC_GPIO &pcfg_pull_none>;// eDP
++		};
++	};
++
+ 	sdio-pwrseq {
+ 		wifi_enable_h_pin: wifi-enable-h-pin {
+ 			rockchip,pins = <0 RK_PB2 RK_FUNC_GPIO &pcfg_pull_none>;
+@@ -123,6 +239,11 @@
+ 		bt_reset_pin: bt-reset-pin {
+ 			rockchip,pins = <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
+ 		};
++
++		uart0_gpios: uart0-gpios {
++			rockchip,pins =
++				<2 RK_PC3 0 &pcfg_pull_none>;
++		};
+ 	};
+ };
+ 
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts	2021-06-27 08:08:37.008796771 +0000
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts	2021-06-27 03:36:58.196267310 +0000
+@@ -57,7 +57,7 @@
+ 	es8316-sound {
+ 		compatible = "simple-audio-card";
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&hp_det_pin>;
++		pinctrl-0 = <&hp_det>;
+ 		simple-audio-card,name = "rockchip,es8316-codec";
+ 		simple-audio-card,format = "i2s";
+ 		simple-audio-card,mclk-fs = <256>;
+@@ -147,17 +147,10 @@
+ 		};
+ 	};
+ 
+-	host_5v {
+-		usb1_en_oc: usb1-en-oc {
+-			rockchip,pins =
+-				<4 25 RK_FUNC_GPIO &pcfg_pull_up_10ma>;
+-		};
+-	};
+-
+ 	vbus_typec {
+ 		usb0_en_oc: usb0-en-oc {
+ 			rockchip,pins =
+-				<4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up_10ma>;
++				<4 RK_PD2 RK_FUNC_GPIO &pcfg_pull_up>;
+ 		};
+ 	};
+ 
+@@ -171,25 +164,25 @@
+ 	sdmmc {
+ 		sdmmc_bus1: sdmmc-bus1 {
+ 			rockchip,pins =
+-				<4 8 RK_FUNC_1 &pcfg_pull_up_10ma>;
++				<4 8 RK_FUNC_GPIO &pcfg_pull_up>;
+ 		};
+ 
+ 		sdmmc_bus4: sdmmc-bus4 {
+ 			rockchip,pins =
+-				<4 8 RK_FUNC_1 &pcfg_pull_up_10ma>,
+-				<4 9 RK_FUNC_1 &pcfg_pull_up_10ma>,
+-				<4 10 RK_FUNC_1 &pcfg_pull_up_10ma>,
+-				<4 11 RK_FUNC_1 &pcfg_pull_up_10ma>;
++				<4 8 RK_FUNC_GPIO &pcfg_pull_up>,
++				<4 9 RK_FUNC_GPIO &pcfg_pull_up>,
++				<4 10 RK_FUNC_GPIO &pcfg_pull_up>,
++				<4 11 RK_FUNC_GPIO &pcfg_pull_up>;
+ 		};
+ 
+ 		sdmmc_clk: sdmmc-clk {
+ 			rockchip,pins =
+-				<4 12 RK_FUNC_1 &pcfg_pull_none_10ma>;
++				<4 12 RK_FUNC_GPIO &pcfg_pull_none>;
+ 		};
+ 
+ 		sdmmc_cmd: sdmmc-cmd {
+ 			rockchip,pins =
+-				<4 13 RK_FUNC_1 &pcfg_pull_up_10ma>;
++				<4 13 RK_FUNC_GPIO &pcfg_pull_up>;
+ 		};
+ 	};
+ 
+@@ -203,7 +196,7 @@
+ 	pwm3a {
+ 		pwm3a_pin: pwm3a-pin {
+ 			rockchip,pins =
+-				<0 RK_PA6 RK_FUNC_1 &pcfg_pull_none>;
++				<0 RK_PA6 RK_FUNC_GPIO &pcfg_pull_none>;
+ 		};
+ 	};
+ 
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi	2021-06-27 08:12:48.334966885 +0000
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi	2021-06-27 03:38:29.972768824 +0000
+@@ -388,7 +388,7 @@
+ 		clocks = <&cru SCLK_I2S_8CH_OUT>;
+ 		clock-names = "mclk";
+ 		pinctrl-names = "default";
+-		pinctrl-0 = <&i2s_8ch_mclk>;
++		//pinctrl-0 = <&i2s_8ch_mclk>;
+ 	};
+ 
+ 	camera1: camera-module@10 {
+@@ -410,7 +410,7 @@
+ 
+ 		port {
+ 			ucam_out0: endpoint {
+-				remote-endpoint = <&mipi_in_ucam0>;
++				//remote-endpoint = <&mipi_in_ucam0>;
+ 				data-lanes = <1 2>;
+ 			};
+ 		};
