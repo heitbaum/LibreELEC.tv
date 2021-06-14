@@ -1,0 +1,131 @@
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+@@ -19,6 +19,111 @@
+ 	chosen {
+ 		stdout-path = "serial2:1500000n8";
+ 	};
++
++	/* Power sequence for SDIO WiFi module */
++	sdio_pwrseq: sdio-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		/* clocks = <&rk808 1>; */
++		clocks = <&hym8563>;
++		clock-names = "ext_clock";
++		pinctrl-names = "default";
++		pinctrl-0 = <&wifi_enable_h_pin>;
++		post-power-on-delay-ms = <100>;
++		power-off-delay-us = <500000>;
++
++		/* WL_REG_ON on module */
++		/* reset-gpios = <&gpio0 RK_PB2 GPIO_ACTIVE_LOW>; */
++		/*
++		 * On the module itself this is one of these (depending
++		 * on the actual card populated):
++		 * - SDIO_RESET_L_WL_REG_ON
++		 * - PDN (power down when low)
++		 */
++		reset-gpios = <&gpio2 RK_PD3 GPIO_ACTIVE_LOW>;
++
++		status = "okay";
++	};
++
++	/* rk_headset {
++		status = "okay";
++		compatible = "rockchip_headset";
++		headset_gpio = <&gpio2 RK_PB4 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		//pinctrl-0 = <&hp_det>;
++		io-channels = <&saradc 0>;
++	}; */
++
++	/* Audio components */
++	/* es8316-sound {
++		compatible = "simple-audio-card";
++		pinctrl-names = "default";
++		pinctrl-0 = <&hp_det_pin>;
++		simple-audio-card,name = "rockchip,es8316-codec";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,mclk-fs = <256>;
++
++		status = "disabled";
++
++		simple-audio-card,widgets =
++			"Microphone", "Mic Jack",
++			"Headphone", "Headphone Jack";
++		simple-audio-card,routing =
++			"Mic Jack", "MICBIAS1",
++			"IN1P", "Mic Jack",
++			"Headphones Jack", "HPOL",
++			"Headphones Jack", "HPOR";
++
++		simple-audio-card,cpu {
++			sound-dai = <&i2s0>;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&es8316>;
++		};
++	}; */
++
++	wireless_wlan: wireless-wlan {
++		compatible = "wlan-platdata";
++		rockchip,grf = <&grf>;
++		wifi_chip_type = "ap6398s";
++		sdio_vref = <1800>;
++		WIFI,host_wake_irq = <&gpio0 RK_PA3 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++	};
++
++	bt_uart0: wireless_bluetooth: wireless-bluetooth {
++		compatible = "bluetooth-platdata";
++		uart_rts_gpios = <&gpio2 RK_PC3 GPIO_ACTIVE_LOW>;
++		pinctrl-names = "default", "rts_gpio";
++		pinctrl-0 = <&uart0_rts>;
++		//pinctrl-1 = <&uart0_gpios>;
++		BT,reset_gpio    = <&gpio2 RK_PD4 GPIO_ACTIVE_HIGH>;
++		BT,wake_gpio     = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
++		BT,wake_host_irq = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++	};
++};
++
++&pinctrl {
++	sdio-pwrseq {
++		wifi_enable_h_pin: wifi-enable-h-pin {
++			rockchip,pins = <0 RK_PB2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
++	wireless-bluetooth {
++		bt_wake_pin: bt-wake-pin {
++			rockchip,pins = <2 RK_PD3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		bt_host_wake_pin: bt-host-wake-pin {
++			rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		bt_reset_pin: bt-reset-pin {
++			rockchip,pins = <0 RK_PB1 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
+ };
+ 
+ &uart2 {
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -405,6 +405,12 @@
+ 		};
+ 	};
+ 
++	npu_clk {
++		npu_ref_clk: npu-ref-clk {
++			rockchip,pins =	<0 RK_PA2 1 &pcfg_pull_none>;
++		};
++	};
++
+ 	pcie {
+ 		pcie_pwr: pcie-pwr {
+ 			rockchip,pins =	<4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_up>;
