@@ -1,0 +1,7 @@
+apt install apt-utils software-properties-common
+add-apt-repository ppa:git-core/ppa
+
+cat list-of-packages | while read x
+do
+  apt install -y $x
+done
