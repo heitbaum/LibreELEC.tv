@@ -269,3 +269,14 @@ diff -Naur a/configs/tanix_tx6s_defconfig b/configs/tanix_tx6s_defconfig
 +CONFIG_SPL_I2C_SUPPORT=y
 +CONFIG_SUN8I_EMAC=y
 +CONFIG_I2C3_ENABLE=y
+diff --git a/arch/arm/dts/sunxi-u-boot.dtsi b/arch/arm/dts/sunxi-u-boot.dtsi
+index a4227a3c22d..06da009fa28 100644
+--- a/arch/arm/dts/sunxi-u-boot.dtsi
++++ b/arch/arm/dts/sunxi-u-boot.dtsi
+@@ -12,6 +12,7 @@
+ 
+ / {
+ 	aliases {
++		mmc0 = &mmc0;
+ 		mmc1 = &mmc2;
+ 	};
