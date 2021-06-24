@@ -1,23 +1,10 @@
-diff -Naur a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
---- a/arch/arm/dts/Makefile	2021-04-26 11:12:35.000000000 +0200
-+++ b/arch/arm/dts/Makefile	2021-05-11 21:07:30.613333253 +0200
-@@ -622,7 +622,8 @@
- 	sun50i-h6-pine-h64.dtb \
- 	sun50i-h6-tanix-tx6.dtb
- dtb-$(CONFIG_MACH_SUN50I_H616) += \
--	sun50i-h616-orangepi-zero2.dtb
-+	sun50i-h616-orangepi-zero2.dtb \
-+	sun50i-h616-tanix-tx6s.dtb
- dtb-$(CONFIG_MACH_SUN50I) += \
- 	sun50i-a64-amarula-relic.dtb \
- 	sun50i-a64-bananapi-m64.dtb \
-diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-tanix-tx6s.dts
---- a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts	1970-01-01 01:00:00.000000000 +0100
-+++ b/arch/arm/dts/sun50i-h616-tanix-tx6s.dts	2021-05-11 20:52:30.906666606 +0200
-@@ -0,0 +1,232 @@
+diff -Naur linux-5.12.5-old/arch/arm64/boot/dts/allwinner/sun50i-h616-tanix-tx6s.dts linux-5.12.5-new/arch/arm64/boot/dts/allwinner/sun50i-h616-tanix-tx6s.dts
+--- linux-5.12.5-old/arch/arm64/boot/dts/allwinner/sun50i-h616-tanix-tx6s.dts	1970-01-01 01:00:00.000000000 +0100
++++ linux-5.12.5-new/arch/arm64/boot/dts/allwinner/sun50i-h616-tanix-tx6s.dts	2021-05-25 18:17:32.416665828 +0200
+@@ -0,0 +1,333 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +/*
-+ * Copyright (C) 2021 Arm Ltd.
++ * Copyright (C) 2020 Arm Ltd.
 + */
 +
 +/dts-v1/;
@@ -41,17 +28,69 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +		stdout-path = "serial0:115200n8";
 +	};
 +
++	connector {
++		compatible = "hdmi-connector";
++		type = "d";
++
++		port {
++			hdmi_con_in: endpoint {
++				remote-endpoint = <&hdmi_out_con>;
++			};
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led-0 {
++			function = LED_FUNCTION_POWER;
++			color = <LED_COLOR_ID_RED>;
++			gpios = <&pio 2 12 GPIO_ACTIVE_HIGH>; /* PC12 */
++			default-state = "on";
++		};
++	};
++
 +	reg_vcc5v: vcc5v {
-+		/* board wide 5V supply directly from the DC input */
++		/* board wide 5V supply directly from the USB-C socket */
 +		compatible = "regulator-fixed";
 +		regulator-name = "vcc-5v";
 +		regulator-min-microvolt = <5000000>;
 +		regulator-max-microvolt = <5000000>;
 +		regulator-always-on;
 +	};
++
++	reg_usb1_vbus: usb1-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb1-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc5v>;
++		enable-active-high;
++		/* gpio = <&pio 2 16 GPIO_ACTIVE_HIGH>; PC16 */
++		status = "okay";
++	};
++
++	reg_vcc_wifi: reg_vcc_wifi {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-wifi";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&pio 6 18 GPIO_ACTIVE_HIGH>; /* PG18 WL_REG_ON */
++		regulator-always-on;
++		enable-active-high;
++		status = "okay";
++	};
++};
++
++&de {
++	status = "okay";
 +};
 +
 +&ehci0 {
++	status = "okay";
++};
++
++&ehci1 {
 +	status = "okay";
 +};
 +
@@ -59,7 +98,27 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +	status = "okay";
 +};
 +
-+&ir {
++&ehci3 {
++	status = "okay";
++};
++
++&hdmi {
++	hvcc-supply = <&reg_bldo1>;
++	status = "okay";
++};
++
++&hdmi_out {
++	hdmi_out_con: endpoint {
++		remote-endpoint = <&hdmi_con_in>;
++	};
++};
++
++&gpu {
++	mali-supply = <&reg_dcdcc>;
++	status = "okay";
++};
++
++&i2c3 {
 +	status = "okay";
 +};
 +
@@ -81,27 +140,29 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +	};
 +};
 +
-+&r_i2c {
-+	status = "okay";
-+
-+	axp305_1: pmic@36 {
-+		compatible = "x-powers,axp305", "x-powers,axp805",
-+		"x-powers,axp806";
-+		reg = <0x36>;
-+
-+		/* dummy interrupt to appease the driver for now */
-+		interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupt-controller;
-+		#interrupt-cells = <1>;
-+	};
-+};
-+
 +&mmc0 {
 +	vmmc-supply = <&reg_dcdce>;
-+	//cd-gpios = <&pio 8 16 GPIO_ACTIVE_LOW>;	/* PI16 */
++	//cd-gpios = <&pio 5 6 GPIO_ACTIVE_LOW>; /* PF6 */
 +	broken-cd;
 +	bus-width = <4>;
 +	status = "okay";
++};
++
++&mmc1 {
++	vmmc-supply = <&reg_dcdce>;
++	vqmmc-supply = <&reg_vcc_wifi>;
++	bus-width = <4>;
++	non-removable;
++	status = "okay";
++
++	wlan: wifi@1 {
++		reg = <1>;
++		compatible = "xradio,xr819",
++			     "brcm,bcm4329-fmac";
++		interrupt-parent = <&pio>;
++		interrupts = <GIC_SPI 207 IRQ_TYPE_EDGE_RISING>;
++		interrupt-names = "host-wake";
++	};
 +};
 +
 +&mmc2 {
@@ -116,7 +177,15 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +	status = "okay";
 +};
 +
++&ohci1 {
++	status = "okay";
++};
++
 +&ohci2 {
++	status = "okay";
++};
++
++&ohci3 {
 +	status = "okay";
 +};
 +
@@ -148,18 +217,18 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +				regulator-name = "vcc-sys";
 +			};
 +
-+			reg_aldo2: aldo2 {
++			reg_aldo2: aldo2 {	/* 3.3V on headers */
++				regulator-always-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
 +				regulator-name = "vcc3v3-ext";
-+				status = "disabled";
 +			};
 +
-+			reg_aldo3: aldo3 {
++			reg_aldo3: aldo3 {	/* 3.3V on headers */
++				regulator-always-on;
 +				regulator-min-microvolt = <3300000>;
 +				regulator-max-microvolt = <3300000>;
 +				regulator-name = "vcc3v3-ext2";
-+				status = "disabled";
 +			};
 +
 +			reg_bldo1: bldo1 {
@@ -169,11 +238,8 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +				regulator-name = "vcc1v8";
 +			};
 +
-+			reg_bldo2: bldo2 {
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <1800000>;
-+				regulator-name = "vcc1v8-2";
-+				status = "disabled";
++			bldo2 {
++				/* unused */
 +			};
 +
 +			bldo3 {
@@ -185,9 +251,7 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +			};
 +
 +			cldo1 {
-+				regulator-min-microvolt = <2500000>;
-+				regulator-max-microvolt = <2500000>;
-+				regulator-name = "vcc2v5";
++				/* reserved */
 +			};
 +
 +			cldo2 {
@@ -214,8 +278,8 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +
 +			reg_dcdcd: dcdcd {
 +				regulator-always-on;
-+				regulator-min-microvolt = <1360000>;
-+				regulator-max-microvolt = <1360000>;
++				regulator-min-microvolt = <1500000>;
++				regulator-max-microvolt = <1500000>;
 +				regulator-name = "vdd-dram";
 +			};
 +
@@ -239,33 +303,35 @@ diff -Naur a/arch/arm/dts/sun50i-h616-tanix-tx6s.dts b/arch/arm/dts/sun50i-h616-
 +	status = "okay";
 +};
 +
++&uart1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&uart1_pins>, <&uart1_rts_cts_pins>;
++	uart-has-rtscts;
++	status = "okay";
++
++	bluetooth {
++		compatible = "brcm,bcm43438-bt";
++		clocks = <&rtc 1>;
++		clock-names = "lpo";
++		vbat-supply = <&reg_dcdce>;
++		vddio-supply = <&reg_dcdce>;
++		device-wakeup-gpios = <&r_pio 0 6 GPIO_ACTIVE_HIGH>; /* PL6 */
++		host-wakeup-gpios = <&r_pio 0 5 GPIO_ACTIVE_HIGH>; /* PL5 */
++		shutdown-gpios = <&r_pio 0 4 GPIO_ACTIVE_HIGH>; /* PL4 */
++	};
++};
++
 +&usbotg {
-+	dr_mode = "host";	/* USB A type receptable */
++	dr_mode = "peripheral";
 +	status = "okay";
 +};
 +
 +&usbphy {
++	usb1_vbus-supply = <&reg_usb1_vbus>;
 +	status = "okay";
 +};
-diff -Naur a/configs/tanix_tx6s_defconfig b/configs/tanix_tx6s_defconfig
---- a/configs/tanix_tx6s_defconfig	1970-01-01 01:00:00.000000000 +0100
-+++ b/configs/tanix_tx6s_defconfig	2021-05-11 20:49:24.476666604 +0200
-@@ -0,0 +1,18 @@
-+CONFIG_ARM=y
-+CONFIG_ARCH_SUNXI=y
-+CONFIG_SPL=y
-+# CONFIG_DRAM_SUN50I_H616_WRITE_LEVELING=y
-+CONFIG_DRAM_SUN50I_H616_READ_CALIBRATION=y
-+# CONFIG_DRAM_SUN50I_H616_READ_TRAINING=y
-+# CONFIG_DRAM_SUN50I_H616_WRITE_TRAINING=y
-+CONFIG_DRAM_SUN50I_H616_UNKNOWN_FEATURE=y
-+CONFIG_MACH_SUN50I_H616=y
-+CONFIG_MMC0_CD_PIN=""
-+# CONFIG_MMC_SUNXI_SLOT_EXTRA=2
-+CONFIG_R_I2C_ENABLE=y
-+CONFIG_DEFAULT_DEVICE_TREE="sun50i-h616-tanix-tx6s"
-+# CONFIG_SYS_MALLOC_CLEAR_ON_INIT is not set
-+CONFIG_SUPPORT_EMMC_BOOT=y
-+CONFIG_SPL_I2C_SUPPORT=y
-+CONFIG_SUN8I_EMAC=y
-+CONFIG_I2C3_ENABLE=y
++
++&ir {
++	linux,rc-map-name = "rc-beelink-gs1";
++	status = "okay";
++};
