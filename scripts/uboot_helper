@@ -385,6 +385,12 @@ devices = \
         'config': 'evb-rk3399_defconfig'
       },
     },
+    'RK3568': {
+      'roc-pc': {
+        'dtb': 'rk3568-roc-pc.dtb',
+        'config': 'roc-pc-rk3568_defconfig'
+      },
+    },
   },
   'Samsung': {
     'Exynos': {
