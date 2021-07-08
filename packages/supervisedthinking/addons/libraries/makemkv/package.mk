@@ -2,13 +2,13 @@
 # Copyright (C) 2018-present Frank Hartung (supervisedthinking (@) gmail.com)
 
 PKG_NAME="makemkv"
-PKG_VERSION="1.16.3"
-PKG_SHA256="6141a8ccff41eaf9964385b172d49b7b3ceefb4c8b25734a424f53c27405f05d"
+PKG_VERSION="1.16.4"
+PKG_SHA256="e6b0d391159e60c48c115cdf6938eb02f5aeef3c3fecf94813c500f4031e4f6b"
 PKG_REV="113"
 PKG_ARCH="aarch64 arm x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://makemkv.com/"
-PKG_URL="http://www.makemkv.com/download/makemkv-oss-$PKG_VERSION.tar.gz"
+PKG_URL="http://www.makemkv.com/download/makemkv-oss-${PKG_VERSION}.tar.gz"
 PKG_MAINTAINER="ThinkSupervised"
 PKG_DEPENDS_TARGET="toolchain makemkv-bin openssl expat ffmpeg zlib"
 PKG_SECTION="lib/multimedia"
