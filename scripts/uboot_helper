@@ -388,7 +388,7 @@ devices = \
     'RK3568': {
       'roc-pc': {
         'dtb': 'rk3568-roc-pc.dtb',
-        'config': 'roc-pc-rk3568_defconfig'
+        'config': 'evb-rk3568_defconfig'
       },
     },
   },
