@@ -1,1 +1,1 @@
-SUBSYSTEM=="ieee80211", ACTION=="add", RUN+="/usr/lib/iw/setregdomain"
+KERNEL=="regulatory*", ACTION=="add", SUBSYSTEM=="platform", RUN+="/usr/lib/iw/setregdomain"
