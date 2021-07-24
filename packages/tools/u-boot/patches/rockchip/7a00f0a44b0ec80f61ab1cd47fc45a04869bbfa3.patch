@@ -1,0 +1,107 @@
+From 7a00f0a44b0ec80f61ab1cd47fc45a04869bbfa3 Mon Sep 17 00:00:00 2001
+From: Yi Liu <liuyi@rock-chips.com>
+Date: Fri, 14 May 2021 11:30:32 +0800
+Subject: [PATCH] tools: mkimage: preparation for 356X support
+
+1.add header_ver into spl_info struct
+2.change signature into magic on header0_info
+
+Signed-off-by: Yi Liu <liuyi@rock-chips.com>
+Change-Id: I5aaaf53106e52f49484643cda7266e2bbc6f46dc
+---
+ tools/rkcommon.c | 45 +++++++++++++++++++++++++--------------------
+ 1 file changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/tools/rkcommon.c b/tools/rkcommon.c
+index 44e82dfa745..1a88b5e837c 100644
+--- a/tools/rkcommon.c
++++ b/tools/rkcommon.c
+@@ -16,7 +16,11 @@
+ #include "rkcommon.h"
+ 
+ enum {
+-	RK_SIGNATURE		= 0x0ff0aa55,
++	RK_MAGIC		= 0x0ff0aa55,
++};
++
++enum {
++	RK_HEADER_V1	= 1,
+ };
+ 
+ /**
+@@ -25,14 +29,14 @@ enum {
+  * This is stored at SD card block 64 (where each block is 512 bytes, or at
+  * the start of SPI flash. It is encoded with RC4.
+  *
+- * @signature:		Signature (must be RKSD_SIGNATURE)
++ * @magic:		Magic (must be RK_MAGIC)
+  * @disable_rc4:	0 to use rc4 for boot image,  1 to use plain binary
+  * @init_offset:	Offset in blocks of the SPL code from this header
+  *			block. E.g. 4 means 2KB after the start of this header.
+  * Other fields are not used by U-Boot
+  */
+ struct header0_info {
+-	uint32_t signature;
++	uint32_t magic;
+ 	uint8_t reserved[4];
+ 	uint32_t disable_rc4;
+ 	uint16_t init_offset;
+@@ -56,27 +60,28 @@ struct header1_info {
+  * @spl_hdr:		Boot ROM requires a 4-bytes spl header
+  * @spl_size:		Spl size(include extra 4-bytes spl header)
+  * @spl_rc4:		RC4 encode the SPL binary (same key as header)
++ * @header_ver:		header block version
+  */
+-
+ struct spl_info {
+ 	const char *imagename;
+ 	const char *spl_hdr;
+ 	const uint32_t spl_size;
+ 	const bool spl_rc4;
++	const uint32_t header_ver;
+ };
+ 
+ static struct spl_info spl_infos[] = {
+-	{ "px30", "RK33", 0x2800, false },
+-	{ "rk3036", "RK30", 0x1000, false },
+-	{ "rk3128", "RK31", 0x1800, false },
+-	{ "rk3188", "RK31", 0x8000 - 0x800, true },
+-	{ "rk322x", "RK32", 0x8000 - 0x1000, false },
+-	{ "rk3288", "RK32", 0x8000, false },
+-	{ "rk3308", "RK33", 0x40000 - 0x1000, false},
+-	{ "rk3328", "RK32", 0x8000 - 0x1000, false },
+-	{ "rk3368", "RK33", 0x8000 - 0x1000, false },
+-	{ "rk3399", "RK33", 0x30000 - 0x2000, false },
+-	{ "rv1108", "RK11", 0x1800, false },
++	{ "px30", "RK33", 0x2800, false, RK_HEADER_V1 },
++	{ "rk3036", "RK30", 0x1000, false, RK_HEADER_V1 },
++	{ "rk3128", "RK31", 0x1800, false, RK_HEADER_V1 },
++	{ "rk3188", "RK31", 0x8000 - 0x800, true, RK_HEADER_V1 },
++	{ "rk322x", "RK32", 0x8000 - 0x1000, false, RK_HEADER_V1 },
++	{ "rk3288", "RK32", 0x8000, false, RK_HEADER_V1 },
++	{ "rk3308", "RK33", 0x40000 - 0x1000, false, RK_HEADER_V1 },
++	{ "rk3328", "RK32", 0x8000 - 0x1000, false, RK_HEADER_V1 },
++	{ "rk3368", "RK33", 0x8000 - 0x1000, false, RK_HEADER_V1 },
++	{ "rk3399", "RK33", 0x30000 - 0x2000, false, RK_HEADER_V1 },
++	{ "rv1108", "RK11", 0x1800, false, RK_HEADER_V1 },
+ };
+ 
+ /**
+@@ -229,7 +229,7 @@
+ 	uint32_t init_boot_size;
+ 
+ 	memset(buf, '\0', RK_INIT_OFFSET * RK_BLK_SIZE);
+-	hdr->signature   = cpu_to_le32(RK_SIGNATURE);
++	hdr->magic       = cpu_to_le32(RK_MAGIC);
+ 	hdr->disable_rc4 = cpu_to_le32(!rkcommon_need_rc4_spl(params));
+ 	hdr->init_offset = cpu_to_le16(RK_INIT_OFFSET);
+ 	hdr->init_size   = cpu_to_le16(spl_params.init_size / RK_BLK_SIZE);
+@@ -299,7 +304,7 @@ static int rkcommon_parse_header(const void *buf, struct header0_info *header0,
+ 	memcpy((void *)header0, buf, sizeof(struct header0_info));
+ 	rc4_encode((void *)header0, sizeof(struct header0_info), rc4_key);
+ 
+-	if (le32_to_cpu(header0->signature) != RK_SIGNATURE)
++	if (le32_to_cpu(header0->magic) != RK_MAGIC)
+ 		return -EPROTO;
+ 
+ 	/* We don't support RC4 encoded image payloads here, yet... */
