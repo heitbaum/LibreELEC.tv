@@ -5,6 +5,7 @@
 PKG_NAME="libbluray"
 PKG_VERSION="1.3.0"
 PKG_SHA256="e2dbaf99e84e0a9725f4985bcb85d41e52c2261cc651d8884b1b790b5ef016f9"
+PKG_ARCH="LGPL"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://www.videolan.org/developers/libbluray.html"
 PKG_URL="http://download.videolan.org/pub/videolan/libbluray/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
@@ -25,6 +26,7 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-werror \
                            --disable-optimizations \
                            --disable-examples \
                            --disable-bdjava-jar \
+                           --disable-dependency-tracking \
                            --disable-doxygen-doc \
                            --disable-doxygen-dot \
                            --disable-doxygen-man \
