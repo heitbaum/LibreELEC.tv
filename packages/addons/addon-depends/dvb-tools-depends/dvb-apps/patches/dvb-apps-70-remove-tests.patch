@@ -1,0 +1,10 @@
+--- a/Makefile	2021-07-27 23:20:15.781478584 +1000
++++ b/Makefile	2021-07-27 23:20:23.258133395 +1000
+@@ -10,7 +10,6 @@
+ 
+ all clean install:
+ 	$(MAKE) -C lib $@
+-	$(MAKE) -C test $@
+ 	$(MAKE) -C util $@
+ 
+ update:
