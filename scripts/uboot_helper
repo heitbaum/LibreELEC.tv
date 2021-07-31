@@ -327,6 +327,14 @@ devices = \
       },
     },
   },
+  'RiscV': {
+    'D1': {
+      'nezha': {
+        'dtb': 'sun20i-d1-nezha.dtb',
+        'config': 'nezha_defconfig'
+      },
+    },
+  },
   'Rockchip': {
     'RK3288': {
       'miqi': {
