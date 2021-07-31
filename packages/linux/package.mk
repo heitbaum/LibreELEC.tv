@@ -220,6 +220,9 @@ make_target() {
         x86_64)
           PERF_BUILD_ARGS="ARCH=x86"
           ;;
+        riscv64)
+          PERF_BUILD_ARGS="ARCH=riscv"
+          ;;
         aarch64)
           PERF_BUILD_ARGS="ARCH=arm64"
           ;;
