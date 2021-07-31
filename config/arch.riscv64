@@ -1,0 +1,26 @@
+# determines TARGET_CPU, if not forced by user
+  if [ -z "$TARGET_CPU" ]; then
+    TARGET_CPU=d1
+  fi
+
+# determine architecture's family
+  TARGET_SUBARCH=riscv64
+  TARGET_VARIANT=rv64gc
+  #TARGET_VARIANT=rv64gcv
+  #TARGET_ABI=eabi
+  TARGET_FEATURES+=""
+
+  TARGET_GCC_ARCH=${TARGET_SUBARCH/-}
+  TARGET_KERNEL_ARCH=riscv
+
+# setup ARCH specific *FLAGS
+# https://five-embeddev.com/toolchain/2019/06/26/gcc-targets/
+#  TARGET_CFLAGS="-march=${TARGET_VARIANT}${TARGET_CPU_FLAGS} -mabi=lp64 -Wno-psabi -mtune=$TARGET_CPU"
+#  TARGET_CFLAGS="-march=${TARGET_VARIANT}${TARGET_CPU_FLAGS} -mabi=lp64d -Wno-psabi"
+  TARGET_CFLAGS="-march=${TARGET_VARIANT}${TARGET_CPU_FLAGS} -Wno-psabi"
+# Disable runtime checking support of ARMv8.0's optional LSE feature. Breaks gdb and mesa compile.
+  TARGET_CFLAGS="${TARGET_CFLAGS} -mcmodel=medany"
+#  TARGET_LDFLAGS="-march=${TARGET_VARIANT}${TARGET_CPU_FLAGS} -mtune=$TARGET_CPU"
+  TARGET_LDFLAGS="-march=${TARGET_VARIANT}${TARGET_CPU_FLAGS}"
+#  GCC_OPTS="--with-abi=lp64 --with-arch=$TARGET_VARIANT"
+  GCC_OPTS="--with-arch=$TARGET_VARIANT"
