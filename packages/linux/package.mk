@@ -45,7 +45,9 @@ PKG_KERNEL_CFG_FILE=$(kernel_config_path) || die
 
 if [ -n "${KERNEL_TOOLCHAIN}" ]; then
   PKG_DEPENDS_TARGET+=" gcc-${KERNEL_TOOLCHAIN}:host"
-  HEADERS_ARCH=${TARGET_ARCH}
+  if [ "$TARGET_KERNEL_ARCH" != "riscv" ]; then
+    HEADERS_ARCH=${TARGET_ARCH}
+  fi
 else
   PKG_DEPENDS_TARGET+=" toolchain"
 fi
