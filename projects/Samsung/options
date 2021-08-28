@@ -77,7 +77,7 @@
   # additional packages to install:
   # Space separated list is supported,
   # e.g. ADDITIONAL_PACKAGES+=" PACKAGE1 PACKAGE2"
-    ADDITIONAL_PACKAGES+=" dtc emmctool"
+    ADDITIONAL_PACKAGES+=" dtc emmctool glmark2 kmscube"
 
   # debug tty path
     DEBUG_TTY="/dev/ttySAC2"
