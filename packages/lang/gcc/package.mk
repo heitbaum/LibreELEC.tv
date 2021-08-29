@@ -117,11 +117,13 @@ post_make_host() {
   if [ ! "${BUILD_WITH_DEBUG}" = "yes" ]; then
     ${TARGET_PREFIX}strip ${TARGET_NAME}/libgcc/libgcc_s.so*
     ${TARGET_PREFIX}strip ${TARGET_NAME}/libstdc++-v3/src/.libs/libstdc++.so*
+    ${TARGET_PREFIX}strip ${TARGET_NAME}/libgomp/.libs/libgomp.so*
   fi
 }
 
 post_makeinstall_host() {
   cp -PR ${TARGET_NAME}/libstdc++-v3/src/.libs/libstdc++.so* ${SYSROOT_PREFIX}/usr/lib
+  cp -PR ${TARGET_NAME}/libgomp/.libs/libgomp.so* ${SYSROOT_PREFIX}/usr/lib
 
   GCC_VERSION=$(${TOOLCHAIN}/bin/${TARGET_NAME}-gcc -dumpversion)
   DATE="0501$(echo ${GCC_VERSION} | sed 's/\./0/g')"
@@ -172,6 +174,7 @@ makeinstall_target() {
     if [ "${OPTS_LIBATOMIC}" = "--enable-libatomic" ]; then
       cp -P ${PKG_BUILD}/.${HOST_NAME}/${TARGET_NAME}/libatomic/.libs/libatomic.so* ${INSTALL}/usr/lib
     fi
+    cp -P ${PKG_BUILD}/.${HOST_NAME}/${TARGET_NAME}/libgomp/.libs/libgomp.so* ${INSTALL}/usr/lib
 }
 
 configure_init() {
