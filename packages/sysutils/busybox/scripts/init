@@ -98,6 +98,7 @@ break_after() {
         ;;
     esac
   fi
+  debug_shell
 }
 
 # Mount handlers
@@ -957,7 +958,7 @@ prepare_sysroot() {
 # Do init tasks to bring up system
 
 # hide kernel log messages on console
-echo '1 4 1 7' > /proc/sys/kernel/printk
+# echo '1 4 1 7' > /proc/sys/kernel/printk
 
 # run platform_init script if exists
 if [ -f "./platform_init" ]; then
@@ -1094,6 +1095,7 @@ for BOOT_STEP in \
 done
 
 BOOT_STEP=final
+break_after $BOOT_STEP
 
 # log if booting from usb / removable storage
 STORAGE=$(cat /proc/mounts | grep " /sysroot/storage " | awk '{print $1}' | awk -F '/' '{print $3}')
