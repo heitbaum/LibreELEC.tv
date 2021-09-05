@@ -37,7 +37,7 @@
  
  
 -GNULIB_REVISION=d271f868a8df9bbec29049d01e056481b7a1a263
-+GNULIB_REVISION=ebaa53c5f1253974c6f23bb1500d8de198e84ab8
++GNULIB_REVISION=298f08077b41078d5a5d9a2460bbb40f40512997
  
  # gnulib modules used by this package.
  # mbswidth is used by gnulib-fix-width.diff's changes to argp rather than
