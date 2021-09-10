@@ -1,0 +1,31 @@
+--- a/intl/plural.y	2021-09-10 18:28:49.067261327 +1000
++++ b/intl/plural.y	2021-09-10 18:29:14.597255037 +1000
+@@ -54,8 +54,8 @@
+ 
+ %{
+ /* Prototypes for local functions.  */
+-static int yylex (YYSTYPE *lval, struct parse_args *arg);
+-static void yyerror (struct parse_args *arg, const char *str);
++int yylex (YYSTYPE *lval, struct parse_args *arg);
++void yyerror (struct parse_args *arg, const char *str);
+ 
+ /* Allocation of expressions.  */
+ 
+@@ -232,7 +232,7 @@
+ }
+ 
+ 
+-static int
++int
+ yylex (YYSTYPE *lval, struct parse_args *arg)
+ {
+   const char *exp = arg->cp;
+@@ -375,7 +375,7 @@
+ }
+ 
+ 
+-static void
++void
+ yyerror (struct parse_args *arg, const char *str)
+ {
+   /* Do nothing.  We don't print error messages here.  */
