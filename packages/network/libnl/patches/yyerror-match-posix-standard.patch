@@ -1,0 +1,24 @@
+diff --git a/lib/route/cls/ematch_syntax.y b/lib/route/cls/ematch_syntax.y
+index 68ec783..0c89603 100644
+--- a/lib/route/cls/ematch_syntax.y
++++ b/lib/route/cls/ematch_syntax.y
+@@ -46,6 +46,7 @@
+ %{
+ extern int ematch_lex(YYSTYPE *, void *);
+ 
++#define ematch_error yyerror
+ static void yyerror(void *scanner, char **errp, struct nl_list_head *root, const char *msg)
+ {
+ 	if (msg)
+diff --git a/lib/route/pktloc_syntax.y b/lib/route/pktloc_syntax.y
+index 25d8710..3c9326f 100644
+--- a/lib/route/pktloc_syntax.y
++++ b/lib/route/pktloc_syntax.y
+@@ -24,6 +24,7 @@
+ %{
+ extern int pktloc_lex(YYSTYPE *, YYLTYPE *, void *);
+ 
++#define pktloc_error yyerror
+ static void yyerror(YYLTYPE *locp, void *scanner, const char *msg)
+ {
+ 	NL_DBG(1, "Error while parsing packet location file: %s\n", msg);
