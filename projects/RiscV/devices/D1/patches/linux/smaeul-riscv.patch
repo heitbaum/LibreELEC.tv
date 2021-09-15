@@ -216,7 +216,7 @@ index 1f2be234b11cdb..57a24d40d43f81 100644
  CONFIG_RTC_CLASS=y
  CONFIG_VIRTIO_PCI=y
 @@ -135,6 +136,3 @@ CONFIG_RCU_EQS_DEBUG=y
- CONFIG_DEBUG_BLOCK_EXT_DEVT=y
+ CONFIG_RCU_EQS_DEBUG=y
  # CONFIG_FTRACE is not set
  # CONFIG_RUNTIME_TESTING_MENU is not set
 -CONFIG_MEMTEST=y
@@ -249,8 +249,8 @@ index 8dd02b842fef8c..97d899df244511 100644
  CONFIG_DRM=y
  CONFIG_DRM_RADEON=y
  CONFIG_DRM_VIRTIO_GPU=y
-@@ -130,5 +131,3 @@ CONFIG_RCU_EQS_DEBUG=y
- CONFIG_DEBUG_BLOCK_EXT_DEVT=y
+@@ -130,5 +131,3 @@
+ CONFIG_RCU_EQS_DEBUG=y
  # CONFIG_FTRACE is not set
  # CONFIG_RUNTIME_TESTING_MENU is not set
 -CONFIG_MEMTEST=y
@@ -2591,9 +2591,9 @@ index 269fc648ef3d84..8f3153fe42d314 100644
 --- a/arch/riscv/mm/init.c
 +++ b/arch/riscv/mm/init.c
 @@ -19,6 +19,9 @@
- #include <linux/set_memory.h>
  #include <linux/dma-map-ops.h>
  #include <linux/crash_dump.h>
+ #include <linux/hugetlb.h>
 +#ifdef CONFIG_RELOCATABLE
 +#include <linux/elf.h>
 +#endif
@@ -2652,11 +2652,11 @@ index 269fc648ef3d84..8f3153fe42d314 100644
 +#endif
 +
  #ifdef CONFIG_XIP_KERNEL
- static void __init create_kernel_page_table(pgd_t *pgdir, uintptr_t map_size,
+ static void __init create_kernel_page_table(pgd_t *pgdir,
  					    __always_unused bool early)
 @@ -560,6 +601,16 @@ asmlinkage void __init setup_vm(uintptr_t dtb_pa)
  
- 	pfn_base = PFN_DOWN(kernel_map.phys_addr);
+ 	riscv_pfn_base = PFN_DOWN(kernel_map.phys_addr);
  
 +#ifdef CONFIG_RELOCATABLE
 +	/*
@@ -2668,9 +2668,9 @@ index 269fc648ef3d84..8f3153fe42d314 100644
 +	BUG_ON(PGDIR_SIZE - (kernel_map.virt_addr & (PGDIR_SIZE - 1)) < load_sz);
 +	relocate_kernel(load_pa);
 +#endif
- 	/*
- 	 * Enforce boot alignment requirements of RV32 and
- 	 * RV64 by only allowing PMD or PGD mappings.
+ 	/* Sanity check alignment and size */
+ 	BUG_ON((PAGE_OFFSET % PGDIR_SIZE) != 0);
+ 	BUG_ON((kernel_map.phys_addr % PMD_SIZE) != 0);
 
 From b6aa6477e4108f7fabcdb1910b7e129a423cbe92 Mon Sep 17 00:00:00 2001
 From: Alexandre Ghiti <alex@ghiti.fr>
@@ -2988,9 +2988,9 @@ diff --git a/arch/riscv/mm/init.c b/arch/riscv/mm/init.c
 index 8f3153fe42d314..f2a01f4cb4f69f 100644
 --- a/arch/riscv/mm/init.c
 +++ b/arch/riscv/mm/init.c
-@@ -571,6 +571,26 @@ static void __init create_kernel_page_table(pgd_t *pgdir, uintptr_t map_size,
+@@ -571,10 +571,32 @@ static void __init create_kernel_page_table(pgd_t *pgdir, uintptr_t map_size,
+ 	dtb_early_pa = dtb_pa;
  }
- #endif
  
 +static void __init setup_protection_map(void)
 +{
@@ -3014,10 +3014,7 @@ index 8f3153fe42d314..f2a01f4cb4f69f 100644
 +
  asmlinkage void __init setup_vm(uintptr_t dtb_pa)
  {
- 	uintptr_t __maybe_unused pa;
-@@ -579,6 +599,8 @@ asmlinkage void __init setup_vm(uintptr_t dtb_pa)
- 	pmd_t fix_bmap_spmd, fix_bmap_epmd;
- #endif
+ 	pmd_t __maybe_unused fix_bmap_spmd, fix_bmap_epmd;
  
 +	setup_protection_map();
 +
@@ -3227,8 +3224,8 @@ index f2a01f4cb4f69f..7e5df805ec2615 100644
 --- a/arch/riscv/mm/init.c
 +++ b/arch/riscv/mm/init.c
 @@ -599,6 +599,7 @@ asmlinkage void __init setup_vm(uintptr_t dtb_pa)
- 	pmd_t fix_bmap_spmd, fix_bmap_epmd;
- #endif
+ {
+ 	pmd_t __maybe_unused fix_bmap_spmd, fix_bmap_epmd;
  
 +	soc_setup_vm();
  	setup_protection_map();
@@ -7875,9 +7872,9 @@ index 7e604d3028c80a..4c5487d31903c6 100644
 --- a/drivers/leds/Makefile
 +++ b/drivers/leds/Makefile
 @@ -83,6 +83,7 @@ obj-$(CONFIG_LEDS_REGULATOR)		+= leds-regulator.o
+ obj-$(CONFIG_LEDS_REGULATOR)		+= leds-regulator.o
  obj-$(CONFIG_LEDS_S3C24XX)		+= leds-s3c24xx.o
  obj-$(CONFIG_LEDS_SC27XX_BLTC)		+= leds-sc27xx-bltc.o
- obj-$(CONFIG_LEDS_SGM3140)		+= leds-sgm3140.o
 +obj-$(CONFIG_LEDS_SUN20I)		+= leds-sun20i.o
  obj-$(CONFIG_LEDS_SUNFIRE)		+= leds-sunfire.o
  obj-$(CONFIG_LEDS_SYSCON)		+= leds-syscon.o
@@ -10394,7 +10391,7 @@ new file mode 100644
 index 00000000000000..52101df6bd41b1
 --- /dev/null
 +++ b/drivers/pwm/pwm-sun8i-v536.c
-@@ -0,0 +1,401 @@
+@@ -0,0 +1,398 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Driver for Allwinner sun8i-v536 Pulse Width Modulation Controller
@@ -10770,11 +10767,8 @@ index 00000000000000..52101df6bd41b1
 +static int sun8i_pwm_remove(struct platform_device *pdev)
 +{
 +	struct sun8i_pwm_chip *pc = platform_get_drvdata(pdev);
-+	int ret;
 +
-+	ret = pwmchip_remove(&pc->chip);
-+	if (ret)
-+		return ret;
++	pwmchip_remove(&pc->chip);
 +
 +	clk_disable_unprepare(pc->clk);
 +	reset_control_assert(pc->rst_clk);
@@ -12581,32 +12575,6 @@ index b50757882a98a9..72ee7791736bc7 100644
  	{ /* sentinel */ }
  };
  MODULE_DEVICE_TABLE(of, sunxi_wdt_dt_ids);
-
-From f195296c3c898a652bf2bc5968e7b1ea95bea7bb Mon Sep 17 00:00:00 2001
-From: Samuel Holland <samuel@sholland.org>
-Date: Sun, 13 Jun 2021 23:47:55 -0500
-Subject: [PATCH 097/115] ASoC: simple-card-utils: Fix overallocation of DLCs
-
-Signed-off-by: Samuel Holland <samuel@sholland.org>
----
- sound/soc/generic/simple-card-utils.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/sound/soc/generic/simple-card-utils.c b/sound/soc/generic/simple-card-utils.c
-index 677f7da93b4bb8..10c63b73900c66 100644
---- a/sound/soc/generic/simple-card-utils.c
-+++ b/sound/soc/generic/simple-card-utils.c
-@@ -640,8 +640,8 @@ int asoc_simple_init_priv(struct asoc_simple_priv *priv,
- 			cnf_num += li->num[i].codecs;
- 	}
- 
--	dais = devm_kcalloc(dev, dai_num, sizeof(*dais),      GFP_KERNEL);
--	dlcs = devm_kcalloc(dev, dlc_num, sizeof(*dai_props), GFP_KERNEL);
-+	dais = devm_kcalloc(dev, dai_num, sizeof(*dais), GFP_KERNEL);
-+	dlcs = devm_kcalloc(dev, dlc_num, sizeof(*dlcs), GFP_KERNEL);
- 	if (!dais || !dlcs)
- 		return -ENOMEM;
- 
 
 From 5add3d61155c482efefcc7967b9f79f04c684caf Mon Sep 17 00:00:00 2001
 From: Samuel Holland <samuel@sholland.org>
