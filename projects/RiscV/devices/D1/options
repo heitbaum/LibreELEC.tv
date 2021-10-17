@@ -72,10 +72,12 @@
   # Xorg Graphic drivers to use (all / i915,i965,r200,r300,r600,nvidia,nouveau)
   # Space separated list is supported,
   # e.g. GRAPHIC_DRIVERS="i915 i965 r300 r600 radeonsi nvidia nouveau"
-    GRAPHIC_DRIVERS=""
+    GRAPHIC_DRIVERS="r300 nouveau"
 
   # KODI Player implementation to use (default / bcm2835-driver / libfslvpuwrap / libamcodec)
     KODIPLAYER_DRIVER="mesa"
+
+    KODI_SAMBA_SUPPORT="no"
 
   # additional Firmware to use (dvb-firmware, misc-firmware, wlan-firmware)
   # Space separated list is supported,
@@ -93,11 +95,19 @@
   # build with installer (yes / no)
     INSTALLER_SUPPORT="no"
 
+  # Start boot partition at 32MiB, see https://linux-sunxi.org/Allwinner_Nezha#Mainline_U-Boot
+  # ### Now you can write this TOC1 to your SD card. Note the large (16+ MiB) offset! You
+  # ### will need to leave a gap before your first partition; 20 MiB should be plenty.
+  # We have set it the 32MB just as a round number
+    SYSTEM_PART_START=65536
+
   # kernel serial console
     EXTRA_CMDLINE="console=ttyMSM0,115200n8 console=tty0"
 
   # debug tty path
     DEBUG_TTY="/dev/ttyMSM0"
+
+    BUILD_WITH_DEBUG=yes
 
   # set the addon project
     ADDON_PROJECT="RiscV"
