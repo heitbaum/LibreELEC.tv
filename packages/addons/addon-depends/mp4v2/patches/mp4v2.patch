@@ -1,0 +1,15 @@
+--- a/CMakeLists.txt	2021-10-03 19:47:58.993732764 +1100
++++ b/CMakeLists.txt	2021-10-03 19:47:58.993732764 +1100
+@@ -236,6 +236,12 @@
+ #target_link_libraries(mp4subtitle mp4v2-static)
+ #
+ #add_executable(mp4tags ${UTILITY_HEADERS} util/mp4tags.cpp)
++add_executable(mp4tags util/mp4tags.cpp)
++target_include_directories(mp4tags PRIVATE SYSTEM
++   ${CMAKE_CURRENT_SOURCE_DIR}
++   ${CMAKE_CURRENT_SOURCE_DIR}/include
++   )
++target_link_libraries(mp4tags mp4v2)
+ #target_link_libraries(mp4tags mp4v2-static)
+ #
+ #add_executable(mp4track ${UTILITY_HEADERS} util/mp4track.cpp)
