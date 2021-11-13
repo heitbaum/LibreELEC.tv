@@ -1,7 +1,9 @@
 --- a/tools/depends/native/TexturePacker/CMakeLists.txt
 +++ b/tools/depends/native/TexturePacker/CMakeLists.txt
-@@ -1,3 +1,5 @@
-+set(CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../../../..)
+@@ -1,3 +1,7 @@
++if(NOT WITH_TEXTUREPACKER)
++  set(CMAKE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/../../../..)
++endif()
 +
  list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
  
