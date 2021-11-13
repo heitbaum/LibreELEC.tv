@@ -12,11 +12,32 @@ PKG_DEPENDS_TARGET="toolchain zlib"
 PKG_LONGDESC="giflib: giflib service library"
 PKG_TOOLCHAIN="manual"
 
+pre_build_host() {
+  mkdir -p ${PKG_BUILD}/.${HOST_NAME}
+  cp -r ${PKG_BUILD}/* ${PKG_BUILD}/.${HOST_NAME}
+}
+
 make_host() {
+  cd ${PKG_BUILD}/.${HOST_NAME}
   make libgif.a CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
 }
 
 makeinstall_host() {
   make install-include PREFIX="${TOOLCHAIN}"
   make install-lib PREFIX="${TOOLCHAIN}"
+}
+
+pre_build_target() {
+  mkdir -p ${PKG_BUILD}/.${TARGET_NAME}
+  cp -r ${PKG_BUILD}/* ${PKG_BUILD}/.${TARGET_NAME}
+}
+
+make_target() {
+  cd ${PKG_BUILD}/.${TARGET_NAME}
+  make libgif.a CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
+}
+
+makeinstall_target() {
+  make install-include PREFIX="${SYSROOT_PREFIX}/usr"
+  make install-lib PREFIX="${SYSROOT_PREFIX}/usr"
 }
