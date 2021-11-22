@@ -110,7 +110,7 @@ echo "image: merging part2 into disk image..."
 dd if="${LE_TMP}/part2.ext4" of="${DISK}" bs=512 seek="${STORAGE_PART_START}" conv=fsync,notrunc >"${SAVE_ERROR}" 2>&1 || show_error
 
 # create disk image for virtual appliance
-if [ "${PROJECT}" = "Generic" ]; then
+if [ "${PROJECT}" = "Generic" -a "${SKIP_VIRTUAL_APPLIANCE}" != "yes" ]; then
   echo "image: creating open virtual appliance..."
   # duplicate ${DISK} so anything we do to it directly doesn't effect original
   dd if="${DISK}" of="${DISK_BASENAME}.tmp" bs=1M conv=fsync >"${SAVE_ERROR}" 2>&1 || show_error
@@ -295,7 +295,7 @@ echo "image: merging part1 into disk image..."
 dd if="${LE_TMP}/part1.fat" of="${DISK}" bs=512 seek="${SYSTEM_PART_START}" conv=fsync,notrunc >"${SAVE_ERROR}" 2>&1 || show_error
 
 # finalize virtual appliance
-if [ "${PROJECT}" = "Generic" ]; then
+if [ "${PROJECT}" = "Generic" -a "${SKIP_VIRTUAL_APPLIANCE}" != "yes" ]; then
   # change syslinux default to 'run'
   echo "image: modifying files on part1 for open virtual appliance..."
   sed -e "/DEFAULT/ s/installer/run/" -i "${LE_TMP}/syslinux.cfg"
