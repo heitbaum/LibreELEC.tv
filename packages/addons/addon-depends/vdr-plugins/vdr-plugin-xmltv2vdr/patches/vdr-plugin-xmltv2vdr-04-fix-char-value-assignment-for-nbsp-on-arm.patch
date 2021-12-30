@@ -1,0 +1,50 @@
+From 6ac2fb2a38ae4a32d3f2840205b973f3ff537525 Mon Sep 17 00:00:00 2001
+From: seahawk1986 <seahawk1986@gmx.de>
+Date: Thu, 8 Apr 2021 10:08:57 +0200
+Subject: [PATCH] Fix char[] value assignment for nbsp on ARM
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Currently the plugin fails to build on ARM architectures (e.g. https://launchpadlibrarian.net/532356966/buildlog_ubuntu-focal-arm64.vdr-plugin-xmltv2vdr_1%3A0.1.1+git20170320-74-ec7bd92-0yavdr0~focal_BUILDING.txt.gz) when built with anything newer than `-std=c++03`.
+
+This seems to happen because `char` is a unsigned type on ARM:
+```
+g++ -g -O3 -Wall -Werror=overloaded-virtual -Wno-parentheses -fPIC -c -D_GNU_SOURCE -D_XOPEN_SOURCE -DPLUGIN_NAME_I18N='"xmltv2vdr"' -I/usr/include/vdr/include -I/usr/include/libxml2 import.cpp
+import.cpp: In member function ‘char* cImport::AddEOT2Description(char*, bool)’:
+import.cpp:264:37: error: narrowing conversion of ‘-62’ from ‘int’ to ‘char’ [-Wnarrowing]
+  264 |     const char nbspUTF8[]={-62,-96,0};
+      |                                     ^
+import.cpp:264:37: error: narrowing conversion of ‘-96’ from ‘int’ to ‘char’ [-Wnarrowing]
+import.cpp:280:41: error: narrowing conversion of ‘-96’ from ‘int’ to ‘char’ [-Wnarrowing]
+  280 |                 const char nbsp[]={-96,0};
+      |                                         ^
+make[2]: *** [Makefile:70: import.o] Error 1
+```
+Setting the value as a string literal should fix this issue - is `const char nbspUTF8[]{"\u00A0"};` preferable to `const char nbspUTF8[]{"\xC2\xA0"};`?
+---
+ import.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/import.cpp b/import.cpp
+index 0d6f7bf..db2dd90 100644
+--- a/import.cpp
++++ b/import.cpp
+@@ -261,7 +261,7 @@ char *cImport::Add2Description(char *description, const char *Name, int Value)
+ 
+ char *cImport::AddEOT2Description(char *description, bool checkutf8)
+ {
+-    const char nbspUTF8[]={-62,-96,0};
++    const char nbspUTF8[]{"\u00A0"};
+ 
+     if (checkutf8)
+     {
+@@ -277,7 +277,7 @@ char *cImport::AddEOT2Description(char *description, bool checkutf8)
+             }
+             else
+             {
+-                const char nbsp[]={-96,0};
++                const char nbsp[]{"\xA0"};
+                 description=strcatrealloc(description,nbsp);
+             }
+         }
