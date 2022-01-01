@@ -252,19 +252,19 @@ index 3b5857da4123..2a94e7c441a0 100644
 @@ -31,6 +31,7 @@ subdir-ccflags-y += -I$(srctree)/$(src)
  
  # core driver code
- i915-y += i915_driver.o \
+ i915-y += i915_drv.o \
 +	  i915_drm_client.o \
  	  i915_config.o \
  	  i915_irq.o \
  	  i915_getparam.o \
-diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
 index bbc99fc5888f..a4f8031602b3 100644
---- a/drivers/gpu/drm/i915/i915_driver.c
-+++ b/drivers/gpu/drm/i915/i915_driver.c
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
 @@ -73,6 +73,7 @@
+ #include "gt/intel_rc6.h"
  
  #include "i915_debugfs.h"
- #include "i915_driver.h"
 +#include "i915_drm_client.h"
  #include "i915_drv.h"
  #include "i915_ioc32.h"
@@ -733,7 +733,7 @@ index 78c357baa65d..ae9de81b0e6b 100644
 +	}
 +}
 +
- static int
+ static int __i915_sw_fence_call
  engines_notify(struct i915_sw_fence *fence, enum i915_sw_fence_notify state)
  {
  	struct i915_gem_engines *engines =
@@ -1763,10 +1763,10 @@ index b7d801993bfa..29f412a0c3dc 100644
 +
 +Possible `drm-engine-` key names are: `render`, `copy`, `video` and
 +`video-enhance`.
-diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
 index a4f8031602b3..3b75e88de1b8 100644
---- a/drivers/gpu/drm/i915/i915_driver.c
-+++ b/drivers/gpu/drm/i915/i915_driver.c
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
 @@ -1753,6 +1753,9 @@ static const struct file_operations i915_driver_fops = {
  	.read = drm_read,
  	.compat_ioctl = i915_ioc32_compat_ioctl,
