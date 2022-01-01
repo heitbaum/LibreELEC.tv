@@ -56,5 +56,5 @@ addon() {
   cp $PKG_BUILD/out/libmakemkv.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
   cp $PKG_BUILD/out/libdriveio.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
   cp $PKG_BUILD/out/libmmbd.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_install_dir openssl)/usr/lib/libcrypto.so.?.? $ADDON_BUILD/$PKG_ADDON_ID/lib
+  cp -PL $(get_install_dir openssl)/usr/lib/libcrypto.so.* $ADDON_BUILD/$PKG_ADDON_ID/lib
 }
