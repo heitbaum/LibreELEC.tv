@@ -3,7 +3,7 @@
 #
 file=$1
 
-cd /var/media/DATA/home-rudi/LibreELEC.kernel11/packages/linux/patches/default
+cd /var/media/DATA/home-rudi/LibreELEC.tv/packages/linux/patches/default
 wget https://mirrors.edge.kernel.org/pub/linux/kernel/v5.x/stable-review/patch-${file}.xz
 unxz patch-${file}.xz
 mv patch-${file} patch-${file}.patch
