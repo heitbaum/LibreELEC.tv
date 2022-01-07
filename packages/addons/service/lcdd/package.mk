@@ -2,10 +2,10 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="lcdd"
-PKG_VERSION="9ec9ba4e5dda653288bc55d2898723aa2c2ad9c1"
-PKG_SHA256="442f60fc7c26847508e7fb99d901e905016c136d0f6eb320e3262bef20f39452"
-PKG_VERSION_DATE="0.5dev+2020-07-21"
-PKG_REV="0"
+PKG_VERSION="0e2ce9b9c46c47363436f9ee730f7c71bf455f0f"
+PKG_SHA256="23bc5afa703826381e7d760eb9ca8d3f6c0567e0e5888074cfea4f79ef0b7e96"
+PKG_VERSION_DATE="0.5dev+2021-12-21"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://lcdproc.org/"
@@ -21,13 +21,13 @@ PKG_IS_ADDON="yes"
 PKG_ADDON_NAME="LCDproc"
 PKG_ADDON_TYPE="xbmc.service"
 
-PKG_CONFIGURE_OPTS_TARGET="--with-ft-prefix=${SYSROOT_PREFIX}/usr \
-                           --enable-libusb \
-                           --enable-libftdi \
-                           --disable-libX11 \
+PKG_CONFIGURE_OPTS_TARGET="--enable-drivers=all \
+                           --enable-freetype \
                            --enable-libhid \
+                           --enable-libftdi \
                            --disable-libpng \
-                           --enable-drivers=all"
+                           --enable-libusb \
+                           --disable-libX11"
 
 pre_configure_target() {
   CFLAGS+=" -O3"
