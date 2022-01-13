@@ -30,6 +30,7 @@ pre_configure_target() {
   export REALCC=${CC}
   export CC=${CXX}
   export LD=${CXX}
+  export PYTHON="@python3"
 }
 
 pre_make_target() {
