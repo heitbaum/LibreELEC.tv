@@ -51,6 +51,7 @@ fi
 if [ "${PKG_BUILD_PERF}" != "no" ] && grep -q ^CONFIG_PERF_EVENTS= ${PKG_KERNEL_CFG_FILE}; then
   PKG_BUILD_PERF="yes"
   PKG_BUILD_TMON="yes"
+  PKG_BUILD_CPUPOWER="yes"
   PKG_DEPENDS_TARGET+=" binutils elfutils libunwind zlib openssl"
 fi
 
@@ -282,6 +283,39 @@ make_target() {
         make ${PERF_BUILD_ARGS}
       mkdir -p ${INSTALL}/usr/bin
         cp tmon ${INSTALL}/usr/bin
+    )
+  fi
+
+  if [ "${PKG_BUILD_CPUPOWER}" = "no" ]; then
+    ( cd tools/power/cpupower
+
+      # arch specific perf build args
+      case "${TARGET_ARCH}" in
+        x86_64)
+          PERF_BUILD_ARGS="ARCH=x86"
+          ;;
+        aarch64)
+          PERF_BUILD_ARGS="ARCH=arm64"
+          ;;
+        *)
+          PERF_BUILD_ARGS="ARCH=${TARGET_ARCH}"
+          ;;
+      esac
+
+      mkdir -p ${INSTALL}/usr/bin
+      WERROR=0 \
+      NO_LIBPERL=1 \
+      NO_LIBPYTHON=1 \
+      NO_SLANG=1 \
+      NO_GTK2=1 \
+      NO_LIBNUMA=1 \
+      NO_LIBAUDIT=1 \
+      NO_LZMA=1 \
+      NO_SDT=1 \
+      CROSS_COMPILE="${TARGET_PREFIX}" \
+      JOBS="${CONCURRENCY_MAKE_LEVEL}" \
+        make ${PERF_BUILD_ARGS}
+      #install-tools
     )
   fi
 
