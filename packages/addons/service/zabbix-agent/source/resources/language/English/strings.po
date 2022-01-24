@@ -1,0 +1,42 @@
+# Kodi Media Center language file
+# Addon Name: zabbix-agent
+# Addon id: service.zabbix-agent
+# Addon Provider: Team LibreELEC
+msgid ""
+msgstr ""
+
+msgctxt "#32000"
+msgid "General"
+msgstr ""
+
+msgctxt "#32001"
+msgid "Passive checks related"
+msgstr ""
+
+msgctxt "#32002"
+msgid "Server"
+msgstr "List of comma delimited IP addresses, optionally in CIDR notation, or DNS names of Zabbix servers and Zabbix proxies. Incoming connections will be accepted only from the hosts listed here."
+
+msgctxt "#32003"
+msgid "ListenPort"
+msgstr "Agent will listen on this port for connections from the server."
+
+msgctxt "#32004"
+msgid "Active checks related"
+msgstr ""
+
+msgctxt "#32005"
+msgid "ServerActive"
+msgstr "List of comma delimited IP:port (or DNS name:port) pairs of Zabbix servers and Zabbix proxies for active checks. If port is not specified, default port is used."
+
+msgctxt "#32006"
+msgid "Local Device Settings"
+msgstr ""
+
+msgctxt "#32007"
+msgid "Hostname"
+msgstr "List of comma delimited unique, case sensitive hostnames. Required for active checks and must match hostnames as configured on the server."
+
+msgctxt "#32008"
+msgid "User"
+msgstr "Drop privileges to a specific, existing user on the system."

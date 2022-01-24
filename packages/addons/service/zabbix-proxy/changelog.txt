@@ -1,0 +1,3 @@
+100
+- Initial addon
+- zabbix 5.4.9
