@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
+
+. /etc/profile
+oe_setup_addon service.zabbix-proxy
+
+ADDON_ID=service.zabbix-proxy
+ADDON_DIR="${HOME}/.kodi/addons/${ADDON_ID}"
+ADDON_HOME="${HOME}/.kodi/userdata/addon_data/${ADDON_ID}"
+
+PROXY_PID=`cat /run/zabbix-proxy/zabbix_proxy.pid`
+
+kill -TERM ${PROXY_PID}
