@@ -1,0 +1,48 @@
+diff -Nur src2/zabbix_agent/zabbix_agentd.c src/zabbix_agent/zabbix_agentd.c
+--- a/src/zabbix_agent/zabbix_agentd.c	2021-12-23 08:49:06.000000000 +0000
++++ b/src/zabbix_agent/zabbix_agentd.c	2022-01-24 09:31:56.946767703 +0000
+@@ -607,7 +607,7 @@
+ 		CONFIG_LOAD_MODULE_PATH = zbx_strdup(CONFIG_LOAD_MODULE_PATH, DEFAULT_LOAD_MODULE_PATH);
+ 
+ 	if (NULL == CONFIG_PID_FILE)
+-		CONFIG_PID_FILE = (char *)"/tmp/zabbix_agentd.pid";
++		CONFIG_PID_FILE = (char *)"/run/zabbix-agent/zabbix_agentd.pid";
+ #endif
+ 	if (NULL == CONFIG_LOG_TYPE_STR)
+ 		CONFIG_LOG_TYPE_STR = zbx_strdup(CONFIG_LOG_TYPE_STR, ZBX_OPTION_LOGTYPE_FILE);
+diff -Nur src2/zabbix_proxy/proxy.c src/zabbix_proxy/proxy.c
+--- a/src/zabbix_proxy/proxy.c	2021-12-23 08:49:06.000000000 +0000
++++ b/src/zabbix_proxy/proxy.c	2022-01-24 09:31:51.666789616 +0000
+@@ -496,7 +496,7 @@
+ 		CONFIG_SNMPTRAP_FILE = zbx_strdup(CONFIG_SNMPTRAP_FILE, "/tmp/zabbix_traps.tmp");
+ 
+ 	if (NULL == CONFIG_PID_FILE)
+-		CONFIG_PID_FILE = zbx_strdup(CONFIG_PID_FILE, "/tmp/zabbix_proxy.pid");
++		CONFIG_PID_FILE = zbx_strdup(CONFIG_PID_FILE, "/run/zabbix-proxy/zabbix_proxy.pid");
+ 
+ 	if (NULL == CONFIG_TMPDIR)
+ 		CONFIG_TMPDIR = zbx_strdup(CONFIG_TMPDIR, "/tmp");
+diff -Nur conf2/zabbix_agentd.conf conf/zabbix_agentd.conf
+--- a/conf/zabbix_agentd.conf	2021-12-23 08:49:06.000000000 +0000
++++ b/conf/zabbix_agentd.conf	2022-01-24 09:33:14.299801812 +0000
+@@ -8,7 +8,7 @@
+ #
+ # Mandatory: no
+ # Default:
+-# PidFile=/tmp/zabbix_agentd.pid
++# PidFile=/run/zabbix-agent/zabbix_agentd.pid
+ 
+ ### Option: LogType
+ #	Specifies where log messages are written to:
+diff -Nur conf2/zabbix_proxy.conf conf/zabbix_proxy.conf
+--- a/conf/zabbix_proxy.conf	2021-12-23 08:49:06.000000000 +0000
++++ b/conf/zabbix_proxy.conf	2022-01-24 09:33:32.106404676 +0000
+@@ -136,7 +136,7 @@
+ #
+ # Mandatory: no
+ # Default:
+-# PidFile=/tmp/zabbix_proxy.pid
++# PidFile=/run/zabbix-proxy/zabbix_proxy.pid
+ 
+ ### Option: SocketDir
+ #	IPC socket directory.
