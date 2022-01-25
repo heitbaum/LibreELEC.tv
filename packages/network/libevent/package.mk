@@ -13,6 +13,7 @@ PKG_TOOLCHAIN="cmake"
 
 PKG_CMAKE_OPTS_TARGET="-DCMAKE_CXX_EXTENSIONS:BOOL=OFF \
                        -DCMAKE_CXX_STANDARD=14 \
+                       -DEVENT__LIBRARY_TYPE=STATIC \
                        -DSPDLOG_BUILD_EXAMPLE=OFF \
                        -DSPDLOG_BUILD_TESTS=OFF \
                        -DSPDLOG_FMT_EXTERNAL=ON"
