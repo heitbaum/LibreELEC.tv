@@ -3,11 +3,11 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="ncurses"
-PKG_VERSION="6.3"
-PKG_SHA256="97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059"
+PKG_VERSION="6.3-20220924"
+PKG_SHA256="844dcf6ab547e07aeb222b842bc34980a05ec8bd2694eda6d9d5538d88d27c00"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.gnu.org/software/ncurses/"
-PKG_URL="http://invisible-mirror.net/archives/ncurses/ncurses-${PKG_VERSION}.tar.gz"
+PKG_URL="http://invisible-mirror.net/archives/ncurses/current/ncurses-${PKG_VERSION}.tgz"
 PKG_DEPENDS_HOST="ccache:host"
 PKG_DEPENDS_TARGET="toolchain zlib ncurses:host"
 PKG_LONGDESC="A library is a free software emulation of curses in System V Release 4.0, and more."
