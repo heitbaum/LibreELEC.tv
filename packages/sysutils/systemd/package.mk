@@ -101,6 +101,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dmount-path=/usr/bin/mount \
                        -Dumount-path=/usr/bin/umount \
                        -Ddebug-tty=${DEBUG_TTY} \
+                       -Dpkgconfigdatadir=/usr/lib/pkgconfig \
                        -Dversion-tag=${PKG_VERSION}"
 
 if [ "${PROJECT}" = "Generic" ]; then
