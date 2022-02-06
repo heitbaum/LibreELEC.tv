@@ -14,6 +14,11 @@ PKG_BUILD_FLAGS="-cfg-libs"
 
 PKG_CONFIGURE_OPTS_TARGET="--without-xmlto"
 
+pre_configure_target() {
+  sed -i 's|^pkgconfigdir = .*|pkgconfigdir = /usr/lib/pkgconfig|' ${PKG_BUILD}/Makefile.am
+  sed -i 's|^pkgconfigdir = .*|pkgconfigdir = /usr/lib/pkgconfig|' ${PKG_BUILD}/Makefile.in
+}
+
 post_makeinstall_target() {
   mkdir -p ${SYSROOT_PREFIX}/usr/lib/pkgconfig
     cp xtrans.pc ${SYSROOT_PREFIX}/usr/lib/pkgconfig
