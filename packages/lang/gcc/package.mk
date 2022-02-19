@@ -4,12 +4,10 @@
 
 PKG_NAME="gcc"
 PKG_VERSION="10.3.0"
-PKG_VERSION="12-20220116"
-#PKG_SHA256="64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344"
+PKG_SHA256="64f404c1a650f27fc33da242e1f2df54952e3963a49e06e73f6940f3223ac344"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="http://gcc.gnu.org/"
 PKG_URL="http://ftpmirror.gnu.org/gcc/${PKG_NAME}-${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-PKG_URL="https://fossies.org/linux/misc/gcc-12-20220116.tar.xz"
 PKG_DEPENDS_BOOTSTRAP="ccache:host autoconf:host binutils:host gmp:host mpfr:host mpc:host zstd:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_DEPENDS_HOST="ccache:host autoconf:host binutils:host gmp:host mpfr:host mpc:host zstd:host glibc"
