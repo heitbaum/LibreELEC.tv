@@ -257,10 +257,10 @@ index 3b5857da4123..2a94e7c441a0 100644
  	  i915_config.o \
  	  i915_irq.o \
  	  i915_getparam.o \
-diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
 index bbc99fc5888f..a4f8031602b3 100644
---- a/drivers/gpu/drm/i915/i915_drv.c
-+++ b/drivers/gpu/drm/i915/i915_drv.c
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
 @@ -73,6 +73,7 @@
  #include "gt/intel_rc6.h"
  
@@ -1763,10 +1763,10 @@ index b7d801993bfa..29f412a0c3dc 100644
 +
 +Possible `drm-engine-` key names are: `render`, `copy`, `video` and
 +`video-enhance`.
-diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
 index a4f8031602b3..3b75e88de1b8 100644
---- a/drivers/gpu/drm/i915/i915_drv.c
-+++ b/drivers/gpu/drm/i915/i915_drv.c
+--- a/drivers/gpu/drm/i915/i915_driver.c
++++ b/drivers/gpu/drm/i915/i915_driver.c
 @@ -1753,6 +1753,9 @@ static const struct file_operations i915_driver_fops = {
  	.read = drm_read,
  	.compat_ioctl = i915_ioc32_compat_ioctl,
