@@ -31,6 +31,9 @@ case "${LINUX}" in
     PKG_VERSION="5.17"
     PKG_SHA256="555fef61dddb591a83d62dd04e252792f9af4ba9ef14683f64840e46fa20b1b1"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v5.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+    #PKG_URL="https://github.com/torvalds/linux/archive/${PKG_VERSION}.tar.gz"
+    #PKG_URL="https://git.kernel.org/torvalds/t/linux-${PKG_VERSION}.tar.gz"
+    #PKG_SHA256="f58338c5b06314559a269afe70b33b9b0b75cc2fe5e8a537ac29f70caa6e489b"
     PKG_PATCH_DIRS="default"
     ;;
 esac
