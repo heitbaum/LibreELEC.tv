@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="procps-ng"
-PKG_VERSION="3.3.17"
-PKG_SHA256="8374d281f91e5fc9bb9ea8dc991b25331e3a2b0299b46f22c633f7fb6bcb0764"
+PKG_VERSION="4.0.0"
+PKG_SHA256="af50ba30ef649f969cc5b8e5616498d4e1a6aea0bff1a01e48667acc9fa6256a"
 PKG_LICENSE="GPL"
 PKG_SITE="https://gitlab.com/procps-ng/procps"
 PKG_URL="https://gitlab.com/procps-ng/procps/-/archive/v${PKG_VERSION}/procps-v${PKG_VERSION}.tar.bz2"
@@ -18,9 +18,9 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-modern-top \
                            --enable-static"
 
-PKG_MAKE_OPTS_TARGET="free top/top proc/libprocps.la proc/libprocps.pc"
+PKG_MAKE_OPTS_TARGET="free top/top proc/libproc-2.la proc/libproc-2.pc"
 
-PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-proc_libprocps_la_includeHEADERS"
+PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-proc_libproc_2_la_includeHEADERS"
 
 makeinstall_target() {
   mkdir -p ${INSTALL}/usr/bin
