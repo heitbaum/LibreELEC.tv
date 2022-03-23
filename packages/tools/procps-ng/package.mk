@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="procps-ng"
-PKG_VERSION="3.3.17"
-PKG_SHA256="8374d281f91e5fc9bb9ea8dc991b25331e3a2b0299b46f22c633f7fb6bcb0764"
+PKG_VERSION="4.0.3"
+PKG_SHA256="56db2ed0f3733e2d4e5656dec4bd8852e05b925c10aacc8f87b763d4916dd0c9"
 PKG_LICENSE="GPL"
 PKG_SITE="https://gitlab.com/procps-ng/procps"
 PKG_URL="https://gitlab.com/procps-ng/procps/-/archive/v${PKG_VERSION}/procps-v${PKG_VERSION}.tar.bz2"
@@ -18,9 +18,9 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-modern-top \
                            --enable-static"
 
-PKG_MAKE_OPTS_TARGET="free top/top proc/libprocps.la proc/libprocps.pc"
+PKG_MAKE_OPTS_TARGET="src/free src/top/top library/libproc2.la library/libproc2.pc"
 
-PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-proc_libprocps_la_includeHEADERS"
+PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-library_libproc2_la_includeHEADERS"
 
 pre_configure_target() {
   sed -i -e "s/UNKNOWN/${PKG_VERSION}/" ../configure
@@ -28,8 +28,12 @@ pre_configure_target() {
 
 makeinstall_target() {
   mkdir -p ${INSTALL}/usr/bin
-    cp -P ${PKG_BUILD}/.${TARGET_NAME}/free ${INSTALL}/usr/bin
-    cp -P ${PKG_BUILD}/.${TARGET_NAME}/top/top ${INSTALL}/usr/bin
+    cp -P ${PKG_BUILD}/.${TARGET_NAME}/src/free ${INSTALL}/usr/bin
+    cp -P ${PKG_BUILD}/.${TARGET_NAME}/src/top/top ${INSTALL}/usr/bin
 
   make DESTDIR=${SYSROOT_PREFIX} -j1 ${PKG_MAKEINSTALL_OPTS_TARGET}
+
+  sed 's@proc/misc.h@procps/misc.h@' \
+    ${PKG_BUILD}/library/include/readproc.h \
+    > ${SYSROOT_PREFIX}/usr/include/libproc2/readproc.h
 }
