@@ -2,8 +2,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glfw"
-PKG_VERSION="3.3.6"
-PKG_SHA256="ed07b90e334dcd39903e6288d90fa1ae0cf2d2119fec516cf743a0a404527c02"
+PKG_VERSION="3.3.8"
+PKG_SHA256="f30f42e05f11e5fc62483e513b0488d5bceeab7d9c5da0ffe2252ad81816c713"
 PKG_ARCH="x86_64"
 PKG_LICENSE="BSD"
 PKG_SITE="https://glfw.org"
