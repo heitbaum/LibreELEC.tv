@@ -1,5 +1,6 @@
 107
-- update MariaDB to 10.6.5
+- update MariaDB to 10.8.3
+- uses openssl
 
 106
 - update MariaDB to 10.4.22
