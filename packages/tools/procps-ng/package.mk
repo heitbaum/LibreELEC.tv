@@ -28,4 +28,6 @@ makeinstall_target() {
     cp -P ${PKG_BUILD}/.${TARGET_NAME}/top/top ${INSTALL}/usr/bin
 
   make DESTDIR=${SYSROOT_PREFIX} -j1 ${PKG_MAKEINSTALL_OPTS_TARGET}
+
+  sed 's@proc/misc.h@procps/misc.h@' ${PKG_BUILD}/proc/readproc.h > ${SYSROOT_PREFIX}/usr/include/procps/readproc.h
 }
