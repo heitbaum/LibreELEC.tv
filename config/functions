@@ -341,6 +341,12 @@ setup_toolchain() {
     MAKEFLAGS+=" V=1 VERBOSE=1"
   fi
 
+  # NDEBUG flag
+  if [ "${BUILD_WITH_DEBUG}" != "yes" ] && flag_enabled "ndebug" "yes"; then
+    TARGET_CFLAGS+=" -DNDEBUG"
+    TARGET_CXXFLAGS+=" -DNDEBUG"
+  fi
+
   # average load limit
   if [ "${CONCURRENCY_LOAD}" != "0" ]; then
     NINJA_OPTS+=" -l${CONCURRENCY_LOAD}"
