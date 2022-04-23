@@ -16,11 +16,6 @@ PKG_TOOLCHAIN="make"
 PKG_MAKE_OPTS_TARGET="dtc fdtput fdtget libfdt"
 PKG_MAKE_OPTS_HOST="dtc libfdt"
 
-pre_configure_host() {
-  cd ..
-  rm -rf .${HOST_NAME}
-}
-
 pre_make_host() {
   mkdir -p ${PKG_BUILD}/.${HOST_NAME}
     cp -a ${PKG_BUILD}/* ${PKG_BUILD}/.${HOST_NAME}
@@ -33,11 +28,6 @@ makeinstall_host() {
     cp -P ${PKG_BUILD}/.${HOST_NAME}/dtc ${TOOLCHAIN}/bin
   mkdir -p ${TOOLCHAIN}/lib
     cp -P ${PKG_BUILD}/.${HOST_NAME}/libfdt/libfdt.so* ${TOOLCHAIN}/lib
-}
-
-pre_configure_target() {
-  cd ..
-  rm -rf .${TARGET_NAME}
 }
 
 pre_make_target() {
