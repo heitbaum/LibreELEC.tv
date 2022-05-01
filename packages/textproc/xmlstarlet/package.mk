@@ -3,8 +3,8 @@
 # Copyright (C) 2020-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xmlstarlet"
-PKG_VERSION="1.6.7"
-PKG_SHA256="70b73cd9555d2cdfbdd1d87bd64f44e04e95a8ad11d4507b406bbdd9d5ca1c46"
+PKG_VERSION="1.6.8"
+PKG_SHA256="5b1aafe346fa77cb571b47fd86fa48b99a0017eeb109000b1322397b314fed23"
 PKG_LICENSE="MIT"
 PKG_SITE="https://pypi.org/project/xmlstarlet"
 PKG_URL="https://github.com/dimitern/xmlstarlet/archive/v${PKG_VERSION}.tar.gz"
