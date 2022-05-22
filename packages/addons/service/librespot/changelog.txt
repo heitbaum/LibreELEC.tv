@@ -1,1 +1,5 @@
+1
+- Update to 0.4.2
+
+0
 initial release
