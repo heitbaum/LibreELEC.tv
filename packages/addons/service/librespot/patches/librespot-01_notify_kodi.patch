@@ -8,7 +8,7 @@ diff --git a/core/src/spotify_id.rs b/core/src/spotify_id.rs
 index 1a5fcd2..c670977 100644
 --- a/core/src/spotify_id.rs
 +++ b/core/src/spotify_id.rs
-@@ -9,6 +9,12 @@
+@@ -10,6 +10,12 @@
      Podcast,
      NonPlayable,
  }
@@ -25,7 +25,7 @@ diff --git a/playback/src/config.rs b/playback/src/config.rs
 index 9d65042..6d098db 100644
 --- a/playback/src/config.rs
 +++ b/playback/src/config.rs
-@@ -142,6 +142,7 @@
+@@ -139,6 +139,7 @@
      // pass function pointers so they can be lazily instantiated *after* spawning a thread
      // (thereby circumventing Send bounds that they might not satisfy)
      pub ditherer: Option<DithererBuilder>,
@@ -33,8 +33,8 @@ index 9d65042..6d098db 100644
  }
  
  impl Default for PlayerConfig {
-@@ -159,6 +160,7 @@
-             normalisation_knee: 1.0,
+@@ -156,6 +157,7 @@
+             normalisation_knee_db: 5.0,
              passthrough: false,
              ditherer: Some(mk_ditherer::<TriangularDitherer>),
 +            notify_kodi: false,
@@ -45,7 +45,7 @@ diff --git a/playback/src/player.rs b/playback/src/player.rs
 index 2dd8f3b..67b3b28 100644
 --- a/playback/src/player.rs
 +++ b/playback/src/player.rs
-@@ -1868,6 +1868,10 @@ impl PlayerInternal {
+@@ -1912,6 +1912,10 @@
          }
      }
  
@@ -54,9 +54,9 @@ index 2dd8f3b..67b3b28 100644
 +    }
 +
      fn send_event(&mut self, event: PlayerEvent) {
-         let mut index = 0;
-         while index < self.event_senders.len() {
-@@ -1878,6 +1882,16 @@ impl PlayerInternal {
+         self.event_senders
+             .retain(|sender| sender.send(event.clone()).is_ok());
+@@ -1970,6 +1974,16 @@ impl PlayerInternal {
                  }
              }
          }
@@ -77,30 +77,30 @@ diff --git a/src/main.rs b/src/main.rs
 index 2efd62b..ecee2ff 100644
 --- a/src/main.rs
 +++ b/src/main.rs
-@@ -424,6 +424,11 @@
-         "",
-         PASSTHROUGH,
-         "Pass a raw stream to the output. Only works with the pipe and subprocess backends.",
+@@ -380,6 +380,11 @@
+         ENABLE_VOLUME_NORMALISATION_SHORT,
+         ENABLE_VOLUME_NORMALISATION,
+         "Play all tracks at approximately the same apparent volume.",
 +    )
 +    .optflag(
 +        "",
 +        "notify-kodi",
 +        "Notify Kodi",
-     );
- 
-     let matches = match opts.parse(&args[1..]) {
-@@ -644,6 +649,8 @@ fn setup(args: &[String]) -> Setup {
-         )
+     )
+     .optopt(
+         NAME_SHORT,
+@@ -1239,6 +1239,8 @@
+         }
      };
  
 +    let notify_kodi = matches.opt_present("notify-kodi");
 +
-     let session_config = {
-         let device_id = device_id(&name);
- 
-@@ -763,6 +763,7 @@
-             normalisation_release,
-             normalisation_knee,
+     let session_config = SessionConfig {
+         user_agent: version::VERSION_STRING.to_string(),
+         device_id: device_id(&connect_config.name),
+@@ -1535,6 +1540,7 @@
+             normalisation_release_cf,
+             normalisation_knee_db,
              ditherer,
 +            notify_kodi: notify_kodi,
          }
