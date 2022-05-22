@@ -1,3 +1,6 @@
+131
+- Update to 0.4.2
+
 130
 - Update to 0.3.1
 
