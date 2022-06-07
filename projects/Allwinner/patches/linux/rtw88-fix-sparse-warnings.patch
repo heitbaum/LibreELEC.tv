@@ -1,0 +1,545 @@
+From patchwork Tue May 24 15:36:18 2022
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Larry Finger <Larry.Finger@lwfinger.net>
+X-Patchwork-Id: 12860320
+X-Patchwork-Delegate: kvalo@adurom.com
+Return-Path: <linux-wireless-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 792D1C433EF
+	for <linux-wireless@archiver.kernel.org>;
+ Tue, 24 May 2022 15:36:48 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S237095AbiEXPgr (ORCPT
+        <rfc822;linux-wireless@archiver.kernel.org>);
+        Tue, 24 May 2022 11:36:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36230 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238947AbiEXPgr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 May 2022 11:36:47 -0400
+Received: from p-impout007.msg.pkvw.co.charter.net
+ (p-impout007aa.msg.pkvw.co.charter.net [47.43.26.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC69F3135E
+        for <linux-wireless@vger.kernel.org>;
+ Tue, 24 May 2022 08:36:45 -0700 (PDT)
+Received: from 2603-8090-2005-39b3-0000-0000-0000-100e.res6.spectrum.com.com
+ ([24.31.246.181])
+        by cmsmtp with ESMTP
+        id tWaMnfPwitfLptWaTny5bq; Tue, 24 May 2022 15:36:45 +0000
+X-Authority-Analysis: v=2.4 cv=A+F/goaG c=1 sm=1 tr=0 ts=628cfb8d
+ a=cAe/7qmlxnd6JlJqP68I9A==:117 a=cAe/7qmlxnd6JlJqP68I9A==:17 a=yQdBAQUQAAAA:8
+ a=n9Sqmae0AAAA:8 a=GMpMNBm-7sDyb4zJ14QA:9 a=SzazLyfi1tnkUD6oumHU:22
+ a=UmAUUZEt6-oIqEbegvw9:22
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v3 1/4] rtw88: Fix sparse warning for rtw8822b_hw_spec
+Date: Tue, 24 May 2022 10:36:18 -0500
+Message-Id: <20220524153621.19027-2-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+References: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+X-CMAE-Envelope: 
+ MS4xfC4CsaDp9Dbbiqe17PI2S1qEZMHvfGc1asURbwLZtviMNMz0nkGtneSnAlND+U1Fi6oiF+OjzgSeP8Jr8nR65bD8cPha0Pck9UHLLRuYidk5jOfHxJlq
+ iqY43v1kH3WF1a2NsFWJeRgJlVubG/l303i/zhGrqt807YIkSJfoCqgYztrWb4oFE7/lB4H3GeCZnLGqqVBg/Qt05ft2xeENQnTlWR6G9rRwDEBx8ALcqdQy
+ MaW9AtO4fwKu5aKd8yW5ytE2mp/PKzP7R3EHR/J6Eol6i1o5rg0UWZGI4zGiRjIhV4ljZOPDPJfuCwQyGcAVPVwZM01nHjw6RVyTUt2PWn+th/xGe6zYiadK
+ ngryS9/ebfUHN4uV+jK+cdGCkrd0S4ThkLfDj+gcoJ+ufBa9iIk=
+Precedence: bulk
+List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: linux-wireless@vger.kernel.org
+
+Sparse lists the following for rtw88:
+
+  CHECK   drivers/net/wireless/realtek/rtw88/rtw8822b.c
+drivers/net/wireless/realtek/rtw88/rtw8822b.c:2500:22: warning: symbol 'rtw8822b_hw_spec' was not declared. Should it be static?
+
+The warning arises because the external declaration for rtw8822b_hw_spec
+occurs in rtw8822be.h, which is not included in rtw8822b.h. That line is
+moved, and the now empty file rtw8822be.h is deleted.
+
+Symbol 'rtw8822b_hw_spec' can be made constant.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+v2 Change patch subjects as recommended by Kalle
+v3 Make the correct fix for the warnings - 'static' is incorrect, but const is correct
+---
+
+ drivers/net/wireless/realtek/rtw88/rtw8822b.c  |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822b.h  |  2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822be.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822be.h | 10 ----------
+ 4 files changed, 4 insertions(+), 12 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822be.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.c b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+index dccd722b8e62..321848870561 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.c
+@@ -2497,7 +2497,7 @@ static struct rtw_hw_reg_offset rtw8822b_edcca_th[] = {
+ 	[EDCCA_TH_H2L_IDX] = {{.addr = 0x8a4, .mask = MASKBYTE1}, .offset = 0},
+ };
+ 
+-struct rtw_chip_info rtw8822b_hw_spec = {
++const struct rtw_chip_info rtw8822b_hw_spec = {
+ 	.ops = &rtw8822b_ops,
+ 	.id = RTW_CHIP_TYPE_8822B,
+ 	.fw_name = "rtw88/rtw8822b_fw.bin",
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822b.h b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+index 3fff8b881854..01d3644e0c94 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822b.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822b.h
+@@ -187,4 +187,6 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ #define REG_ANTWT	0x1904
+ #define REG_IQKFAILMSK	0x1bf0
+ 
++extern const struct rtw_chip_info rtw8822b_hw_spec;
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822be.c b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
+index 62ee7e62cac0..4994950776cd 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822be.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822be.c
+@@ -5,7 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include "pci.h"
+-#include "rtw8822be.h"
++#include "rtw8822b.h"
+ 
+ static const struct pci_device_id rtw_8822be_id_table[] = {
+ 	{
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822be.h b/drivers/net/wireless/realtek/rtw88/rtw8822be.h
+deleted file mode 100644
+index 6668460d664d..000000000000
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822be.h
++++ /dev/null
+@@ -1,10 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+-/* Copyright(c) 2018-2019  Realtek Corporation
+- */
+-
+-#ifndef __RTW_8822BE_H_
+-#define __RTW_8822BE_H_
+-
+-extern struct rtw_chip_info rtw8822b_hw_spec;
+-
+-#endif
+
+From patchwork Tue May 24 15:36:19 2022
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Larry Finger <Larry.Finger@lwfinger.net>
+X-Patchwork-Id: 12860321
+X-Patchwork-Delegate: kvalo@adurom.com
+Return-Path: <linux-wireless-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F216C433EF
+	for <linux-wireless@archiver.kernel.org>;
+ Tue, 24 May 2022 15:36:57 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S238968AbiEXPg4 (ORCPT
+        <rfc822;linux-wireless@archiver.kernel.org>);
+        Tue, 24 May 2022 11:36:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37138 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238969AbiEXPgz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 May 2022 11:36:55 -0400
+Received: from p-impout007.msg.pkvw.co.charter.net
+ (p-impout007aa.msg.pkvw.co.charter.net [47.43.26.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A93831347
+        for <linux-wireless@vger.kernel.org>;
+ Tue, 24 May 2022 08:36:53 -0700 (PDT)
+Received: from 2603-8090-2005-39b3-0000-0000-0000-100e.res6.spectrum.com.com
+ ([24.31.246.181])
+        by cmsmtp with ESMTP
+        id tWaMnfPwitfLptWabny5d6; Tue, 24 May 2022 15:36:53 +0000
+X-Authority-Analysis: v=2.4 cv=A+F/goaG c=1 sm=1 tr=0 ts=628cfb95
+ a=cAe/7qmlxnd6JlJqP68I9A==:117 a=cAe/7qmlxnd6JlJqP68I9A==:17 a=yQdBAQUQAAAA:8
+ a=XEJPoD4cSoQjHLxuymgA:9 a=SzazLyfi1tnkUD6oumHU:22
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v3 2/4] rtw88: Fix Sparse warning for rtw8822c_hw_spec
+Date: Tue, 24 May 2022 10:36:19 -0500
+Message-Id: <20220524153621.19027-3-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+References: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+X-CMAE-Envelope: 
+ MS4xfN3Dj96fLLeUg8jvG5BDNCBFxUD4biK+00ptUWJEjk2twM5UzZU/M2JthiUvyy1zntsCEvFhSCuQmTub9+0/5/nU0RJibLpNIZ2VmcZsmZo9pkUOjZDe
+ kb4bRHDoezdOGKIe89xBsYvRGm4YNA8zxbrYWu66OUptfmBswWe+wJhGhVaqCrViIV9qZbpgLOJG1U4NvnZfSBUdkZhvedhknnFOXgGxEStt5iVcd7oVJ7cM
+ t/4LSDmRHrTdiXX9dR5rItCIMR7DdRfSts+6oe95aTdFH5sq3DO8x+jvN4b5d9yasHFfBMwQgE1bwxLgIobZMonUvfkgVzq7dTU/iiMK9H7JyW/zmJ1cYOQ1
+ kzffT3wV8MnXHD2sQTjNyFAXX7N3BYZ7InJz9CxnXL34toXsjuY=
+Precedence: bulk
+List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: linux-wireless@vger.kernel.org
+
+Sparse reports the following:
+
+  CHECK   drivers/net/wireless/realtek/rtw88/rtw8822c.c
+drivers/net/wireless/realtek/rtw88/rtw8822c.c:5313:22: warning: symbol 'rtw8822c_hw_spec' was not declared. Should it be static?
+
+The warning arises because the external declaration for rtw8822c_hw_spec
+occurs in rtw8822ce.h, which is not included in rtw8822c.h. That line is
+moved, and the now empty file rtw8822ce.h is deleted.
+
+Symbol 'rtw8822c_hw_spec' can be made constant.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+v2 Change patch subjects as recommended by Kalle
+v3 Make the correct fix for the warnings - 'static' is incorrect, but const is correct
+---
+
+ drivers/net/wireless/realtek/rtw88/rtw8822c.c  |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822c.h  |  2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8822ce.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8822ce.h | 10 ----------
+ 4 files changed, 4 insertions(+), 12 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtw88/rtw8822ce.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.c b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+index c043b5c520b9..09f9e4adcf34 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.c
+@@ -5310,7 +5310,7 @@ static const struct rtw_reg_domain coex_info_hw_regs_8822c[] = {
+ 	{0xc50, MASKBYTE0, RTW_REG_DOMAIN_MAC8},
+ };
+ 
+-struct rtw_chip_info rtw8822c_hw_spec = {
++const struct rtw_chip_info rtw8822c_hw_spec = {
+ 	.ops = &rtw8822c_ops,
+ 	.id = RTW_CHIP_TYPE_8822C,
+ 	.fw_name = "rtw88/rtw8822c_fw.bin",
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822c.h b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+index 8201955e1f21..479d5d769c52 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822c.h
+@@ -118,6 +118,8 @@ enum rtw8822c_dpk_one_shot_action {
+ void rtw8822c_parse_tbl_dpk(struct rtw_dev *rtwdev,
+ 			    const struct rtw_table *tbl);
+ 
++extern const struct rtw_chip_info rtw8822c_hw_spec;
++
+ #define RTW_DECL_TABLE_DPK(name)			\
+ const struct rtw_table name ## _tbl = {			\
+ 	.data = name,					\
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+index 3845b1333dc3..e26c6bc82936 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8822ce.c
+@@ -5,7 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include "pci.h"
+-#include "rtw8822ce.h"
++#include "rtw8822c.h"
+ 
+ static const struct pci_device_id rtw_8822ce_id_table[] = {
+ 	{
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8822ce.h b/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
+deleted file mode 100644
+index fee32d7a4504..000000000000
+--- a/drivers/net/wireless/realtek/rtw88/rtw8822ce.h
++++ /dev/null
+@@ -1,10 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+-/* Copyright(c) 2018-2019  Realtek Corporation
+- */
+-
+-#ifndef __RTW_8822CE_H_
+-#define __RTW_8822CE_H_
+-
+-extern struct rtw_chip_info rtw8822c_hw_spec;
+-
+-#endif
+
+From patchwork Tue May 24 15:36:20 2022
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Larry Finger <Larry.Finger@lwfinger.net>
+X-Patchwork-Id: 12860322
+X-Patchwork-Delegate: kvalo@adurom.com
+Return-Path: <linux-wireless-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F732C433F5
+	for <linux-wireless@archiver.kernel.org>;
+ Tue, 24 May 2022 15:37:07 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S238970AbiEXPhG (ORCPT
+        <rfc822;linux-wireless@archiver.kernel.org>);
+        Tue, 24 May 2022 11:37:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37618 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238976AbiEXPhC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 May 2022 11:37:02 -0400
+Received: from p-impout007.msg.pkvw.co.charter.net
+ (p-impout007aa.msg.pkvw.co.charter.net [47.43.26.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FBC033EBD
+        for <linux-wireless@vger.kernel.org>;
+ Tue, 24 May 2022 08:36:59 -0700 (PDT)
+Received: from 2603-8090-2005-39b3-0000-0000-0000-100e.res6.spectrum.com.com
+ ([24.31.246.181])
+        by cmsmtp with ESMTP
+        id tWaMnfPwitfLptWahny5eG; Tue, 24 May 2022 15:36:59 +0000
+X-Authority-Analysis: v=2.4 cv=A+F/goaG c=1 sm=1 tr=0 ts=628cfb9b
+ a=cAe/7qmlxnd6JlJqP68I9A==:117 a=cAe/7qmlxnd6JlJqP68I9A==:17 a=yQdBAQUQAAAA:8
+ a=jSSIIWNXt1tgi8AzHDQA:9 a=SzazLyfi1tnkUD6oumHU:22
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v3 3/4] rtw88: Fix Sparse warning for rtw8723d_hw_spec
+Date: Tue, 24 May 2022 10:36:20 -0500
+Message-Id: <20220524153621.19027-4-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.36.1
+In-Reply-To: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+References: <20220524153621.19027-1-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+X-CMAE-Envelope: 
+ MS4xfBRWF71EEEHP9kEEUduP0slXZOl2vMcHVMB31VkM6N8mR9bKADKljP/GoYt7z9B+7KCY0dDdsQ4Lf3cBllwNB7k4GUBfO52FLgQgL7hGWP8wWd7k/bK8
+ RA6IcmGUY8m0m4OJAGuLWN4HdrT6oQ7lPFhjKuXwb1z+uypEe6JSsqQdVYMeKC/ElKs7BYEUkRNtGYxMtMd7aY0K388wLUo+VwhXdfqYihzeRawXspuMyquD
+ 1GHfBPykn3AMqSUxq11wo87W4Yu63+SHJL0Di42C/+8oork64rCt2Wtj+tDnjY4OyFpUrpnDaYksPQSKMGXY5Z/jlVKfjgEgbKFhjTNPV4iT1Z9bjhqJvxhK
+ HYOsgsWTyV1KGXiAlJKsb5MiBVTX4k2PLxGl68TGwqs1DwbLyso=
+Precedence: bulk
+List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: linux-wireless@vger.kernel.org
+
+Sparse lists the following:
+
+  CHECK   drivers/net/wireless/realtek/rtw88/rtw8723d.c
+drivers/net/wireless/realtek/rtw88/rtw8723d.c:2704:22: warning: symbol 'rtw8723d_hw_spec' was not declared. Should it be static?
+
+The warning arises because the external declaration for rtw8723d_hw_spec
+occurs in rtw8723de.h, which is not included in rtw8723d.h. That line is
+moved, and the now empty file rtw8723de.h is deleted.
+
+Symbol 'rtw8723d_hw_spec' can be made constant.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+v2 Change patch subjects as recommended by Kalle
+v3 Make the correct fix for the warnings - 'static' is incorrect, but const is correct
+---
+
+ drivers/net/wireless/realtek/rtw88/rtw8723d.c  |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8723d.h  |  2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8723de.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8723de.h | 10 ----------
+ 4 files changed, 4 insertions(+), 12 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtw88/rtw8723de.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.c b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+index 93cce44df531..993bd6b1d723 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.c
+@@ -2701,7 +2701,7 @@ static const struct rtw_reg_domain coex_info_hw_regs_8723d[] = {
+ 	{0x953, BIT(1), RTW_REG_DOMAIN_MAC8},
+ };
+ 
+-struct rtw_chip_info rtw8723d_hw_spec = {
++const struct rtw_chip_info rtw8723d_hw_spec = {
+ 	.ops = &rtw8723d_ops,
+ 	.id = RTW_CHIP_TYPE_8723D,
+ 	.fw_name = "rtw88/rtw8723d_fw.bin",
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723d.h b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+index 41d35174a542..4641f6e047b4 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723d.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723d.h
+@@ -72,6 +72,8 @@ struct rtw8723d_efuse {
+ 	struct rtw8723de_efuse e;
+ };
+ 
++extern const struct rtw_chip_info rtw8723d_hw_spec;
++
+ /* phy status page0 */
+ #define GET_PHY_STAT_P0_PWDB(phy_stat)                                         \
+ 	le32_get_bits(*((__le32 *)(phy_stat) + 0x00), GENMASK(15, 8))
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.c b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+index 2dd689441e8d..abbaafa32851 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723de.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8723de.c
+@@ -5,7 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include "pci.h"
+-#include "rtw8723de.h"
++#include "rtw8723d.h"
+ 
+ static const struct pci_device_id rtw_8723de_id_table[] = {
+ 	{
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8723de.h b/drivers/net/wireless/realtek/rtw88/rtw8723de.h
+deleted file mode 100644
+index 2b4894846a07..000000000000
+--- a/drivers/net/wireless/realtek/rtw88/rtw8723de.h
++++ /dev/null
+@@ -1,10 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+-/* Copyright(c) 2018-2019  Realtek Corporation
+- */
+-
+-#ifndef __RTW_8723DE_H_
+-#define __RTW_8723DE_H_
+-
+-extern struct rtw_chip_info rtw8723d_hw_spec;
+-
+-#endif
+
+From patchwork Tue May 24 15:37:16 2022
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Patchwork-Submitter: Larry Finger <Larry.Finger@lwfinger.net>
+X-Patchwork-Id: 12860323
+X-Patchwork-Delegate: kvalo@adurom.com
+Return-Path: <linux-wireless-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0445CC433EF
+	for <linux-wireless@archiver.kernel.org>;
+ Tue, 24 May 2022 15:37:27 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S238971AbiEXPh0 (ORCPT
+        <rfc822;linux-wireless@archiver.kernel.org>);
+        Tue, 24 May 2022 11:37:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39804 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236252AbiEXPhZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 May 2022 11:37:25 -0400
+Received: from p-impout007.msg.pkvw.co.charter.net
+ (p-impout007aa.msg.pkvw.co.charter.net [47.43.26.138])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D78FD6223D
+        for <linux-wireless@vger.kernel.org>;
+ Tue, 24 May 2022 08:37:21 -0700 (PDT)
+Received: from 2603-8090-2005-39b3-0000-0000-0000-100e.res6.spectrum.com.com
+ ([24.31.246.181])
+        by cmsmtp with ESMTP
+        id tWb2nfQAktfLptWb2ny5i8; Tue, 24 May 2022 15:37:20 +0000
+X-Authority-Analysis: v=2.4 cv=A+F/goaG c=1 sm=1 tr=0 ts=628cfbb0
+ a=cAe/7qmlxnd6JlJqP68I9A==:117 a=cAe/7qmlxnd6JlJqP68I9A==:17 a=yQdBAQUQAAAA:8
+ a=TcJKRCS9Dne6_0BgUPwA:9 a=SzazLyfi1tnkUD6oumHU:22
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: Kalle Valo <kvalo@kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v3 4/4] rtw88: Fix Sparse warning for rtw8821c_hw_spec
+Date: Tue, 24 May 2022 10:37:16 -0500
+Message-Id: <20220524153716.20450-1-Larry.Finger@lwfinger.net>
+X-Mailer: git-send-email 2.36.1
+MIME-Version: 1.0
+X-CMAE-Envelope: 
+ MS4xfKXdI5JdOdRDI0h2q/oxxcBBA6Rw2hqZQvQQe3GfZLXb0+Im+I0PPBhvrk7d9a3iYmryZ8Ts77Alt1x/IynnhrIw4ddH82lDQw9g2HcioIamYZ8nmr5W
+ MOwHdSwXZeN1GYwWDDvZeC0R3evPmZ6yOdLTYFUPEFh/4IQVvCQnJSmUYfUAgEdkH7yc8ZZsixX7rlEu8JaKHUy5A4/uIQSPcU0huJkfzOEYR5K+JDjYgj7y
+ oIYwwzEx3zHksspvC12PVTdE988GwgmI5AMBak9Sky8elPQSvVMise4ZWHRqHgYD1Ln9Xc7KpFfAdpkh8eSSWkBaznxXS/q76eWyifSo8kiOLX2PTGdsVyt0
+ d6Qx5wZ5mDbI7ipNtMqT4FKS76tqVfXZ+pNMGQMxCTsfJ7TCxpo=
+Precedence: bulk
+List-ID: <linux-wireless.vger.kernel.org>
+X-Mailing-List: linux-wireless@vger.kernel.org
+
+Sparse lists the following:
+
+  CHECK   drivers/net/wireless/realtek/rtw88/rtw8821c.c
+drivers/net/wireless/realtek/rtw88/rtw8821c.c:1880:22: warning: symbol 'rtw8821c_hw_spec' was not declared. Should it be static?
+
+The warning arises because the external declaration for rtw8821c_hw_spec
+occurs in rtw8821ce.h, which is not included in rtw8821c.h. That line is
+moved, and the now empty file rtw8821ce.h is deleted.
+
+Symbol 'rtw8821c_hw_spec' can be made constant.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+v2 Change patch subjects as recommended by Kalle
+v3 Make the correct fix for the warnings - 'static' is incorrect, but const is correct
+---
+
+ drivers/net/wireless/realtek/rtw88/rtw8821c.c  |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821c.h  |  2 ++
+ drivers/net/wireless/realtek/rtw88/rtw8821ce.c |  2 +-
+ drivers/net/wireless/realtek/rtw88/rtw8821ce.h | 10 ----------
+ 4 files changed, 4 insertions(+), 12 deletions(-)
+ delete mode 100644 drivers/net/wireless/realtek/rtw88/rtw8821ce.h
+
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.c b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+index ffee39ea5df6..42841f5d502c 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.c
+@@ -1877,7 +1877,7 @@ static const struct rtw_reg_domain coex_info_hw_regs_8821c[] = {
+ 	{0x60A, MASKBYTE0, RTW_REG_DOMAIN_MAC8},
+ };
+ 
+-struct rtw_chip_info rtw8821c_hw_spec = {
++const struct rtw_chip_info rtw8821c_hw_spec = {
+ 	.ops = &rtw8821c_ops,
+ 	.id = RTW_CHIP_TYPE_8821C,
+ 	.fw_name = "rtw88/rtw8821c_fw.bin",
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821c.h b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+index d9fbddd7b0f3..2698801fc35d 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821c.h
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821c.h
+@@ -84,6 +84,8 @@ _rtw_write32s_mask(struct rtw_dev *rtwdev, u32 addr, u32 mask, u32 data)
+ 	rtw_write32_mask(rtwdev, addr + 0x200, mask, data);
+ }
+ 
++extern const struct rtw_chip_info rtw8821c_hw_spec;
++
+ #define rtw_write32s_mask(rtwdev, addr, mask, data)			       \
+ 	do {								       \
+ 		BUILD_BUG_ON((addr) < 0xC00 || (addr) >= 0xD00);	       \
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
+index 56d22f9de904..f3d971feda04 100644
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
++++ b/drivers/net/wireless/realtek/rtw88/rtw8821ce.c
+@@ -5,7 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include "pci.h"
+-#include "rtw8821ce.h"
++#include "rtw8821c.h"
+ 
+ static const struct pci_device_id rtw_8821ce_id_table[] = {
+ 	{
+diff --git a/drivers/net/wireless/realtek/rtw88/rtw8821ce.h b/drivers/net/wireless/realtek/rtw88/rtw8821ce.h
+deleted file mode 100644
+index 54142acca534..000000000000
+--- a/drivers/net/wireless/realtek/rtw88/rtw8821ce.h
++++ /dev/null
+@@ -1,10 +0,0 @@
+-/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
+-/* Copyright(c) 2018-2019  Realtek Corporation
+- */
+-
+-#ifndef __RTW_8821CE_H_
+-#define __RTW_8821CE_H_
+-
+-extern struct rtw_chip_info rtw8821c_hw_spec;
+-
+-#endif
