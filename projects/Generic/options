@@ -15,7 +15,9 @@
         #
         # x86-64-v3    e.g. AMD CPU - Bulldozer GEN4 - (bdver4)
         #                   Intel CPU - Haswell - (haswell)
-        TARGET_CPU="x86-64"
+        #TARGET_CPU="x86-64"
+        #TARGET_CPU="tigerlake"
+        TARGET_CPU="x86-64-v3"
         ;;
     esac
 
