@@ -59,7 +59,7 @@ check_for_update() {
 
   # check if package exists at tracker
   RMO_API_RESPONSE=$(curl -m 5 -sL "https://release-monitoring.org/api/project/LibreELEC/${PKG_NAME}" || true)
-  upstream_version=$(echo "${RMO_API_RESPONSE}" | jq -r '.version')
+  upstream_version=$(echo "${RMO_API_RESPONSE}" | jq -r '.version' || true)
 
   # look for alternative versions if necessary
   if [ "${upstream_version}" = "null" ]; then
