@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Frank Hartung (supervisedthinking (@) gmail.com)
 
 PKG_NAME="makemkv-bin"
-PKG_VERSION="1.16.7"
-PKG_SHA256="623b185b6326cc366a38c75896a134759dfdf50abc849450f4109588d7b12c7b"
+PKG_VERSION="1.17.0"
+PKG_SHA256="e277d75722aede64ac1b564969c7d64608e00591b17068dc7a88358e7a03e2c0"
 PKG_ARCH="aarch64 arm x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.makemkv.com/"
