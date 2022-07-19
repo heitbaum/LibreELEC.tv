@@ -1,3 +1,6 @@
+132
+- include fuse
+
 131
 - Add kmsxx (kmsprint, kmstest)
 
