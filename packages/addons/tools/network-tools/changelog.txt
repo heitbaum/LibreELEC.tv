@@ -1,3 +1,7 @@
+117
+- sshfs: update to 3.7.3
+- include fuse and fuse3
+
 116
 - rsync: update to 3.2.5
 
