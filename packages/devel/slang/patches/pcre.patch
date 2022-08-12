@@ -1,0 +1,45 @@
+Description: Support for PCRE2 library
+Author: Alastair McKinstry <mckinstry@debian.org>
+Last-Updated: 2021-11-18
+Forwarded: no
+
+
+--- a/autoconf/configure.ac
++++ b/autoconf/configure.ac
+@@ -1,4 +1,4 @@
+-dnl# -*- sh -*-
++nl# -*- sh -*-
+ dnl#
+ dnl#   This file requires JD_* m4 macros that are defined in 
+ dnl# the aclocal.m4 file.
+@@ -263,7 +263,7 @@
+ if test $jd_with_pcre_library = yes
+ then
+   PCRE_MODULE="pcre-module.so"
+-  AC_DEFINE(HAVE_PCRE_H,1,[Set to 1 if you have the pcre.h header])
++  AC_DEFINE(HAVE_PCRE2_H,1,[Set to 1 if you have the pcre2.h header])
+   extramodules="$extramodules pcre"
+ else
+   PCRE_MODULE=""
+--- a/modules/pcre-module.c
++++ b/modules/pcre-module.c
+@@ -23,7 +23,7 @@
+ #include <stdio.h>
+ #include <slang.h>
+ #include <string.h>
+-#include <pcre.h>
++#include <pcre2.h>
+ 
+ SLANG_MODULE(pcre);
+ 
+--- a/src/config.hin
++++ b/src/config.hin
+@@ -214,7 +214,7 @@
+ #define HAVE_PROCESS_H
+  */
+ 
+-#undef HAVE_PCRE_H
++#undef HAVE_PCRE2_H
+ 
+ #undef USE_TERMCAP
+ 
