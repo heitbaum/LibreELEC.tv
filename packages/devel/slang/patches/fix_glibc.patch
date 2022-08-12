@@ -1,0 +1,43 @@
+Author: Alastair McKinstry <mckinstry@debian.org>
+Description: Fixes needed so that functions are visible (ip_mreq,strtoll)
+ Needed for glibc > 2.9
+Last-Updated 2014-09-21
+Forwarded: yes
+
+--- a/modules/socket-module.c
++++ b/modules/socket-module.c
+@@ -42,6 +42,15 @@
+ 
+ #include <sys/types.h>
+ 
++/* struct in_mreq now hidden behind __USE_MISC.
++ *  Move up here; __USE_MISC needs to be after  types.h, etc
++ *  but before netdb.h
++ */
++#define __USE_MISC 1
++#ifdef HAVE_NETINET_IN_H
++# include <netinet/in.h>
++#endif
++
+ #include <time.h>
+ #ifdef HAVE_SYS_TIME_H
+ # include <sys/time.h>
+@@ -76,9 +85,6 @@
+ # include <sys/un.h>		       /* for AF_UNIX sockets */
+ #endif
+ 
+-#ifdef HAVE_NETINET_IN_H
+-# include <netinet/in.h>
+-#endif
+ 
+ #ifdef HAVE_ARPA_INET_H
+ # include <arpa/inet.h>
+@@ -97,6 +103,8 @@
+ static int SocketHerrnoError = -1;
+ static int Socket_Type_Id = -1;
+ 
++struct ip_mreq group;
++
+ typedef struct Socket_Type Socket_Type;
+ typedef struct
+ {
