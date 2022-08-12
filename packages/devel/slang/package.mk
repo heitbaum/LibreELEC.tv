@@ -8,11 +8,19 @@ PKG_SHA256="f9145054ae131973c61208ea82486d5dd10e3c5cdad23b7c4a0617743c8f5a18"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.jedsoft.org/slang/"
 PKG_URL="https://www.jedsoft.org/releases/slang/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
-PKG_DEPENDS_TARGET="toolchain pcre"
+PKG_DEPENDS_TARGET="toolchain pcre2"
 PKG_LONGDESC="A library designed to allow a developer to create robust multi-platform software."
 PKG_BUILD_FLAGS="-parallel"
 
 PKG_CONFIGURE_OPTS_TARGET="--without-onig"
+
+post_patch() {
+ ln -s ../src ${PKG_BUILD}/autoconf/src
+ pushd ${PKG_BUILD}/autoconf
+ autoreconf --install
+ mv configure ..
+ popd
+}
 
 pre_configure_target() {
  # slang fails to build in subdirs
