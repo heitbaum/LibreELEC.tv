@@ -1,0 +1,11 @@
+--- a/slsh/Makefile.in
++++ b/slsh/Makefile.in
+@@ -21,7 +21,7 @@
+ SLANG_ELFLIB	= -L@ELFDIR@#  for dynamically linked
+ SLANG_OBJLIB	= -L@OBJDIR@#  for statically linked
+ #---------------------------------------------------------------------------
+-DYNAMIC_LIBS	= @TERMCAP@ @DYNAMIC_LINK_LIB@ @LIBS@ @M_LIB@
++DYNAMIC_LIBS	= @TERMCAP@  @LIBS@ 
+ STATIC_LIBS	= @TERMCAP@ @LIBS@ @M_LIB@
+ RPATH		= @RPATH@
+ #----------------------------------------------------------------------------
