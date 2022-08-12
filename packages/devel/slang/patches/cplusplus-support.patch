@@ -1,0 +1,28 @@
+Description: Allow C++ compilation
+Author: Gise Vanem <gisle.vanem@gmail.com>
+Last-Updated: 2022-04-25
+Forwarded: no
+
+--- a/src/slcurses.h
++++ b/src/slcurses.h
+@@ -29,6 +29,10 @@
+ extern "C" {
+ #endif
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
++  
+ /* This is a temporary hack until lynx is fixed to not include this file. */
+ #ifndef LYCURSES_H
+ 
+@@ -395,5 +399,9 @@
+ #endif
+ 
+ #ifdef __cplusplus
++}
++#endif
++
++#ifdef __cplusplus
+ }
+ #endif
