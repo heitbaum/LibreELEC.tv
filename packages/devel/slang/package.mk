@@ -15,6 +15,14 @@ PKG_BUILD_FLAGS="-parallel"
 PKG_CONFIGURE_OPTS_TARGET="--without-pcre \
                            --without-onig"
 
+post_patch() {
+ ln -s ../src ${PKG_BUILD}/autoconf/src
+ pushd ${PKG_BUILD}/autoconf
+ autoreconf --install
+ mv configure ..
+ popd
+}
+
 pre_configure_target() {
  # slang fails to build in subdirs
  cd ${PKG_BUILD}
