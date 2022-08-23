@@ -1,101 +1,36 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jonas Karlman <jonas@kwiboo.se>
-Date: Sat, 23 May 2020 15:03:46 +0000
-Subject: [PATCH] WIP: media: uapi: hevc: add fields needed for rkvdec
-
-NOTE: these fields are used by rkvdec hevc backend
-
-Signed-off-by: Jonas Karlman <jonas@kwiboo.se>
----
- include/media/hevc-ctrls.h | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/include/media/hevc-ctrls.h b/include/media/hevc-ctrls.h
-index 01ccda48d8c5..a536dab3f8a7 100644
---- a/include/media/hevc-ctrls.h
-+++ b/include/media/hevc-ctrls.h
-@@ -58,6 +58,8 @@ enum v4l2_mpeg_video_hevc_start_code {
- /* The controls are not stable at the moment and will likely be reworked. */
- struct v4l2_ctrl_hevc_sps {
- 	/* ISO/IEC 23008-2, ITU-T Rec. H.265: Sequence parameter set */
-+	__u8	video_parameter_set_id;
-+	__u8	seq_parameter_set_id;
- 	__u16	pic_width_in_luma_samples;
- 	__u16	pic_height_in_luma_samples;
- 	__u8	bit_depth_luma_minus8;
-@@ -81,6 +83,8 @@ struct v4l2_ctrl_hevc_sps {
- 	__u8	chroma_format_idc;
- 	__u8	sps_max_sub_layers_minus1;
- 
-+	__u8	padding[6];
-+
- 	__u64	flags;
- };
- 
-@@ -108,6 +112,7 @@ struct v4l2_ctrl_hevc_sps {
- 
- struct v4l2_ctrl_hevc_pps {
- 	/* ISO/IEC 23008-2, ITU-T Rec. H.265: Picture parameter set */
-+	__u8	pic_parameter_set_id;
- 	__u8	num_extra_slice_header_bits;
- 	__u8	num_ref_idx_l0_default_active_minus1;
- 	__u8	num_ref_idx_l1_default_active_minus1;
-@@ -123,7 +128,7 @@ struct v4l2_ctrl_hevc_pps {
- 	__s8	pps_tc_offset_div2;
- 	__u8	log2_parallel_merge_level_minus2;
- 
--	__u8	padding[4];
-+	__u8	padding;
- 	__u64	flags;
- };
- 
-@@ -200,7 +205,10 @@ struct v4l2_ctrl_hevc_slice_params {
- 	__u8	ref_idx_l0[V4L2_HEVC_DPB_ENTRIES_NUM_MAX];
- 	__u8	ref_idx_l1[V4L2_HEVC_DPB_ENTRIES_NUM_MAX];
- 
--	__u8	padding;
-+	__u16	short_term_ref_pic_set_size;
-+	__u16	long_term_ref_pic_set_size;
-+
-+	__u8	padding[4];
- 
- 	/* ISO/IEC 23008-2, ITU-T Rec. H.265: Weighted prediction parameter */
- 	struct v4l2_hevc_pred_weight_table pred_weight_table;
-
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Jonas Karlman <jonas@kwiboo.se>
 Date: Sat, 23 May 2020 15:07:15 +0000
 Subject: [PATCH] HACK: media: uapi: hevc: tiles and num_slices
 
 ---
- include/media/hevc-ctrls.h | 7 +++++--
+ include/uapi/linux/v4l2-controls.h | 7 +++++--
  1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/include/media/hevc-ctrls.h b/include/media/hevc-ctrls.h
+diff --git a/include/uapi/linux/v4l2-controls.h b/include/uapi/linux/v4l2-controls.h
 index a536dab3f8a7..c8618dc68fc7 100644
---- a/include/media/hevc-ctrls.h
-+++ b/include/media/hevc-ctrls.h
-@@ -83,7 +83,8 @@ struct v4l2_ctrl_hevc_sps {
+--- a/include/uapi/linux/v4l2-controls.h
++++ b/include/uapi/linux/v4l2-controls.h
+@@ -2118,7 +2118,8 @@ struct v4l2_ctrl_hevc_sps {
  	__u8	chroma_format_idc;
  	__u8	sps_max_sub_layers_minus1;
  
--	__u8	padding[6];
+-	__u8	reserved[6];
 +	__u8	num_slices;
-+	__u8	padding[5];
- 
++	__u8	reserved[5];
  	__u64	flags;
  };
-@@ -208,7 +209,9 @@ struct v4l2_ctrl_hevc_slice_params {
+ 
+@@ -2375,6 +2376,9 @@ struct v4l2_ctrl_hevc_slice_params {
  	__u16	short_term_ref_pic_set_size;
  	__u16	long_term_ref_pic_set_size;
  
--	__u8	padding[4];
-+	__u32	num_entry_point_offsets;
 +	__u32	entry_point_offset_minus1[256];
-+	__u8	padding[8];
- 
++	__u8	reserved[8];
++
  	/* ISO/IEC 23008-2, ITU-T Rec. H.265: Weighted prediction parameter */
  	struct v4l2_hevc_pred_weight_table pred_weight_table;
+ 
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jonas Karlman <jonas@kwiboo.se>
@@ -2595,16 +2530,16 @@ index 000000000000..c3cceba837c2
 +	struct v4l2_ctrl *ctrl;
 +
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_SLICE_PARAMS);
++			      V4L2_CID_STATELESS_HEVC_SLICE_PARAMS);
 +	run->slices_params = ctrl ? ctrl->p_cur.p : NULL;
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_SPS);
++			      V4L2_CID_STATELESS_HEVC_SPS);
 +	run->sps = ctrl ? ctrl->p_cur.p : NULL;
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_PPS);
++			      V4L2_CID_STATELESS_HEVC_PPS);
 +	run->pps = ctrl ? ctrl->p_cur.p : NULL;
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_SCALING_MATRIX);
++			      V4L2_CID_STATELESS_HEVC_SCALING_MATRIX);
 +	run->scaling_matrix = ctrl ? ctrl->p_cur.p : NULL;
 +
 +	rkvdec_run_preamble(ctx, &run->base);
@@ -2674,31 +2609,31 @@ index b6d5b26a93c2..7e8674e7d501 100644
  
 +static const struct rkvdec_ctrl_desc rkvdec_hevc_ctrl_descs[] = {
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SLICE_PARAMS,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_SLICE_PARAMS,
 +		// HACK: match ffmpeg v4l2 request api hwaccel size,
 +		//       we should support variable length up to 600 slices
 +		.cfg.dims = { 32 },
 +	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SPS,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_SPS,
 +	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_PPS,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_PPS,
 +	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SCALING_MATRIX,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_SCALING_MATRIX,
 +	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_DECODE_MODE,
-+		.cfg.min = V4L2_MPEG_VIDEO_HEVC_DECODE_MODE_FRAME_BASED,
-+		.cfg.max = V4L2_MPEG_VIDEO_HEVC_DECODE_MODE_FRAME_BASED,
-+		.cfg.def = V4L2_MPEG_VIDEO_HEVC_DECODE_MODE_FRAME_BASED,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_DECODE_MODE,
++		.cfg.min = V4L2_STATELESS_HEVC_DECODE_MODE_FRAME_BASED,
++		.cfg.max = V4L2_STATELESS_HEVC_DECODE_MODE_FRAME_BASED,
++		.cfg.def = V4L2_STATELESS_HEVC_DECODE_MODE_FRAME_BASED,
 +	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_START_CODE,
-+		.cfg.min = V4L2_MPEG_VIDEO_HEVC_START_CODE_ANNEX_B,
-+		.cfg.def = V4L2_MPEG_VIDEO_HEVC_START_CODE_ANNEX_B,
-+		.cfg.max = V4L2_MPEG_VIDEO_HEVC_START_CODE_ANNEX_B,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_START_CODE,
++		.cfg.min = V4L2_STATELESS_HEVC_START_CODE_ANNEX_B,
++		.cfg.def = V4L2_STATELESS_HEVC_START_CODE_ANNEX_B,
++		.cfg.max = V4L2_STATELESS_HEVC_START_CODE_ANNEX_B,
 +	},
 +	{
 +		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_PROFILE,
@@ -2868,10 +2803,10 @@ index c3cceba837c2..5c341b5fa534 100644
  	struct v4l2_ctrl *ctrl;
 -
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_DECODE_PARAMS);
++			      V4L2_CID_STATELESS_HEVC_DECODE_PARAMS);
 +	run->decode_params = ctrl ? ctrl->p_cur.p : NULL;
  	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
- 			      V4L2_CID_MPEG_VIDEO_HEVC_SLICE_PARAMS);
+ 			      V4L2_CID_STATELESS_HEVC_SLICE_PARAMS);
  	run->slices_params = ctrl ? ctrl->p_cur.p : NULL;
 diff --git a/drivers/staging/media/rkvdec/rkvdec.c b/drivers/staging/media/rkvdec/rkvdec.c
 index 7e8674e7d501..0f877acfba27 100644
@@ -2879,14 +2814,14 @@ index 7e8674e7d501..0f877acfba27 100644
 +++ b/drivers/staging/media/rkvdec/rkvdec.c
 @@ -150,6 +150,9 @@ static const struct rkvdec_ctrl_desc rkvdec_hevc_ctrl_descs[] = {
  	{
- 		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SCALING_MATRIX,
+ 		.cfg.id = V4L2_CID_STATELESS_HEVC_SCALING_MATRIX,
  	},
 +	{
-+		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_DECODE_PARAMS,
++		.cfg.id = V4L2_CID_STATELESS_HEVC_DECODE_PARAMS,
 +	},
  	{
- 		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_DECODE_MODE,
- 		.cfg.min = V4L2_MPEG_VIDEO_HEVC_DECODE_MODE_FRAME_BASED,
+ 		.cfg.id = V4L2_CID_STATELESS_HEVC_DECODE_MODE,
+ 		.cfg.min = V4L2_STATELESS_HEVC_DECODE_MODE_FRAME_BASED,
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Jonas Karlman <jonas@kwiboo.se>
@@ -2961,7 +2896,7 @@ index 5c341b5fa534..ac06039140bc 100644
  	int ret;
  
 +	ctrl = v4l2_ctrl_find(&ctx->ctrl_hdl,
-+			      V4L2_CID_MPEG_VIDEO_HEVC_SPS);
++			      V4L2_CID_STATELESS_HEVC_SPS);
 +	if (!ctrl)
 +		return -EINVAL;
 +
@@ -2983,7 +2918,7 @@ index 5c341b5fa534..ac06039140bc 100644
  
 +static int rkvdec_hevc_try_ctrl(struct rkvdec_ctx *ctx, struct v4l2_ctrl *ctrl)
 +{
-+	if (ctrl->id == V4L2_CID_MPEG_VIDEO_HEVC_SPS)
++	if (ctrl->id == V4L2_CID_STATELESS_HEVC_SPS)
 +		return rkvdec_hevc_validate_sps(ctx, ctrl->p_new.p_hevc_sps);
 +
 +	return 0;
@@ -3013,11 +2948,11 @@ index 0f877acfba27..9f6a619499ab 100644
 @@ -143,6 +143,7 @@ static const struct rkvdec_ctrl_desc rkvdec_hevc_ctrl_descs[] = {
  	},
  	{
- 		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_SPS,
+ 		.cfg.id = V4L2_CID_STATELESS_HEVC_SPS,
 +		.cfg.ops = &rkvdec_ctrl_ops,
  	},
  	{
- 		.cfg.id = V4L2_CID_MPEG_VIDEO_HEVC_PPS,
+ 		.cfg.id = V4L2_CID_STATELESS_HEVC_PPS,
 
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Alex Bee <knaerzche@gmail.com>
