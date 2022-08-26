@@ -9,8 +9,9 @@ PKG_LICENSE="GPLv3+"
 PKG_SITE="https://www.samba.org"
 PKG_URL="https://download.samba.org/pub/samba/stable/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_URL="https://download.samba.org/pub/samba/rc/${PKG_NAME}-${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain attr heimdal:host e2fsprogs Python3 libunwind zlib readline popt libaio connman gnutls wsdd2"
-PKG_NEED_UNPACK="$(get_pkg_directory heimdal) $(get_pkg_directory e2fsprogs)"
+PKG_DEPENDS_HOST="toolchain:host"
+PKG_DEPENDS_TARGET="toolchain attr e2fsprogs Python3 libunwind zlib readline popt libaio connman gnutls wsdd2"
+PKG_NEED_UNPACK="$(get_pkg_directory e2fsprogs)"
 PKG_LONGDESC="A free SMB / CIFS fileserver and client."
 PKG_BUILD_FLAGS="-gold"
 
@@ -37,8 +38,6 @@ configure_package() {
                       --with-logfilebase=/var/log \
                       --with-piddir=/run/samba \
                       --with-privatedir=/run/samba \
-                      --with-modulesdir=/usr/lib \
-                      --with-privatelibdir=/usr/lib \
                       --with-sockets-dir=/run/samba \
                       --with-configdir=/run/samba \
                       --with-libiconv=${SYSROOT_PREFIX}/usr \
@@ -80,6 +79,7 @@ configure_package() {
                       --with-syslog  \
                       --without-json \
                       --without-ldb-lmdb \
+                      --host=x86_64 \
                       --nopyc --nopyo"
 
   PKG_SAMBA_TARGET="smbclient,client/smbclient,smbtree,nmblookup,testparm"
@@ -87,6 +87,27 @@ configure_package() {
   if [ "${SAMBA_SERVER}" = "yes" ]; then
     PKG_SAMBA_TARGET+=",nmbd,rpcd_classic,rpcd_epmapper,rpcd_winreg,samba-dcerpcd,smbpasswd,smbd/smbd"
   fi
+}
+
+pre_configure_host() {
+# samba uses its own build directory
+  cd ${PKG_BUILD}
+    rm -rf .${HOST_NAME}
+
+# work around link issues
+  #export LDFLAGS="${LDFLAGS} -lreadline -lncurses"
+}
+
+configure_host() {
+  cp ${PKG_DIR}/config/samba4-cache.txt ${PKG_BUILD}/cache.txt
+    echo "Checking uname machine type: \"${TARGET_ARCH}\"" >> ${PKG_BUILD}/cache.txt
+
+  #export COMPILE_ET=${TOOLCHAIN}/bin/heimdal_compile_et
+  #export ASN1_COMPILE=${TOOLCHAIN}/bin/heimdal_asn1_compile
+
+  PYTHON_CONFIG="${SYSROOT_PREFIX}/usr/bin/python3-config" \
+  python_LDFLAGS="" python_LIBDIR="" \
+  PYTHON=${TOOLCHAIN}/bin/python3 ./configure ${PKG_CONFIGURE_OPTS}
 }
 
 pre_configure_target() {
@@ -107,12 +128,13 @@ configure_target() {
   cp ${PKG_DIR}/config/samba4-cache.txt ${PKG_BUILD}/cache.txt
     echo "Checking uname machine type: \"${TARGET_ARCH}\"" >> ${PKG_BUILD}/cache.txt
 
-  export COMPILE_ET=${TOOLCHAIN}/bin/heimdal_compile_et
-  export ASN1_COMPILE=${TOOLCHAIN}/bin/heimdal_asn1_compile
+  #export COMPILE_ET=${TOOLCHAIN}/bin/heimdal_compile_et
+  #export ASN1_COMPILE=${TOOLCHAIN}/bin/heimdal_asn1_compile
 
   PYTHON_CONFIG="${SYSROOT_PREFIX}/usr/bin/python3-config" \
   python_LDFLAGS="" python_LIBDIR="" \
-  PYTHON=${TOOLCHAIN}/bin/python3 ./configure ${PKG_CONFIGURE_OPTS}
+  PYTHON=${TOOLCHAIN}/bin/python3 ./configure ${PKG_CONFIGURE_OPTS} \
+    --bundled-libraries='!asn1_compile,!compile_et'
 }
 
 # disable icu, there is no buildswitch to disable
