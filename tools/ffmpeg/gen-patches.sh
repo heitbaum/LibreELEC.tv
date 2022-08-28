@@ -2,7 +2,7 @@
 
 # base ffmpeg version
 KODI_FFMPEG_REPO="https://github.com/xbmc/FFmpeg"
-KODI_FFMPEG_VERSION="4.4-N-Alpha1"
+KODI_FFMPEG_VERSION="4.4.1-Nexus-Alpha1"
 
 ALL_FEATURE_SETS="v4l2-drmprime v4l2-request libreelec rpi"
 
