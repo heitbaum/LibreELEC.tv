@@ -1312,9 +1312,9 @@ index c3a7338a70..c28b58cd5d 100644
          sl->idr_pic_id = get_ue_golomb_long(&sl->gb);
  
 +    pos = sl->gb.index;
+     sl->poc_lsb = 0;
+     sl->delta_poc_bottom = 0;
      if (sps->poc_type == 0) {
-         sl->poc_lsb = get_bits(&sl->gb, sps->log2_max_poc_lsb);
- 
 @@ -1845,6 +1846,7 @@ static int h264_slice_header_parse(const H264Context *h, H264SliceContext *sl,
          if (pps->pic_order_present == 1 && picture_structure == PICT_FRAME)
              sl->delta_poc[1] = get_se_golomb(&sl->gb);
