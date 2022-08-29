@@ -10,10 +10,12 @@ PKG_SITE="https://github.com/sahlberg/libnfs"
 PKG_URL="https://github.com/sahlberg/libnfs/archive/libnfs-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A client library for accessing NFS shares over a network."
-PKG_TOOLCHAIN="autotools"
 
-PKG_CONFIGURE_OPTS_TARGET="--disable-examples \
-                           --without-libkrb5"
+PKG_CMAKE_OPTS_TARGET="-DENABLE_DOCUMENTATION=OFF \
+                       -DENABLE_EXAMPLES=OFF \
+                       --without-libkrb5 \
+                       -DENABLE_TESTS=OFF \
+                       -DENABLE_UTILS=ON"
 
 pre_configure_target() {
   export CFLAGS="${CFLAGS} -D_FILE_OFFSET_BITS=64"
