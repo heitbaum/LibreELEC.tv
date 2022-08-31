@@ -1,0 +1,29 @@
+diff -Nur a/meson.build b/meson.build
+--- a/meson.build	2022-02-03 13:11:32.000000000 +0000
++++ b/meson.build	2022-08-31 09:52:59.339858616 +0000
+@@ -84,3 +84,7 @@
+ 
+ pkg = import('pkgconfig')
+ pkg.generate(liblcms2_lib)
++
++if get_option('utils')
++  subdir('utils')
++endif
+diff -Nur a/meson_options.txt b/meson_options.txt
+--- a/meson_options.txt	1970-01-01 00:00:00.000000000 +0000
++++ b/meson_options.txt	2022-08-31 09:47:51.108625772 +0000
+@@ -0,0 +1,5 @@
++option(
++  'utils',
++  type : 'boolean',
++  value : false,
++  description : 'Enable building utils')
+diff -Nur a/utils/meson.build b/utils/meson.build
+--- a/utils/meson.build	1970-01-01 00:00:00.000000000 +0000
++++ b/utils/meson.build	2022-08-31 10:00:38.860045734 +0000
+@@ -0,0 +1,5 @@
++subdir('jpgicc')
++subdir('linkicc')
++subdir('psicc')
++subdir('tificc')
++subdir('transicc')
