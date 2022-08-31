@@ -12,18 +12,52 @@ diff -Nur a/meson.build b/meson.build
 diff -Nur a/meson_options.txt b/meson_options.txt
 --- a/meson_options.txt	1970-01-01 00:00:00.000000000 +0000
 +++ b/meson_options.txt	2022-08-31 09:47:51.108625772 +0000
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,11 @@
 +option(
 +  'utils',
 +  type : 'boolean',
 +  value : false,
 +  description : 'Enable building utils')
++
++option(
++  'jpeg',
++  type : 'boolean',
++  value : true,
++  description : 'Enable building with jpeg')
 diff -Nur a/utils/meson.build b/utils/meson.build
 --- a/utils/meson.build	1970-01-01 00:00:00.000000000 +0000
 +++ b/utils/meson.build	2022-08-31 10:00:38.860045734 +0000
 @@ -0,0 +1,5 @@
 +subdir('jpgicc')
-+subdir('linkicc')
-+subdir('psicc')
-+subdir('tificc')
-+subdir('transicc')
++#subdir('linkicc')
++#subdir('psicc')
++#subdir('tificc')
++#subdir('transicc')
+diff -Nu a/utils/jpgicc/meson.build b/utils/jpgicc/meson.build
+--- a/utils/jpgicc/meson.build	1970-01-01 00:00:00.000000000 +0000
++++ b/utils/jpgicc/meson.build	2022-08-31 11:30:50.147968050 +0000
+@@ -0,0 +1,24 @@
++#project('jpegicc', 'c')
++
++jpegicc_srcs = [
++  'jpgicc.c',
++  'iccjpeg.c',
++  '../common/xgetopt.c',
++  '../common/vprf.c',
++  '../common/utils.h',
++]
++
++inc_common_dirs = include_directories('../common')
++
++libjpeg_dep = dependency('libjpeg', required: get_option('jpeg'))
++if libjpeg_dep.found()
++  executable('jpegicc',
++    jpegicc_srcs,
++    c_args: cargs,
++    dependencies : [liblcms2_dep, libjpeg_dep],
++    include_directories : inc_common_dirs,
++    install : true)
++endif
++
++#man_MANS = jpgicc.1
++#EXTRA_DIST = iccjpeg.h $(man_MANS)
