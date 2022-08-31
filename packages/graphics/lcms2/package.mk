@@ -11,4 +11,4 @@ PKG_DEPENDS_TARGET="toolchain tiff"
 PKG_LONGDESC="An small-footprint color management engine, with special focus on accuracy and performance."
 PKG_BUILD_FLAGS="+pic"
 
-PKG_MESON_OPTS_TARGET="--default-library static"
+PKG_MESON_OPTS_TARGET="--default-library static -Dutils=false"
