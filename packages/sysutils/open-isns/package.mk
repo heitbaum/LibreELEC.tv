@@ -2,8 +2,8 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="open-isns"
-PKG_VERSION="0.101"
-PKG_SHA256="f672ec86b6c9e984843a7a28d76f07e26393499c486f86034b8b18caa8deb556"
+PKG_VERSION="0.102"
+PKG_SHA256="9611344733c0cdf14395f60880950ea4c3c7d6b765565b6493ad3e1afbe216de"
 PKG_LICENSE="LGPL2.1"
 PKG_SITE="https://github.com/open-iscsi/open-isns"
 PKG_URL="https://github.com/open-iscsi/open-isns/archive/v${PKG_VERSION}.tar.gz"
