@@ -15,6 +15,10 @@ PKG_CONFIGURE_OPTS_HOST="--disable-silent-rules \
                          --with-internal-glib --disable-dtrace \
                          --with-gnu-ld"
 
+pre_configure_host() {
+  export CC=${LOCAL_CC}
+}
+
 post_makeinstall_host() {
   mkdir -p ${SYSROOT_PREFIX}/usr/share/aclocal
     cp pkg.m4 ${SYSROOT_PREFIX}/usr/share/aclocal
