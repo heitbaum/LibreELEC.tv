@@ -8,9 +8,14 @@ PKG_SHA256="0d9020f06f3ddf17fb537dc228e1a56c927ee506b486f55fe2dc19f69bf0c8db"
 PKG_LICENSE="BSD"
 PKG_SITE="https://cmake.org/"
 PKG_URL="https://cmake.org/files/v$(get_pkg_version_maj_min)/cmake-${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_HOST="ccache:host pkg-config:host"
+PKG_DEPENDS_HOST="pkg-config:host"
 PKG_LONGDESC="A cross-platform, open-source make system."
 PKG_TOOLCHAIN="configure"
+
+pre_configure_host() {
+  export CC=${LOCAL_CC}
+  export CXX=${LOCAL_CXX}
+}
 
 configure_host() {
   ../configure --prefix=${TOOLCHAIN} \
