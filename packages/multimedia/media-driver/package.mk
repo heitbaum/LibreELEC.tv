@@ -3,11 +3,13 @@
 
 PKG_NAME="media-driver"
 PKG_VERSION="22.5.3"
-PKG_SHA256="65652b365d48be3c9f0b3c561502952b92ee5fcc587520b88d0d752cf2a6a3b5"
+PKG_VERSION="a2e00c82d129dc0b7b2dcdb790d34d91be38d249"
+PKG_SHA256="86bb6114cba1ffc3daefe443681ebbffdf20b2af38dd8e4c3351391da9f20750"
 PKG_ARCH="x86_64"
 PKG_LICENSE="MIT"
 PKG_SITE="https://01.org/linuxmedia"
 PKG_URL="https://github.com/intel/media-driver/archive/intel-media-${PKG_VERSION}.tar.gz"
+PKG_URL="https://github.com/intel/media-driver/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain libva libdrm gmmlib"
 PKG_LONGDESC="media-driver: The Intel(R) Media Driver for VAAPI is a new VA-API (Video Acceleration API) user mode driver supporting hardware accelerated decoding, encoding, and video post processing for GEN based graphics hardware."
 
