@@ -166,6 +166,8 @@ configure_package() {
 
   if target_has_feature neon; then
     KODI_NEON="-DENABLE_NEON=ON"
+  elif [ "${TARGET_ARCH}" = "x86_64" ]; then
+    KODI_NEON=""
   else
     KODI_NEON="-DENABLE_NEON=OFF"
   fi
