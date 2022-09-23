@@ -1,0 +1,89 @@
+From 29e8dc81f095b7c242e338effd77fcff67fea8ba Mon Sep 17 00:00:00 2001
+From: Martijn van Beurden <mvanb1@gmail.com>
+Date: Sat, 24 Sep 2022 16:53:42 +0200
+Subject: [PATCH 1/2] AC_CHECK_FILE -> simple test, doesn't fail when
+ cross-compiling
+
+This should fix https://github.com/xiph/flac/issues/463
+---
+ configure.ac | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index daa630430..825256480 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -375,11 +375,10 @@ if test "x$enable_doxygen_docs" != xfalse ; then
+ fi
+ AM_CONDITIONAL(FLaC__HAS_DOXYGEN, test -n "$DOXYGEN")
+ 
+-if test  "x$DOXYGEN" = "x"; then
+-	AC_CHECK_FILE($srcdir/doc/FLAC.tag,[HAVE_PREBUILT_FLAC_TAG=yes])
+-	AC_CHECK_FILE($srcdir/doc/api/modules.html,[HAVE_PREBUILT_API_DIR=yes])
++if test ! -n "$DOXYGEN" && test -f "$srcdir/doc/FLAC.tag" && test -f "$srcdir/doc/api/modules.html" ; then
++	HAS_PREBUILT_DOXYGEN=yes
+ fi
+-AM_CONDITIONAL(FLaC__HAS_PREBUILT_DOXYGEN, test "x$HAVE_PREBUILD_FLAG_TAG$HAVEPREBUILD_API_DIR" = "xyesyes")
++AM_CONDITIONAL(FLaC__HAS_PREBUILT_DOXYGEN, test "x$HAS_PREBUILT_DOXYGEN" = xyes)
+ 
+ AC_ARG_ENABLE(local-xmms-plugin,
+ AS_HELP_STRING([--enable-local-xmms-plugin],[Install XMMS plugin to ~/.xmms/Plugins instead of system location]),
+@@ -480,13 +479,14 @@ AM_LANGINFO_CODESET
+ AC_CHECK_PROGS(PANDOC, pandoc)
+ AM_CONDITIONAL(FLaC__HAS_PANDOC, test -n "$PANDOC")
+ if test -n "$PANDOC" ; then
+-AC_DEFINE(FLAC__HAS_PANDOC)
+-AH_TEMPLATE(FLAC__HAS_PANDOC, [define if you have pandoc])
++	AC_DEFINE(FLAC__HAS_PANDOC)
++	AH_TEMPLATE(FLAC__HAS_PANDOC, [define if you have pandoc])
+ else
+-AC_CHECK_FILE($srcdir/man/flac.1,[HAVE_MAN_FLAC=yes])
+-AC_CHECK_FILE($srcdir/man/metaflac.1,[HAVE_MAN_METAFLAC=yes])
++if [ -f "$srcdir/man/flac.1" ] && [ -f "$srcdir/man/metaflac.1" ] ; then
++	HAS_PREBUILT_MANPAGES = yes
+ fi
+-AM_CONDITIONAL(FLaC__HAS_PREBUILT_MANPAGES, test "x$HAVE_MAN_FLAC$HAVE_MAN_METAFLAC" = "xyesyes")
++fi
++AM_CONDITIONAL(FLaC__HAS_PREBUILT_MANPAGES, test "x$HAS_PREBUILT_MANPAGES" = "xyes")
+ 
+ AC_CHECK_LIB(rt, clock_gettime,
+         LIB_CLOCK_GETTIME=-lrt
+
+From e4311aa99170f1c19b3f20ea27a3ef3b7611f2b4 Mon Sep 17 00:00:00 2001
+From: Martijn van Beurden <mvanb1@gmail.com>
+Date: Mon, 26 Sep 2022 11:03:14 +0200
+Subject: [PATCH 2/2] Fix out-of-tree building with prebuilt docs
+
+---
+ configure.ac    | 4 ++--
+ doc/Makefile.am | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 825256480..631cf7a7d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -482,8 +482,8 @@ if test -n "$PANDOC" ; then
+ 	AC_DEFINE(FLAC__HAS_PANDOC)
+ 	AH_TEMPLATE(FLAC__HAS_PANDOC, [define if you have pandoc])
+ else
+-if [ -f "$srcdir/man/flac.1" ] && [ -f "$srcdir/man/metaflac.1" ] ; then
+-	HAS_PREBUILT_MANPAGES = yes
++if test -f "$srcdir/man/flac.1" && test -f "$srcdir/man/metaflac.1" ; then
++	HAS_PREBUILT_MANPAGES=yes
+ fi
+ fi
+ AM_CONDITIONAL(FLaC__HAS_PREBUILT_MANPAGES, test "x$HAS_PREBUILT_MANPAGES" = "xyes")
+diff --git a/doc/Makefile.am b/doc/Makefile.am
+index 593d691bb..20e291e3b 100644
+--- a/doc/Makefile.am
++++ b/doc/Makefile.am
+@@ -56,7 +56,7 @@ if FLaC__HAS_PREBUILT_DOXYGEN
+ # handle 'api/' specially:
+ install-data-local:
+ 	$(mkinstalldirs) $(DESTDIR)$(docdir)/api
+-	(cd $(builddir)/api && $(INSTALL_DATA) * $(DESTDIR)$(docdir)/api)
++	(cd $(srcdir)/api && $(INSTALL_DATA) * $(DESTDIR)$(docdir)/api)
+ uninstall-local:
+ 	rm -rf $(DESTDIR)$(docdir)/api
+ endif
