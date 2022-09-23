@@ -1,0 +1,72 @@
+commit 612c9ff444cec40925108397695de261010fd803
+Author: Rudi Heitbaum <rudi@heitbaum.com>
+Date:   Fri Sep 23 06:28:27 2022 +0000
+
+    revert Include api dir in distribution
+
+diff --git a/configure.ac b/configure.ac
+index daa63043..0365028a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -375,12 +375,6 @@ if test "x$enable_doxygen_docs" != xfalse ; then
+ fi
+ AM_CONDITIONAL(FLaC__HAS_DOXYGEN, test -n "$DOXYGEN")
+ 
+-if test  "x$DOXYGEN" = "x"; then
+-	AC_CHECK_FILE($srcdir/doc/FLAC.tag,[HAVE_PREBUILT_FLAC_TAG=yes])
+-	AC_CHECK_FILE($srcdir/doc/api/modules.html,[HAVE_PREBUILT_API_DIR=yes])
+-fi
+-AM_CONDITIONAL(FLaC__HAS_PREBUILT_DOXYGEN, test "x$HAVE_PREBUILD_FLAG_TAG$HAVEPREBUILD_API_DIR" = "xyesyes")
+-
+ AC_ARG_ENABLE(local-xmms-plugin,
+ AS_HELP_STRING([--enable-local-xmms-plugin],[Install XMMS plugin to ~/.xmms/Plugins instead of system location]),
+ [case "${enableval}" in
+diff --git a/doc/Makefile.am b/doc/Makefile.am
+index 593d691b..cb0df6f8 100644
+--- a/doc/Makefile.am
++++ b/doc/Makefile.am
+@@ -25,38 +25,17 @@ FLAC.tag: Doxyfile
+ 	rm -rf api
+ 	mv doxytmp/html api
+ 	rm -rf doxytmp
+-
+-doc_DATA = \
+-	FLAC.tag
+ else
+-if FLaC__HAS_PREBUILT_DOXYGEN
++FLAC.tag:
++	touch $@
++	mkdir -p api
++endif
++
+ doc_DATA = \
+ 	FLAC.tag
+-endif
+-endif
+ 
+ EXTRA_DIST = Doxyfile.in doxygen.footer.html \
+-	isoflac.txt $(doc_DATA) CMakeLists.txt \
+-	api
++	isoflac.txt $(doc_DATA) CMakeLists.txt
+ 
+-if FLaC__HAS_DOXYGEN
+-# The install targets don't copy whole directories so we have to
+-# handle 'api/' specially:
+-install-data-local:
+-	$(mkinstalldirs) $(DESTDIR)$(docdir)/api
+-	(cd $(builddir)/api && $(INSTALL_DATA) * $(DESTDIR)$(docdir)/api)
+-uninstall-local:
+-	rm -rf $(DESTDIR)$(docdir)/api
+ distclean-local:
+ 	rm -rf FLAC.tag api doxytmp
+-endif
+-
+-if FLaC__HAS_PREBUILT_DOXYGEN
+-# The install targets don't copy whole directories so we have to
+-# handle 'api/' specially:
+-install-data-local:
+-	$(mkinstalldirs) $(DESTDIR)$(docdir)/api
+-	(cd $(builddir)/api && $(INSTALL_DATA) * $(DESTDIR)$(docdir)/api)
+-uninstall-local:
+-	rm -rf $(DESTDIR)$(docdir)/api
+-endif

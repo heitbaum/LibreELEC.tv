@@ -1,0 +1,49 @@
+commit 4a96705598f0164e40d765185a51d6c311e0c793
+Author: Rudi Heitbaum <rudi@heitbaum.com>
+Date:   Fri Sep 23 06:31:02 2022 +0000
+
+    revert Do not make empty man pages, use either pandoc or prebuild
+
+diff --git a/configure.ac b/configure.ac
+index 0365028a..e8a2344f 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -476,11 +476,7 @@ AM_CONDITIONAL(FLaC__HAS_PANDOC, test -n "$PANDOC")
+ if test -n "$PANDOC" ; then
+ AC_DEFINE(FLAC__HAS_PANDOC)
+ AH_TEMPLATE(FLAC__HAS_PANDOC, [define if you have pandoc])
+-else
+-AC_CHECK_FILE($srcdir/man/flac.1,[HAVE_MAN_FLAC=yes])
+-AC_CHECK_FILE($srcdir/man/metaflac.1,[HAVE_MAN_METAFLAC=yes])
+ fi
+-AM_CONDITIONAL(FLaC__HAS_PREBUILT_MANPAGES, test "x$HAVE_MAN_FLAC$HAVE_MAN_METAFLAC" = "xyesyes")
+ 
+ AC_CHECK_LIB(rt, clock_gettime,
+         LIB_CLOCK_GETTIME=-lrt
+diff --git a/man/Makefile.am b/man/Makefile.am
+index 2e8afe3f..8ffd98d1 100644
+--- a/man/Makefile.am
++++ b/man/Makefile.am
+@@ -22,13 +22,16 @@ flac.1: flac.md
+ 
+ metaflac.1: metaflac.md
+ 	pandoc --standalone --to man $? > $@
++	
++else
++flac.1:
++	echo "*** Warning: docbook-to-man not found; man pages will not be built."
++	touch $@
+ 
+-man_MANS = flac.1 metaflac.1
++metaflac.1:
++	touch $@
++endif
+ 
+-else
+-if FLaC__HAS_PREBUILT_MANPAGES
+ man_MANS = flac.1 metaflac.1
+-endif
+-endif
+ 
+-EXTRA_DIST = flac.1 metaflac.1 flac.md metaflac.md
++EXTRA_DIST = $(man_MANS) flac.md metaflac.md
