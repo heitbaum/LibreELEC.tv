@@ -16,10 +16,11 @@ This project is for Rockchip SoC devices
 
 **RK3399**
 * [96rocks ROCK960](devices/RK3399)
+* [Firefly ROC-RK3399-PC](devices/RK3399)
 * [Hugsun X99 TV BOX](devices/RK3399)
-* [Khadas Edge](devices/RK3399)
 * [FriendlyARM NanoPC-T4](devices/RK3399)
 * [FriendlyARM NanoPi M4](devices/RK3399)
+* [Khadas Edge](devices/RK3399)
 * [Orange Pi RK3399](devices/RK3399)
 * [PINE64 RockPro64](devices/RK3399)
 * [Radxa ROCK Pi 4](devices/RK3399)
@@ -28,6 +29,9 @@ This project is for Rockchip SoC devices
 * [ROC-RK3399-PC](devices/RK3399)
 * [ROC-RK3399-PC-PLUS](devices/RK3399)
 * [Rockchip Sapphire Board](devices/RK3399)
+
+**RK3568**
+* [Firefly ROC-RK3568-PC](devices/RK3568)
 
 **My single-board computer is not listed, will it be added in the future?**<br>
 If your single-board computer uses a current generation SoC listed on http://opensource.rock-chips.com/wiki_Main_Page the odds are in your favor.
