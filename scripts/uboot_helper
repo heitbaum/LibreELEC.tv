@@ -413,6 +413,12 @@ devices = \
         'rockchip_legacy_boot': '1'
       },
     },
+    'RK3568': {
+      'roc-pc': {
+        'dtb': 'rk3568-roc-pc.dtb',
+        'config': 'evb-rk3568_defconfig'
+      },
+    },
   },
   'Samsung': {
     'Exynos': {
