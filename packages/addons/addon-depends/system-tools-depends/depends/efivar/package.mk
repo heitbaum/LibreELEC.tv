@@ -11,7 +11,7 @@ PKG_URL="https://github.com/rhboot/efivar/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_HOST="toolchain:host"
 PKG_DEPENDS_TARGET="toolchain efivar:host"
 PKG_LONGDESC="Tools and library to manipulate EFI variables."
-PKG_BUILD_FLAGS="-gold +pic"
+PKG_BUILD_FLAGS="-gold"
 
 pre_make_host() {
   export TOPDIR=${PKG_BUILD}
@@ -27,7 +27,6 @@ pre_make_target() {
 }
 
 make_target() {
-  LDFLAGS+=" -Wl,--no-warn-rwx-segments"
   make CROSS_COMPILE=${TARGET_NAME}- -C src/ libefivar.a libefiboot.a efivar.h efivar
 }
 
