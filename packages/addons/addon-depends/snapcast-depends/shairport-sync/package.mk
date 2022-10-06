@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="shairport-sync"
-PKG_VERSION="4.1-rc0"
-PKG_SHA256="133103d00a2f668ba803bf88ad192ce2b5bd900fc8e4bfbbcb9f164895f81a40"
+PKG_VERSION="4.1-rc1"
+PKG_SHA256="d0a57c60fac41527751ac1def4e4c34a88f1090db0a1657b2864de434ed086ca"
 PKG_LICENSE="OSS"
 PKG_SITE="https://github.com/mikebrady/shairport-sync"
 PKG_URL="https://github.com/mikebrady/shairport-sync/archive/${PKG_VERSION}.tar.gz"
@@ -24,4 +24,3 @@ PKG_CONFIGURE_OPTS_TARGET="--with-alsa \
                            --with-stdout \
                            --without-configfiles \
                            --with-airplay-2"
-                           #--with-systemd
