@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="dbus"
-PKG_VERSION="1.15.0"
-PKG_SHA256="5073c8cb9ad20226647bb38f4965182b762a6e1f595ccdc8e59411014bfd640a"
+PKG_VERSION="1.15.2"
+PKG_SHA256="7e640803084af59f5e477b7ded11fd888b5380910a895c51ca3aedd63c0626ca"
 PKG_LICENSE="GPL"
 PKG_SITE="https://dbus.freedesktop.org"
 PKG_URL="https://dbus.freedesktop.org/releases/${PKG_NAME}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
