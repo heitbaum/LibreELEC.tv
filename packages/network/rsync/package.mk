@@ -2,11 +2,12 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="rsync"
-PKG_VERSION="3.2.6"
-PKG_SHA256="fb3365bab27837d41feaf42e967c57bd3a47bc8f10765a3671efd6a3835454d3"
+PKG_VERSION="3.2.7pre1"
+PKG_SHA256="f9423681e6751fcefa39de00fb4dcb9db42cc12fbe61e39e3413e9000ea2dc87"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://rsync.samba.org"
 PKG_URL="https://download.samba.org/pub/rsync/src/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_URL="https://download.samba.org/pub/rsync/src-previews/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_HOST="autotools:host zlib:host"
 PKG_DEPENDS_TARGET="toolchain zlib openssl"
 PKG_LONGDESC="A very fast method for bringing remote files into sync."
@@ -33,6 +34,14 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-acl-support \
                            --disable-zstd \
                            --with-included-popt \
                            --without-included-zlib"
+
+pre_configure_host() {
+  HOST_CONFIGURE_OPTS=$(echo ${HOST_CONFIGURE_OPTS} | sed -e "s|--disable-static||" -e "s|--enable-shared||")
+}
+
+pre_configure_target() {
+  TARGET_CONFIGURE_OPTS=$(echo ${TARGET_CONFIGURE_OPTS} | sed -e "s|--disable-static||" -e "s|--enable-shared||")
+}
 
 pre_make_host() {
   # do not detect LE git version
