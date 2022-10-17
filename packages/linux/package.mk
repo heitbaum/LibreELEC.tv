@@ -28,9 +28,10 @@ case "${LINUX}" in
     PKG_SOURCE_NAME="linux-${LINUX}-${PKG_VERSION}.tar.gz"
     ;;
   *)
-    PKG_VERSION="6.0.11"
-    PKG_SHA256="2bae6131e64971e1e34ff395fa542971134c857bdb0b29069ab847c7c9a9c762"
+    PKG_VERSION="6.1-rc8"
+    PKG_SHA256="61063135667b1e6177cf933cf12f08f2d8ce6a094d61616d0869466c3b6dc7ae"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+    PKG_URL="https://git.kernel.org/torvalds/t/linux-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default"
     ;;
 esac
