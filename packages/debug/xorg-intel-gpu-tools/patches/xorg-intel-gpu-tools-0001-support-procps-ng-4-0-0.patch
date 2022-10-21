@@ -12,7 +12,7 @@
 +  # do something
 +else
 +  # find procps-ng >= 4.x.x
-+  libprocps = dependency('libproc-2', required : true)
++  libprocps = dependency('libproc2', required : true)
 +endif
 +
  
@@ -25,7 +25,7 @@
  #include <grp.h>
  
 -#include <proc/readproc.h>
-+#include <procps/readproc.h>
++#include <libproc2/readproc.h>
  #include <libudev.h>
  
  #include "drmtest.h"
