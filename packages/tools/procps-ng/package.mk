@@ -18,9 +18,9 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --disable-modern-top \
                            --enable-static"
 
-PKG_MAKE_OPTS_TARGET="free top/top proc/libproc-2.la proc/libproc-2.pc"
+PKG_MAKE_OPTS_TARGET="src/free src/top/top library/libproc2.la library/libproc2.pc"
 
-PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-proc_libproc_2_la_includeHEADERS"
+PKG_MAKEINSTALL_OPTS_TARGET="install-libLTLIBRARIES install-pkgconfigDATA install-library_libproc2_la_includeHEADERS"
 
 pre_configure_target() {
   sed -i -e "s/UNKNOWN/${PKG_VERSION}/" ../configure
@@ -28,10 +28,12 @@ pre_configure_target() {
 
 makeinstall_target() {
   mkdir -p ${INSTALL}/usr/bin
-    cp -P ${PKG_BUILD}/.${TARGET_NAME}/free ${INSTALL}/usr/bin
-    cp -P ${PKG_BUILD}/.${TARGET_NAME}/top/top ${INSTALL}/usr/bin
+    cp -P ${PKG_BUILD}/.${TARGET_NAME}/src/free ${INSTALL}/usr/bin
+    cp -P ${PKG_BUILD}/.${TARGET_NAME}/src/top/top ${INSTALL}/usr/bin
 
   make DESTDIR=${SYSROOT_PREFIX} -j1 ${PKG_MAKEINSTALL_OPTS_TARGET}
 
-  sed 's@proc/misc.h@procps/misc.h@' ${PKG_BUILD}/proc/readproc.h > ${SYSROOT_PREFIX}/usr/include/procps/readproc.h
+  sed 's@proc/misc.h@procps/misc.h@' \
+    ${PKG_BUILD}/library/include/readproc.h \
+    > ${SYSROOT_PREFIX}/usr/include/libproc2/readproc.h
 }
