@@ -51,7 +51,7 @@
     cortex-a53|cortex-a55|cortex-a72.cortex-a53)
       TARGET_SUBARCH=armv8-a
       TARGET_ABI=eabi
-      TARGET_FPU_FLAGS="-mfloat-abi=$TARGET_FLOAT -mfpu=$TARGET_FPU"
+      TARGET_FPU_FLAGS=""
       TARGET_FEATURES+=" neon"
       ;;
   esac
@@ -69,7 +69,7 @@
   fi
 
 # setup ARCH specific *FLAGS
-  TARGET_CFLAGS="-march=$TARGET_VARIANT -mtune=$TARGET_CPU -mabi=aapcs-linux -Wno-psabi -Wa,-mno-warn-deprecated"
+  TARGET_CFLAGS="-march=$TARGET_VARIANT -mtune=$TARGET_CPU -Wno-psabi -Wa,-mno-warn-deprecated"
   [ -n "$TARGET_FPU" ] && TARGET_CFLAGS="$TARGET_CFLAGS $TARGET_FPU_FLAGS"
   TARGET_LDFLAGS=""
   TARGET_ARCH_GCC_OPTS="--with-abi=aapcs-linux --with-arch=$TARGET_SUBARCH --with-float=$TARGET_FLOAT --with-fpu=$TARGET_FPU"
