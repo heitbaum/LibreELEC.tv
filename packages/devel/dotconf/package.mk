@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
+
+PKG_NAME="dotconf"
+PKG_VERSION="1.4.1"
+PKG_SHA256="5922c46cacf99b2ecc4853d28a2bda4a489292e73276e604bd9cba29dfca892d"
+PKG_LICENSE="LGPL-2.1"
+PKG_SITE="https://github.com/williamh"
+PKG_URL="https://github.com/williamh/dotconf/archive/refs/tags/v${PKG_VERSION}.tar.gz"
+PKG_DEPENDS_TARGET="toolchain"
+PKG_LONGDESC="dot.conf configuration file parser"
+PKG_TOOLCHAIN="autotools"
