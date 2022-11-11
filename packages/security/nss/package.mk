@@ -53,6 +53,8 @@ make_target() {
   make ${TARGET_x86_64} clean || true
   rm -rf ${PKG_BUILD}/dist
 
+  sed -i -e "s/^CPU_TAG = _.*/CPU_TAG = _${TARGET_ARCH}/" coreconf/Linux.mk
+
   make BUILD_OPT=1 ${TARGET_USE_64} ${TARGET_x86_64} \
      NSS_USE_SYSTEM_SQLITE=1 \
      NSPR_INCLUDE_DIR=${SYSROOT_PREFIX}/usr/include/nspr \
