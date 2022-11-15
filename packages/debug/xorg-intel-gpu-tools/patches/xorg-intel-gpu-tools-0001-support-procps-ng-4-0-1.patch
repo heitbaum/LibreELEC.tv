@@ -1,0 +1,242 @@
+--- a/lib/igt_aux.c
++++ b/lib/igt_aux.c
+@@ -52,8 +52,16 @@
+ #include <assert.h>
+ #include <grp.h>
+ 
++#ifdef HAVE_LIBPROCPS
+ #include <proc/readproc.h>
++#endif
++#ifdef HAVE_LIBPROC2
++#include <libproc2/pids.h>
++#endif
++
+ #include <libudev.h>
++#include <linux/limits.h>
++#include <dirent.h>
+ 
+ #include "drmtest.h"
+ #include "i915_drm.h"
+@@ -1190,6 +1198,7 @@
+  */
+ int igt_is_process_running(const char *comm)
+ {
++#if HAVE_LIBPROCPS
+ 	PROCTAB *proc;
+ 	proc_t *proc_info;
+ 	bool found = false;
+@@ -1208,6 +1217,26 @@
+ 
+ 	closeproc(proc);
+ 	return found;
++#endif
++#if HAVE_LIBPROC2
++	enum pids_item Item[] = { PIDS_CMD };
++	struct pids_info *info = NULL;
++	struct pids_stack *stack;
++	char *pid_comm;
++	bool found = false;
++
++	if (procps_pids_new(&info, Item, 1) < 0)
++	    return false;
++	while ((stack = procps_pids_get(info, PIDS_FETCH_TASKS_ONLY))) {
++	    pid_comm = PIDS_VAL(0, str, stack, info);
++	    if (!strncasecmp(pid_comm, comm, strlen(pid_comm))) {
++		found = true;
++		break;
++	    }
++	}
++	procps_pids_unref(&info);
++	return found;
++#endif
+ }
+ 
+ /**
+@@ -1224,6 +1253,7 @@
+  */
+ int igt_terminate_process(int sig, const char *comm)
+ {
++#if HAVE_LIBPROCPS
+ 	PROCTAB *proc;
+ 	proc_t *proc_info;
+ 	int err = 0;
+@@ -1245,6 +1275,29 @@
+ 
+ 	closeproc(proc);
+ 	return err;
++#endif
++#if HAVE_LIBPROC2
++	enum pids_item Items[] = { PIDS_ID_PID, PIDS_CMD };
++	struct pids_info *info = NULL;
++	struct pids_stack *stack;
++	char *pid_comm;
++	int pid;
++	int err = 0;
++
++	if (procps_pids_new(&info, Items, 2) < 0)
++		return -errno;
++	while ((stack = procps_pids_get(info, PIDS_FETCH_TASKS_ONLY))) {
++		pid = PIDS_VAL(0, s_int, stack, info);
++		pid_comm = PIDS_VAL(1, str, stack, info);
++		if (!strncasecmp(pid_comm, comm, strlen(pid_comm))) {
++			if (kill(pid, sig) < 0)
++				err = -errno;
++			break;
++		}
++	}
++	procps_pids_unref(&info);
++	return err;
++#endif
+ }
+ 
+ struct pinfo {
+@@ -1314,9 +1367,9 @@
+ }
+ 
+ static void
+-igt_show_stat(proc_t *info, int *state, const char *fn)
++igt_show_stat(const pid_t tid, const char *cmd, int *state, const char *fn)
+ {
+-	struct pinfo p = { .pid = info->tid, .comm = info->cmd, .fn = fn };
++	struct pinfo p = { .pid = tid, .comm = cmd, .fn = fn };
+ 
+ 	if (!*state)
+ 		igt_show_stat_header();
+@@ -1326,7 +1379,7 @@
+ }
+ 
+ static void
+-__igt_lsof_fds(proc_t *proc_info, int *state, char *proc_path, const char *dir)
++__igt_lsof_fds(const pid_t tid, const char *cmd, int *state, char *proc_path, const char *dir)
+ {
+ 	struct dirent *d;
+ 	struct stat st;
+@@ -1373,7 +1426,7 @@
+ 		dirn = dirname(copy_fd_lnk);
+ 
+ 		if (!strncmp(dir, dirn, strlen(dir)))
+-			igt_show_stat(proc_info, state, fd_lnk);
++			igt_show_stat(tid, cmd, state, fd_lnk);
+ 
+ 		free(copy_fd_lnk);
+ 		free(fd_lnk);
+@@ -1389,13 +1442,14 @@
+ static void
+ __igt_lsof(const char *dir)
+ {
+-	PROCTAB *proc;
+-	proc_t *proc_info;
+-
+ 	char path[30];
+ 	char *name_lnk;
+ 	struct stat st;
+ 	int state = 0;
++#ifdef HAVE_LIBPROCPS
++	PROCTAB *proc;
++	proc_t *proc_info;
++
+ 
+ 	proc = openproc(PROC_FILLCOM | PROC_FILLSTAT | PROC_FILLARG);
+ 	igt_assert(proc != NULL);
+@@ -1416,19 +1470,57 @@
+ 		name_lnk[read] = '\0';
+ 
+ 		if (!strncmp(dir, name_lnk, strlen(dir)))
+-			igt_show_stat(proc_info, &state, name_lnk);
++			igt_show_stat(proc_info->tid, proc_info->cmd, &state, name_lnk);
+ 
+ 		/* check also fd, seems that lsof(8) doesn't look here */
+ 		memset(path, 0, sizeof(path));
+ 		snprintf(path, sizeof(path), "/proc/%d/fd", proc_info->tid);
+ 
+-		__igt_lsof_fds(proc_info, &state, path, dir);
++		__igt_lsof_fds(proc_info->tid, proc_info->cmd, &state, path, dir);
+ 
+ 		free(name_lnk);
+ 		freeproc(proc_info);
+ 	}
+ 
+ 	closeproc(proc);
++#endif
++#ifdef HAVE_LIBPROC2
++	enum pids_item Items[] = { PIDS_ID_PID, PIDS_CMD };
++	struct pids_info *info = NULL;
++	struct pids_stack *stack;
++
++	if (procps_pids_new(&info, Items, 2) < 0)
++		return;
++	while ((stack = procps_pids_get(info, PIDS_FETCH_TASKS_ONLY))) {
++		ssize_t read;
++		int tid = PIDS_VAL(0, s_int, stack, info);
++		char *pid_comm = PIDS_VAL(1, str, stack, info);
++
++		/* check current working directory */
++		memset(path, 0, sizeof(path));
++		snprintf(path, sizeof(path), "/proc/%d/cwd", tid);
++
++		if (stat(path, &st) == -1)
++			continue;
++
++		name_lnk = malloc(st.st_size + 1);
++
++		igt_assert((read = readlink(path, name_lnk, st.st_size + 1)));
++		name_lnk[read] = '\0';
++
++		if (!strncmp(dir, name_lnk, strlen(dir)))
++			igt_show_stat(tid, pid_comm, &state, name_lnk);
++
++		/* check also fd, seems that lsof(8) doesn't look here */
++		memset(path, 0, sizeof(path));
++		snprintf(path, sizeof(path), "/proc/%d/fd", tid);
++
++		__igt_lsof_fds(tid, pid_comm, &state, path, dir);
++
++		free(name_lnk);
++	}
++	procps_pids_unref(&info);
++#endif
+ }
+ 
+ /**
+--- a/meson.build
++++ b/meson.build
+@@ -121,7 +121,15 @@
+ 
+ pciaccess = dependency('pciaccess', version : '>=0.10')
+ libkmod = dependency('libkmod')
+-libprocps = dependency('libprocps', required : true)
++libprocps = dependency('libprocps', required : false)
++libproc2 = dependency('libproc2', required : false)
++if libprocps.found()
++  config.set('HAVE_LIBPROCPS', 1)
++elif libproc2.found()
++  config.set('HAVE_LIBPROC2', 1)
++else
++  error('Either libprocps or libproc2 is required')
++endif
+ 
+ libunwind = dependency('libunwind', required : get_option('libunwind'))
+ build_info += 'With libunwind: @0@'.format(libunwind.found())
+--- a/lib/meson.build
++++ b/lib/meson.build
+@@ -97,7 +97,6 @@
+ 	libdrm,
+ 	libdw,
+ 	libkmod,
+-	libprocps,
+ 	libudev,
+ 	math,
+ 	pciaccess,
+@@ -148,6 +147,12 @@
+ 	lib_sources += 'igt_chamelium_stream.c'
+ endif
+ 
++if libprocps.found()
++	lib_deps += libprocps
++else
++	lib_deps += libproc2
++endif
++
+ if get_option('srcdir') != ''
+     srcdir = join_paths(get_option('srcdir'), 'tests')
+ else
