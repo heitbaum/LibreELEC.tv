@@ -1,0 +1,865 @@
+From dc2d963989b96161472b2cd38cef5d1f4851ea34 Mon Sep 17 00:00:00 2001
+From: Dmitry Goncharov <dgoncharov@users.sf.net>
+Date: Sun, 27 Nov 2022 14:09:17 -0500
+Subject: [SV 63347] Always add command line variable assignments to MAKEFLAGS
+
+This commit introduces two visible changes:
+1. Keep command line variable assignments in MAKEFLAGS at all times,
+   even while parsing makefiles.
+2. Define makeflags immediately when a makefile modifies MAKEFLAGS.
+
+The new MAKEFLAGS and MAKEOVERRIDES initialization procedure:
+1. decode_switches (argc, argv, o_command) is called to parse command
+   line variable assignments.
+2. Command line variable assignments go through quote_for_env.
+   Initialize -*-command-variables-*- to the quoted values.
+3. MAKEOVERRIDES is initialized to refer to -*-command-variables-*-
+   with origin o_env to keep the definitions in the database intact.
+4. define_makeflags() is called which adds MAKEOVERRIDES to MAKEFLAGS.
+5. Makefiles are parsed.  If a makefile modifies MAKEFLAGS, the new
+   value of MAKEFLAGS is defined right away.
+6. Env switches are decoded again as o_env.  The definitions set by
+   decode_switches at step 1 stay intact, as o_command beats o_env.
+
+We must preserve the original intact definitions in order to detect
+failure cases; for example:
+  $ cat makefile
+  all:; $(hello)
+  $ make hello='$(world'
+  makefile:1: *** unterminated variable reference.  Stop.
+
+* src/makeint.h: Declare enum variable_origin, struct variable and
+define_makeflags().  Add parameter origin to decode_env_switches().
+* src/main.c (define_makeflags): Remove "all". If a variable is
+assigned on the command line then append MAKEOVERRIDES to MAKEFLAGS.
+(decode_env_switches): Replace parameter env with origin.
+(decode_switches): Replace parameter env with origin.
+Treat origin == o_command as env == 0.
+(handle_non_switch_argument): Replace parameter env with origin.
+Treat origin == o_command as env == 0.
+(main): Call decode_switches() with origin==o_command before parsing
+makefiles.  Call decode_switches() with origin==o_env after parsing
+makefiles.
+* src/variable.c (set_special_var): Define makeflags at parse time,
+each time a makefile modifies MAKEFLAGS.
+(do_variable_definition): Strip command line variable assignments from
+MAKEFLAGS before appending extra flags.  set_special_var() adds them
+back.
+* tests/scripts/variables/MAKEFLAGS: Add tests.
+---
+ src/main.c                        |  90 ++++++-------
+ src/makeint.h                     |   6 +-
+ src/variable.c                    |  72 ++++++----
+ tests/scripts/variables/MAKEFLAGS | 273 +++++++++++++++++++++++++++++++++-----
+ 4 files changed, 336 insertions(+), 105 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index b31ddd4..d8a7372 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -105,8 +105,8 @@ double atof ();
+ static void clean_jobserver (int status);
+ static void print_data_base (void);
+ static void print_version (void);
+-static void decode_switches (int argc, const char **argv, int env);
+-static struct variable *define_makeflags (int all, int makefile);
++static void decode_switches (int argc, const char **argv,
++                             enum variable_origin origin);
+ static char *quote_for_env (char *out, const char *in);
+ static void initialize_global_hash_tables (void);
+ 
+@@ -1572,13 +1572,13 @@ main (int argc, char **argv, char **envp)
+   /* Decode the switches.  */
+   if (lookup_variable (STRING_SIZE_TUPLE (GNUMAKEFLAGS_NAME)))
+     {
+-      decode_env_switches (STRING_SIZE_TUPLE (GNUMAKEFLAGS_NAME));
++      decode_env_switches (STRING_SIZE_TUPLE (GNUMAKEFLAGS_NAME), o_command);
+ 
+       /* Clear GNUMAKEFLAGS to avoid duplication.  */
+       define_variable_cname (GNUMAKEFLAGS_NAME, "", o_env, 0);
+     }
+ 
+-  decode_env_switches (STRING_SIZE_TUPLE (MAKEFLAGS_NAME));
++  decode_env_switches (STRING_SIZE_TUPLE (MAKEFLAGS_NAME), o_command);
+ 
+ #if 0
+   /* People write things like:
+@@ -1599,7 +1599,7 @@ main (int argc, char **argv, char **envp)
+     int env_slots = arg_job_slots;
+     arg_job_slots = INVALID_JOB_SLOTS;
+ 
+-    decode_switches (argc, (const char **)argv, 0);
++    decode_switches (argc, (const char **)argv, o_command);
+     argv_slots = arg_job_slots;
+ 
+     if (arg_job_slots == INVALID_JOB_SLOTS)
+@@ -2022,7 +2022,7 @@ main (int argc, char **argv, char **envp)
+ 
+   /* Set up the MAKEFLAGS and MFLAGS variables for makefiles to see.
+      Initialize it to be exported but allow the makefile to reset it.  */
+-  define_makeflags (0, 0)->export = v_export;
++  define_makeflags (0)->export = v_export;
+ 
+   /* Define the default variables.  */
+   define_default_variables ();
+@@ -2072,12 +2072,12 @@ main (int argc, char **argv, char **envp)
+     arg_job_slots = INVALID_JOB_SLOTS;
+ 
+     /* Decode switches again, for variables set by the makefile.  */
+-    decode_env_switches (STRING_SIZE_TUPLE (GNUMAKEFLAGS_NAME));
++    decode_env_switches (STRING_SIZE_TUPLE (GNUMAKEFLAGS_NAME), o_env);
+ 
+     /* Clear GNUMAKEFLAGS to avoid duplication.  */
+     define_variable_cname (GNUMAKEFLAGS_NAME, "", o_override, 0);
+ 
+-    decode_env_switches (STRING_SIZE_TUPLE (MAKEFLAGS_NAME));
++    decode_env_switches (STRING_SIZE_TUPLE (MAKEFLAGS_NAME), o_env);
+ #if 0
+     decode_env_switches (STRING_SIZE_TUPLE ("MFLAGS"));
+ #endif
+@@ -2260,7 +2260,7 @@ main (int argc, char **argv, char **envp)
+ 
+   /* Set up MAKEFLAGS and MFLAGS again, so they will be right.  */
+ 
+-  define_makeflags (1, 0);
++  define_makeflags (0);
+ 
+   /* Make each 'struct goaldep' point at the 'struct file' for the file
+      depended on.  Also do magic for special targets.  */
+@@ -2420,7 +2420,7 @@ main (int argc, char **argv, char **envp)
+       }
+ 
+       /* Set up 'MAKEFLAGS' specially while remaking makefiles.  */
+-      define_makeflags (1, 1);
++      define_makeflags (1);
+ 
+       {
+         int orig_db_level = db_level;
+@@ -2812,7 +2812,7 @@ main (int argc, char **argv, char **envp)
+     }
+ 
+   /* Set up 'MAKEFLAGS' again for the normal targets.  */
+-  define_makeflags (1, 0);
++  define_makeflags (0);
+ 
+   /* Set always_make_flag if -B was given.  */
+   always_make_flag = always_make_set;
+@@ -3000,7 +3000,7 @@ init_switches (void)
+ 
+ /* Non-option argument.  It might be a variable definition.  */
+ static void
+-handle_non_switch_argument (const char *arg, int env)
++handle_non_switch_argument (const char *arg, enum variable_origin origin)
+ {
+   struct variable *v;
+ 
+@@ -3033,7 +3033,7 @@ handle_non_switch_argument (const char *arg, int env)
+       }
+   }
+ #endif
+-  v = try_variable_definition (0, arg, o_command, 0);
++  v = try_variable_definition (0, arg, origin, 0);
+   if (v != 0)
+     {
+       /* It is indeed a variable definition.  If we don't already have this
+@@ -3053,11 +3053,12 @@ handle_non_switch_argument (const char *arg, int env)
+           command_variables = cv;
+         }
+     }
+-  else if (! env)
++  else if (arg[0] != '\0' && origin == o_command)
+     {
+-      /* Not an option or variable definition; it must be a goal
+-         target!  Enter it as a file and add it to the dep chain of
+-         goals.  */
++      /* Not an option or variable definition; it must be a goal target.
++         Enter it as a file and add it to the dep chain of goals.
++         Check ARG[0] because if the top makefile resets MAKEOVERRIDES
++         then ARG points to an empty string in the submake.  */
+       struct file *f = enter_file (strcache_add (expand_command_line_file (arg)));
+       f->cmd_target = 1;
+ 
+@@ -3105,7 +3106,7 @@ handle_non_switch_argument (const char *arg, int env)
+    They came from the environment if ENV is nonzero.  */
+ 
+ static void
+-decode_switches (int argc, const char **argv, int env)
++decode_switches (int argc, const char **argv, enum variable_origin origin)
+ {
+   int bad = 0;
+   const struct command_switch *cs;
+@@ -3119,7 +3120,7 @@ decode_switches (int argc, const char **argv, int env)
+ 
+   /* Let getopt produce error messages for the command line,
+      but not for options from the environment.  */
+-  opterr = !env;
++  opterr = origin == o_command;
+   /* Reset getopt's state.  */
+   optind = 0;
+ 
+@@ -3135,7 +3136,7 @@ decode_switches (int argc, const char **argv, int env)
+         break;
+       else if (c == 1)
+         /* An argument not starting with a dash.  */
+-        handle_non_switch_argument (coptarg, env);
++        handle_non_switch_argument (coptarg, origin);
+       else if (c == '?')
+         /* Bad option.  We will print a usage message and die later.
+            But continue to parse the other options so the user can
+@@ -3149,7 +3150,7 @@ decode_switches (int argc, const char **argv, int env)
+                  this switch.  We test this individually inside the
+                  switch below rather than just once outside it, so that
+                  options which are to be ignored still consume args.  */
+-              int doit = !env || cs->env;
++              int doit = origin == o_command || cs->env;
+ 
+               switch (cs->type)
+                 {
+@@ -3299,9 +3300,9 @@ decode_switches (int argc, const char **argv, int env)
+      to be returned in order, this only happens when there is a "--"
+      argument to prevent later arguments from being options.  */
+   while (optind < argc)
+-    handle_non_switch_argument (argv[optind++], env);
++    handle_non_switch_argument (argv[optind++], origin);
+ 
+-  if (bad && !env)
++  if (bad && origin == o_command)
+     print_usage (bad);
+ 
+   /* If there are any options that need to be decoded do it now.  */
+@@ -3321,7 +3322,7 @@ decode_switches (int argc, const char **argv, int env)
+    decode_switches.  */
+ 
+ void
+-decode_env_switches (const char *envar, size_t len)
++decode_env_switches (const char *envar, size_t len, enum variable_origin origin)
+ {
+   char *varref = alloca (2 + len + 2);
+   char *value, *p, *buf;
+@@ -3383,7 +3384,7 @@ decode_env_switches (const char *envar, size_t len)
+     argv[1] = buf;
+ 
+   /* Parse those words.  */
+-  decode_switches (argc, argv, 1);
++  decode_switches (argc, argv, origin);
+ }
+ 
+ /* Quote the string IN so that it will be interpreted as a single word with
+@@ -3408,11 +3409,11 @@ quote_for_env (char *out, const char *in)
+ }
+ 
+ /* Define the MAKEFLAGS and MFLAGS variables to reflect the settings of the
+-   command switches.  Include options with args if ALL is nonzero.
++   command switches. Always include options with args.
+    Don't include options with the 'no_makefile' flag set if MAKEFILE.  */
+ 
+-static struct variable *
+-define_makeflags (int all, int makefile)
++struct variable *
++define_makeflags (int makefile)
+ {
+   const char ref[] = "MAKEOVERRIDES";
+   const char posixref[] = "-*-command-variables-*-";
+@@ -3597,25 +3598,24 @@ define_makeflags (int all, int makefile)
+       p = mempcpy (p, evalref, CSTRLEN (evalref));
+     }
+ 
+-  if (all)
+-    {
+-      /* If there are any overrides to add, write a reference to
+-         $(MAKEOVERRIDES), which contains command-line variable definitions.
+-         Separate the variables from the switches with a "--" arg.  */
++  {
++    /* If there are any overrides to add, write a reference to
++       $(MAKEOVERRIDES), which contains command-line variable definitions.
++       Separate the variables from the switches with a "--" arg.  */
+ 
+-      const char *r = posix_pedantic ? posixref : ref;
+-      size_t l = strlen (r);
+-      v = lookup_variable (r, l);
++    const char *r = posix_pedantic ? posixref : ref;
++    size_t l = strlen (r);
++    v = lookup_variable (r, l);
+ 
+-      if (v && v->value && v->value[0] != '\0')
+-        {
+-          p = stpcpy (p, " -- ");
+-          *(p++) = '$';
+-          *(p++) = '(';
+-          p = mempcpy (p, r, l);
+-          *(p++) = ')';
+-        }
+-    }
++    if (v && v->value && v->value[0] != '\0')
++      {
++        p = stpcpy (p, " -- ");
++        *(p++) = '$';
++        *(p++) = '(';
++        p = mempcpy (p, r, l);
++        *(p++) = ')';
++      }
++  }
+ 
+   /* If there is a leading dash, omit it.  */
+   if (flagstring[0] == '-')
+diff --git a/src/makeint.h b/src/makeint.h
+index c726abe..d6ac21b 100644
+--- a/src/makeint.h
++++ b/src/makeint.h
+@@ -558,7 +558,11 @@ void out_of_memory (void) NORETURN;
+ #define ONS(_t,_a,_f,_n,_s)   _t((_a), INTSTR_LENGTH + strlen (_s), \
+                                  (_f), (_n), (_s))
+ 
+-void decode_env_switches (const char*, size_t line);
++enum variable_origin;
++void decode_env_switches (const char*, size_t line,
++                          enum variable_origin origin);
++struct variable;
++struct variable *define_makeflags (int makefile);
+ void temp_stdin_unlink (void);
+ void die (int) NORETURN;
+ void pfatal_with_name (const char *) NORETURN;
+diff --git a/src/variable.c b/src/variable.c
+index 0bd9963..d8bf428 100644
+--- a/src/variable.c
++++ b/src/variable.c
+@@ -1215,7 +1215,7 @@ target_environment (struct file *file, int recursive)
+ }
+ 
+ static struct variable *
+-set_special_var (struct variable *var)
++set_special_var (struct variable *var, enum variable_origin origin)
+ {
+   if (streq (var->name, RECIPEPREFIX_NAME))
+     {
+@@ -1225,7 +1225,10 @@ set_special_var (struct variable *var)
+       cmd_prefix = var->value[0]=='\0' ? RECIPEPREFIX_DEFAULT : var->value[0];
+     }
+   else if (streq (var->name, MAKEFLAGS_NAME))
+-    decode_env_switches (STRING_SIZE_TUPLE(MAKEFLAGS_NAME));
++    {
++      decode_env_switches (STRING_SIZE_TUPLE(MAKEFLAGS_NAME), origin);
++      define_makeflags (rebuilding_makefiles);
++    }
+ 
+   return var;
+ }
+@@ -1261,7 +1264,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+                         const char *value, enum variable_origin origin,
+                         enum variable_flavor flavor, int target_var)
+ {
+-  const char *p;
++  const char *newval;
+   char *alloc_value = NULL;
+   struct variable *v;
+   int append = 0;
+@@ -1276,7 +1279,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+          We have to allocate memory since otherwise it'll clobber the
+          variable buffer, and we may still need that if we're looking at a
+          target-specific variable.  */
+-      p = alloc_value = allocated_variable_expand (value);
++      newval = alloc_value = allocated_variable_expand (value);
+       break;
+     case f_expand:
+       {
+@@ -1285,16 +1288,16 @@ do_variable_definition (const floc *flocp, const char *varname,
+            tokens to '$$' to resolve to '$' when recursively expanded.  */
+         char *t = allocated_variable_expand (value);
+         char *np = alloc_value = xmalloc (strlen (t) * 2 + 1);
+-        p = t;
+-        while (p[0] != '\0')
++        char *op = t;
++        while (op[0] != '\0')
+           {
+-            if (p[0] == '$')
++            if (op[0] == '$')
+               *(np++) = '$';
+-            *(np++) = *(p++);
++            *(np++) = *(op++);
+           }
+         *np = '\0';
+-        p = alloc_value;
+         free (t);
++        newval = alloc_value;
+         break;
+       }
+     case f_shell:
+@@ -1302,9 +1305,10 @@ do_variable_definition (const floc *flocp, const char *varname,
+         /* A shell definition "var != value".  Expand value, pass it to
+            the shell, and store the result in recursively-expanded var. */
+         char *q = allocated_variable_expand (value);
+-        p = alloc_value = shell_result (q);
++        alloc_value = shell_result (q);
+         free (q);
+         flavor = f_recursive;
++        newval = alloc_value;
+         break;
+       }
+     case f_conditional:
+@@ -1320,7 +1324,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+     case f_recursive:
+       /* A recursive variable definition "var = value".
+          The value is used verbatim.  */
+-      p = value;
++      newval = value;
+       break;
+     case f_append:
+     case f_append_value:
+@@ -1345,15 +1349,16 @@ do_variable_definition (const floc *flocp, const char *varname,
+           {
+             /* There was no old value.
+                This becomes a normal recursive definition.  */
+-            p = value;
++            newval = value;
+             flavor = f_recursive;
+           }
+         else
+           {
+             /* Paste the old and new values together in VALUE.  */
+ 
+-            size_t oldlen, vallen;
++            size_t oldlen, vallen, alloclen;
+             const char *val;
++            char *cp;
+             char *tp = NULL;
+ 
+             val = value;
+@@ -1378,18 +1383,25 @@ do_variable_definition (const floc *flocp, const char *varname,
+               }
+ 
+             oldlen = strlen (v->value);
+-            p = alloc_value = xmalloc (oldlen + 1 + vallen + 1);
++            alloclen = oldlen + 1 + vallen + 1;
++            cp = alloc_value = xmalloc (alloclen);
+ 
+             if (oldlen)
+               {
+-                memcpy (alloc_value, v->value, oldlen);
+-                alloc_value[oldlen] = ' ';
+-                ++oldlen;
++                char *s;
++                if (streq (varname, MAKEFLAGS_NAME)
++                    && (s = strstr (v->value, " -- ")))
++                  /* We found a separator in MAKEFLAGS.  Ignore variable
++                     assignments: set_special_var() will reconstruct things.  */
++                  cp = mempcpy (cp, v->value, s - v->value);
++                else
++                  cp = mempcpy (cp, v->value, oldlen);
++                *(cp++) = ' ';
+               }
+ 
+-            memcpy (&alloc_value[oldlen], val, vallen + 1);
+-
++            memcpy (cp, val, vallen + 1);
+             free (tp);
++            newval = alloc_value;
+           }
+       }
+       break;
+@@ -1399,6 +1411,8 @@ do_variable_definition (const floc *flocp, const char *varname,
+       abort ();
+     }
+ 
++  assert (newval);
++
+ #ifdef __MSDOS__
+   /* Many Unix Makefiles include a line saying "SHELL=/bin/sh", but
+      non-Unix systems don't conform to this default configuration (in
+@@ -1440,16 +1454,16 @@ do_variable_definition (const floc *flocp, const char *varname,
+           char *fake_env[2];
+           size_t pathlen = 0;
+ 
+-          shellbase = strrchr (p, '/');
+-          bslash = strrchr (p, '\\');
++          shellbase = strrchr (newval, '/');
++          bslash = strrchr (newval, '\\');
+           if (!shellbase || bslash > shellbase)
+             shellbase = bslash;
+-          if (!shellbase && p[1] == ':')
+-            shellbase = p + 1;
++          if (!shellbase && newval[1] == ':')
++            shellbase = newval + 1;
+           if (shellbase)
+             shellbase++;
+           else
+-            shellbase = p;
++            shellbase = newval;
+ 
+           /* Search for the basename of the shell (with standard
+              executable extensions) along the $PATH.  */
+@@ -1490,7 +1504,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+          set no_default_sh_exe to indicate sh was found and
+          set new value for SHELL variable.  */
+ 
+-      if (find_and_set_default_shell (p))
++      if (find_and_set_default_shell (newval))
+         {
+           v = define_variable_in_set (varname, strlen (varname), default_shell,
+                                       origin, flavor == f_recursive,
+@@ -1504,11 +1518,11 @@ do_variable_definition (const floc *flocp, const char *varname,
+         {
+           char *tp = alloc_value;
+ 
+-          alloc_value = allocated_variable_expand (p);
++          alloc_value = allocated_variable_expand (newval);
+ 
+           if (find_and_set_default_shell (alloc_value))
+             {
+-              v = define_variable_in_set (varname, strlen (varname), p,
++              v = define_variable_in_set (varname, strlen (varname), newval,
+                                           origin, flavor == f_recursive,
+                                           (target_var
+                                            ? current_variable_set_list->set
+@@ -1536,7 +1550,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+      invoked in places where we want to define globally visible variables,
+      make sure we define this variable in the global set.  */
+ 
+-  v = define_variable_in_set (varname, strlen (varname), p, origin,
++  v = define_variable_in_set (varname, strlen (varname), newval, origin,
+                               flavor == f_recursive || flavor == f_expand,
+                               (target_var
+                                ? current_variable_set_list->set : NULL),
+@@ -1546,7 +1560,7 @@ do_variable_definition (const floc *flocp, const char *varname,
+ 
+  done:
+   free (alloc_value);
+-  return v->special ? set_special_var (v) : v;
++  return v->special ? set_special_var (v, origin) : v;
+ }
+ 
+ /* Parse P (a null-terminated string) as a variable definition.
+diff --git a/tests/scripts/variables/MAKEFLAGS b/tests/scripts/variables/MAKEFLAGS
+index a41f1cf..e81c327 100644
+--- a/tests/scripts/variables/MAKEFLAGS
++++ b/tests/scripts/variables/MAKEFLAGS
+@@ -65,79 +65,113 @@ rmdir('bar');
+ # Test that command line switches are all present in MAKEFLAGS.
+ # sv 62514.
+ my @opts;
++my @flavors;
+ 
+ # Simple flags.
+ @opts = ('i', 'k', 'n', 'q', 'r', 's', 'w', 'd');
+ exists $FEATURES{'check-symlink'} and push @opts, 'L';
++@flavors = ('=', ':=', ':::=', '+=-');
+ 
++for my $fl (@flavors) {
+ for my $opt (@opts) {
+-  run_make_test(q!
+-MAKEFLAGS:=B
+-all:; $(info makeflags='$(MAKEFLAGS)')
+-!, "-$opt", "/makeflags='B$opt'/");
++  run_make_test("
++MAKEFLAGS${fl}B
++all:; \$(info makeflags='\$(MAKEFLAGS)')
++", "-$opt", "/makeflags='B$opt'/");
++}
+ }
+ 
+ # Switches which carry arguments.
+ @opts = (' -I/tmp', ' -Onone', ' --debug=b', ' -l2.5');
++for my $fl (@flavors) {
+ for my $opt (@opts) {
+-  run_make_test(q!
+-MAKEFLAGS:=B
+-all:; $(info makeflags='$(MAKEFLAGS)')
+-!, "$opt", "/makeflags='B$opt'/");
++  run_make_test("
++MAKEFLAGS${fl}B
++all:; \$(info makeflags='\$(MAKEFLAGS)')
++", "$opt", "/makeflags='B$opt'/");
++}
+ }
+ 
+ # Long options which take no arguments.
+ # sv 62514.
+ @opts = (' --no-print-directory', ' --warn-undefined-variables', ' --trace');
++for my $fl (@flavors) {
+ for my $opt (@opts) {
+-run_make_test(q!
+-MAKEFLAGS:=B
+-all:; $(info makeflags='$(MAKEFLAGS)')
+-!, "$opt", "/makeflags='B$opt'/");
++run_make_test("
++MAKEFLAGS${fl}B
++all:; \$(info makeflags='\$(MAKEFLAGS)')
++", "$opt", "/makeflags='B$opt'/");
++}
+ }
+ 
+ # Test that make filters out duplicates.
+ # Each option is specified in the makefile, env and on the command line.
+ @opts = (' -I/tmp', ' -Onone', ' --debug=b', ' -l2.5');
+-$ENV{'MAKEFLAGS'} = $opt;
++for my $fl (@flavors) {
+ for my $opt (@opts) {
++$ENV{'MAKEFLAGS'} = $opt;
+   run_make_test("
+-MAKEFLAGS:=B $opt
++MAKEFLAGS${fl}B $opt
+ all:; \$(info makeflags='\$(MAKEFLAGS)')
+ ", "$opt", "/makeflags='B$opt'/");
+ }
++}
+ 
+ # Test that make filters out duplicates.
+ # Each option is specified in the makefile, env and on the command line.
+ # decode_switches reallocates when the number of parameters in sl->list exceeds 5.
+ # This test exercises the realloc branch.
++for my $fl (@flavors) {
+ $ENV{'MAKEFLAGS'} = '-I1 -Onone --debug=b -l2.5 -I2 -I3 -I4 -I5 -I6 -I2 -I2';
+-run_make_test(q!
+-MAKEFLAGS:=B -I1 -Onone --debug=b -l2.5 -I2 -I3 -I4 -I5 -I6 -I2 -I2
+-all:; $(info makeflags='$(MAKEFLAGS)')
+-!,
++run_make_test("
++MAKEFLAGS${fl}B -I1 -Onone --debug=b -l2.5 -I2 -I3 -I4 -I5 -I6 -I2 -I2
++all:; \$(info makeflags='\$(MAKEFLAGS)')
++",
+ '-I1 -Onone --debug=b -l2.5 -I2 -I3 -I4 -I5 -I6',
+ "/makeflags='B -I1 -I2 -I3 -I4 -I5 -I6 -l2.5 -Onone --debug=b'/");
++}
+ 
+ # A mix of multiple flags from env, the makefile and command line.
+ # Skip -L since it's not available everywhere
++for my $fl (@flavors) {
+ $ENV{'MAKEFLAGS'} = 'ikB --no-print-directory --warn-undefined-variables --trace';
+-run_make_test(q!
+-MAKEFLAGS:=iknqrswd -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5
+-all:; $(info makeflags='$(MAKEFLAGS)')
+-!,
++run_make_test("
++MAKEFLAGS${fl}iknqrswd -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5
++all:; \$(info makeflags='\$(MAKEFLAGS)')
++",
+ '-Onone -l2.5 -l2.5 -Onone -I/tmp -iknqrswd -i -n -s -k -I/tmp',
+ "/makeflags='Bdiknqrsw -I/tmp -l2.5 -Onone --trace --warn-undefined-variables'/");
++}
+ 
+-# Verify MAKEFLAGS are all available to shell functions
++# Verify MAKEFLAGS are all available to shell function at parse time.
++for my $fl (@flavors) {
++my $answer = 'Biknqrs -I/tmp -l2.5 -Onone --no-print-directory --warn-undefined-variables';
+ $ENV{'MAKEFLAGS'} = 'ikB --no-print-directory --warn-undefined-variables';
+-run_make_test(q!
+-MAKEFLAGS := iknqrsw -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5 --no-print-directory
+-XX := $(shell echo "$$MAKEFLAGS")
+-all:; $(info makeflags='$(XX)')
+-!,
+-    '-Onone -l2.5 -l2.5 -Onone -I/tmp -iknqrs -i -n -s -k -I/tmp',
+-    "makeflags='iknqrsw -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5 --no-print-directory'");
++run_make_test("
++MAKEFLAGS${fl}iknqrsw -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5 --no-print-directory
++\$(info at parse time '\$(MAKEFLAGS)')
++XX := \$(shell echo \"\$\$MAKEFLAGS\")
++all:; \$(info at build time makeflags='\$(XX)')
++",
++'-Onone -l2.5 -l2.5 -Onone -I/tmp -iknqrs -i -n -s -k -I/tmp',
++"at parse time '$answer'
++at build time makeflags='$answer'");
++}
++
++# Verify MAKEFLAGS and command line definitions are all available to shell function at parse time.
++for my $fl (@flavors) {
++$ENV{'MAKEFLAGS'} = 'ikB --no-print-directory --warn-undefined-variables';
++my $answer = 'Biknqrs -I/tmp -l2.5 -Onone --no-print-directory --warn-undefined-variables -- hello=world';
++run_make_test("
++MAKEFLAGS${fl}iknqrsw -I/tmp -I/tmp -Onone -Onone -l2.5 -l2.5 --no-print-directory
++\$(info at parse time '\$(MAKEFLAGS)')
++XX := \$(shell echo \"\$\$MAKEFLAGS\")
++all:; \$(info at build time makeflags='\$(XX)')
++",
++'-Onone -l2.5 -l2.5 -Onone -I/tmp -iknqrs -i -n -s -k -I/tmp hello=world',
++"at parse time '$answer'
++at build time makeflags='$answer'");
++}
+ 
+ # Verify that command line arguments are included in MAKEFLAGS
+ run_make_test(q!
+@@ -155,4 +189,183 @@ echo /erR --trace --no-print-directory -- FOO=bar/
+ /erR --trace --no-print-directory -- FOO=bar/");
+ 
+ 
++# sv 63347.
++# Verify that command line arguments are included in MAKEFLAGS
++# when makefiles are parsed.
++my $answer = 'erR -- hello:=world FOO=bar';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, '-e FOO=bar -r -R hello:=world',
++"$answer
++$answer
++#MAKE#: 'all' is up to date.\n");
++
++# sv 63347.
++# Same as above, with makefile setting the value of the same variables as
++# defined on the cli.
++my $answer = 'erR -- hello:=world FOO=bar';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++FOO=moon
++hello:=moon
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, '-e FOO=bar -r -R hello:=world',
++"$answer
++$answer
++$answer
++#MAKE#: 'all' is up to date.\n");
++
++# sv 63347.
++# Same as above, with makefile overriding the value of cli definition.
++my $answer = 'erR -- hello:=world FOO=bar';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++override FOO=moon
++override hello:=moon
++export hello
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, '-e FOO=bar -r -R hello:=world',
++"$answer
++$answer
++$answer
++#MAKE#: 'all' is up to date.\n");
++
++# Same as above, and makefile overrides the value of cli definition.
++# resets MAKEOVERRIDES.
++my $answer = 'rR -- hello:=world FOO=bar';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++override FOO=moon
++override hello:=moon
++export hello
++$(info $(MAKEFLAGS))
++MAKEOVERRIDES=
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, 'FOO=bar -r -R hello:=world',
++"$answer
++$answer
++rR -- \nrR
++#MAKE#: 'all' is up to date.\n");
++
++# sv 63347.
++# MAKEFLAGS set is env and makefile sets MAKEFLAGS and there is a command
++# line definition.
++my $answer = ' -- bye=moon hello=world';
++$ENV{'MAKEFLAGS'} = 'hello=world';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, 'bye=moon',
++" -- bye=moon hello=world
++ -- bye=moon hello=world
++#MAKE#: 'all' is up to date.\n");
++
++# sv 63347.
++# Conditional assignment and MAKEFLAGS.
++my $answer = 'B -- bye=moon hello=world';
++$ENV{'MAKEFLAGS'} = 'hello=world';
++run_make_test(q!
++$(info $(MAKEFLAGS))
++MAKEFLAGS?=-k
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, '-B bye=moon',
++"$answer
++$answer
++$answer
++#MAKE#: 'all' is up to date.\n");
++
++# sv 63347.
++# MAKEFLAGS set is env and makefile sets MAKEFLAGS and there is a command
++# line definition.
++for my $fl (@flavors) {
++my $answer = ' -- bye=moon hello=world';
++$ENV{'MAKEFLAGS'} = 'hello=world';
++run_make_test("
++\$(info \$(MAKEFLAGS))
++MAKEFLAGS${fl}R
++\$(info \$(MAKEFLAGS))
++all:; \$(info \$(MAKEFLAGS))
++", 'bye=moon',
++"$answer
++R$answer
++rR$answer
++#MAKE#: 'all' is up to date.\n");
++}
++
++# sv 63347.
++# Test changes introduced by makefiles to MAKEFLAGS.
++for my $fl (@flavors) {
++my $answer = 'rR --no-print-directory -- hello:=world FOO=bar';
++run_make_test(q!
++MAKEFLAGS+=--no-print-directory
++$(info $(MAKEFLAGS))
++MAKEFLAGS+=-k
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, 'FOO=bar -r -R hello:=world',
++"$answer
++k$answer
++k$answer
++#MAKE#: 'all' is up to date.\n");
++}
++
++# sv 63347.
++# Test changes introduced by makefiles to MAKEFLAGS.
++# Same as above, but with -e.
++for my $fl (@flavors) {
++my $answer = 'erR -- hello:=world FOO=bar';
++run_make_test(q!
++MAKEFLAGS+=--no-print-directory
++$(info $(MAKEFLAGS))
++MAKEFLAGS+=-k
++$(info $(MAKEFLAGS))
++all:; $(info $(MAKEFLAGS))
++!, '-e FOO=bar -r -R hello:=world',
++"$answer
++$answer
++$answer
++#MAKE#: 'all' is up to date.\n");
++}
++
++mkdir('bye', 0777);
++
++create_file('bye/makefile',
++'hello=moon
++all:; $(info $(hello))');
++
++# sv 63347.
++# Test that a cli definition takes precendence over a definition set in
++# submake.
++run_make_test(q!
++v:=$(shell $(MAKE) -C bye --no-print-directory)
++all: ; $(info $(v))
++!, 'hello=world', "world #MAKE#[1]: 'all' is up to date.\n#MAKE#: 'all' is up to date.");
++
++# Same as above with the shell assignment operator.
++run_make_test(q!
++v \!= $(MAKE) -C bye --no-print-directory
++all: ; $(info $(v))
++!, 'hello=world', "world #MAKE#[1]: 'all' is up to date.\n#MAKE#: 'all' is up to date.");
++
++unlink('bye/makefile');
++rmdir('bye');
++
++# sv 63347
++# Invalid command line variable definition.
++run_make_test(q!
++all:; $(info $(hello))
++!, 'hello=\'$(world\'', "#MAKEFILE#:2: *** unterminated variable reference.  Stop.\n", 512);
++
++# sv 63347
++# An unused invalid command line variable definition is ignored.
++run_make_test(q!
++all:; $(info good)
++!, 'hello=\'$(world\'', "good\n#MAKE#: 'all' is up to date.\n");
++
++
+ 1;
+-- 
+cgit v1.1
+
