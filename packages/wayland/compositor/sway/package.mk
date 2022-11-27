@@ -2,8 +2,8 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="sway"
-PKG_VERSION="1.7"
-PKG_SHA256="0c64536fb2883ec518e75cfb119f9300115fb49b084e3fde62b794fe2c6c8d84"
+PKG_VERSION="1.8-rc3"
+PKG_SHA256="ec0fdb0b2c4d5a1ee26189473cbe03988c1c1fc34fd2462c47d754d4c8ff8d0d"
 PKG_LICENSE="MIT"
 PKG_SITE="https://swaywm.org/"
 PKG_URL="https://github.com/swaywm/sway/archive/${PKG_VERSION}.tar.gz"
@@ -24,7 +24,7 @@ PKG_MESON_OPTS_TARGET="-Ddefault-wallpaper=false \
 
 pre_configure_target() {
   # sway does not build without -Wno flags as all warnings being treated as errors
-  export TARGET_CFLAGS=$(echo "${TARGET_CFLAGS} -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-stringop-truncation -Wno-address")
+  export TARGET_CFLAGS=$(echo "${TARGET_CFLAGS} -Wno-unused-variable")
 }
 
 post_makeinstall_target() {
