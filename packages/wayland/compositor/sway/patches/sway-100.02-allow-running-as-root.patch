@@ -1,13 +1,13 @@
 --- a/sway/main.c
 +++ b/sway/main.c
-@@ -152,6 +152,10 @@ static void log_kernel(void) {
+@@ -151,6 +151,10 @@
+ }
  
- 
- static bool drop_permissions(void) {
+ static bool detect_suid(void) {
 +	if (getuid() == 0 || getgid() == 0) {
 +		sway_log(SWAY_INFO, "Running sway as root user");
-+		return true;
++		return false;
 +	}
- 	if (getuid() != geteuid() || getgid() != getegid()) {
- 		sway_log(SWAY_ERROR, "!!! DEPRECATION WARNING: "
- 			"SUID privilege drop will be removed in a future release, please migrate to seatd-launch");
+ 	if (geteuid() != 0 && getegid() != 0) {
+ 		return false;
+ 	}
