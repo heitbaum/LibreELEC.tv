@@ -13,11 +13,6 @@ PKG_LONGDESC="A cross-platform, open-source make system."
 PKG_TOOLCHAIN="configure"
 PKG_BUILD_FLAGS="+local-cc"
 
-pre_configure_host() {
-  export CC=${LOCAL_CC}
-  export CXX=${LOCAL_CXX}
-}
-
 configure_host() {
   ../configure --prefix=${TOOLCHAIN} \
                --no-qt-gui --no-system-libs \
