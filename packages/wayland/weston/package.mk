@@ -44,6 +44,11 @@ PKG_MESON_OPTS_TARGET="-Dbackend-drm=true \
                        -Dtest-skip-is-failure=false \
                        -Ddoc=false"
 
+pre_configure_target() {
+  # weston does not build with NDEBUG (requires assert for tests)
+  export TARGET_CFLAGS=$(echo ${TARGET_CFLAGS} | sed -e "s|-DNDEBUG||g")
+}
+
 post_makeinstall_target() {
   mkdir -p ${INSTALL}/usr/lib/weston
     cp ${PKG_DIR}/scripts/weston-config ${INSTALL}/usr/lib/weston
