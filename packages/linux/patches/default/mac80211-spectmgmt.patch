@@ -1,0 +1,21 @@
+commit aeffb6f8ecb91964573944c918f27b1e7fa345ee
+Author: Rudi Heitbaum <rudi@heitbaum.com>
+Date:   Sun Feb 12 02:13:22 2023 +0000
+
+    mac80211: spectmgmt: improve log error
+
+diff --git a/net/mac80211/spectmgmt.c b/net/mac80211/spectmgmt.c
+index 871cdac2d0f4..ff80798b9263 100644
+--- a/net/mac80211/spectmgmt.c
++++ b/net/mac80211/spectmgmt.c
+@@ -54,8 +54,8 @@ int ieee80211_parse_ch_switch_ie(struct ieee80211_sub_if_data *sdata,
+ 				elems->ext_chansw_ie->new_operating_class,
+ 				&new_band)) {
+ 			sdata_info(sdata,
+-				   "cannot understand ECSA IE operating class, %d, ignoring\n",
+-				   elems->ext_chansw_ie->new_operating_class);
++				   "cannot understand ECSA IE operating class, %d, ignoring for channel %d\n",
++				   elems->ext_chansw_ie->new_operating_class, elems->ext_chansw_ie->new_ch_num);
+ 		}
+ 		new_chan_no = elems->ext_chansw_ie->new_ch_num;
+ 		csa_ie->count = elems->ext_chansw_ie->count;
