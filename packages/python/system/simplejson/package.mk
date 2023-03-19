@@ -15,5 +15,6 @@ PKG_TOOLCHAIN="python"
 post_makeinstall_target() {
   python_remove_source
 
-  rm -rf ${INSTALL}/usr/lib/python*/site-packages/*/tests
+  #rm -rf ${INSTALL}/usr/lib/python*/site-packages/*/tests
+  touch ${INSTALL}/usr/lib/python3.11/site-packages/index.rst
 }
