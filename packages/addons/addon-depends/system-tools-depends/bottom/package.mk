@@ -12,10 +12,12 @@ PKG_LONGDESC="A TUI system monitor written in Rust."
 PKG_TOOLCHAIN="manual"
 
 make_target() {
-  export RUST_LOG="rustc_trans"
+  cargo update \
+    --offline
   cargo build \
     --target ${TARGET_NAME} \
     --release \
+    --locked \
     --all-features
 }
 
