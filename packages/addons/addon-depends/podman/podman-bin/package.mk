@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="podman-bin"
-PKG_VERSION="4.4.3"
-PKG_SHA256="c4770787f008923ec3181ea49c31bdb4d2b77458dbc842f43053fc96a1914ee0"
+PKG_VERSION="4.4.4"
+PKG_SHA256="2dacfe7041b83e2cb05fda58bd1fbdae61348a427f5b9073b96b36154de894a1"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="https://podman.io/"
 PKG_URL="https://github.com/containers/podman/archive/v${PKG_VERSION}.tar.gz"
