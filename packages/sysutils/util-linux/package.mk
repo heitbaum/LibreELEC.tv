@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="util-linux"
-PKG_VERSION="2.39-rc1"
-PKG_SHA256="b3971bcd6d82af2feeb3e2a19205437d364bc952459c25b6f47f1996711e99a1"
+PKG_VERSION="2.39-rc2"
+PKG_SHA256="68b9d1965108172ff687db728a040747c0ed86f6b88b20d96b67af1622d46807"
 PKG_LICENSE="GPL"
 PKG_URL="https://www.kernel.org/pub/linux/utils/util-linux/v$(get_pkg_version_maj_min | cut -f 1 -d -)/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="ccache:host autoconf:host automake:host intltool:host libtool:host pkg-config:host"
