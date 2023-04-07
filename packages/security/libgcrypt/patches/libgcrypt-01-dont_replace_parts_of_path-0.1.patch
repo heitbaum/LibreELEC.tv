@@ -5,8 +5,8 @@ diff -Naur libgcrypt-1.4.6/cipher/Makefile.am libgcrypt-1.4.6.patch/cipher/Makef
  
  
  if ENABLE_O_FLAG_MUNGING
--o_flag_munging = sed -e 's/-O\([2-9sg][2-9sg]*\)/-O1/' -e 's/-Ofast/-O1/g'
-+o_flag_munging = sed -e 's/-O\([2-9sg][2-9sg]\)/-O1/' -e 's/-Ofast/-O1/g'
+-o_flag_munging = sed -e 's/-O\([2-9sgz][2-9sgz]*\)/-O1/' -e 's/-Ofast/-O1/g'
++o_flag_munging = sed -e 's/-O\([2-9sgz][2-9sgz]\)/-O1/' -e 's/-Ofast/-O1/g'
  else
  o_flag_munging = cat
  endif
@@ -17,8 +17,8 @@ diff -Naur libgcrypt-1.4.6/cipher/Makefile.in libgcrypt-1.4.6.patch/cipher/Makef
  	blake2b-amd64-avx2.S blake2s-amd64-avx.S
  
  @ENABLE_O_FLAG_MUNGING_FALSE@o_flag_munging = cat
--@ENABLE_O_FLAG_MUNGING_TRUE@o_flag_munging = sed -e 's/-O\([2-9sg][2-9sg]*\)/-O1/' -e 's/-Ofast/-O1/g'
-+@ENABLE_O_FLAG_MUNGING_TRUE@o_flag_munging = sed -e 's/-O\([2-9sg][2-9sg]\)/-O1/' -e 's/-Ofast/-O1/g'
+-@ENABLE_O_FLAG_MUNGING_TRUE@o_flag_munging = sed -e 's/-O\([2-9sgz][2-9sgz]*\)/-O1/' -e 's/-Ofast/-O1/g'
++@ENABLE_O_FLAG_MUNGING_TRUE@o_flag_munging = sed -e 's/-O\([2-9sgz][2-9sgz]\)/-O1/' -e 's/-Ofast/-O1/g'
  @ENABLE_INSTRUMENTATION_MUNGING_FALSE@instrumentation_munging = cat
  
  # We need to disable instrumentation for these modules as they use cc as
