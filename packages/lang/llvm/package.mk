@@ -140,7 +140,8 @@ pre_configure_target() {
       LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS=''"
       ;;
     "x86_64")
-      LLVM_BUILD_TARGETS="AMDGPU"
+      LLVM_BUILD_TARGETS="X86"
+      LLVM_BUILD_TARGETS+="\;AMDGPU"
       # do not build clang (not needed)
       # llvm:target is only required to build mesa amd on x86_64 targets
       LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS=''"
