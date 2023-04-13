@@ -125,7 +125,7 @@ pre_configure_target() {
                          -DLLVM_NATIVE_BUILD=${PKG_BUILD}/.${TARGET_NAME}/native \
                          -DCMAKE_CROSSCOMPILING=ON \
                          -DLLVM_ENABLE_PROJECTS='' \
-                         -DLLVM_TARGETS_TO_BUILD=X86\;AMDGPU \
+                         -DLLVM_TARGETS_TO_BUILD=AMDGPU \
                          -DLLVM_TARGET_ARCH="${TARGET_ARCH}" \
                          -DLLVM_TABLEGEN=${TOOLCHAIN}/bin/llvm-tblgen"
 }
