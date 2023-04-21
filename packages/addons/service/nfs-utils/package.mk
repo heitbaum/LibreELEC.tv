@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nfs-utils"
-PKG_VERSION="2.6.2"
-PKG_SHA256="5200873e81c4d610e2462fc262fe18135f2dbe78b7979f95accd159ae64d5011"
+PKG_VERSION="2.6.3"
+PKG_SHA256="38d89e853a71d3c560ff026af3d969d75e24f782ff68324e76261fe0344459e1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="http://nfs.sourceforge.net/"
