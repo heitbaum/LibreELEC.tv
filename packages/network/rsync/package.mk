@@ -2,11 +2,12 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="rsync"
-PKG_VERSION="3.2.7"
-PKG_SHA256="4e7d9d3f6ed10878c58c5fb724a67dacf4b6aac7340b13e488fb2dc41346f2bb"
+PKG_VERSION="3.3.0pre1"
+PKG_SHA256="30a18c6654cc09f6c6e5edb6738f196b20a1f2341dac5282693d69db2eac54e1"
 PKG_LICENSE="GPLv3"
 PKG_SITE="https://rsync.samba.org"
 PKG_URL="https://download.samba.org/pub/rsync/src/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_URL="https://download.samba.org/pub/rsync/src-previews/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_HOST="autotools:host zlib:host"
 PKG_DEPENDS_TARGET="toolchain zlib openssl"
 PKG_LONGDESC="A very fast method for bringing remote files into sync."
