@@ -34,7 +34,7 @@ get_graphicdrivers() {
   V4L2_SUPPORT="no"
 
   if [ "${GRAPHIC_DRIVERS}" = "all" ]; then
-    GRAPHIC_DRIVERS="crocus i915 iris r300 r600 radeonsi nvidia nvidia-legacy nvidia-ng vmware virtio vc4"
+    GRAPHIC_DRIVERS="crocus i915 iris r300 r600 radeonsi nvidia nvidia-ng vmware virtio vc4"
   fi
 
   if listcontains "${GRAPHIC_DRIVERS}" "crocus"; then
@@ -85,11 +85,6 @@ get_graphicdrivers() {
   if listcontains "${GRAPHIC_DRIVERS}" "nvidia"; then
     XORG_DRIVERS+=" nvidia"
     VULKAN_DRIVERS_CONFIG+=" nvidia"
-    VDPAU_SUPPORT="yes"
-  fi
-
-  if listcontains "${GRAPHIC_DRIVERS}" "nvidia-legacy"; then
-    XORG_DRIVERS+=" nvidia-legacy"
     VDPAU_SUPPORT="yes"
   fi
 
