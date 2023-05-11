@@ -1,0 +1,93 @@
+From a77f3c995b16514ea4de7142e26d12b72b6cd4ca Mon Sep 17 00:00:00 2001
+From: H1X4 <10332146+H1X4Dev@users.noreply.github.com>
+Date: Fri, 31 Mar 2023 14:05:34 +0300
+Subject: [PATCH 1/3] fix build for master fmt (non-bundled)
+
+---
+ include/spdlog/common.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/include/spdlog/common.h b/include/spdlog/common.h
+index e69201a81..ddd9fd67e 100644
+--- a/include/spdlog/common.h
++++ b/include/spdlog/common.h
+@@ -173,12 +173,18 @@ using format_string_t = fmt::format_string<Args...>;
+ template<class T>
+ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+ 
++#if FMT_VERSION >= 90101
++# define FMT_STRING_RUNTIME fmt::runtime_format_string<Char>
++#else
++# define FMT_STRING_RUNTIME fmt::basic_runtime<Char>
++#endif
++
+ // clang doesn't like SFINAE disabled constructor in std::is_convertible<> so have to repeat the condition from basic_format_string here,
+ // in addition, fmt::basic_runtime<Char> is only convertible to basic_format_string<Char> but not basic_string_view<Char>
+ template<class T, class Char = char>
+ struct is_convertible_to_basic_format_string
+     : std::integral_constant<bool,
+-          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, fmt::basic_runtime<Char>>::value>
++          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, FMT_STRING_RUNTIME>::value>
+ {};
+ 
+ #    if defined(SPDLOG_WCHAR_FILENAMES) || defined(SPDLOG_WCHAR_TO_UTF8_SUPPORT)
+
+From 651fc42cab4f1f8a664f6ff964be0fb9d4c7dfe1 Mon Sep 17 00:00:00 2001
+From: H1X4 <10332146+H1X4Dev@users.noreply.github.com>
+Date: Fri, 31 Mar 2023 19:27:10 +0300
+Subject: [PATCH 2/3] update fmt_runtime_string macro
+
+---
+ include/spdlog/common.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/include/spdlog/common.h b/include/spdlog/common.h
+index ddd9fd67e..dfe7c76c6 100644
+--- a/include/spdlog/common.h
++++ b/include/spdlog/common.h
+@@ -173,10 +173,11 @@ using format_string_t = fmt::format_string<Args...>;
+ template<class T>
+ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+ 
++template <typename Char>
+ #if FMT_VERSION >= 90101
+-# define FMT_STRING_RUNTIME fmt::runtime_format_string<Char>
++using fmt_runtime_string = fmt::runtime_format_string<Char>;
+ #else
+-# define FMT_STRING_RUNTIME fmt::basic_runtime<Char>
++using fmt_runtime_string = fmt::basic_runtime<Char>;
+ #endif
+ 
+ // clang doesn't like SFINAE disabled constructor in std::is_convertible<> so have to repeat the condition from basic_format_string here,
+@@ -184,7 +185,7 @@ using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>
+ template<class T, class Char = char>
+ struct is_convertible_to_basic_format_string
+     : std::integral_constant<bool,
+-          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, FMT_STRING_RUNTIME>::value>
++          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, fmt_runtime_string>::value>
+ {};
+ 
+ #    if defined(SPDLOG_WCHAR_FILENAMES) || defined(SPDLOG_WCHAR_TO_UTF8_SUPPORT)
+
+From 607a5217e55f4c43ed7ccd7ea83f93bcb1e52c35 Mon Sep 17 00:00:00 2001
+From: H1X4 <10332146+H1X4Dev@users.noreply.github.com>
+Date: Fri, 31 Mar 2023 20:06:03 +0300
+Subject: [PATCH 3/3] fix build of updated macro
+
+---
+ include/spdlog/common.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/spdlog/common.h b/include/spdlog/common.h
+index dfe7c76c6..5f671c5c6 100644
+--- a/include/spdlog/common.h
++++ b/include/spdlog/common.h
+@@ -185,7 +185,7 @@ using fmt_runtime_string = fmt::basic_runtime<Char>;
+ template<class T, class Char = char>
+ struct is_convertible_to_basic_format_string
+     : std::integral_constant<bool,
+-          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, fmt_runtime_string>::value>
++          std::is_convertible<T, fmt::basic_string_view<Char>>::value || std::is_same<remove_cvref_t<T>, fmt_runtime_string<Char>>::value>
+ {};
+ 
+ #    if defined(SPDLOG_WCHAR_FILENAMES) || defined(SPDLOG_WCHAR_TO_UTF8_SUPPORT)
