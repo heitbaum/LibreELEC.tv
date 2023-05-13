@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC
 
 PKG_NAME="atf"
-PKG_VERSION="2.8"
-PKG_SHA256="42256fa354f32b09972e72e0570a0f73698785927f93163b1d1308c485fcb4a6"
+PKG_VERSION="2.9.0"
+PKG_SHA256="f055aae17e0d8254034d12beaafead0d7b5ee87ed1e2cc495044c3cce0f309a9"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="BSD-3c"
 PKG_SITE="https://github.com/ARM-software/arm-trusted-firmware"
@@ -21,9 +21,9 @@ fi
 
 make_target() {
   if [ "${ATF_PLATFORM}" = "imx8mq" ]; then
-    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="--no-warn-rwx-segments" CFLAGS="--param=min-pagesize=0" make PLAT=${ATF_PLATFORM} bl31
+    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="" CFLAGS="--param=min-pagesize=0" make PLAT=${ATF_PLATFORM} bl31
   else
-    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="--no-warn-rwx-segments" CFLAGS="" make PLAT=${ATF_PLATFORM} bl31
+    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="" CFLAGS="" make PLAT=${ATF_PLATFORM} bl31
   fi
 }
 
