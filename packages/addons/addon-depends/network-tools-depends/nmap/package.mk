@@ -18,7 +18,8 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-static \
                            --with-libdnet=included \
                            --with-liblua=included \
                            --with-liblinear=included \
-                           --with-openssl=${SYSROOT_PREFIX}"
+                           --with-openssl=${SYSROOT_PREFIX} \
+                           --with-zenmap=no"
 
 pre_configure_target() {
 # nmap fails to build in subdirs
