@@ -84,7 +84,6 @@ post_makeinstall_target() {
   rm -f ${INSTALL}/usr/share/dbus-1/system-services/org.freedesktop.Avahi.service
   rm -f ${INSTALL}/usr/sbin/avahi-dnsconfd
   rm -f ${INSTALL}/usr/bin/avahi-bookmarks
-  rm -f ${INSTALL}/usr/bin/avahi-publish*
   rm -f ${INSTALL}/usr/bin/avahi-resolve*
   rm -f ${INSTALL}/usr/lib/libdns_sd*
 
