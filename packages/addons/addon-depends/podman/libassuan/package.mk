@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libassuan"
-PKG_VERSION="2.5.5"
-PKG_SHA256="8e8c2fcc982f9ca67dcbb1d95e2dc746b1739a4668bc20b3a3c5be632edb34e4"
+PKG_VERSION="2.5.6"
+PKG_SHA256="e9fd27218d5394904e4e39788f9b1742711c3e6b41689a31aa3380bd5aa4f426"
 PKG_LICENSE="LGPLv2.1+"
 PKG_SITE="https://gnupg.org/software/libassuan/index.html"
 PKG_URL="https://www.gnupg.org/ftp/gcrypt/libassuan/libassuan-${PKG_VERSION}.tar.bz2"
