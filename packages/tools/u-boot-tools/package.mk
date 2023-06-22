@@ -16,8 +16,17 @@ unpack() {
 }
 
 make_host() {
-  make qemu-x86_64_defconfig HOSTCC="${HOST_CC}" HOSTCFLAGS="-I${TOOLCHAIN}/include" HOSTLDFLAGS="${HOST_LDFLAGS}"
-  make tools-only HOSTCC="${HOST_CC}" HOSTCFLAGS="-I${TOOLCHAIN}/include" HOSTLDFLAGS="${HOST_LDFLAGS}"
+case "${MACHINE_HARDWARE_NAME}" in
+    "aarch64")
+      cp /usr/bin/true tools/mkimage
+      ;;
+    "arm")
+      ;;
+    "x86_64")
+       make qemu-x86_64_defconfig HOSTCC="${HOST_CC}" HOSTCFLAGS="-I${TOOLCHAIN}/include" HOSTLDFLAGS="${HOST_LDFLAGS}"
+       make tools-only HOSTCC="${HOST_CC}" HOSTCFLAGS="-I${TOOLCHAIN}/include" HOSTLDFLAGS="${HOST_LDFLAGS}"
+      ;;
+  esac
 }
 
 make_target() {
