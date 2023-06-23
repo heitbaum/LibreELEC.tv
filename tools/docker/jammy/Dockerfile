@@ -12,7 +12,7 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-RUN adduser --disabled-password --gecos '' docker \
+RUN adduser --uid 1001 --disabled-password --gecos '' docker \
  && adduser docker sudo \
  && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
@@ -23,6 +23,7 @@ RUN apt-get install -y \
       unzip diffutils lzop make file g++-12 xfonts-utils xsltproc default-jre-headless python3 \
       libc6-dev libncurses5-dev libjson-perl libxml-parser-perl libparse-yapp-perl rdfind \
       golang-1.21-go git openssh-client \
+      vim mutt jq curl \
     --no-install-recommends \
     && ln -s /usr/lib/go-1.21 /usr/lib/go \
     && ln -s /usr/lib/go-1.21/bin/go /usr/bin/go \
