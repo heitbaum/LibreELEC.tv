@@ -2,13 +2,9 @@
 # Copyright (C) 2009-2016 Stephan Raue (stephan@openelec.tv)
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
-#git archive --format=tar --prefix=binutils-2.41git/ --remote=git://sourceware.org/git/binutils-gdb.git binutils-2_41-branch > bin.tar
-# sha256sum bin.tar.xz > sources/binutils/binutils-2.41.tar.xz.sha256
-# cp bin.tar.xz sources/binutils/binutils-2.41.tar.xz
-
 PKG_NAME="binutils"
-PKG_VERSION="2.41"
-PKG_SHA256=""
+PKG_VERSION="2.40"
+PKG_SHA256="0f8a4c272d7f17f369ded10a4aca28b8e304828e95526da482b0ccc4dfc9d8e1"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.gnu.org/software/binutils/"
 PKG_URL="https://ftp.gnu.org/gnu/binutils/${PKG_NAME}-${PKG_VERSION}.tar.xz"
