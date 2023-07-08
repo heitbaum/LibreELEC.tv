@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="gpgme"
-PKG_VERSION="1.20.0"
-PKG_SHA256="25a5785a5da356689001440926b94e967d02e13c49eb7743e35ef0cf22e42750"
+PKG_VERSION="1.21.0"
+PKG_SHA256="416e174e165734d84806253f8c96bda2993fd07f258c3aad5f053a6efd463e88"
 PKG_LICENSE="gpgme"
 PKG_SITE="https://gnupg.org/software/gpgme/index.html"
 PKG_URL="https://gnupg.org/ftp/gcrypt/gpgme/gpgme-${PKG_VERSION}.tar.bz2"
