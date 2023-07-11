@@ -1,0 +1,68 @@
+From ba8b4254ad1ef0452357d93bb3a620a81ca7b4b7 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Tue, 11 Jul 2023 12:08:17 +0000
+Subject: [PATCH] fix for compile with linux-6.5-rc1
+
+---
+ bundled/linux/include/uapi/linux/io_uring.h | 2 +-
+ src/io_uring.c                              | 8 ++++----
+ src/ptp.c                                   | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/bundled/linux/include/uapi/linux/io_uring.h b/bundled/linux/include/uapi/linux/io_uring.h
+index 84c33b5e8..9eade1056 100644
+--- a/bundled/linux/include/uapi/linux/io_uring.h
++++ b/bundled/linux/include/uapi/linux/io_uring.h
+@@ -406,7 +406,7 @@ struct io_sqring_offsets {
+ 	__u32 dropped;
+ 	__u32 array;
+ 	__u32 resv1;
+-	__u64 resv2;
++	__u64 user_addr;
+ };
+ 
+ /*
+diff --git a/src/io_uring.c b/src/io_uring.c
+index 61e9357f7..29e7ddaac 100644
+--- a/src/io_uring.c
++++ b/src/io_uring.c
+@@ -45,9 +45,9 @@ print_io_sqring_offsets(const struct io_sqring_offsets *const p)
+ 		tprint_struct_next();
+ 		PRINT_FIELD_X(*p, resv1);
+ 	}
+-	if (p->resv2) {
++	if (p->user_addr) {
+ 		tprint_struct_next();
+-		PRINT_FIELD_X(*p, resv2);
++		PRINT_FIELD_X(*p, user_addr);
+ 	}
+ 	tprint_struct_end();
+ }
+@@ -73,9 +73,9 @@ print_io_cqring_offsets(const struct io_cqring_offsets *const p)
+ 		tprint_struct_next();
+ 		PRINT_FIELD_X(*p, resv1);
+ 	}
+-	if (p->resv2) {
++	if (p->user_addr) {
+ 		tprint_struct_next();
+-		PRINT_FIELD_X(*p, resv2);
++		PRINT_FIELD_X(*p, user_addr);
+ 	}
+ 	tprint_struct_end();
+ }
+diff --git a/src/ptp.c b/src/ptp.c
+index 4c7fde368..02bc0ee41 100644
+--- a/src/ptp.c
++++ b/src/ptp.c
+@@ -78,7 +78,7 @@ ptp_ioctl(struct tcb *const tcp, const unsigned int code,
+ 	case PTP_CLOCK_GETCAPS:
+ 	case PTP_CLOCK_GETCAPS2: {
+ 		struct ptp_clock_caps caps;
+-		CHECK_TYPE_SIZE(caps.rsv, sizeof(unsigned int) * 12);
++		CHECK_TYPE_SIZE(caps.rsv, sizeof(unsigned int) * 11);
+ 		CHECK_IOCTL_SIZE(PTP_CLOCK_GETCAPS, 80);
+ 		CHECK_IOCTL_SIZE(PTP_CLOCK_GETCAPS2, 80);
+ 
+-- 
+2.34.1
+
