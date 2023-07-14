@@ -1,0 +1,80 @@
+From 72d5bd62cc1661e3b2bbbbb2de732815f2a0e646 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 14 Jul 2023 10:25:10 +0000
+Subject: [PATCH] linux use MFD_NOEXEC_SEAL for shared memory
+
+ref: https://lore.kernel.org/lkml/20221207154939.2532830-4-jeffxu@google.com/
+
+The new MFD_NOEXEC_SEAL and MFD_EXEC flags allows application to set
+executable bit at creation time (memfd_create).
+
+When MFD_NOEXEC_SEAL is set, memfd is created without executable bit
+(mode:0666), and sealed with F_SEAL_EXEC, so it can't be chmod to be
+executable (mode: 0777) after creation.
+
+When MFD_EXEC flag is set, memfd is created with executable bit
+(mode:0777), this is the same as the old behavior of memfd_create.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ xbmc/platform/posix/utils/SharedMemory.cpp | 7 +++++--
+ xbmc/utils/UDMABufferObject.cpp            | 6 +++++-
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/xbmc/platform/posix/utils/SharedMemory.cpp b/xbmc/platform/posix/utils/SharedMemory.cpp
+index 6c1318e936..c01fef3eb1 100644
+--- a/xbmc/platform/posix/utils/SharedMemory.cpp
++++ b/xbmc/platform/posix/utils/SharedMemory.cpp
+@@ -15,6 +15,9 @@
+ #if defined(HAVE_LINUX_MEMFD)
+ #include <linux/memfd.h>
+ #include <sys/syscall.h>
++#ifndef MFD_NOEXEC_SEAL
++#define MFD_NOEXEC_SEAL 0x0008U
++#endif
+ #endif
+ 
+ #include <cerrno>
+@@ -63,7 +66,7 @@ CFileHandle CSharedMemory::OpenMemfd()
+ #if defined(SYS_memfd_create) && defined(HAVE_LINUX_MEMFD)
+   // This is specific to Linux >= 3.17, but preferred over shm_create if available
+   // because it is race-free
+-  int fd = syscall(SYS_memfd_create, "kodi", MFD_CLOEXEC);
++  int fd = syscall(SYS_memfd_create, "kodi", MFD_CLOEXEC | MFD_ALLOW_SEALING | MFD_NOEXEC_SEAL);
+   if (fd < 0)
+   {
+     throw std::system_error(errno, std::generic_category(), "memfd_create");
+@@ -115,4 +118,4 @@ CFileHandle CSharedMemory::OpenShm()
+   unlink(tmpFilename.c_str());
+ 
+   return fd;
+-}
+\ No newline at end of file
++}
+diff --git a/xbmc/utils/UDMABufferObject.cpp b/xbmc/utils/UDMABufferObject.cpp
+index 2b8336bcea..e67b6b2154 100644
+--- a/xbmc/utils/UDMABufferObject.cpp
++++ b/xbmc/utils/UDMABufferObject.cpp
+@@ -20,6 +20,10 @@
+ 
+ #include "PlatformDefs.h"
+ 
++#ifndef MFD_NOEXEC_SEAL
++#define MFD_NOEXEC_SEAL 0x0008U
++#endif
++
+ namespace
+ {
+ 
+@@ -95,7 +99,7 @@ bool CUDMABufferObject::CreateBufferObject(uint64_t size)
+   // Must be rounded to the system page size
+   m_size = RoundUp(size, PAGESIZE);
+ 
+-  m_memfd = memfd_create("kodi", MFD_CLOEXEC | MFD_ALLOW_SEALING);
++  m_memfd = memfd_create("kodi", MFD_CLOEXEC | MFD_ALLOW_SEALING | MFD_NOEXEC_SEAL);
+   if (m_memfd < 0)
+   {
+     CLog::Log(LOGERROR, "CUDMABufferObject::{} - memfd_create failed: {}", __FUNCTION__,
+-- 
+2.34.1
+
