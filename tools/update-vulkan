@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
+
+# path to the version file
+DISTRIBUTION_PATH="distributions/LibreELEC/version"
+
+# prevents executing from wrong folder
+[ -f ${DISTRIBUTION_PATH} ] || { echo "${DISTRIBUTION_PATH}: No such file or directory" && exit; }
+
+# main code
+pkgver=${1}
+[ $# -ne 1 ] && { echo "Usage: $0 PKG_VERSION"; exit 1; }
+
+dirs="packages/graphics/vulkan/vulkan-tools
+packages/graphics/vulkan/vulkan-loader
+packages/graphics/vulkan/vulkan-headers"
+
+for pkgmk in ${dirs}
+do
+  sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}/package.mk"
+  CHANGE_HASH=yes scripts/get ${pkgmk}
+  git commit -m "$(basename ${pkgmk}): update to ${pkgver}" ${pkgmk}
+done
+
+git co -b vulkan master
+git co vulkan
+git ls dev | head -3 | grep vulkan | cut -f 1 -d " " | xargs git cp
+git pu
+echo "https://github.com/KhronosGroup/Vulkan-Docs/blob/main/ChangeLog.adoc"
+git log --decorate=no --pretty=format:"- %s" -n 3 | sort
+git co dev
