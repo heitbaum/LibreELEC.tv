@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="efivar"
-PKG_VERSION="b920a6ca82250504167066d24aa8731ad29a0de8" # 10 Dec 2021
-PKG_SHA256="def327792854bdb5bc442e2907e1871c954e55e33d67045dcd2d2988f8a08afd"
+PKG_VERSION="90e88b221e8bc60dc50f3246051369b8f580c0d0"
+PKG_SHA256="9a82e0470097df96f5d1ebfe25313a3c486481d05ca17fafed95bc81989b760a"
 PKG_ARCH="x86_64"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://github.com/rhboot/efivar"
@@ -27,7 +27,7 @@ pre_make_target() {
 }
 
 make_target() {
-  make CROSS_COMPILE=${TARGET_NAME}- -C src/ libefivar.a libefiboot.a efivar.h efivar
+  make CROSS_COMPILE=${TARGET_NAME}- -C src/ libefivar.a libefiboot.a efivar.h efivar-static
 }
 
 makeinstall_host() {
