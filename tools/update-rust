@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
+
+# path to the version file
+DISTRIBUTION_PATH="distributions/LibreELEC/version"
+
+# prevents executing from wrong folder
+[ -f ${DISTRIBUTION_PATH} ] || { echo "${DISTRIBUTION_PATH}: No such file or directory" && exit; }
+
+# update a package.mk file with the multiple sha
+updatemultiplesha()
+{
+file=$1
+sha1=$2
+sha2=$3
+sha3=$4
+
+sed -i '
+# by default - do not print anything
+/^  "aarch64")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha1}'"/
+    P
+    D
+  }
+}
+/^  "arm")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha2}'"/
+    P
+    D
+  }
+}
+/^  "x86_64")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha3}'"/
+    P
+    D
+  }
+}' ${file}
+}
+
+getsha()
+{
+  t=$(mktemp) && 
+  wget "$1" -qO "$t" && 
+    set -- $(sha256sum "$t"); echo $1
+  rm "$t"
+}
+
+# main code
+pkgver=$1
+[ $# -ne 1 ] && { echo "Usage: $0 PKG_VERSION"; exit 1; }
+
+# update rust package to "pkgver" version
+echo "Starting update of rust to $pkgver."
+PKG_DIR=packages/rust/rust
+sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${PKG_DIR}/package.mk"
+CHANGE_HASH=yes scripts/get rust
+
+# update rust support packages to "pkgver" version
+pkgs="cargo rust-std rustc"
+
+for pkg in $pkgs
+do
+  echo "Starting update of ${pkg}-snapshot to $pkgver."
+  pkgmk="packages/rust/${pkg}-snapshot/package.mk"
+
+  sha1url="https://static.rust-lang.org/dist/${pkg}-${pkgver}-aarch64-unknown-linux-gnu.tar.xz"
+  sha2url="https://static.rust-lang.org/dist/${pkg}-${pkgver}-arm-unknown-linux-gnueabihf.tar.xz"
+  sha3url="https://static.rust-lang.org/dist/${pkg}-${pkgver}-x86_64-unknown-linux-gnu.tar.xz"
+
+  sha1=$(getsha ${sha1url})
+  sha2=$(getsha ${sha2url})
+  sha3=$(getsha ${sha3url})
+
+  updatemultiplesha $pkgmk $sha1 $sha2 $sha3
+done
+
+git commit -m "rust: update to ${pkgver}" packages/rust/rust/package.mk
+git commit -m "cargo-snapshot: update to ${pkgver}" packages/rust/cargo-snapshot/package.mk
+git commit -m "rust-std-snapshot: update to ${pkgver}" packages/rust/rust-std-snapshot/package.mk
+git commit -m "rustc-snapshot: update to ${pkgver}" packages/rust/rustc-snapshot/package.mk
