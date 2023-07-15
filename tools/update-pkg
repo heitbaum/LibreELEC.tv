@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
+
+# path to the version file
+DISTRIBUTION_PATH="distributions/LibreELEC/version"
+
+# prevents executing from wrong folder
+[ -f ${DISTRIBUTION_PATH} ] || { echo "${DISTRIBUTION_PATH}: No such file or directory" && exit; }
+
+# main code
+pkgname=${1}
+pkgver=${2}
+[ $# -ne 2 ] && { echo "Usage: $0 PKG_NAME PKG_VERSION"; exit 1; }
+
+PACKAGE_LIST="$(find packages -type d -name ${pkgname})/package.mk"
+  if [ ! -f "${PACKAGE_LIST}" ]; then
+    die "Package not found: ${pkgname}"
+  fi
+
+#https://stackoverflow.com/questions/8063228/check-if-a-variable-exists-in-a-list-in-bash
+for pkgmk in ${PACKAGE_LIST}
+do
+  if [[ ! $(grep "^PKG_VERSION=.*get_pkg_version" "${pkgmk}") ]]; then
+    # PKG_VERSION does not contain code, proceed
+    if [[ ! ${pkgname} = @(cli|demopkg|str3) ]]; then
+      # PKG is not in the array
+      sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}"
+    fi
+  fi
+  CHANGE_HASH=yes scripts/get ${pkgmk}
+  [ ${#pkgver} -eq 40 ] && pkgver="githash ${pkgver:0:7}"
+
+  commit_msg="${pkgname}: update to ${pkgver}"
+
+  case ${pkgname} in
+    curl)
+      commit_msg+="\n\nRelease notes:\n- https://curl.se/changes.html"
+      ;;
+  esac
+
+  printf "${commit_msg}" | git commit -F - ${pkgmk}
+done
