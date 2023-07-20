@@ -38,6 +38,14 @@ do
     curl)
       commit_msg+="\n\nRelease notes:\n- https://curl.se/changes.html"
       ;;
+    openssh)
+      commit_msg+="\n\nChange log:\n- https://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/ChangeLog"
+      commit_msg+="\n\nRelease notes:\n- https://www.openssh.com/releasenotes.html#${pkgver}"
+      commit_msg+="\n\nRelease notes:\n- https://www.openssh.com/txt/release-${pkgver}"
+      ;;
+    samba)
+      commit_msg+="\n\nRelease notes:\n- https://www.samba.org/samba/history/samba-${pkgver}.html"
+      ;;
   esac
 
   printf "${commit_msg}" | git commit -F - ${pkgmk}
