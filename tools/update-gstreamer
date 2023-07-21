@@ -1,0 +1,14 @@
+dirs="packages/multimedia/gstreamer/gst-plugins-bad
+packages/multimedia/gstreamer/gst-plugins-base
+packages/multimedia/gstreamer/gstreamer"
+for PKG_DIR in $dirs
+do
+  sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${1}\"|" -i "${PKG_DIR}/package.mk"
+  CHANGE_HASH=yes scripts/get $PKG_DIR
+  git commit -m "$(basename $PKG_DIR): update to $1" $PKG_DIR
+done
+git co -b gst master
+git ls dev | head -3 | grep gst | cut -f 1 -d " " | xargs git cp
+git pu
+git co dev
+git log gst --decorate=no -n 3 --pretty=format:"- %s" | sort
