@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
+
+# path to the version file
+DISTRIBUTION_PATH="distributions/LibreELEC/version"
+
+# prevents executing from wrong folder
+[ -f ${DISTRIBUTION_PATH} ] || { echo "${DISTRIBUTION_PATH}: No such file or directory" && exit; }
+
+# main code
+pkgver=${1}
+glslang_pkgver=${1}
+[ $# -ne 1 ] && { echo "Usage: $0 PKG_VERSION"; exit 1; }
+
+known_good=$(curl -sL https://raw.githubusercontent.com/KhronosGroup/glslang/${glslang_pkgver}/known_good.json)
+commit_headers=$(echo "${known_good}" | jq -r '.commits[]|select(.subrepo=="KhronosGroup/SPIRV-Headers")|.commit')
+commit_tools=$(echo "${known_good}" | jq -r '.commits[]|select(.subrepo=="KhronosGroup/SPIRV-Tools")|.commit')
+
+pkgmk="packages/graphics/vulkan/spirv-headers"
+  pkgver="${commit_headers}"
+  sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}/package.mk"
+  pkgname=$(basename ${pkgmk})
+  CHANGE_HASH=yes scripts/get ${pkgname}
+
+  pkgver="githash ${pkgver:0:7}"
+  commit_msg="${pkgname}: update to ${pkgver}"
+  commit_msg+="\n\nSupports build of glslang ${glslang_pkgver}"
+
+  printf "${commit_msg}" | git commit -F - ${pkgmk}
+
+pkgmk="packages/graphics/vulkan/spirv-tools"
+  pkgver="${commit_tools}"
+  sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}/package.mk"
+  pkgname=$(basename ${pkgmk})
+  CHANGE_HASH=yes scripts/get ${pkgname}
+
+  pkgver="githash ${pkgver:0:7}"
+  commit_msg="${pkgname}: update to ${pkgver}"
+  commit_msg+="\n\nSupports build of glslang ${glslang_pkgver}"
+
+  printf "${commit_msg}" | git commit -F - ${pkgmk}
+
+pkgmk="packages/graphics/vulkan/glslang"
+  sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${glslang_pkgver}\"|" -i "${pkgmk}/package.mk"
+  pkgname=$(basename ${pkgmk})
+  CHANGE_HASH=yes scripts/get ${pkgname}
+
+  commit_msg="${pkgname}: update to ${glslang_pkgver}"
+  commit_msg+="\n\nRelease notes: https://github.com/KhronosGroup/glslang/releases"
+  commit_msg+="\n\nSupported by:"
+  commit_msg+="\n- spirv-tools: ${commit_tools}"
+  commit_msg+="\n- spirv-headers: ${commit_headers}"
+
+  printf "${commit_msg}" | git commit -F - ${pkgmk}
