@@ -2,49 +2,49 @@ diff --git a/pkg/machine/ignition.go b/pkg/machine/ignition.go
 index 6a6495bf7..c819138ad 100644
 --- a/pkg/machine/ignition.go
 +++ b/pkg/machine/ignition.go
-@@ -25,7 +25,7 @@ import (
+@@ -27,7 +27,7 @@
  */
  
  const (
--	UserCertsTargetPath = "/etc/containers/certs.d"
-+	UserCertsTargetPath = "/storage/.kodi/addons/service.system.podman/etc/containers/certs.d"
+-	UserCertsTargetPath     = "/etc/containers/certs.d"
++	UserCertsTargetPath     = "/storage/.kodi/addons/service.system.podman/etc/containers/certs.d"
+ 	PodmanDockerTmpConfPath = "/etc/tmpfiles.d/podman-docker.conf"
  )
  
- // Convenience function to convert int to ptr
-@@ -266,7 +266,7 @@ func getDirs(usrName string) []Directory {
+@@ -262,7 +262,7 @@
  	dirs = append(dirs, Directory{
  		Node: Node{
- 			Group: getNodeGrp("root"),
+ 			Group: GetNodeGrp("root"),
 -			Path:  "/etc/containers/registries.conf.d",
 +			Path:  "/storage/.kodi/addons/service.system.podman/etc/containers/registries.conf.d",
- 			User:  getNodeUsr("root"),
+ 			User:  GetNodeUsr("root"),
  		},
- 		DirectoryEmbedded1: DirectoryEmbedded1{Mode: intToPtr(0755)},
-@@ -401,7 +401,7 @@ Delegate=memory pids cpu io
+ 		DirectoryEmbedded1: DirectoryEmbedded1{Mode: IntToPtr(0755)},
+@@ -402,7 +402,7 @@
  	files = append(files, File{
  		Node: Node{
- 			Group: getNodeGrp("root"),
+ 			Group: GetNodeGrp("root"),
 -			Path:  "/etc/containers/containers.conf",
 +			Path:  "/storage/.kodi/addons/service.system.podman/etc/containers/containers.conf",
- 			User:  getNodeUsr("root"),
+ 			User:  GetNodeUsr("root"),
  		},
  		FileEmbedded1: FileEmbedded1{
-@@ -417,7 +417,7 @@ Delegate=memory pids cpu io
+@@ -418,7 +418,7 @@
  	files = append(files, File{
  		Node: Node{
- 			Group: getNodeGrp("root"),
+ 			Group: GetNodeGrp("root"),
 -			Path:  "/etc/containers/podman-machine",
 +			Path:  "/storage/.kodi/addons/service.system.podman/etc/containers/podman-machine",
- 			User:  getNodeUsr("root"),
+ 			User:  GetNodeUsr("root"),
  		},
  		FileEmbedded1: FileEmbedded1{
-@@ -437,7 +437,7 @@ Delegate=memory pids cpu io
+@@ -439,7 +439,7 @@
  	files = append(files, File{
  		Node: Node{
- 			Group: getNodeGrp("root"),
+ 			Group: GetNodeGrp("root"),
 -			Path:  "/etc/containers/registries.conf.d/999-podman-machine.conf",
 +			Path:  "/storage/.kodi/addons/service.system.podman/etc/containers/registries.conf.d/999-podman-machine.conf",
- 			User:  getNodeUsr("root"),
+ 			User:  GetNodeUsr("root"),
  		},
  		FileEmbedded1: FileEmbedded1{
 diff --git a/pkg/rootless/rootless_linux.c b/pkg/rootless/rootless_linux.c
