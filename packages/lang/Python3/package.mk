@@ -113,11 +113,6 @@ post_makeinstall_host() {
 }
 
 pre_configure_target() {
-  for i in ${PKG_DIR}/patches/target/*.patch; do
-    build_msg "CLR_APPLY_PATCH" "APPLY PATCH $(print_color "CLR_PATCH_DESC" "(target)")" "${i#${ROOT}/}"
-    patch -d "${PKG_BUILD}" -p1 < ${i}
-  done
-
   export PYTHON_MODULES_INCLUDE="${TARGET_INCDIR}"
   export PYTHON_MODULES_LIB="${TARGET_LIBDIR}"
   export DISABLED_EXTENSIONS="${PKG_PY_DISABLED_MODULES}"
