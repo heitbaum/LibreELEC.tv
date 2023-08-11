@@ -123,9 +123,9 @@ index 4ce5d0320..531de9ceb 100644
  	// policy.json file.
 -	DefaultSignaturePolicyPath = "/etc/containers/policy.json"
 +	DefaultSignaturePolicyPath = "/storage/.kodi/addons/service.system.podman/etc/containers/policy.json"
- )
  
- func selinuxEnabled() bool {
+ 	// Mount type for mounting host dir
+ 	_typeBind = "bind"
 @@ -49,8 +49,5 @@ func ifRootlessConfigPath() (string, error) {
  }
  
