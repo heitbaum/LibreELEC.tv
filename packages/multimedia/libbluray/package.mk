@@ -25,7 +25,6 @@ PKG_CONFIGURE_OPTS_TARGET="--disable-werror \
                            --disable-optimizations \
                            --disable-examples \
                            --disable-bdjava-jar \
-                           --disable-dependency-tracking \
                            --disable-doxygen-doc \
                            --disable-doxygen-dot \
                            --disable-doxygen-man \
