@@ -1,0 +1,70 @@
+From 2383fca5b451d30e3e83470c840bdb374ba6c175 Mon Sep 17 00:00:00 2001
+From: CastagnaIT <gottardo.stefano.83@gmail.com>
+Date: Fri, 25 Aug 2023 14:18:40 +0200
+Subject: [PATCH] test
+
+---
+ src/common/AdaptiveTree.cpp | 18 +++++++++++++++++-
+ src/common/AdaptiveTree.h   |  5 +++++
+ 2 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/src/common/AdaptiveTree.cpp b/src/common/AdaptiveTree.cpp
+index 04e6bdf21..3ab59a87a 100644
+--- a/src/common/AdaptiveTree.cpp
++++ b/src/common/AdaptiveTree.cpp
+@@ -563,8 +563,11 @@ namespace adaptive
+   {
+     std::unique_lock<std::mutex> updLck(m_updMutex);
+ 
+-    while (~m_tree->m_updateInterval && !m_threadStop)
++    while (~m_tree->m_updateInterval)
+     {
++      if (m_threadStop)
++        break;
++
+       if (m_cvUpdInterval.wait_for(updLck, std::chrono::milliseconds(m_tree->m_updateInterval)) ==
+           std::cv_status::timeout)
+       {
+@@ -579,6 +582,19 @@ namespace adaptive
+     }
+   }
+ 
++  void AdaptiveTree::TreeUpdateThread::Stop()
++  {
++    // If an update is already in progress the wait until its finished
++    while (true)
++    {
++      std::lock_guard<std::mutex> updLck{m_updMutex};
++      if (m_waitQueue == 0)
++        break;
++      std::this_thread::sleep_for(std::chrono::milliseconds(10));
++    }
++    m_threadStop = true;
++  }
++
+   void AdaptiveTree::TreeUpdateThread::Pause()
+   {
+     // If an update is already in progress the wait until its finished
+diff --git a/src/common/AdaptiveTree.h b/src/common/AdaptiveTree.h
+index 45ef4044d..3d905ee55 100644
+--- a/src/common/AdaptiveTree.h
++++ b/src/common/AdaptiveTree.h
+@@ -525,6 +525,8 @@ class ATTR_DLL_LOCAL AdaptiveTree
+   AdaptiveTree(const AdaptiveTree& left);
+   virtual ~AdaptiveTree()
+   {
++    m_updThread.Stop();
++
+     for (auto period : periods_)
+       delete period;
+   }
+@@ -639,6 +641,9 @@ class ATTR_DLL_LOCAL AdaptiveTree
+     // \brief As "std::mutex" unlock, but resume the manifest updates (support std::lock_guard).
+     void unlock() { Resume(); }
+ 
++    // \brief Stop performing new updates.
++    void Stop();
++
+   private:
+     void Worker();
+     void Pause();
