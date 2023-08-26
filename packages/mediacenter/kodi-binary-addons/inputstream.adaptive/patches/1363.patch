@@ -1,31 +1,18 @@
-From 2383fca5b451d30e3e83470c840bdb374ba6c175 Mon Sep 17 00:00:00 2001
+From 37cdb31464f7030875d0e7a9ec7c5e112a699764 Mon Sep 17 00:00:00 2001
 From: CastagnaIT <gottardo.stefano.83@gmail.com>
-Date: Fri, 25 Aug 2023 14:18:40 +0200
-Subject: [PATCH] test
+Date: Sat, 26 Aug 2023 10:52:26 +0200
+Subject: [PATCH] test2
 
 ---
- src/common/AdaptiveTree.cpp | 18 +++++++++++++++++-
+ src/common/AdaptiveTree.cpp | 14 ++++++++++++++
  src/common/AdaptiveTree.h   |  5 +++++
- 2 files changed, 22 insertions(+), 1 deletion(-)
+ 2 files changed, 19 insertions(+)
 
 diff --git a/src/common/AdaptiveTree.cpp b/src/common/AdaptiveTree.cpp
-index 04e6bdf21..3ab59a87a 100644
+index 04e6bdf21..72554387b 100644
 --- a/src/common/AdaptiveTree.cpp
 +++ b/src/common/AdaptiveTree.cpp
-@@ -563,8 +563,11 @@ namespace adaptive
-   {
-     std::unique_lock<std::mutex> updLck(m_updMutex);
- 
--    while (~m_tree->m_updateInterval && !m_threadStop)
-+    while (~m_tree->m_updateInterval)
-     {
-+      if (m_threadStop)
-+        break;
-+
-       if (m_cvUpdInterval.wait_for(updLck, std::chrono::milliseconds(m_tree->m_updateInterval)) ==
-           std::cv_status::timeout)
-       {
-@@ -579,6 +582,19 @@ namespace adaptive
+@@ -579,6 +579,20 @@ namespace adaptive
      }
    }
  
@@ -40,6 +27,7 @@ index 04e6bdf21..3ab59a87a 100644
 +      std::this_thread::sleep_for(std::chrono::milliseconds(10));
 +    }
 +    m_threadStop = true;
++    ResetStartTime();
 +  }
 +
    void AdaptiveTree::TreeUpdateThread::Pause()
