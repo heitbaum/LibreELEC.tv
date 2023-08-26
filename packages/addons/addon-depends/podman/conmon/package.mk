@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="conmon"
-PKG_VERSION="2.1.7"
-PKG_SHA256="7d0f9a2f7cb8a76c51990128ac837aaf0cc89950b6ef9972e94417aa9cf901fe"
+PKG_VERSION="2.1.8"
+PKG_SHA256="e72c090210a03ca3b43a0fad53f15bca90bbee65105c412468009cf3a5988325"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="https://github.com/containers/conmon"
 PKG_URL="https://github.com/containers/conmon/archive/v${PKG_VERSION}.tar.gz"
