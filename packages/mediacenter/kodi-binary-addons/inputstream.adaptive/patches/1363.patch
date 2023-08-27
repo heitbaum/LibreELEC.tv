@@ -1,33 +1,37 @@
-From 37cdb31464f7030875d0e7a9ec7c5e112a699764 Mon Sep 17 00:00:00 2001
+From ae29e576bdcf9feba1c12ac93047677dfb2cd4e5 Mon Sep 17 00:00:00 2001
 From: CastagnaIT <gottardo.stefano.83@gmail.com>
-Date: Sat, 26 Aug 2023 10:52:26 +0200
-Subject: [PATCH] test2
+Date: Sun, 27 Aug 2023 15:06:38 +0200
+Subject: [PATCH] test3
 
 ---
- src/common/AdaptiveTree.cpp | 14 ++++++++++++++
+ src/common/AdaptiveTree.cpp | 11 +++++++++++
  src/common/AdaptiveTree.h   |  5 +++++
- 2 files changed, 19 insertions(+)
+ 2 files changed, 16 insertions(+)
 
 diff --git a/src/common/AdaptiveTree.cpp b/src/common/AdaptiveTree.cpp
-index 04e6bdf21..72554387b 100644
+index 04e6bdf21..b5cee5ff5 100644
 --- a/src/common/AdaptiveTree.cpp
 +++ b/src/common/AdaptiveTree.cpp
-@@ -579,6 +579,20 @@ namespace adaptive
+@@ -572,6 +572,8 @@ namespace adaptive
+         // If paused, wait until last "Resume" will be called
+         std::unique_lock<std::mutex> lckWait(m_waitMutex);
+         m_cvWait.wait(lckWait, [&] { return m_waitQueue == 0; });
++        if (m_threadStop)
++          break;
+ 
+         updLck.lock();
+         m_tree->RefreshLiveSegments();
+@@ -579,6 +581,15 @@ namespace adaptive
      }
    }
  
 +  void AdaptiveTree::TreeUpdateThread::Stop()
 +  {
-+    // If an update is already in progress the wait until its finished
-+    while (true)
-+    {
-+      std::lock_guard<std::mutex> updLck{m_updMutex};
-+      if (m_waitQueue == 0)
-+        break;
-+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-+    }
 +    m_threadStop = true;
-+    ResetStartTime();
++    // If an update is already in progress wait until exit
++    std::lock_guard<std::mutex> updLck{m_updMutex};
++    m_cvUpdInterval.notify_all();
++    m_cvWait.notify_all();
 +  }
 +
    void AdaptiveTree::TreeUpdateThread::Pause()
