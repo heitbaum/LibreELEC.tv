@@ -1,13 +1,29 @@
-From ae29e576bdcf9feba1c12ac93047677dfb2cd4e5 Mon Sep 17 00:00:00 2001
+From 91bec1167d66789facc8184963630af298e68fb0 Mon Sep 17 00:00:00 2001
 From: CastagnaIT <gottardo.stefano.83@gmail.com>
-Date: Sun, 27 Aug 2023 15:06:38 +0200
-Subject: [PATCH] test3
+Date: Mon, 28 Aug 2023 18:07:23 +0200
+Subject: [PATCH] test4
 
 ---
- src/common/AdaptiveTree.cpp | 11 +++++++++++
- src/common/AdaptiveTree.h   |  5 +++++
- 2 files changed, 16 insertions(+)
+ src/common/AdaptiveStream.cpp |  4 ++++
+ src/common/AdaptiveTree.cpp   | 11 +++++++++++
+ src/common/AdaptiveTree.h     |  5 +++++
+ 3 files changed, 20 insertions(+)
 
+diff --git a/src/common/AdaptiveStream.cpp b/src/common/AdaptiveStream.cpp
+index 6d5f3112b..b5cfb0756 100644
+--- a/src/common/AdaptiveStream.cpp
++++ b/src/common/AdaptiveStream.cpp
+@@ -814,6 +814,10 @@ bool AdaptiveStream::ensureSegment()
+   {
+     // wait until worker is ready for new segment
+     std::unique_lock<std::mutex> lck(thread_data_->mutex_dl_);
++
++    if (state_ == STOPPED)
++      return false;
++
+     // lock live segment updates
+     std::lock_guard<adaptive::AdaptiveTree::TreeUpdateThread> lckUpdTree(tree_.GetTreeUpdMutex());
+ 
 diff --git a/src/common/AdaptiveTree.cpp b/src/common/AdaptiveTree.cpp
 index 04e6bdf21..b5cee5ff5 100644
 --- a/src/common/AdaptiveTree.cpp
