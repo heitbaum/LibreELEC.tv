@@ -33,6 +33,17 @@ make_host() {
        lib=/lib \
        USE_GPERF=no \
        -C libcap libcap.pc libcap.a
+
+  make CC=${CC} \
+       AR=${AR} \
+       RANLIB=${RANLIB} \
+       CFLAGS="${HOST_CFLAGS}" \
+       BUILD_CFLAGS="${HOST_CFLAGS} -I${PKG_BUILD}/libcap/include" \
+       PAM_CAP=no \
+       lib=/lib \
+       USE_GPERF=no \
+       DYNAMIC=no \
+       -C progs
 }
 
 make_target() {
@@ -48,6 +59,18 @@ make_target() {
        lib=/lib \
        USE_GPERF=no \
        -C libcap libcap.pc libcap.a
+
+  make CC=${CC} \
+       AR=${AR} \
+       RANLIB=${RANLIB} \
+       CFLAGS="${TARGET_CFLAGS}" \
+       BUILD_CC=${HOST_CC} \
+       BUILD_CFLAGS="${HOST_CFLAGS} -I${PKG_BUILD}/libcap/include" \
+       PAM_CAP=no \
+       lib=/lib \
+       USE_GPERF=no \
+       DYNAMIC=no \
+       -C progs
 }
 
 makeinstall_host() {
@@ -59,6 +82,9 @@ makeinstall_host() {
 
   mkdir -p ${TOOLCHAIN}/include/sys
     cp libcap/include/sys/capability.h ${TOOLCHAIN}/include/sys
+
+  mkdir -p ${TOOLCHAIN}/sbin
+    cp progs/{capsh,getpcaps,getcap,setcap} ${TOOLCHAIN}/sbin
 }
 
 makeinstall_target() {
@@ -70,4 +96,7 @@ makeinstall_target() {
 
   mkdir -p ${SYSROOT_PREFIX}/usr/include/sys
     cp libcap/include/sys/capability.h ${SYSROOT_PREFIX}/usr/include/sys
+
+  mkdir -p ${INSTALL}/usr/sbin
+    cp progs/{capsh,getpcaps,getcap,setcap} ${INSTALL}/usr/sbin
 }
