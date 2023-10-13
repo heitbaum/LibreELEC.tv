@@ -3,11 +3,12 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="cmake"
-PKG_VERSION="3.27.7"
-PKG_SHA256="08f71a106036bf051f692760ef9558c0577c42ac39e96ba097e7662bd4158d8e"
+PKG_VERSION="3.28.0-rc2"
+PKG_SHA256="97192d87f6e0766b8ad1c6cc456079be416e3a55435880ba2d5543070737910c"
 PKG_LICENSE="BSD"
 PKG_SITE="https://cmake.org/"
 PKG_URL="https://cmake.org/files/v$(get_pkg_version_maj_min | cut -f 1 -d -)/cmake-${PKG_VERSION}.tar.gz"
+PKG_URL="https://cmake.org/files/v3.28/cmake-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_HOST="pkg-config:host"
 PKG_LONGDESC="A cross-platform, open-source make system."
 PKG_TOOLCHAIN="configure"
