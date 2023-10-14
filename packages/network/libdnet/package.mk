@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libdnet"
-PKG_VERSION="1.16.4"
-PKG_SHA256="7df1f0a3db9cf03b48cf50ab273fd6a20c1be99eb9344b9663fe3fd9ed9dab65"
+PKG_VERSION="1.17.0"
+PKG_SHA256="6be1ed0763151ede4c9665a403f1c9d974b2ffab2eacdb26b22078e461aae1dc"
 PKG_LICENSE="BSD"
 PKG_SITE="https://github.com/ofalk/libdnet"
 PKG_URL="https://github.com/ofalk/libdnet/archive/${PKG_NAME}-${PKG_VERSION}.tar.gz"
