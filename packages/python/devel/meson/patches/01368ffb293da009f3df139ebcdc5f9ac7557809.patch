@@ -1,0 +1,58 @@
+From 01368ffb293da009f3df139ebcdc5f9ac7557809 Mon Sep 17 00:00:00 2001
+From: Eli Schwartz <eschwartz93@gmail.com>
+Date: Sat, 28 Oct 2023 21:53:49 -0400
+Subject: [PATCH] simd module: fix regression that broke using only some simd
+ variants
+
+Regression in commit a3d287c553b9598f010fe0755c5528ef62055e44.
+
+When a given kwarg is not specified, we want to not generate it as a
+simd variant. Since the default for buildtarget sources is `[]` it
+resulted in building a static library with no sources, and a warning
+stating that this was buggy and will eventually be removed.
+
+Fix this by teaching buildtarget sources to allow None, and defaulting
+to it specifically for the simd module. We can check this and then skip
+processing entirely.
+
+Fixes #12438
+---
+ mesonbuild/interpreter/type_checking.py | 2 +-
+ mesonbuild/modules/simd.py              | 4 +++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/mesonbuild/interpreter/type_checking.py b/mesonbuild/interpreter/type_checking.py
+index 296baca31bae..e7edc1939b18 100644
+--- a/mesonbuild/interpreter/type_checking.py
++++ b/mesonbuild/interpreter/type_checking.py
+@@ -470,7 +470,7 @@ def link_whole_validator(values: T.List[T.Union[StaticLibrary, CustomTarget, Cus
+ 
+ BT_SOURCES_KW: KwargInfo[SourcesVarargsType] = KwargInfo(
+     'sources',
+-    ContainerTypeInfo(list, SOURCES_VARARGS),
++    (NoneType, ContainerTypeInfo(list, SOURCES_VARARGS)),
+     listify=True,
+     default=[],
+ )
+diff --git a/mesonbuild/modules/simd.py b/mesonbuild/modules/simd.py
+index bce89dd2d976..b8baf39ef34a 100644
+--- a/mesonbuild/modules/simd.py
++++ b/mesonbuild/modules/simd.py
+@@ -71,7 +71,7 @@ def __init__(self, interpreter: Interpreter):
+     @typed_pos_args('simd.check', str)
+     @typed_kwargs('simd.check',
+                   KwargInfo('compiler', Compiler, required=True),
+-                  *[BT_SOURCES_KW.evolve(name=iset) for iset in ISETS],
++                  *[BT_SOURCES_KW.evolve(name=iset, default=None) for iset in ISETS],
+                   *[a for a in STATIC_LIB_KWS if a.name != 'sources'],
+                   allow_unknown=True) # Because we also accept STATIC_LIB_KWS, but build targets have not been completely ported to typed_pos_args/typed_kwargs.
+     @permittedKwargs({'compiler', *ISETS, *build.known_stlib_kwargs}) # Also remove this, per above comment
+@@ -90,6 +90,8 @@ def check(self, state: ModuleState, args: T.Tuple[str], kwargs: CheckKw) -> T.Li
+ 
+         for iset in ISETS:
+             sources = kwargs[iset]
++            if sources is None:
++                continue
+ 
+             compile_args = compiler.get_instruction_set_args(iset)
+             if compile_args is None:
