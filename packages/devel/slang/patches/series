@@ -1,8 +1,0 @@
-demos_make.patch
-hostent_haddr.patch
-slsh_libs.patch
-dso_linking.patch
-fix_glibc.patch
-segv_fix.patch
-init-crash.patch
-cplusplus-support.patch
