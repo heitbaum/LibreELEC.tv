@@ -1,0 +1,176 @@
+From b2c41028bcf3d657effcbf130b83a57c680ca26f Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 11 Nov 2023 10:49:01 +0000
+Subject: [PATCH] use "std::regex_replace" instead of obsolete pcre
+
+---
+ Makefile                             |  4 ++--
+ dist/epgdata2xmltv/Makefile          |  4 ++--
+ dist/epgdata2xmltv/epgdata2xmltv.cpp |  8 +++++---
+ event.cpp                            | 22 +++++++++++-----------
+ import.cpp                           | 20 ++++++++++----------
+ 5 files changed, 30 insertions(+), 28 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 9ee4c3e..3c1b796 100644
+--- a/Makefile
++++ b/Makefile
+@@ -50,8 +50,8 @@ SOFILE = libvdr-$(PLUGIN).so
+ 
+ ### Includes and Defines (add further entries here):
+ 
+-PKG-LIBS += libxml-2.0 libpcrecpp sqlite3
+-PKG-INCLUDES += libxml-2.0 libpcrecpp sqlite3
++PKG-LIBS += libxml-2.0 sqlite3
++PKG-INCLUDES += libxml-2.0 sqlite3
+ 
+ DEFINES += -D_GNU_SOURCE -D_XOPEN_SOURCE -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
+ 
+diff --git a/dist/epgdata2xmltv/Makefile b/dist/epgdata2xmltv/Makefile
+index 75ab3c9..b705586 100644
+--- a/dist/epgdata2xmltv/Makefile
++++ b/dist/epgdata2xmltv/Makefile
+@@ -11,8 +11,8 @@ STRIP ?= -s
+ 
+ ### Includes and Defines (add further entries here):
+ 
+-PKG-LIBS += libxml-2.0 libxslt libexslt libcurl libzip libpcrecpp enca
+-PKG-INCLUDES += libxml-2.0 libxslt libexslt libcurl libzip libpcrecpp enca
++PKG-LIBS += libxml-2.0 libxslt libexslt libcurl libzip enca
++PKG-INCLUDES += libxml-2.0 libxslt libexslt libcurl libzip enca
+ 
+ DEFINES += -D_GNU_SOURCE 
+ DEFINES += -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
+diff --git a/dist/epgdata2xmltv/epgdata2xmltv.cpp b/dist/epgdata2xmltv/epgdata2xmltv.cpp
+index ec465fb..9bdf50e 100644
+--- a/dist/epgdata2xmltv/epgdata2xmltv.cpp
++++ b/dist/epgdata2xmltv/epgdata2xmltv.cpp
+@@ -6,9 +6,9 @@
+ #include <sys/types.h>
+ #include <dirent.h>
+ #include <string.h>
++#include <regex>
+ #include <locale.h>
+ #include <zip.h>
+-#include <pcrecpp.h>
+ #include <enca.h>
+ #include <libxml/parserInternals.h>
+ #include "epgdata2xmltv.h"
+@@ -562,8 +562,10 @@ int cepgdata2xmltv::Process(int argc, char *argv[])
+             }
+ 
+             std::string s = xmlmem;
+-            int reps=pcrecpp::RE("&(?![a-zA-Z]{1,8};)").GlobalReplace("%amp;",&s);
+-            if (reps) {
++            long unsigned int reps = s.length();
++            std::regex_replace(s, std::regex("&(?![a-zA-Z]{1,8};)"), ("%amp;"));
++            if (reps != s.length())
++            {
+                 xmlmem = (char *)realloc(xmlmem, s.size()+1);
+                 xmlsize = s.size();
+                 strcpy(xmlmem,s.c_str());
+diff --git a/event.cpp b/event.cpp
+index 1df43ec..5ff7c41 100644
+--- a/event.cpp
++++ b/event.cpp
+@@ -7,9 +7,9 @@
+ 
+ #include <stdlib.h>
+ #include <stdio.h>
++#include <regex>
+ #include <vector>
+ #include <vdr/tools.h>
+-#include <pcrecpp.h>
+ #include "event.h"
+ 
+ extern char *strcatrealloc(char *, const char*);
+@@ -529,11 +529,11 @@ void cXMLTVEvent::GetSQL(const char *Source, int SrcIdx, const char *ChannelID,
+     }
+ 
+     std::string si=sql_insert;
+-    int ireps;
+-    ireps=pcrecpp::RE("'").GlobalReplace("''",&si);
+-    ireps+=pcrecpp::RE("\\^").GlobalReplace("'",&si);
+-    ireps+=pcrecpp::RE("'NULL'").GlobalReplace("NULL",&si);
+-    if (ireps)
++    long unsigned int ilen = si.length();
++    std::regex_replace(si, std::regex("'"), "''");
++    std::regex_replace(si, std::regex("\\^"), "'");
++    std::regex_replace(si, std::regex("'NULL'"), "NULL");
++    if (ilen != si.length())
+     {
+         sql_insert=(char *) realloc(sql_insert,si.size()+1);
+         strcpy(sql_insert,si.c_str());
+@@ -541,11 +541,11 @@ void cXMLTVEvent::GetSQL(const char *Source, int SrcIdx, const char *ChannelID,
+     *Insert=sql_insert;
+ 
+     std::string su=sql_update;
+-    int ureps;
+-    ureps=pcrecpp::RE("'").GlobalReplace("''",&su);
+-    ureps+=pcrecpp::RE("\\^").GlobalReplace("'",&su);
+-    ureps+=pcrecpp::RE("'NULL'").GlobalReplace("NULL",&su);
+-    if (ureps)
++    long unsigned int ulen = su.length();
++    std::regex_replace(su, std::regex("'"), "''");
++    std::regex_replace(su, std::regex("\\^"), "'");
++    std::regex_replace(su, std::regex("'NULL'"), "NULL");
++    if (ulen != su.length())
+     {
+         sql_update=(char *) realloc(sql_update,su.size()+1);
+         strcpy(sql_update,su.c_str());
+diff --git a/import.cpp b/import.cpp
+index da14179..81bfb0a 100644
+--- a/import.cpp
++++ b/import.cpp
+@@ -7,8 +7,8 @@
+ 
+ #include <sqlite3.h>
+ #include <ctype.h>
++#include <regex>
+ #include <time.h>
+-#include <pcrecpp.h>
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <vdr/channels.h>
+@@ -1403,9 +1403,9 @@ bool cImport::UpdateXMLTVEvent(cEPGSource *Source, sqlite3 *Db, cXMLTVEvent *xEv
+ 
+         std::string ed=shortdesc;
+ 
+-        int reps;
+-        reps=pcrecpp::RE("'").GlobalReplace("''",&ed);
+-        if (reps)
++        long unsigned int reps = ed.length();
++        std::regex_replace(ed, std::regex("'"), "''");
++        if (reps != ed.length())
+         {
+             shortdesc=(char *) realloc(shortdesc,ed.size()+1);
+             strcpy(shortdesc,ed.c_str());
+@@ -1513,9 +1513,9 @@ bool cImport::UpdateXMLTVEvent(cEPGSource *Source, sqlite3 *Db, const cEvent *Ev
+ 
+         std::string ed=eitdescription;
+ 
+-        int reps;
+-        reps=pcrecpp::RE("'").GlobalReplace("''",&ed);
+-        if (reps)
++        long unsigned int reps = ed.length();
++        std::regex_replace(ed, std::regex("'"), "''");
++        if (reps != ed.length())
+         {
+             eitdescription=(char *) realloc(eitdescription,ed.size()+1);
+             strcpy(eitdescription,ed.c_str());
+@@ -1651,9 +1651,9 @@ cXMLTVEvent *cImport::SearchXMLTVEvent(sqlite3 **Db,const char *ChannelID, const
+ 
+         std::string st=sqltitle;
+ 
+-        int reps;
+-        reps=pcrecpp::RE("'").GlobalReplace("''",&st);
+-        if (reps)
++        long unsigned int reps = st.length();
++        std::regex_replace(st, std::regex("'"), "''");
++        if (reps != st.length())
+         {
+             char *tmp_sqltitle=(char *) realloc(sqltitle,st.size()+1);
+             if (tmp_sqltitle)
+-- 
+2.34.1
+
