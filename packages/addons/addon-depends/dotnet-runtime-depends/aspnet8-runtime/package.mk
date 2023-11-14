@@ -2,7 +2,7 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="aspnet8-runtime"
-PKG_VERSION="8.0.0-rc.2"
+PKG_VERSION="8.0.0"
 PKG_LICENSE="MIT"
 PKG_SITE="https://dotnet.microsoft.com/"
 PKG_DEPENDS_TARGET="toolchain"
@@ -11,16 +11,16 @@ PKG_TOOLCHAIN="manual"
 
 case "${ARCH}" in
   "aarch64")
-    PKG_SHA256="c190a0487867ec6478622c6c87da06c1f33ad1197759ec547d7de2132ff2f3d4"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/c5d92a9c-c318-422e-b66a-7849199de735/6c3bc3f5958917851fe7dacd383bcaea/aspnetcore-runtime-8.0.0-rc.2.23480.2-linux-arm64.tar.gz"
+    PKG_SHA256="2c501257aa5f7437ab7cbc7419b3a4368ad2b72b515b3f3f9acfd83c0b75d057"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/91223e4e-2300-4e8e-9364-09ea1c317294/47fb26a2df5eeee08f77a4d1b720a34a/aspnetcore-runtime-8.0.0-linux-arm64.tar.gz"
     ;;
   "arm")
-    PKG_SHA256="a7648c5c15f527fd84f9fd9c7e7ac8ca2a32ffc3c600bc05243165418e281557"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/bfa751f5-17fe-489b-bc5d-6f53a578e601/4137a4e66d3c0895035925e7073cb47a/aspnetcore-runtime-8.0.0-rc.2.23480.2-linux-arm.tar.gz"
+    PKG_SHA256="dc89239d90011b8e373c796c22b91a72d90fe22110b984e18e7758a29270d49d"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/6d3049cc-4dcf-4dfb-9444-009997fbe620/fa9da42c88a2d74aef7e99f56269e36d/aspnetcore-runtime-8.0.0-linux-arm.tar.gz"
     ;;
   "x86_64")
-    PKG_SHA256="e4c0ad37d1fe47805ce4f21de28c95eac7b5650be1b41d2de5a2c20000c369d8"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/0d7fb51b-f30e-4b84-b4c2-b739ec8f7978/68e9fc71fb2c4f01a9c7f25672caf1d1/aspnetcore-runtime-8.0.0-rc.2.23480.2-linux-x64.tar.gz"
+    PKG_SHA256="4418b2169d5f3bb33064e40e34f2cff0f67659dcd3fb0f3c9355b2b69e688964"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/257bdcc7-cbfd-4680-964a-cbe8e9160bca/ac0cbf19d897ba51ae004b4146940a0a/aspnetcore-runtime-8.0.0-linux-x64.tar.gz"
     ;;
 esac
 PKG_SOURCE_NAME="aspnetcore-runtime_${PKG_VERSION}_${ARCH}.tar.gz"
