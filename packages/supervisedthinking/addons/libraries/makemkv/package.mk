@@ -46,15 +46,16 @@ addon() {
   # Install makemkv binary
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/bin
   install -m 0755 $(get_build_dir makemkv-bin)/bin/${MKVARCH}/makemkvcon $ADDON_BUILD/$PKG_ADDON_ID/bin/makemkvcon.bin
+  patchelf --add-rpath '$ORIGIN/../lib.private' ${ADDON_BUILD}/${PKG_ADDON_ID}/bin/makemkvcon.bin
 
   # Copy licence file
   mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/license
   cp $(get_build_dir makemkv-bin)/src/eula_en_linux.txt $ADDON_BUILD/$PKG_ADDON_ID/license
 
   # Install libs
-  mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp $PKG_BUILD/out/libmakemkv.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp $PKG_BUILD/out/libdriveio.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp $PKG_BUILD/out/libmmbd.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib
-  cp -PL $(get_install_dir openssl)/usr/lib/libcrypto.so.* $ADDON_BUILD/$PKG_ADDON_ID/lib
+  mkdir -p $ADDON_BUILD/$PKG_ADDON_ID/lib.private
+  cp $PKG_BUILD/out/libmakemkv.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib.private
+  cp $PKG_BUILD/out/libdriveio.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib.private
+  cp $PKG_BUILD/out/libmmbd.so.? $ADDON_BUILD/$PKG_ADDON_ID/lib.private
+  cp -PL $(get_install_dir openssl)/usr/lib/libcrypto.so.* $ADDON_BUILD/$PKG_ADDON_ID/lib.private
 }
