@@ -5,9 +5,42 @@ Subject: [PATCH 1/2] xmlCleanupGlobals is a noop and not available in libxml2
  2.12.0
 
 ---
+ no-exit.patch  | 5 ++---
  src/xml_edit.c | 2 --
- 1 files changed, 2 deletions(-)
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
+diff --git a/no-exit.patch b/no-exit.patch
+index cc3e048b..8caf3f53 100644
+--- a/no-exit.patch
++++ b/no-exit.patch
+@@ -588,9 +588,9 @@ index e199178..afd931b 100644
+      const edOptions* g_ops)
+  {
+ @@ -559,7 +569,7 @@ edOutput(const char* filename, const XmlEdAction* ops, int ops_count,
++     {
+          cleanupNSArr(ns_arr);
+          xmlCleanupParser();
+-         xmlCleanupGlobals();
+ -        exit(EXIT_BAD_FILE);
+ +        return EXIT_BAD_FILE;
+      }
+@@ -658,7 +658,7 @@ index e199178..afd931b 100644
+          if (arg[0] == '-')
+          {
+              if (ops_count >= max_ops_count)
+-@@ -741,17 +763,23 @@ edMain(int argc, char **argv)
++@@ -741,16 +763,22 @@ edMain(int argc, char **argv)
+  
+      if (i >= argc)
+      {
+@@ -682,7 +682,6 @@ index e199178..afd931b 100644
+      xmlFree(ops);
+      cleanupNSArr(ns_arr);
+      xmlCleanupParser();
+-     xmlCleanupGlobals();
+ -    return 0;
+ +
+ +    return ret;
 diff --git a/src/xml_edit.c b/src/xml_edit.c
 index e199178e..85a0a9f4 100644
 --- a/src/xml_edit.c
