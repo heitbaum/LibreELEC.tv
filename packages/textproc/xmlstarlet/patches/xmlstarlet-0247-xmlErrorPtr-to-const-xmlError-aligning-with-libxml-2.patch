@@ -1,0 +1,41 @@
+From a62c58c5f301b49a445936dc322011c6b2c80f2d Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 3 Dec 2023 06:19:19 +0000
+Subject: [PATCH] xmlErrorPtr to const xmlError * aligning with libxml 2.12
+
+ref:
+- https://github.com/GNOME/libxml2/commit/45470611b047db78106dcb2fdbd4164163c15ab7
+---
+ src/xml.c     | 2 +-
+ src/xmlstar.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/xml.c b/src/xml.c
+index cf47cc2..e6f19c1 100644
+--- a/src/xml.c
++++ b/src/xml.c
+@@ -104,7 +104,7 @@ void reportGenericError(void* ctx, const char * msg, ...) {
+ /* by default all errors are reported */
+ static ErrorInfo errorInfo = { NULL, NULL, VERBOSE, CONTINUE };
+ 
+-void reportError(void *ptr, xmlErrorPtr error)
++void reportError(void *ptr, const xmlError *error)
+ {
+     ErrorInfo *errorInfo = (ErrorInfo*) ptr;
+     assert(errorInfo);
+diff --git a/src/xmlstar.h b/src/xmlstar.h
+index 3e1eed3..e8d7177 100644
+--- a/src/xmlstar.h
++++ b/src/xmlstar.h
+@@ -32,7 +32,7 @@ typedef struct _errorInfo {
+     ErrorStop stop;
+ } ErrorInfo;
+ 
+-void reportError(void *ptr, xmlErrorPtr error);
++void reportError(void *ptr, const xmlError *error);
+ void suppressErrors(void);
+ 
+ typedef struct _gOptions {
+-- 
+2.34.1
+
