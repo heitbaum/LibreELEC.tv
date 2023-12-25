@@ -19,7 +19,7 @@ post_patch() {
   (
     cd ${PKG_BUILD}
     mkdir -p "${PKG_FW_SOURCE}"
-      ./copy-firmware.sh --verbose "${PKG_FW_SOURCE}"
+      ./copy-firmware.sh --xz --verbose "${PKG_FW_SOURCE}"
   )
 }
 
@@ -45,12 +45,12 @@ makeinstall_target() {
       [[ ${fwline} =~ ^#.* ]] && continue
       [[ ${fwline} =~ ^[[:space:]] ]] && continue
 
-      eval "(cd ${PKG_FW_SOURCE} && find "${fwline}" >/dev/null)" || die "ERROR: Firmware pattern does not exist: ${fwline}"
+      eval "(cd ${PKG_FW_SOURCE} && find "${fwline}.xz" >/dev/null)" || die "ERROR: Firmware pattern does not exist: ${fwline}"
 
       while read -r fwfile; do
         [ -d "${PKG_FW_SOURCE}/${fwfile}" ] && continue
 
-        if [ -f "${PKG_FW_SOURCE}/${fwfile}" ]; then
+        if [ -f "${PKG_FW_SOURCE}/${fwfile}.xz" ]; then
           mkdir -p "$(dirname "${FW_TARGET_DIR}/${fwfile}")"
             cp -Lv "${PKG_FW_SOURCE}/${fwfile}" "${FW_TARGET_DIR}/${fwfile}"
         else
