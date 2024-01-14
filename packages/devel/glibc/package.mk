@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glibc"
-PKG_VERSION="44f757a6364a546359809d48c76b3debd26e77d4"
-PKG_SHA256="9acdc19250bc6872265ec77eb9347cc0def5535c6017b0465385bce16bbbe619"
+PKG_VERSION="cfe121910013a46e2477562282c56ae8062089aa"
+PKG_SHA256="f31e07793c60bbcaa6cac16e6e7b13ac3f2cc388bfe90046158de67b5e284f88"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.gnu.org/software/libc/"
 PKG_URL="https://github.com/bminor/glibc/archive/${PKG_VERSION}.tar.gz"
