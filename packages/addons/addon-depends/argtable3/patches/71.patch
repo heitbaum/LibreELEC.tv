@@ -1,0 +1,145 @@
+From dcdcde1740ce488a42c1434feee628bcdad3e5e8 Mon Sep 17 00:00:00 2001
+From: KOLANICH <kolan_n@mail.ru>
+Date: Thu, 22 Jul 2021 17:30:33 +0300
+Subject: [PATCH] Added CPack packaging and a file for pkg-config.
+
+---
+ CMakeLists.txt            | 10 ++++++--
+ packaging/pkgconfig.pc.in |  7 ++++++
+ src/CMakeLists.txt        | 48 ++++++++++++++++++++++++++++++++-------
+ 3 files changed, 55 insertions(+), 10 deletions(-)
+ create mode 100644 packaging/pkgconfig.pc.in
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a485571..c3dab8b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -34,6 +34,7 @@ set(ARGTABLE3_PROJECT_NAME "argtable3")
+ set(ARGTABLE3_PACKAGE_NAME "Argtable3")
+ 
+ project(${ARGTABLE3_PROJECT_NAME} "C")
++set(PROJECT_DESCRIPTION "ANSI C command-line parsing library")
+ 
+ option(BUILD_SHARED_LIBS "Build shared library" OFF)
+ option(ARGTABLE3_ENABLE_CONAN "Enable Conan dependency manager" OFF)
+@@ -44,8 +45,8 @@ option(ARGTABLE3_REPLACE_GETOPT "Replace getopt in the system C library" ON)
+ option(ARGTABLE3_LONG_ONLY "Use getopt_long_only instead of getopt_long" OFF)
+ 
+ get_filename_component(VERSION_TAG_PATH "version.tag" ABSOLUTE)
+-if(EXISTS ${VERSION_TAG_PATH})
+-  file(READ version.tag VERSION_TAG OFFSET 1)
++if(EXISTS "${VERSION_TAG_PATH}")
++  file(READ "${VERSION_TAG_PATH}" VERSION_TAG OFFSET 1)
+   string(REPLACE "." ";" VERSION_LIST ${VERSION_TAG})
+   list(GET VERSION_LIST 0 PROJECT_VERSION_MAJOR)
+   list(GET VERSION_LIST 1 PROJECT_VERSION_MINOR)
+@@ -59,6 +60,7 @@ else()
+ endif()
+ set(PROJECT_VERSION_TWEAK 0)
+ set(ARGTABLE3_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK})
++set(PROJECT_VERSION "${ARGTABLE3_VERSION}")
+ set(ARGTABLE3_FULL_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_BUILD})
+ 
+ if(ARGTABLE3_ENABLE_CONAN AND EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+@@ -88,6 +90,10 @@ set(ARGTABLE3_SRC_FILES
+   ${PROJECT_SOURCE_DIR}/src/arg_getopt_long.c
+ )
+ 
++set(PackagingTemplatesDir "${CMAKE_CURRENT_LIST_DIR}/packaging")
++set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
++set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
++
+ if(APPLE)
+   set(CMAKE_MACOSX_RPATH ON)
+ endif()
+diff --git a/packaging/pkgconfig.pc.in b/packaging/pkgconfig.pc.in
+new file mode 100644
+index 0000000..9b6a44c
+--- /dev/null
++++ b/packaging/pkgconfig.pc.in
+@@ -0,0 +1,7 @@
++prefix=@CMAKE_INSTALL_PREFIX@
++includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
++
++Name: @PROJECT_NAME@
++Description: @PROJECT_DESCRIPTION@
++Version: @PROJECT_VERSION@
++Cflags: -I${includedir}
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 2e0b519..dc70083 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -59,13 +59,14 @@ endif()
+ 
+ add_definitions(-D_XOPEN_SOURCE=700)
+ 
++set(COMPANY_NAME "The Argtable3 Project")
++set(FILE_DESC "${PROJECT_DESCRIPTION}")
++set(INTERNAL_NAME "${PROJECT_NAME}")
++set(LEGAL_COPYRIGHT "Copyright (C) 1998-2001,2003-2011,2013 Stewart Heitmann. All rights reserved.")
++set(ORIGINAL_FILE_NAME "${PROJECT_NAME}")
++set(PRODUCT_NAME "${PROJECT_NAME}")
++
+ if(BUILD_SHARED_LIBS AND WIN32)
+-  set(COMPANY_NAME "The Argtable3 Project")
+-  set(FILE_DESC "ANSI C command-line parsing library")
+-  set(INTERNAL_NAME "${PROJECT_NAME}")
+-  set(LEGAL_COPYRIGHT "Copyright (C) 1998-2001,2003-2011,2013 Stewart Heitmann. All rights reserved.")
+-  set(ORIGINAL_FILE_NAME "${PROJECT_NAME}")
+-  set(PRODUCT_NAME "${PROJECT_NAME}")
+   configure_file(
+     "${PROJECT_SOURCE_DIR}/src/version.rc.in"
+     "${PROJECT_BINARY_DIR}/src/version.rc"
+@@ -80,8 +81,8 @@ add_library(${ARGTABLE3_PROJECT_NAME}::argtable3 ALIAS argtable3)
+ target_include_directories(argtable3 PRIVATE ${PROJECT_SOURCE_DIR}/src)
+ 
+ set_target_properties(argtable3 PROPERTIES
+-  VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
+-  SOVERSION ${PROJECT_VERSION_MAJOR}
++  VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
++  SOVERSION "${PROJECT_VERSION_MAJOR}"
+   OUTPUT_NAME "argtable3$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:_static>"
+   DEBUG_POSTFIX "d"
+ )
+@@ -98,6 +99,7 @@ install(TARGETS argtable3
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
++  INCLUDES ${CMAKE_INSTALL_INCLUDEDIR}
+ )
+ 
+ install(FILES "${PROJECT_SOURCE_DIR}/src/argtable3.h"
+@@ -118,3 +120,33 @@ write_basic_package_version_file("${PROJECT_BINARY_DIR}/${ARGTABLE3_PACKAGE_NAME
+ install(FILES "${PROJECT_BINARY_DIR}/${ARGTABLE3_PACKAGE_NAME}ConfigVersion.cmake"
+   DESTINATION ${ARGTABLE3_INSTALL_CMAKEDIR}
+ )
++
++set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
++set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
++set(CPACK_PACKAGE_VENDOR "${COMPANY_NAME}")
++set(CPACK_PACKAGE_DESCRIPTION "${FILE_DESC}")
++set(CPACK_DEBIAN_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
++set(CPACK_RPM_PACKAGE_NAME "${CPACK_PACKAGE_NAME}")
++set(CPACK_PACKAGE_HOMEPAGE_URL "${PROJECT_HOMEPAGE_URL}")
++set(CPACK_PACKAGE_MAINTAINER "${CPACK_PACKAGE_VENDOR}")
++set(CPACK_DEBIAN_PACKAGE_MAINTAINER "${CPACK_PACKAGE_MAINTAINER}")
++
++set(CPACK_DEBIAN_PACKAGE_NAME "lib${PROJECT_NAME}-dev")
++set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6-dev")
++set(CPACK_DEBIAN_PACKAGE_SUGGESTS "cmake, pkg-config, pkg-conf")
++
++set(CPACK_RPM_PACKAGE_NAME "lib${PROJECT_NAME}-devel")
++set(CPACK_RPM_PACKAGE_SUGGESTS "${CPACK_DEBIAN_PACKAGE_SUGGESTS}")
++
++set(CPACK_DEB_COMPONENT_INSTALL ON)
++set(CPACK_RPM_COMPONENT_INSTALL ON)
++set(CPACK_NSIS_COMPONENT_INSTALL ON)
++set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
++
++set(PKG_CONFIG_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc")
++configure_file("${PackagingTemplatesDir}/pkgconfig.pc.in" "${PKG_CONFIG_FILE_NAME}" @ONLY)
++install(FILES "${PKG_CONFIG_FILE_NAME}"
++	DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
++)
++
++include(CPack)
