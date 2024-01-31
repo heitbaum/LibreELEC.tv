@@ -1,0 +1,129 @@
+From 57e7f16d7c172f92278c1df70c6b22764768f4b4 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Wed, 31 Jan 2024 07:06:50 +0000
+Subject: [PATCH] update remaining custom taglib variables for compile on 32bit
+
+---
+ xbmc/music/tags/TagLibVFSStream.cpp | 18 +++++++++++++++++-
+ xbmc/music/tags/TagLibVFSStream.h   | 18 +++++++++++++++++-
+ 2 files changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/xbmc/music/tags/TagLibVFSStream.cpp b/xbmc/music/tags/TagLibVFSStream.cpp
+index c5f9c2473f..6d22ee85af 100644
+--- a/xbmc/music/tags/TagLibVFSStream.cpp
++++ b/xbmc/music/tags/TagLibVFSStream.cpp
+@@ -59,7 +59,7 @@ FileName TagLibVFSStream::name() const
+  * Reads a block of size \a length at the current get pointer.
+  */
+ #if (TAGLIB_MAJOR_VERSION >= 2)
+-ByteVector TagLibVFSStream::readBlock(unsigned long length)
++ByteVector TagLibVFSStream::readBlock(size_t length)
+ #else
+ ByteVector TagLibVFSStream::readBlock(TagLib::ulong length)
+ #endif
+@@ -282,7 +282,11 @@ bool TagLibVFSStream::isOpen() const
+  *
+  * \see Position
+  */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++void TagLibVFSStream::seek(TagLib::offset_t offset, Position p)
++#else
+ void TagLibVFSStream::seek(long offset, Position p)
++#endif
+ {
+   const long fileLen = length();
+   if (m_bIsReadOnly && fileLen > 0)
+@@ -340,7 +344,11 @@ void TagLibVFSStream::clear()
+ /*!
+  * Returns the current offset within the file.
+  */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++TagLib::offset_t TagLibVFSStream::tell() const
++#else
+ long TagLibVFSStream::tell() const
++#endif
+ {
+   int64_t pos = m_file.GetPosition();
+   if(pos > LONG_MAX)
+@@ -352,7 +360,11 @@ long TagLibVFSStream::tell() const
+ /*!
+  * Returns the length of the file.
+  */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++TagLib::offset_t TagLibVFSStream::length()
++#else
+ long TagLibVFSStream::length()
++#endif
+ {
+   return (long)m_file.GetLength();
+ }
+@@ -360,7 +372,11 @@ long TagLibVFSStream::length()
+ /*!
+  * Truncates the file to a \a length.
+  */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++void TagLibVFSStream::truncate(TagLib::offset_t length)
++#else
+ void TagLibVFSStream::truncate(long length)
++#endif
+ {
+   m_file.Truncate(length);
+ }
+diff --git a/xbmc/music/tags/TagLibVFSStream.h b/xbmc/music/tags/TagLibVFSStream.h
+index 2302c04dd9..c416e35b59 100644
+--- a/xbmc/music/tags/TagLibVFSStream.h
++++ b/xbmc/music/tags/TagLibVFSStream.h
+@@ -38,7 +38,7 @@ namespace MUSIC_INFO
+      * Reads a block of size \a length at the current get pointer.
+      */
+ #if (TAGLIB_MAJOR_VERSION >= 2)
+-    TagLib::ByteVector readBlock(unsigned long length) override;
++    TagLib::ByteVector readBlock(size_t length) override;
+ #else
+     TagLib::ByteVector readBlock(TagLib::ulong length) override;
+ #endif
+@@ -99,7 +99,11 @@ namespace MUSIC_INFO
+      *
+      * \see Position
+      */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++    void seek(TagLib::offset_t offset, TagLib::IOStream::Position p = Beginning) override;
++#else
+     void seek(long offset, TagLib::IOStream::Position p = Beginning) override;
++#endif
+ 
+     /*!
+      * Reset the end-of-file and error flags on the file.
+@@ -109,17 +113,29 @@ namespace MUSIC_INFO
+     /*!
+      * Returns the current offset within the file.
+      */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++    TagLib::offset_t tell() const override;
++#else
+     long tell() const override;
++#endif
+ 
+     /*!
+      * Returns the length of the file.
+      */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++    TagLib::offset_t length() override;
++#else
+     long length() override;
++#endif
+ 
+     /*!
+      * Truncates the file to a \a length.
+      */
++#if (TAGLIB_MAJOR_VERSION >= 2)
++    void truncate(TagLib::offset_t length) override;
++#else
+     void truncate(long length) override;
++#endif
+ 
+   protected:
+     /*!
+-- 
+2.43.0
+
