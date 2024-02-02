@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="avahi"
-PKG_VERSION="0.8"
-PKG_SHA256="c15e750ef7c6df595fb5f2ce10cac0fee2353649600e6919ad08ae8871e4945f"
+PKG_VERSION="0.9-rc1"
+PKG_SHA256="f6c333a7e54918eaa72add70616fe34ef7f93ccbc5644e4626290e098b7a59c2"
 PKG_LICENSE="GPL"
 PKG_SITE="http://avahi.org/"
 PKG_URL="https://github.com/lathiat/avahi/archive/v${PKG_VERSION}.tar.gz"
