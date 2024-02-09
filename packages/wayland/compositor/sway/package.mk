@@ -2,8 +2,8 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="sway"
-PKG_VERSION="1.9-rc2"
-PKG_SHA256="5883138025042177d78b78993ac67bc68ebcee7c9c04dff6f95cbf7d243c999d"
+PKG_VERSION="1.9-rc4"
+PKG_SHA256="bb30330240669e21fcea5735d1d833c4d23fb669d01bb21bb17c5e38b4dd7054"
 PKG_LICENSE="MIT"
 PKG_SITE="https://swaywm.org/"
 PKG_URL="https://github.com/swaywm/sway/archive/${PKG_VERSION}.tar.gz"
