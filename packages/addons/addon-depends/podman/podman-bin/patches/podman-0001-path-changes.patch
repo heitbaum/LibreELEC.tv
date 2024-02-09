@@ -1,16 +1,20 @@
-diff --git a/pkg/machine/ignition.go b/pkg/machine/ignition.go
+diff --git a/pkg/machine/define/config.go b/pkg/machine/define/config.go
 index 6a6495bf7..c819138ad 100644
---- a/pkg/machine/ignition.go
-+++ b/pkg/machine/ignition.go
-@@ -27,7 +27,7 @@
- */
+--- a/pkg/machine/define/config.go
++++ b/pkg/machine/define/config.go
+@@ -2,7 +2,7 @@
  
- const (
--	UserCertsTargetPath     = "/etc/containers/certs.d"
-+	UserCertsTargetPath     = "/storage/.kodi/addons/service.system.podman/etc/containers/certs.d"
- 	PodmanDockerTmpConfPath = "/etc/tmpfiles.d/podman-docker.conf"
- )
+ import "os"
  
+-const UserCertsTargetPath = "/etc/containers/certs.d"
++const UserCertsTargetPath = "/storage/.kodi/addons/service.system.podman/etc/containers/certs.d"
+ const DefaultIdentityName = "machine"
+ 
+ var (
+diff --git a/pkg/machine/ignition/ignition.go b/pkg/machine/ignition/ignition.go
+index 6a6495bf7..c819138ad 100644
+--- a/pkg/machine/ignition/ignition.go
++++ b/pkg/machine/ignition/ignition.go
 @@ -262,7 +262,7 @@
  	dirs = append(dirs, Directory{
  		Node: Node{
@@ -123,9 +127,9 @@ index 4ce5d0320..531de9ceb 100644
  	// policy.json file.
 -	DefaultSignaturePolicyPath = "/etc/containers/policy.json"
 +	DefaultSignaturePolicyPath = "/storage/.kodi/addons/service.system.podman/etc/containers/policy.json"
+ )
  
- 	// Mount type for mounting host dir
- 	_typeBind = "bind"
+ func selinuxEnabled() bool {
 @@ -49,8 +49,5 @@ func ifRootlessConfigPath() (string, error) {
  }
  
