@@ -2,8 +2,8 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libnvme"
-PKG_VERSION="1.7.1"
-PKG_SHA256="e9c3ad59c068788faf0f0af4296f92f8ce410d12749f0f35a541d6a21e630393"
+PKG_VERSION="1.8"
+PKG_SHA256="d59939a280eec41eb7a716e1681d0d0c612099385204ffb55d07134a6be08d75"
 PKG_LICENSE="GPL"
 PKG_SITE="https://nvmexpress.org"
 PKG_URL="https://github.com/linux-nvme/libnvme/archive/refs/tags/v${PKG_VERSION}.tar.gz"
