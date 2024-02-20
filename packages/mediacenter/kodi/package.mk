@@ -263,6 +263,7 @@ configure_package() {
                          -Dgroovy_SOURCE_DIR=$(get_build_dir groovy) \
                          -Dapache-commons-lang_SOURCE_DIR=$(get_build_dir commons-lang3) \
                          -Dapache-commons-text_SOURCE_DIR=$(get_build_dir commons-text) \
+                         -DPKG_CONFIG_PATH=$(get_install_dir pcre)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}
                          ${PKG_KODI_USE_LTO} \
                          ${PKG_KODI_LINKER} \
                          ${KODI_ARCH} \
