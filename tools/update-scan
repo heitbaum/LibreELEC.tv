@@ -91,7 +91,7 @@ check_for_update() {
     github_repos=$(echo "${PKG_URL}" | grep -oP '(?<=https:\/\/github.com\/)?[0-9A-Za-z._-]+\/[0-9A-Za-z._-]+(?=/archive|/tags|/releases)')
     le_master_version_date="Commit date: $(curl -m 5 -sL ${github_api_token} https://api.github.com/repos/${github_repos}/git/commits/${PKG_VERSION} | jq -r '.committer.date')"
     upstream_default_branch=$(curl -m 5 -sL "${github_api_token}" "https://api.github.com/repos/${github_repos}" | jq -r '.default_branch')
-    upstream_latest_commit=$(curl -m 5 -sL "${github_api_token}" "https://api.github.com/repos/${github_repos}/git/refs/heads/${upstream_default_branch}" | jq -r '.object.url')
+    upstream_latest_commit=$(curl -m 5 -sL "${github_api_token}" "https://api.github.com/repos/${github_repos}/git/refs/heads/${upstream_default_branch}" | jq -r '.object.url' || true)
     upstream_latest_commit_date=$(curl -m 5 -sL "${github_api_token}" "${upstream_latest_commit}" | jq -r '.committer.date')
     GH_API_TAG=$(curl -m 5 -sL "${github_api_token}" "https://api.github.com/repos/${github_repos}/tags")
     upstream_latest_tag=$(echo "${GH_API_TAG}" | jq -r '.[0].name')
