@@ -3,8 +3,8 @@ file=$(ls -t target/LibreELEC-Generic*.img.gz | head -1)
 if [ ! -z "${file}" ]; then 
   cp -p .ssh/* ~/.ssh/
   echo "about to deploy ${file} to nuc12"
-  ssh root@192.168.42.205 mkdir -p .ssh
-  scp ~/.ssh/authorized_keys root@192.168.42.205:.ssh/authorized_keys
-  scp ${file} root@192.168.42.205:.update/
-  ssh root@192.168.42.205 reboot
+  ssh root@192.168.42.63 mkdir -p .ssh
+  scp ~/.ssh/authorized_keys root@192.168.42.63:.ssh/authorized_keys
+  scp ${file} root@192.168.42.63:.update/
+  ssh root@192.168.42.63 reboot
 fi
