@@ -67,7 +67,7 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_prog_HAS_HG=/bin/false
                            --enable-readline
                            --enable-bzip2
                            --enable-zlib
-                           --disable-xz
+                           --enable-xz
                            --disable-tk
                            --enable-curses
                            --disable-pydoc
@@ -116,6 +116,7 @@ pre_configure_target() {
   export PYTHON_MODULES_INCLUDE="${TARGET_INCDIR}"
   export PYTHON_MODULES_LIB="${TARGET_LIBDIR}"
   export DISABLED_EXTENSIONS="${PKG_PY_DISABLED_MODULES}"
+  export PKG_CONFIG_PATH="$(get_install_dir xz)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
 }
 
 post_makeinstall_target() {
