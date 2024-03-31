@@ -2,8 +2,8 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="oneDNN"
-PKG_VERSION="3.3.2"
-PKG_SHA256="84cc5342fd77c58150f7429706dc42daa4bd9b2bd1451f465e5e4ed54a2f3534"
+PKG_VERSION="3.4.1"
+PKG_SHA256="906559a25581b292352420721112e1656d21029b66e8597816f9e741fbcdeadb"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/oneapi-src/oneDNN"
 PKG_URL="https://github.com/oneapi-src/oneDNN/archive/v${PKG_VERSION}.tar.gz"
