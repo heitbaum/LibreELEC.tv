@@ -106,10 +106,10 @@
   KODI_EXTRA_FONTS="yes"
 
 # build and install PulseAudio support (yes / no)
-  PULSEAUDIO_SUPPORT="yes"
+  PULSEAUDIO_SUPPORT="no"
 
 # build and install pipewire support (yes / no)
-  PIPEWIRE_SUPPORT="no"
+  PIPEWIRE_SUPPORT="yes"
 
 # build and install eSpeak-NG support (yes / no)
   ESPEAK_SUPPORT="no"
@@ -163,7 +163,7 @@
   KODI_ALSA_SUPPORT="yes"
 
 # build kodi with pulseaudio support (yes/no)
-  KODI_PULSEAUDIO_SUPPORT="yes"
+  KODI_PULSEAUDIO_SUPPORT="no"
 
 # build kodi with pipewire support (yes/no)
   KODI_PIPEWIRE_SUPPORT="no"
