@@ -38,6 +38,9 @@ do
     cli)
       github_repos="docker/cli"
       ;;
+    conmoh)
+      github_repos="containers/conmon"
+      ;;
     containerd)
       github_repos="containerd/containerd"
       ;;
@@ -46,6 +49,9 @@ do
       ;;
     moby)
       github_repos="moby/moby"
+      ;;
+    podman-bin)
+      github_repos="containers/podman"
       ;;
     runc)
       github_repos="opencontainers/runc"
