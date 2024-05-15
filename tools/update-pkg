@@ -104,6 +104,9 @@ do
     systemd)
       commit_msg+="\n\nRelease notes:\n- https://github.com/systemd/systemd/releases"
       ;;
+    wireless-regdb)
+      commit_msg+="\n\nRelease notes:\n- https://git.kernel.org/pub/scm/linux/kernel/git/wens/wireless-regdb.git"
+      ;;
   esac
 
   printf "${commit_msg}" | git commit -F - ${pkgmk}
