@@ -3796,15 +3796,15 @@ index a4a45daf93f2..058bc372f02b 100644
  }
  
 @@ -261,7 +263,8 @@ static int cdn_dp_connector_get_modes(struct drm_connector *connector)
- 	mutex_lock(&dp->lock);
- 	edid = dp->edid;
- 	if (edid) {
+ 		/* FIXME: get rid of drm_edid_raw() */
+ 		const struct edid *edid = drm_edid_raw(dp->drm_edid);
+ 
 -		DRM_DEV_DEBUG_KMS(dp->dev, "got edid: width[%d] x height[%d]\n",
 +		DRM_DEV_DEBUG_KMS(dp->mhdp.dev,
 +				  "got edid: width[%d] x height[%d]\n",
  				  edid->width_cm, edid->height_cm);
  
- 		dp->sink_has_audio = drm_detect_monitor_audio(edid);
+ 	}
 @@ -279,7 +282,8 @@ cdn_dp_connector_mode_valid(struct drm_connector *connector,
  			    struct drm_display_mode *mode)
  {
