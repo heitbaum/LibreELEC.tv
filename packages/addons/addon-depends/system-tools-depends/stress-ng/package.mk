@@ -10,5 +10,3 @@ PKG_URL="https://github.com/ColinIanKing/stress-ng/archive/refs/tags/V${PKG_VERS
 PKG_DEPENDS_TARGET="toolchain attr keyutils libaio libcap zlib"
 PKG_LONGDESC="stress-ng will stress test a computer system in various selectable ways"
 PKG_BUILD_FLAGS="-sysroot"
-
-TARGET_LDFLAGS+=" -lmpfr"
