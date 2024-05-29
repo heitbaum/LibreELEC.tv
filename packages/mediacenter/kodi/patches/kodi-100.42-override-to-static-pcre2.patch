@@ -1,0 +1,10 @@
+--- a/cmake/modules/FindPCRE2.cmake	2024-07-07 11:35:37.193105881 +0000
++++ b/cmake/modules/FindPCRE2.cmake	2024-07-07 11:35:31.223060867 +0000
+@@ -54,6 +54,7 @@
+   endif()
+ 
+   # Check for existing PCRE2. If version >= PCRE2-VERSION file version, dont build
++  set(PCRE2_USE_STATIC_LIBS ON)
+   find_package(PCRE2 CONFIG COMPONENTS 8BIT QUIET)
+ 
+   if((PCRE2_VERSION VERSION_LESS ${${MODULE}_VER} AND ENABLE_INTERNAL_PCRE2) OR
