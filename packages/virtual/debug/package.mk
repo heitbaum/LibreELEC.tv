@@ -6,7 +6,7 @@ PKG_VERSION=""
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.openelec.tv"
 PKG_URL=""
-PKG_DEPENDS_TARGET="toolchain gdb edid-decode memtester strace kmsxx"
+PKG_DEPENDS_TARGET="toolchain gdb edid-decode memtester kmsxx"
 PKG_SECTION="virtual"
 PKG_LONGDESC="debug is a Metapackage for installing debugging tools"
 
