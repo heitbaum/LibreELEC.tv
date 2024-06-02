@@ -33,6 +33,7 @@ case "${LINUX}" in
     PKG_SHA256="d46c5bdf2c5961cc2a4dedefe0434d456865e95e4a7cd9f93fff054f9090e5f9"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
     PKG_VERSION="1613e604df0cd359cf2a7fbd9be7a0bcfacfabd0" # 6.10-rc1
+    PKG_VERSION="83814698cf48ce3aadc5d88a3f577f04482ff92a" # almost 6.10-rc2
     PKG_SHA256=""
     PKG_URL="https://github.com/torvalds/linux/archive/${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default"
