@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="rpi_ws281x"
-PKG_VERSION="68c6da2de32249d126264a363cc5ab788c87cc8b"
-PKG_SHA256="fcca4e3c16fd019306238ea0fb4320194499358c02521307c08db6c3df9c7e21"
+PKG_VERSION="49086d3913367d2fb014a615f9d958a47867bc39"
+PKG_SHA256="2a6142bcb9317b65168674f7164b9508652708fd4160d33f8e7e194e9dab57db"
 PKG_LICENSE="BSD-3c"
 PKG_SITE="https://github.com/hyperion-project/rpi_ws281x"
 PKG_URL="https://github.com/hyperion-project/rpi_ws281x/archive/${PKG_VERSION}.tar.gz"
