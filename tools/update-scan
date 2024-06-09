@@ -48,13 +48,25 @@ check_for_update() {
 
   # source variables from package.mk
   PKG_NAME="$(grep -oP -m 1 '(?<=PKG_NAME=\").*(?=\")' ${1} || true)"
-  PKG_VERSION="$(grep -oP -m 1 '(?<=PKG_VERSION=\").*(?=\")' ${1} || true)"
   eval PKG_URL="$(grep -oP -m 1 '(?<=PKG_URL=\").*(?=\")' ${1} || true)"
+  case ${PKG_NAME} in
+    jellyfin)
+      PKG_VERSION="$(grep -oP -m 1 '(?<=PKG_VERSION_NUMBER=\").*(?=\")' ${1} || true)"
+      ;;
+    *)
+      PKG_VERSION="$(grep -oP -m 1 '(?<=PKG_VERSION=\").*(?=\")' ${1} || true)"
+      ;;
+  esac
 
-  # check if version and url are empty or self hosted by us and ignore those packages
-  if [ -z "${PKG_VERSION}" ] || [[ ${PKG_VERSION} == '$(get_pkg_version '* ]] || [ -z "${PKG_URL}" ] || [[ "${PKG_URL}" == "$DISTRO_SRC"* ]]; then
-    PACKAGES_IGNORED+="${PKG_NAME} "
-    return
+  # check the version of some packages even if they dont has a PKG_URL
+  # the PKG_WITHOUT_URLS is space seperated
+  PKGS_WITHOUT_URLS="jellyfin"
+  if [[ ! " ${PKG_NAME} " == *" ${PKGS_WITHOUT_URLS} "* ]]; then
+    # check if version and url are empty or self hosted by us and ignore those packages
+    if [ -z "${PKG_VERSION}" ] || [[ ${PKG_VERSION} == '$(get_pkg_version '* ]] || [ -z "${PKG_URL}" ] || [[ "${PKG_URL}" == "$DISTRO_SRC"* ]]; then
+      PACKAGES_IGNORED+="${PKG_NAME} "
+      return
+    fi
   fi
 
   upstream_version=""
