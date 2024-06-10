@@ -36,7 +36,7 @@ case "${LINUX}" in
     PKG_VERSION="83814698cf48ce3aadc5d88a3f577f04482ff92a" # almost 6.10-rc2
     PKG_SHA256=""
     PKG_URL="https://github.com/torvalds/linux/archive/${PKG_VERSION}.tar.gz"
-    PKG_VERSION="6.10-rc2" # 6.10-rc2
+    PKG_VERSION="6.10-rc3" # 6.10-rc3
     PKG_URL="https://git.kernel.org/torvalds/t/linux-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default"
     ;;
