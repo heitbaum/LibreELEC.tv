@@ -1,0 +1,28 @@
+From 28b0785f4e08ea5bc102e42d7af55108256ce778 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 10 Jun 2024 06:12:49 +0000
+Subject: [PATCH] mysql: force SSL off
+
+---
+ xbmc/dbwrappers/mysqldataset.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xbmc/dbwrappers/mysqldataset.cpp b/xbmc/dbwrappers/mysqldataset.cpp
+index e277eefd8f..99f2deb160 100644
+--- a/xbmc/dbwrappers/mysqldataset.cpp
++++ b/xbmc/dbwrappers/mysqldataset.cpp
+@@ -181,6 +181,11 @@ int MysqlDatabase::connect(bool create_new)
+     if (!CWakeOnAccess::GetInstance().WakeUpHost(host, "MySQL : " + db))
+       return DB_CONNECTION_NONE;
+ 
++    my_bool verify=0;
++    mysql_options(conn, MYSQL_OPT_SSL_ENFORCE, (void *)&verify);
++    my_bool enforce_tls=0;
++    mysql_options(conn, MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
++
+     // establish connection with just user credentials
+     if (mysql_real_connect(conn, host.c_str(), login.c_str(), passwd.c_str(), NULL,
+                            atoi(port.c_str()), NULL, compression ? CLIENT_COMPRESS : 0) != NULL)
+-- 
+2.43.0
+
