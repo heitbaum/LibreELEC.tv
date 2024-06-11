@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="packaging"
-PKG_VERSION="24.0"
-PKG_SHA256="1bf35cf2c2be982f2ae6c905760ae19cb744fadbf56269f2e54f7bdcef64d291"
+PKG_VERSION="24.1"
+PKG_SHA256="7b31090ae4ddd6c48a5ed10073a880e6e2612ce8ac2f81e34f42aaabefd1b81b"
 PKG_LICENSE="Apache"
 PKG_SITE="https://github.com/pypa/packaging"
 PKG_URL="https://github.com/pypa/packaging/archive/refs/tags/${PKG_VERSION}.tar.gz"
