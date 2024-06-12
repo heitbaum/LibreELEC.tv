@@ -33,7 +33,7 @@ case "${LINUX}" in
     PKG_VERSION="6.9.2"
     PKG_SHA256="d46c5bdf2c5961cc2a4dedefe0434d456865e95e4a7cd9f93fff054f9090e5f9"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-    PKG_PATCH_DIRS="default rtlwifi/6.10 rtlwifi/6.11"
+    PKG_PATCH_DIRS="default rtlwifi/6.11"
     ;;
 esac
 
