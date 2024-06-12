@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="cups"
-PKG_VERSION="2.4.8"
-PKG_SHA256="4cca3693f076542006c663a8debc883ddac3050da3d4a4a43e760efcb12cd4b3"
+PKG_VERSION="2.4.9"
+PKG_SHA256="b01fe197e9e81c1516412c73c782f5d9fef671ce998e3ee207cdf6e09155b76f"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.cups.org"
 PKG_URL="https://github.com/openprinting/cups/archive/v${PKG_VERSION}.tar.gz"
