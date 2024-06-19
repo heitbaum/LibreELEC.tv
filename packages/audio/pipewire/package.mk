@@ -2,8 +2,8 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pipewire"
-PKG_VERSION="1.1.82"
-PKG_SHA256="189878d58005fe3c22d2dd047688a76a8bd3f6394da3d17ec82f2b691e52e1cb"
+PKG_VERSION="1.1.83"
+PKG_SHA256="6d196a0a57239dd70cf15ccd388cf5fb4a5ca3447a989ab1ef6aa9df451f7d0d"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://pipewire.org"
 PKG_URL="https://github.com/PipeWire/pipewire/archive/${PKG_VERSION}.tar.gz"
