@@ -25,9 +25,11 @@ for pkgmk in ${PACKAGE_LIST}
 do
   if [[ ! $(grep "^PKG_VERSION=.*get_pkg_version" "${pkgmk}") ]]; then
     # PKG_VERSION does not contain code, proceed
-    if [[ ! ${pkgname} = @(cli|demopkg|str3) ]]; then
+    if [[ ! ${pkgname} = @(cli|demopkg|str3|jellyfin) ]]; then
       # PKG is not in the array
       sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}"
+    elif [[ ${pkgname} = @(jellyfin) ]]; then
+      sed -e "s|^PKG_VERSION_NUMBER=.*|PKG_VERSION_NUMBER=\"${pkgver}\"|" -i "${pkgmk}"
     fi
   fi
   CHANGE_HASH=yes scripts/get ${pkgname}
