@@ -7,7 +7,7 @@ PKG_SHA256="f887755c434a736a609cbd28d87ddbfbe9d6a3bb5b703c22c02f6af80a802735"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.libarchive.org"
 PKG_URL="https://www.libarchive.org/downloads/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-PKG_DEPENDS_HOST="cmake:host gcc:host"
+PKG_DEPENDS_HOST="cmake:host"
 PKG_DEPENDS_TARGET="cmake:host gcc:host"
 PKG_SHORTDESC="A multi-format archive and compression library."
 
