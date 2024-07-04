@@ -18,7 +18,7 @@ known_good=$(curl -sL https://raw.githubusercontent.com/KhronosGroup/glslang/${g
 commit_headers=$(echo "${known_good}" | jq -r '.commits[]|select(.subrepo=="KhronosGroup/SPIRV-Headers")|.commit')
 commit_tools=$(echo "${known_good}" | jq -r '.commits[]|select(.subrepo=="KhronosGroup/SPIRV-Tools")|.commit')
 
-pkgmk="packages/graphics/vulkan/spirv-headers"
+pkgmk="packages/graphics/spirv-headers"
   pkgver="${commit_headers}"
   sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}/package.mk"
   pkgname=$(basename ${pkgmk})
@@ -30,7 +30,7 @@ pkgmk="packages/graphics/vulkan/spirv-headers"
 
   printf "${commit_msg}" | git commit -F - ${pkgmk}
 
-pkgmk="packages/graphics/vulkan/spirv-tools"
+pkgmk="packages/graphics/spirv-tools"
   pkgver="${commit_tools}"
   sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}/package.mk"
   pkgname=$(basename ${pkgmk})
