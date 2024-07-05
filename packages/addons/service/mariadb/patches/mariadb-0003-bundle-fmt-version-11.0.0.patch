@@ -1,0 +1,65 @@
+From 5ece30a9fac3ff4cba26435c7d559458aebeae48 Mon Sep 17 00:00:00 2001
+From: Daniel Black <daniel@mariadb.org>
+Date: Wed, 22 May 2024 17:43:17 +1000
+Subject: [PATCH 1/2] MDEV-34206 compile failure: fmt use incompatible with
+ libfmt-10.2.[2]+
+
+Upstream libfmt commit https://github.com/fmtlib/fmt/commit/d70729215fba1d54862e407b626abf86ddf409bf
+now requires the format function to be const.
+
+Adjust the function prototype so it is const and can compile.
+---
+ sql/item_strfunc.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sql/item_strfunc.cc b/sql/item_strfunc.cc
+index 19e011d54f8be..28d7ee7145360 100644
+--- a/sql/item_strfunc.cc
++++ b/sql/item_strfunc.cc
+@@ -1382,7 +1382,7 @@ bool Item_func_sformat::fix_length_and_dec(THD *thd)
+ namespace fmt {
+   template <> struct formatter<String>: formatter<string_view> {
+     template <typename FormatContext>
+-    auto format(String c, FormatContext& ctx) -> decltype(ctx.out()) {
++    auto format(String c, FormatContext& ctx) const -> decltype(ctx.out()) {
+       string_view name = { c.ptr(), c.length() };
+       return formatter<string_view>::format(name, ctx);
+     };
+
+From 084fda305c70d90923bd4f5879ea679e379b041f Mon Sep 17 00:00:00 2001
+From: Daniel Black <daniel@mariadb.org>
+Date: Thu, 23 May 2024 12:13:39 +1000
+Subject: [PATCH 2/2] MDEV-34206 compile failure: fmt use incompatible with
+ libfmt-10.2.[2]+ (7.1.3 compat)
+
+Preserve compatibility with 7.1.3 by including the previous non-const
+function.
+
+The error was:
+
+fmt/format.h:3466:8: note: candidate function template not
+viable: no known conversion from 'const formatter<String, [2 * ...]>' to
+'formatter<fmt::basic_string_view<char>, [2 * ...]>' for object argument
+ 3466 |   auto format(const T& val, FormatContext& ctx) ->
+decltype(ctx.out()) {
+---
+ sql/item_strfunc.cc | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/sql/item_strfunc.cc b/sql/item_strfunc.cc
+index 28d7ee7145360..d06b3f57e42bd 100644
+--- a/sql/item_strfunc.cc
++++ b/sql/item_strfunc.cc
+@@ -1386,6 +1386,12 @@ namespace fmt {
+       string_view name = { c.ptr(), c.length() };
+       return formatter<string_view>::format(name, ctx);
+     };
++    /* needed below function for libfmt-7.1.3 compatibility, (not 9.1.0+) */
++    template <typename FormatContext>
++    auto format(String c, FormatContext& ctx) -> decltype(ctx.out()) {
++      string_view name = { c.ptr(), c.length() };
++      return formatter<string_view>::format(name, ctx);
++    };
+   };
+ };
+ 
