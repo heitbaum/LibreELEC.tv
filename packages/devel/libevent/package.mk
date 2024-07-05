@@ -13,7 +13,7 @@ PKG_LONGDESC="libevent – an event notification library"
 PKG_CMAKE_OPTS_TARGET="-DEVENT__LIBRARY_TYPE=STATIC \
                        -DEVENT__DISABLE_DEBUG_MODE=ON \
                        -DEVENT__DISABLE_MM_REPLACEMENT=ON \
-                       -DEVENT__DISABLE_THREAD_SUPPORT=ON \
+                       -DEVENT__DISABLE_THREAD_SUPPORT=OFF \
                        -DEVENT__DISABLE_OPENSSL=ON \
                        -DEVENT__DISABLE_BENCHMARK=ON \
                        -DEVENT__DISABLE_TESTS=ON \
