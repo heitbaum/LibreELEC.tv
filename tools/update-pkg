@@ -67,7 +67,7 @@ do
     sed -e "s|^export PKG_GIT_COMMIT=.*|export PKG_GIT_COMMIT=\"${pkggitcommit}\"|" -i "${pkgmk}"
   fi
 
-  if [[ ${pkgname} = @(btrfs-progs|rsyslog|jellyfin) ]]; then
+  if [[ ${pkgname} = @(btrfs-progs|rsyslog|syncthing|jellyfin|tinc) ]]; then
     export $(grep "^PKG_REV=" "${pkgmk}" | tr -d '"')
     new_pkg_rev=$(($PKG_REV+1))
     sed -e "s|^PKG_REV=.*|PKG_REV=\"${new_pkg_rev}\"|" -i "${pkgmk}"
