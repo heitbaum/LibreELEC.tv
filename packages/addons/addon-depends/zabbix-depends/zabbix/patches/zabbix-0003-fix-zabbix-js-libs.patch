@@ -1,6 +1,6 @@
 --- a/src/zabbix_js/Makefile.am	2022-07-25 08:48:49.824898308 +0000
 +++ b/src/zabbix_js/Makefile.am	2022-08-13 11:30:02.100282598 +0000
-@@ -5,25 +5,25 @@
+@@ -5,30 +5,30 @@
  zabbix_js_SOURCES = zabbix_js.c
  
  zabbix_js_LDADD = \
@@ -11,18 +11,23 @@
 -	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 -	$(top_srcdir)/src/libs/zbxthreads/libzbxthreads.a \
 -	$(top_srcdir)/src/libs/zbxmutexs/libzbxmutexs.a \
+-	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 -	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 -	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
--	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxip/libzbxip.a \
 -	$(top_srcdir)/src/libs/zbxgetopt/libzbxgetopt.a \
 -	$(top_srcdir)/src/libs/zbxhash/libzbxhash.a \
 -	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 -	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
 -	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
 -	$(top_srcdir)/src/libs/zbxvariant/libzbxvariant.a \
--	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a
+-	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a \
+-	$(top_srcdir)/src/libs/zbxstr/libzbxstr.a \
+-	$(top_srcdir)/src/libs/zbxnum/libzbxnum.a \
+-	$(top_srcdir)/src/libs/zbxtime/libzbxtime.a \
+-	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxbincommon/libzbxbincommon.a \
+-	$(top_srcdir)/src/libs/zbxcurl/libzbxcurl.a
 +	$(top_builddir)/src/libs/zbxlog/libzbxlog.a \
 +	$(top_builddir)/src/libs/zbxembed/libzbxembed.a \
 +	$(top_builddir)/src/libs/zbxjson/libzbxjson.a \
@@ -30,24 +35,29 @@
 +	$(top_builddir)/src/libs/zbxalgo/libzbxalgo.a \
 +	$(top_builddir)/src/libs/zbxthreads/libzbxthreads.a \
 +	$(top_builddir)/src/libs/zbxmutexs/libzbxmutexs.a \
++	$(top_builddir)/src/libs/zbxprof/libzbxprof.a \
 +	$(top_builddir)/src/libs/zbxnix/libzbxnix.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
 +	$(top_builddir)/src/libs/zbxcomms/libzbxcomms.a \
-+	$(top_builddir)/src/libs/zbxconf/libzbxconf.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxip/libzbxip.a \
 +	$(top_builddir)/src/libs/zbxgetopt/libzbxgetopt.a \
 +	$(top_builddir)/src/libs/zbxhash/libzbxhash.a \
 +	$(top_builddir)/src/libs/zbxcrypto/libzbxcrypto.a \
 +	$(top_builddir)/src/libs/zbxcompress/libzbxcompress.a \
 +	$(top_builddir)/src/libs/zbxhttp/libzbxhttp.a \
 +	$(top_builddir)/src/libs/zbxvariant/libzbxvariant.a \
-+	$(top_builddir)/src/libs/zbxxml/libzbxxml.a
++	$(top_builddir)/src/libs/zbxxml/libzbxxml.a \
++	$(top_builddir)/src/libs/zbxstr/libzbxstr.a \
++	$(top_builddir)/src/libs/zbxnum/libzbxnum.a \
++	$(top_builddir)/src/libs/zbxtime/libzbxtime.a \
++	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxbincommon/libzbxbincommon.a \
++	$(top_builddir)/src/libs/zbxcurl/libzbxcurl.a
  
  zabbix_js_LDADD += @ZBXJS_LIBS@ $(LIBXML2_LIBS)
  
 --- a/src/zabbix_js/Makefile.in	2021-12-23 08:49:12.000000000 +0000
 +++ b/src/zabbix_js/Makefile.in	2022-08-13 11:23:37.271235238 +0000
-@@ -116,25 +116,25 @@
+@@ -118,30 +118,30 @@
  am_zabbix_js_OBJECTS = zabbix_js.$(OBJEXT)
  zabbix_js_OBJECTS = $(am_zabbix_js_OBJECTS)
  am__DEPENDENCIES_1 =
@@ -58,11 +68,10 @@
 -	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 -	$(top_srcdir)/src/libs/zbxthreads/libzbxthreads.a \
 -	$(top_srcdir)/src/libs/zbxmutexs/libzbxmutexs.a \
+-	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 -	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 -	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
--	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxip/libzbxip.a \
 -	$(top_srcdir)/src/libs/zbxgetopt/libzbxgetopt.a \
 -	$(top_srcdir)/src/libs/zbxhash/libzbxhash.a \
 -	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
@@ -70,6 +79,12 @@
 -	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
 -	$(top_srcdir)/src/libs/zbxvariant/libzbxvariant.a \
 -	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a \
+-	$(top_srcdir)/src/libs/zbxstr/libzbxstr.a \
+-	$(top_srcdir)/src/libs/zbxnum/libzbxnum.a \
+-	$(top_srcdir)/src/libs/zbxtime/libzbxtime.a \
+-	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxbincommon/libzbxbincommon.a \
+-	$(top_srcdir)/src/libs/zbxcurl/libzbxcurl.a \
 +zabbix_js_DEPENDENCIES = $(top_builddir)/src/libs/zbxlog/libzbxlog.a \
 +	$(top_builddir)/src/libs/zbxembed/libzbxembed.a \
 +	$(top_builddir)/src/libs/zbxjson/libzbxjson.a \
@@ -77,11 +92,10 @@
 +	$(top_builddir)/src/libs/zbxalgo/libzbxalgo.a \
 +	$(top_builddir)/src/libs/zbxthreads/libzbxthreads.a \
 +	$(top_builddir)/src/libs/zbxmutexs/libzbxmutexs.a \
++	$(top_builddir)/src/libs/zbxprof/libzbxprof.a \
 +	$(top_builddir)/src/libs/zbxnix/libzbxnix.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
 +	$(top_builddir)/src/libs/zbxcomms/libzbxcomms.a \
-+	$(top_builddir)/src/libs/zbxconf/libzbxconf.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxip/libzbxip.a \
 +	$(top_builddir)/src/libs/zbxgetopt/libzbxgetopt.a \
 +	$(top_builddir)/src/libs/zbxhash/libzbxhash.a \
 +	$(top_builddir)/src/libs/zbxcrypto/libzbxcrypto.a \
@@ -89,10 +103,16 @@
 +	$(top_builddir)/src/libs/zbxhttp/libzbxhttp.a \
 +	$(top_builddir)/src/libs/zbxvariant/libzbxvariant.a \
 +	$(top_builddir)/src/libs/zbxxml/libzbxxml.a \
++	$(top_builddir)/src/libs/zbxstr/libzbxstr.a \
++	$(top_builddir)/src/libs/zbxnum/libzbxnum.a \
++	$(top_builddir)/src/libs/zbxtime/libzbxtime.a \
++	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxbincommon/libzbxbincommon.a \
++	$(top_builddir)/src/libs/zbxcurl/libzbxcurl.a \
  	$(am__DEPENDENCIES_1)
  zabbix_js_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(zabbix_js_LDFLAGS) \
  	$(LDFLAGS) -o $@
-@@ -409,25 +409,25 @@
+@@ -417,30 +417,30 @@
  top_builddir = @top_builddir@
  top_srcdir = @top_srcdir@
  zabbix_js_SOURCES = zabbix_js.c
@@ -103,18 +123,23 @@
 -	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 -	$(top_srcdir)/src/libs/zbxthreads/libzbxthreads.a \
 -	$(top_srcdir)/src/libs/zbxmutexs/libzbxmutexs.a \
+-	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 -	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 -	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
--	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
--	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxip/libzbxip.a \
 -	$(top_srcdir)/src/libs/zbxgetopt/libzbxgetopt.a \
 -	$(top_srcdir)/src/libs/zbxhash/libzbxhash.a \
 -	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 -	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
 -	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
 -	$(top_srcdir)/src/libs/zbxvariant/libzbxvariant.a \
--	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a @ZBXJS_LIBS@ \
+-	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a \
+-	$(top_srcdir)/src/libs/zbxstr/libzbxstr.a \
+-	$(top_srcdir)/src/libs/zbxnum/libzbxnum.a \
+-	$(top_srcdir)/src/libs/zbxtime/libzbxtime.a \
+-	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+-	$(top_srcdir)/src/libs/zbxbincommon/libzbxbincommon.a \
+-	$(top_srcdir)/src/libs/zbxcurl/libzbxcurl.a @ZBXJS_LIBS@ \
 +zabbix_js_LDADD = $(top_builddir)/src/libs/zbxlog/libzbxlog.a \
 +	$(top_builddir)/src/libs/zbxembed/libzbxembed.a \
 +	$(top_builddir)/src/libs/zbxjson/libzbxjson.a \
@@ -122,18 +147,23 @@
 +	$(top_builddir)/src/libs/zbxalgo/libzbxalgo.a \
 +	$(top_builddir)/src/libs/zbxthreads/libzbxthreads.a \
 +	$(top_builddir)/src/libs/zbxmutexs/libzbxmutexs.a \
++	$(top_builddir)/src/libs/zbxprof/libzbxprof.a \
 +	$(top_builddir)/src/libs/zbxnix/libzbxnix.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
 +	$(top_builddir)/src/libs/zbxcomms/libzbxcomms.a \
-+	$(top_builddir)/src/libs/zbxconf/libzbxconf.a \
-+	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxip/libzbxip.a \
 +	$(top_builddir)/src/libs/zbxgetopt/libzbxgetopt.a \
 +	$(top_builddir)/src/libs/zbxhash/libzbxhash.a \
 +	$(top_builddir)/src/libs/zbxcrypto/libzbxcrypto.a \
 +	$(top_builddir)/src/libs/zbxcompress/libzbxcompress.a \
 +	$(top_builddir)/src/libs/zbxhttp/libzbxhttp.a \
 +	$(top_builddir)/src/libs/zbxvariant/libzbxvariant.a \
-+	$(top_builddir)/src/libs/zbxxml/libzbxxml.a @ZBXJS_LIBS@ \
++	$(top_builddir)/src/libs/zbxxml/libzbxxml.a \
++	$(top_builddir)/src/libs/zbxstr/libzbxstr.a \
++	$(top_builddir)/src/libs/zbxnum/libzbxnum.a \
++	$(top_builddir)/src/libs/zbxtime/libzbxtime.a \
++	$(top_builddir)/src/libs/zbxcommon/libzbxcommon.a \
++	$(top_builddir)/src/libs/zbxbincommon/libzbxbincommon.a \
++	$(top_builddir)/src/libs/zbxcurl/libzbxcurl.a @ZBXJS_LIBS@ \
  	$(LIBXML2_LIBS)
  zabbix_js_LDFLAGS = @ZBXJS_LDFLAGS@ $(LIBXML2_LDFLAGS)
  all: all-am
