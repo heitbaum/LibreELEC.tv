@@ -12,6 +12,7 @@ PKG_LONGDESC="mariadb-connector: library to conntect to mariadb/mysql database s
 PKG_BUILD_FLAGS="-gold"
 
 PKG_CMAKE_OPTS_TARGET="-DWITH_EXTERNAL_ZLIB=ON
+                       -DWITH_UNIT_TESTS=OFF
                        -DCLIENT_PLUGIN_DIALOG=STATIC
                        -DCLIENT_PLUGIN_MYSQL_CLEAR_PASSWORD=STATIC
                        -DCLIENT_PLUGIN_MYSQL_OLD_PASSWORD=STATIC
