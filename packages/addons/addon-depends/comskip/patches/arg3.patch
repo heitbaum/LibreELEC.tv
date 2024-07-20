@@ -1,0 +1,77 @@
+commit dc4b654b90a0f3093294b36e600b616dba5029ef
+Author: Rudi Heitbaum <rudi@heitbaum.com>
+Date:   Sat Jul 20 12:09:55 2024 +0000
+
+    allowuseof argtable3
+
+diff --git a/Makefile.am b/Makefile.am
+index dd8ee10..9baa14c 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -26,10 +26,10 @@ if PLATFORM_WIN32
+     PLATFORM_LIBS = -lcomdlg32 -lgdi32
+ endif
+ 
+-comskip_CPPFLAGS = -Wall $(argtable2_CFLAGS) $(ffmpeg_CFLAGS) $(DEFINES)
+-comskip_LDADD = $(argtable2_LIBS) $(ffmpeg_LIBS) $(PLATFORM_LIBS)
+-comskip_gui_CPPFLAGS = -Wall $(argtable2_CFLAGS) $(ffmpeg_CFLAGS) $(sdl_CFLAGS) $(DEFINES) -DHAVE_SDL
+-comskip_gui_LDADD = $(argtable2_LIBS) $(ffmpeg_LIBS) $(sdl_LIBS) $(PLATFORM_LIBS)
++comskip_CPPFLAGS = -Wall $(argtable3_CFLAGS) $(argtable2_CFLAGS) $(ffmpeg_CFLAGS) $(DEFINES)
++comskip_LDADD = $(argtable3_LIBS) $(argtable2_LIBS) $(ffmpeg_LIBS) $(PLATFORM_LIBS)
++comskip_gui_CPPFLAGS = -Wall $(argtable3_CFLAGS) $(argtable2_CFLAGS) $(ffmpeg_CFLAGS) $(sdl_CFLAGS) $(DEFINES) -DHAVE_SDL
++comskip_gui_LDADD = $(argtable3_LIBS) $(argtable2_LIBS) $(ffmpeg_LIBS) $(sdl_LIBS) $(PLATFORM_LIBS)
+ votest_CPPFLAGS = -Wall $(sdl_CFLAGS) -DTEST
+ votest_LDADD = $(sdl_LIBS) $(PLATFORM_LIBS)
+ 
+diff --git a/comskip.c b/comskip.c
+index 2babdb8..1eb1439 100644
+--- a/comskip.c
++++ b/comskip.c
+@@ -15,7 +15,12 @@
+ // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ #include "platform.h"
+ #include "vo.h"
++#ifdef HAVE_argtable3
++#include <argtable3.h>
++#endif
++#ifdef HAVE_argtable2
+ #include <argtable2.h>
++#endif
+ 
+ 
+ #include <libavformat/avformat.h>
+diff --git a/configure.ac b/configure.ac
+index 9750276..a49721b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -48,7 +48,12 @@ AM_CONDITIONAL([ENABLE_DEBUG], [test "x${enable_debug}" = "xyes"])
+ 
+ PKG_PROG_PKG_CONFIG
+ AS_IF([test "x${enable_static}" = "xyes"], PKG_CONFIG="$PKG_CONFIG --static")
+-PKG_CHECK_MODULES(argtable2, [argtable2 >= 2.12])
++PKG_CHECK_MODULES(argtable3, [argtable3 >= 3.2.2],
++   [AC_DEFINE([HAVE_argtable3], [1], [Use argtable3])],
++   [PKG_CHECK_MODULES(argtable2, [argtable2 >= 2.12],
++       [AC_DEFINE([HAVE_argtable2], [1], [Use argtable2])
++    ])
++])
+ PKG_CHECK_MODULES(ffmpeg, [libavutil >= 54.7 libavformat >= 57.33.100 libavcodec >= 57.37.100 libswscale >= 5.0])
+ 
+ AS_IF([test "x${enable_gui}" = "xno"], [
+diff --git a/mpeg2dec.c b/mpeg2dec.c
+index 3caa63c..021beea 100755
+--- a/mpeg2dec.c
++++ b/mpeg2dec.c
+@@ -28,7 +28,12 @@
+ #ifdef HAVE_SDL
+ #include <SDL.h>
+ #endif
++#ifdef HAVE_argtable3
++#include <argtable3.h>
++#endif
++#ifdef HAVE_argtable2
+ #include <argtable2.h>
++#endif
+ #define SELFTEST
+ 
+ int pass = 0;
