@@ -3,11 +3,11 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libtool"
-PKG_VERSION="2.4.7"
-PKG_SHA256="04e96c2404ea70c590c546eba4202a4e12722c640016c12b9b2f1ce3d481e9a8"
+PKG_VERSION="2.5.1"
+PKG_SHA256="d280e64c8cdbf145d76fb91b3b219edab01bdb43cb99402e4acb97d0100636fd"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/libtool/"
-PKG_URL="http://ftpmirror.gnu.org/libtool/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_URL="https://alpha.gnu.org/gnu/libtool/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="ccache:host autoconf:host automake:host intltool:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A generic library support script."
