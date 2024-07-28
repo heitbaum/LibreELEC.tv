@@ -28,7 +28,7 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_POSITION_INDEPENDENT_CODE=1 \
                        -DENABLE_LIBGCC=ON \
                        -DENABLE_LIBXML2=OFF \
                        -DENABLE_LZ4=ON \
-                       -DENABLE_LZMA=OFF \
+                       -DENABLE_LZMA=ON \
                        -DENABLE_LZO=ON \
                        -DENABLE_MBEDTLS=OFF \
                        -DENABLE_NETTLE=OFF \
