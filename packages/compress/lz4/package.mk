@@ -14,6 +14,8 @@ PKG_LONGDESC="lz4 data compressor/decompressor"
 configure_package() {
   PKG_CMAKE_SCRIPT="${PKG_BUILD}/build/cmake/CMakeLists.txt"
 
+  PKG_CMAKE_OPTS_HOST="-DLZ4_BUILD_LEGACY_LZ4C=ON"
+
   PKG_CMAKE_OPTS_TARGET="-DBUILD_SHARED_LIBS=0 \
                          -DLZ4_BUILD_CLI=OFF \
                          -DCMAKE_POSITION_INDEPENDENT_CODE=0"
