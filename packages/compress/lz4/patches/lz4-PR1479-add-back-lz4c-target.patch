@@ -1,0 +1,37 @@
+From 696966175798849201e31cdd6649441171a185b6 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 28 Jul 2024 01:25:23 +0000
+Subject: [PATCH] add back lz4c target but default to OFF
+
+Partially revert "removed lz4c target"
+This reverts commit 65998fecaffe7828df7b2bd9c04e9392e9704a0b.
+---
+ build/cmake/CMakeLists.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/build/cmake/CMakeLists.txt b/build/cmake/CMakeLists.txt
+index c372733aa..c25b720fa 100644
+--- a/build/cmake/CMakeLists.txt
++++ b/build/cmake/CMakeLists.txt
+@@ -32,6 +32,7 @@ project(LZ4 VERSION ${LZ4_VERSION_STRING} LANGUAGES C)
+ 
+ 
+ option(LZ4_BUILD_CLI "Build lz4 program" ON)
++option(LZ4_BUILD_LEGACY_LZ4C "Build lz4c program with legacy argument support" OFF)
+ 
+ 
+ # Determine if LZ4 is being built as part of another project.
+@@ -144,6 +145,13 @@ if (LZ4_BUILD_CLI)
+   set_target_properties(lz4cli PROPERTIES OUTPUT_NAME lz4)
+ endif()
+ 
++# lz4c
++if (LZ4_BUILD_LEGACY_LZ4C)
++  list(APPEND LZ4_PROGRAMS_BUILT lz4c)
++  add_executable(lz4c ${LZ4_CLI_SOURCES})
++  set_target_properties(lz4c PROPERTIES COMPILE_DEFINITIONS "ENABLE_LZ4C_LEGACY_OPTIONS")
++endif()
++
+ # Extra warning flags
+ if(MSVC)
+   set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /W4")
