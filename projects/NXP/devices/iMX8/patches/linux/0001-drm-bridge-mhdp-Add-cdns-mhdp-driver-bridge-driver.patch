@@ -298,8 +298,8 @@ index 000000000000..acb5c860da73
 +	int num_modes = 0;
 +	struct edid *edid;
 +
-+	edid = drm_do_get_edid(&mhdp->connector.base,
-+				   cdns_mhdp_get_edid_block, mhdp);
++	//edid = drm_do_get_edid(&mhdp->connector.base,
++	//			   cdns_mhdp_get_edid_block, mhdp);
 +	if (edid) {
 +		dev_info(mhdp->dev, "%x,%x,%x,%x,%x,%x,%x,%x\n",
 +			 edid->header[0], edid->header[1],
@@ -936,8 +936,8 @@ index 000000000000..da40f62617ef
 +	int num_modes = 0;
 +	struct edid *edid;
 +
-+	edid = drm_do_get_edid(&mhdp->connector.base,
-+				   cdns_hdmi_get_edid_block, mhdp);
++	//edid = drm_do_get_edid(&mhdp->connector.base,
++	//			   cdns_hdmi_get_edid_block, mhdp);
 +	if (edid) {
 +		dev_info(mhdp->dev, "%x,%x,%x,%x,%x,%x,%x,%x\n",
 +			 edid->header[0], edid->header[1],
