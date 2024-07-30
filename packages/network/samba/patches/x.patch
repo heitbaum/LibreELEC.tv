@@ -1,0 +1,80 @@
+From 5b31b723c06a0b41f9d47e47ce79818e07d3b831 Mon Sep 17 00:00:00 2001
+From: Stefan Metzmacher <metze@samba.org>
+Date: Tue, 6 Aug 2024 17:20:38 +0200
+Subject: [PATCH 1/2] s3:lib: add winbind_lookup_name_ex() fallback for
+ --without-winbind
+
+BUG: https://bugzilla.samba.org/show_bug.cgi?id=15687
+
+Signed-off-by: Stefan Metzmacher <metze@samba.org>
+Reviewed-by: Volker Lendecke <vl@samba.org>
+---
+ source3/lib/winbind_util.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/source3/lib/winbind_util.c b/source3/lib/winbind_util.c
+index 0852c3d02814..ece0cbf2114a 100644
+--- a/source3/lib/winbind_util.c
++++ b/source3/lib/winbind_util.c
+@@ -363,6 +363,17 @@ bool winbind_lookup_name(const char *dom_name, const char *name, struct dom_sid
+ 	return false;
+ }
+ 
++_PRIVATE_
++NTSTATUS winbind_lookup_name_ex(const char *dom_name,
++				const char *name,
++				struct dom_sid *sid,
++				enum lsa_SidType *name_type)
++{
++	*name_type = SID_NAME_UNKNOWN;
++	ZERO_STRUCTP(sid);
++	return NT_STATUS_OK;
++}
++
+ /* Call winbindd to convert sid to name */
+ 
+ bool winbind_lookup_sid(TALLOC_CTX *mem_ctx, const struct dom_sid *sid,
+-- 
+2.34.1
+
+
+From c0d0767a3ab2c0cd5c4f2fa5cd77f3b678794d63 Mon Sep 17 00:00:00 2001
+From: Stefan Metzmacher <metze@samba.org>
+Date: Tue, 6 Aug 2024 17:45:37 +0200
+Subject: [PATCH 2/2] script/autobuild.py: do some basic testing using
+ --without-winbind
+
+BUG: https://bugzilla.samba.org/show_bug.cgi?id=15687
+
+Signed-off-by: Stefan Metzmacher <metze@samba.org>
+Reviewed-by: Volker Lendecke <vl@samba.org>
+
+Autobuild-User(master): Volker Lendecke <vl@samba.org>
+Autobuild-Date(master): Wed Aug  7 07:38:35 UTC 2024 on atb-devel-224
+---
+ script/autobuild.py | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/script/autobuild.py b/script/autobuild.py
+index e610f0e88219..d059caec4711 100755
+--- a/script/autobuild.py
++++ b/script/autobuild.py
+@@ -1082,6 +1082,15 @@ tasks = {
+             ("nonshared-lcov", LCOV_CMD),
+             ("nonshared-check-clean-tree", CLEAN_SOURCE_TREE_CMD),
+             ("nonshared-clean", "make clean"),
++
++        # retry without winbindd
++            ("nonwinbind-distclean", "make distclean"),
++            ("nonwinbind-configure", "./configure.developer " + samba_configure_params + " --bundled-libraries=ALL --with-static-modules=ALL --without-winbind"),
++            ("nonwinbind-make", "make -j"),
++            ("nonwinbind-test", make_test(TESTS="samba3.smb2.*.simpleserver")),
++            ("nonwinbind-lcov", LCOV_CMD),
++            ("nonwinbind-check-clean-tree", CLEAN_SOURCE_TREE_CMD),
++            ("nonwinbind-clean", "make clean"),
+         ],
+     },
+ 
+-- 
+2.34.1
+
