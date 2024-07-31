@@ -3,9 +3,9 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="audioencoder.lame"
-PKG_VERSION="20.3.0-Nexus"
-PKG_SHA256="90f36ee0b4972669ed2876eae2502e58d86287aacdbf4bb25180aca01385e1c1"
-PKG_REV="7"
+PKG_VERSION="f272aeb7aeb94e9d8bf1454e23f0232790bf0ef6"
+PKG_SHA256="4241e4d4a5b6619de684d67b79b8e7b18003cee6dcc6d8f87e5c429899f48146"
+PKG_REV="8"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/audioencoder.lame"

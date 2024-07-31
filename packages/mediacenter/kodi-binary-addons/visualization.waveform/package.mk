@@ -3,9 +3,9 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="visualization.waveform"
-PKG_VERSION="20.2.1-Nexus"
-PKG_SHA256="865e72a5f2ed8fd53469518280cbe26f9516467d091009fe5e012ea0d85d5edd"
-PKG_REV="6"
+PKG_VERSION="a388be3b9c4a62a5087616d3c92a26d6cbbeb24f"
+PKG_SHA256="edda37479bc38eb129a9e83c30f14f21646b17693b5679130fd644787b63dce0"
+PKG_REV="7"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/visualization.waveform"

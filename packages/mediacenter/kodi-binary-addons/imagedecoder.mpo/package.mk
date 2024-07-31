@@ -2,9 +2,9 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="imagedecoder.mpo"
-PKG_VERSION="20.1.0-Nexus"
-PKG_SHA256="a6f38f95e5e844f75365ae083ca0a78c012bb4dc670770b3dd5d99160a64187f"
-PKG_REV="7"
+PKG_VERSION="1d60fd5bfd3a552e8472a9bcbdcb7b04fe8423cc"
+PKG_SHA256="5824320a52ce9a45f09d84249f62cdf5c4bac3bdc7997f80c627e33f1e9f32d6"
+PKG_REV="8"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/imagedecoder.mpo"

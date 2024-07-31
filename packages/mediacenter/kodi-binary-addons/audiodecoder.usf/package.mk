@@ -3,9 +3,9 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="audiodecoder.usf"
-PKG_VERSION="20.2.0-Nexus"
-PKG_SHA256="3ce9ef8823c773d894fd0018455ea5000e9b5a64f3cd8d66ddb4cf8f6c9ea836"
-PKG_REV="7"
+PKG_VERSION="5999315e865ec476248cba46dd00862d90b4d7f3"
+PKG_SHA256="222bf04614c3d5fff0513ca4ee0859b6e1ebd5748538bc100ad182910b4cf8a4"
+PKG_REV="8"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/audiodecoder.usf"

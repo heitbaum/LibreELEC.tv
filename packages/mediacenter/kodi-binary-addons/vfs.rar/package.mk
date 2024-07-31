@@ -2,9 +2,9 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="vfs.rar"
-PKG_VERSION="20.1.0-Nexus"
-PKG_SHA256="50870b24a3663f8d8d88802b327a8fd2fec441a9fed952baf71faba6854a8e1b"
-PKG_REV="7"
+PKG_VERSION="2f49a0de43bc9f4e91dfec73a13dcb04df285233"
+PKG_SHA256="c1da0e8aafa5419ae414857893a59c22109138ad7245071e0678b26f401a7be1"
+PKG_REV="8"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/vfs.rar"

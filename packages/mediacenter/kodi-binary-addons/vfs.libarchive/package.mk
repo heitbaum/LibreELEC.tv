@@ -2,9 +2,9 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="vfs.libarchive"
-PKG_VERSION="20.3.0-Nexus"
-PKG_SHA256="06be9bfcda3e676e0757ea9602351d67f2bf0aa9aa9e408b14d947772a615e4f"
-PKG_REV="7"
+PKG_VERSION="0333aa5e189221e76282eeefb3f573e27b187551"
+PKG_SHA256="23515c84f4a0cceaf845c1d6c0c39947a28be2d515cff995b384b29e93b11831"
+PKG_REV="8"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/vfs.libarchive"
