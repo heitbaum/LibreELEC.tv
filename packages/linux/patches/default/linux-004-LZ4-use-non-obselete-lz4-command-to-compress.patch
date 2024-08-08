@@ -1,0 +1,43 @@
+From 49374e558626761677924894e1a58625519c9fa3 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Thu, 8 Aug 2024 03:17:00 +0000
+Subject: [PATCH] LZ4: use non obselete lz4 command to compress
+
+---
+ Makefile             | 2 +-
+ scripts/Makefile.lib | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5c418efbe89b..2a992aeda648 100644
+--- a/Makefile
++++ b/Makefile
+@@ -518,7 +518,7 @@ KGZIP		= gzip
+ KBZIP2		= bzip2
+ KLZOP		= lzop
+ LZMA		= lzma
+-LZ4		= lz4c
++LZ4		= lz4
+ XZ		= xz
+ ZSTD		= zstd
+ 
+diff --git a/scripts/Makefile.lib b/scripts/Makefile.lib
+index 68d0134bdbf9..808e6707ec25 100644
+--- a/scripts/Makefile.lib
++++ b/scripts/Makefile.lib
+@@ -468,10 +468,10 @@ quiet_cmd_lzo_with_size = LZO     $@
+       cmd_lzo_with_size = { cat $(real-prereqs) | $(KLZOP) -9; $(size_append); } > $@
+ 
+ quiet_cmd_lz4 = LZ4     $@
+-      cmd_lz4 = cat $(real-prereqs) | $(LZ4) -l -c1 stdin stdout > $@
++      cmd_lz4 = cat $(real-prereqs) | $(LZ4) -l -12 stdin stdout > $@
+ 
+ quiet_cmd_lz4_with_size = LZ4     $@
+-      cmd_lz4_with_size = { cat $(real-prereqs) | $(LZ4) -l -c1 stdin stdout; \
++      cmd_lz4_with_size = { cat $(real-prereqs) | $(LZ4) -l -12 stdin stdout; \
+                   $(size_append); } > $@
+ 
+ # U-Boot mkimage
+-- 
+2.43.0
+
