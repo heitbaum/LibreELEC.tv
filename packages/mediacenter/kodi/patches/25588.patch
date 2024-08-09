@@ -1,0 +1,60 @@
+From 6c49df769b7a21a3857b25ea12dc8ba0302051aa Mon Sep 17 00:00:00 2001
+From: boogie <boogiepop@gmx.com>
+Date: Wed, 7 Aug 2024 22:35:43 +0200
+Subject: [PATCH 1/2] CDRMAtomic: Backlog only the last known good drmrequest
+
+---
+ xbmc/windowing/gbm/drm/DRMAtomic.cpp | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/xbmc/windowing/gbm/drm/DRMAtomic.cpp b/xbmc/windowing/gbm/drm/DRMAtomic.cpp
+index ff7f137d60e65..70ae92e9482dc 100644
+--- a/xbmc/windowing/gbm/drm/DRMAtomic.cpp
++++ b/xbmc/windowing/gbm/drm/DRMAtomic.cpp
+@@ -149,6 +149,11 @@ void CDRMAtomic::DrmAtomicCommit(int fb_id, int flags, bool rendered, bool video
+   {
+     CLog::Log(LOGERROR, "CDRMAtomic::{} - atomic commit failed: {}", __FUNCTION__,
+               strerror(errno));
++    m_atomicRequestQueue.pop_back();
++  }
++  else if (m_atomicRequestQueue.size() > 1)
++  {
++    m_atomicRequestQueue.pop_front();
+   }
+ 
+   if (m_inFenceFd != -1)
+@@ -164,9 +169,6 @@ void CDRMAtomic::DrmAtomicCommit(int fb_id, int flags, bool rendered, bool video
+                 strerror(errno));
+   }
+ 
+-  if (m_atomicRequestQueue.size() > 1)
+-    m_atomicRequestQueue.pop_back();
+-
+   m_atomicRequestQueue.emplace_back(std::make_unique<CDRMAtomicRequest>());
+   m_req = m_atomicRequestQueue.back().get();
+ }
+
+From 31b8cb34f3e02e1dc6039bfbde12332b01a75f47 Mon Sep 17 00:00:00 2001
+From: boogie <boogiepop@gmx.com>
+Date: Thu, 8 Aug 2024 00:26:21 +0200
+Subject: [PATCH 2/2] CEGLFence: Ignore improper atomic drmrequest when async
+ rendering and dont go into infinite loop
+
+---
+ xbmc/utils/EGLFence.cpp | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/xbmc/utils/EGLFence.cpp b/xbmc/utils/EGLFence.cpp
+index 9d0065bdaf07a..815b633db38b7 100644
+--- a/xbmc/utils/EGLFence.cpp
++++ b/xbmc/utils/EGLFence.cpp
+@@ -135,8 +135,7 @@ void CEGLFence::WaitSyncCPU()
+ 
+   EGLint status{EGL_FALSE};
+ 
+-  while (status != EGL_CONDITION_SATISFIED_KHR)
+-    status = m_eglClientWaitSyncKHR(m_display, m_kmsFence, 0, EGL_FOREVER_KHR);
++  status = m_eglClientWaitSyncKHR(m_display, m_kmsFence, 0, EGL_FOREVER_KHR);
+ 
+   m_eglDestroySyncKHR(m_display, m_kmsFence);
+ }
