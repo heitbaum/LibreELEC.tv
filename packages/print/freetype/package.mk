@@ -11,20 +11,24 @@ PKG_URL="https://download.savannah.gnu.org/releases/freetype/freetype-${PKG_VERS
 PKG_DEPENDS_HOST="toolchain:host"
 PKG_DEPENDS_TARGET="toolchain zlib libpng"
 PKG_LONGDESC="The FreeType engine is a free and portable TrueType font rendering engine."
+PKG_TOOLCHAIN="configure"
 
-PKG_MESON_OPTS_COMMON="-Dbrotli=disabled \
-                       -Dbzip2=disabled \
-                       -Dharfbuzz=disabled \
-                       -Dpng=enabled \
-                       -Dtests=disabled \
-                       -Dzlib=enabled \
-                       -Dc_link_args='-lm'"
+# package specific configure options
+PKG_CONFIGURE_OPTS_TARGET="LIBPNG_CFLAGS=-I${SYSROOT_PREFIX}/usr/include \
+                           LIBPNG_LDFLAGS=-L${SYSROOT_PREFIX}/usr/lib \
+                           --with-zlib"
 
-PKG_MESON_OPTS_HOST="${PKG_MESON_OPTS_COMMON}"
-PKG_MESON_OPTS_TARGET="${PKG_MESON_OPTS_COMMON}"
+pre_configure_target() {
+  # unset LIBTOOL because freetype uses its own
+  (
+    cd ..
+    unset LIBTOOL
+    sh autogen.sh
+  )
+}
 
 post_makeinstall_target() {
   sed -e "s#prefix=/usr#prefix=${SYSROOT_PREFIX}/usr#" -i "${SYSROOT_PREFIX}/usr/lib/pkgconfig/freetype2.pc"
 
-  #cp -P "${PKG_BUILD}/.${TARGET_NAME}/freetype-config" "${SYSROOT_PREFIX}/usr/bin"
+  cp -P "${PKG_BUILD}/.${TARGET_NAME}/freetype-config" "${SYSROOT_PREFIX}/usr/bin"
 }
