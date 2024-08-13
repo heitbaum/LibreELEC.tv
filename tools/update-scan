@@ -27,9 +27,11 @@ test_github_api() {
       echo "Github api usage activated"
       github_api="yes"
     else
+      msg=$(curl -m 5 -sL -I "${github_api_token}" https://api.github.com/user | true)
       message="\n your Github token is not working\n"
       message+=" github_token=${github_token}\n"
       message+=" github_user=${github_user}\n"
+      message+=" ${msg}\n"
       die "${message}"
     fi
   else
