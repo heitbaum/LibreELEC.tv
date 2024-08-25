@@ -3,8 +3,8 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="taglib"
-PKG_VERSION="2.0.1"
-PKG_SHA256="08c0a27b96aa5c4e23060fe0b6f93102ee9091a9385257b9d0ddcf467de0d925"
+PKG_VERSION="2.0.2"
+PKG_SHA256="0de288d7fe34ba133199fd8512f19cc1100196826eafcb67a33b224ec3a59737"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://taglib.org"
 PKG_URL="https://taglib.org/releases/${PKG_NAME}-${PKG_VERSION}.tar.gz"
