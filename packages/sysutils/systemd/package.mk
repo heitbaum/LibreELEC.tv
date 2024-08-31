@@ -105,9 +105,13 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dversion-tag=${PKG_VERSION}"
 
 if [ "${PROJECT}" = "Generic" ]; then
-  PKG_MESON_OPTS_TARGET+=" -Defi=true"
+  PKG_MESON_OPTS_TARGET+=" -Defi=true \
+                          -Dbootloader=enabled"
+  PKG_DEPENDS_TARGET+=" pyelftools:host"
+  PKG_BUILD_FLAGS="-gold"
 else
-  PKG_MESON_OPTS_TARGET+=" -Defi=false"
+  PKG_MESON_OPTS_TARGET+=" -Defi=false \
+                          -Dbootloader=disabled"
 fi
 
 pre_configure_target() {
