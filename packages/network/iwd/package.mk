@@ -10,6 +10,7 @@ PKG_URL="https://www.kernel.org/pub/linux/network/wireless/iwd-${PKG_VERSION}.ta
 PKG_DEPENDS_TARGET="autotools:host gcc:host readline dbus"
 PKG_LONGDESC="Wireless daemon for Linux"
 PKG_TOOLCHAIN="autotools"
+PKG_BUILD_FLAGS="-strip"
 
 PKG_CONFIGURE_OPTS_TARGET="--enable-client \
                            --enable-monitor \
@@ -19,6 +20,7 @@ PKG_CONFIGURE_OPTS_TARGET="--enable-client \
 
 pre_configure_target() {
   export LIBS="-lncurses"
+  export DEBUG="yes"
 }
 
 post_makeinstall_target() {
@@ -34,6 +36,12 @@ post_makeinstall_target() {
       -e 's|^\(ProtectKernelModules=.*\)$|#\1|g' \
       -e 's|^\(ConfigurationDirectory=.*\)$|#\1|g' \
       -i ${INSTALL}/usr/lib/systemd/system/iwd.service
+
+#  sed -e 's|^\(ExecStart=/usr/lib/iwd\)$|\1 -d|g' \
+#      -i ${INSTALL}/usr/lib/systemd/system/iwd.service
+
+#  sed -e 's|^\(\[Service\]\)$|\1|g' \
+#Environment=ETCD_CA_FILE=/path/to/CA.pem
 }
 
 post_install() {
