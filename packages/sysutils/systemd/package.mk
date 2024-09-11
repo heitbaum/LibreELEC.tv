@@ -54,7 +54,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Denvironment-d=false \
                        -Dbinfmt=false \
                        -Drepart=disabled \
-                       -Dcoredump=false \
+                       -Dcoredump=true \
                        -Dresolve=false \
                        -Dlogind=true \
                        -Dhostnamed=true \
