@@ -3,11 +3,11 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="qtbase"
-PKG_VERSION="5.15.11"
-PKG_SHA256="425ad301acd91ca66c10c0dabee0704e2d0cd2801a6b670115800cbb95f84846"
+PKG_VERSION="5.15.2"
+PKG_SHA256="909fad2591ee367993a75d7e2ea50ad4db332f05e1c38dd7a5a274e156a4e0f8"
 PKG_LICENSE="GPL"
 PKG_SITE="https://qt-project.org"
-PKG_URL="https://download.qt.io/archive/qt/${PKG_VERSION%.*}/${PKG_VERSION}/submodules/${PKG_NAME}-everywhere-opensource-src-${PKG_VERSION}.tar.xz"
+PKG_URL="https://download.qt.io/archive/qt/${PKG_VERSION%.*}/${PKG_VERSION}/submodules/${PKG_NAME}-everywhere-src-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="freetype libjpeg-turbo libpng openssl sqlite zlib"
 PKG_LONGDESC="A cross-platform application and UI framework."
 PKG_BUILD_FLAGS="-sysroot"
