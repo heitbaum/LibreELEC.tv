@@ -107,6 +107,10 @@ post_makeinstall_host() {
   rm -fr ${PKG_BUILD}/.${HOST_NAME}/build/temp.*
 }
 
+pre_configure_target() {
+  export PKG_CONFIG_PATH="$(get_install_dir xz)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
+}
+
 post_make_target() {
   # fix sysconfig paths for cross compiling
   PKG_SYSCONFIG_FILE=$(find ${PKG_BUILD}/.${TARGET_NAME} -not -path '*/__pycache__/*' -name '_sysconfigdata__*.py')
