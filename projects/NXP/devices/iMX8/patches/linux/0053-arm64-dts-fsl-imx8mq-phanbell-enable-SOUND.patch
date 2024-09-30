@@ -1,0 +1,72 @@
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts	2024-09-15 14:57:56.000000000 +0000
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts	2024-09-28 10:22:53.000000000 +0000
+@@ -16,6 +16,34 @@
+ 		stdout-path = &uart1;
+ 	};
+ 
++	sound-rt5645 {
++		compatible = "google,edgetpu-audio-card";
++		model = "edgetpu-audio-card";
++		audio-cpu = <&sai2>;
++		audio-codec = <&rt5645>;
++		status = "okay";
++	};
++
++	dummy_dai: dummy-dai {
++		compatible = "linux,snd-soc-dummy";
++		#sound-dai-cells = <0>;
++		status = "okay";
++	};
++
++	sound-header {
++		compatible = "simple-audio-card";
++		status = "okay";
++		simple-audio-card,name = "40-pin Header";
++		simple-audio-card,format = "i2s";
++		simple-audio-card,cpu {
++			sound-dai = <&sai1>;
++		};
++		simple-audio-card,codec {
++			#sound-dai-cells = <0>;
++			sound-dai = <&dummy_dai>;
++		};
++	};
++
+ 	memory@40000000 {
+ 		device_type = "memory";
+ 		reg = <0x00000000 0x40000000 0 0x40000000>;
+@@ -318,6 +318,34 @@
+ 	};
+ };
+ 
++&i2c3 {
++	status = "okay";
++
++	rt5645: rt5645@1a {
++		compatible = "realtek,rt5645";
++		reg = <0x1a>;
++		clocks = <&clk IMX8MQ_CLK_SAI2_ROOT>;
++		clock-names = "mclk1";
++		status = "okay";
++		realtek,dmic1-data-pin = <2>; // GPIO5
++		realtek,jd-mode = <0>;
++		realtek,jd-invert;
++		realtek,jd-low-volt-enable;
++		interrupt-parent = <&gpio5>;
++		interrupts = <4 IRQ_TYPE_EDGE_BOTH>;
++		hp-detect-gpios = <&gpio5 4 GPIO_ACTIVE_HIGH>;
++	};
++
++	typec_ptn5150: ptn5150@3d {
++		compatible = "nxp,ptn5150a";
++		pinctrl-names = "default";
++		#pinctrl-0 = <&pinctrl_typec>;
++		reg = <0x3d>;
++		interrupt-parent = <&gpio3>;
++		interrupts = <0 IRQ_TYPE_EDGE_FALLING>;
++	};
++};
++
+ &fec1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fec1>;
