@@ -60,7 +60,7 @@
 +	typec_ptn5150: ptn5150@3d {
 +		compatible = "nxp,ptn5150a";
 +		pinctrl-names = "default";
-+		
++		#pinctrl-0 = <&pinctrl_typec>;
 +		reg = <0x3d>;
 +		interrupt-parent = <&gpio3>;
 +		interrupts = <0 IRQ_TYPE_EDGE_FALLING>;
