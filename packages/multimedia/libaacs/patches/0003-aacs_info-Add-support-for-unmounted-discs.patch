@@ -1,0 +1,251 @@
+From 447ef86e023a718422c02f75f946dbc8125c5e4f Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Tue, 1 Mar 2022 12:00:54 +0000
+Subject: [PATCH 03/12] aacs_info: Add support for unmounted discs
+
+---
+ Makefile.am              | 10 ++++-
+ configure.ac             |  8 ++++
+ src/examples/aacs_info.c | 20 +++++++++
+ src/examples/udf_fs.c    | 97 ++++++++++++++++++++++++++++++++++++++++
+ src/examples/udf_fs.h    | 31 +++++++++++++
+ 5 files changed, 165 insertions(+), 1 deletion(-)
+ create mode 100644 src/examples/udf_fs.c
+ create mode 100644 src/examples/udf_fs.h
+
+diff --git a/Makefile.am b/Makefile.am
+index 5780a26..7d2a3f6 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -123,4 +123,12 @@ mkb_dump_CFLAGS = -std=c99
+ 
+ aacs_info_SOURCES = src/examples/aacs_info.c
+ aacs_info_CFLAGS = -std=c99
+-aacs_info_LDADD = libaacs.la
++aacs_info_LDADD = libaacs.la $(LIBUDFREAD_LIBS)
++if HAVE_WIN32
++else
++if HAVE_LIBUDFREAD
++aacs_info_SOURCES += \
++	src/examples/udf_fs.h \
++	src/examples/udf_fs.c
++endif
++endif
+diff --git a/configure.ac b/configure.ac
+index 151754b..317f97a 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -119,6 +119,14 @@ AC_FUNC_STRERROR_R
+ AM_PATH_GPG_ERROR([0.5],
+                   AC_DEFINE(HAVE_LIBGPG_ERROR, 1, [Define to 1 if you have the gpg-error library]))
+ 
++dnl aacs_info can be used with unmounted discs if libudfread is used
++PKG_CHECK_MODULES([LIBUDFREAD], [libudfread >= 1.1.0],
++    [with_libudfread=yes
++     AC_DEFINE([HAVE_LIBUDFREAD], [1], [Define to 1 if libudfread is to be used])],
++    [with_libudfread=no])
++AM_CONDITIONAL([HAVE_LIBUDFREAD], [ test x"$with_libudfread" = x"yes" ])
++
++
+ CC_CHECK_CFLAGS_APPEND([-Wall -Wdisabled-optimization -Wpointer-arith ]dnl
+ [-Wredundant-decls -Wcast-qual -Wwrite-strings -Wtype-limits -Wundef ]dnl
+ [-Wmissing-prototypes -Wshadow])
+diff --git a/src/examples/aacs_info.c b/src/examples/aacs_info.c
+index b8754e0..37ca6a5 100644
+--- a/src/examples/aacs_info.c
++++ b/src/examples/aacs_info.c
+@@ -17,11 +17,18 @@
+  * <http://www.gnu.org/licenses/>.
+  */
+ 
++#include "config.h"
++
+ #include <libaacs/aacs.h>
+ 
+ #include <stdio.h>
+ #include <stdlib.h>
+ 
++#if defined(HAVE_LIBUDFREAD) && !defined(_WIN32)
++#  include "udf_fs.h"
++#  define USE_UDF 1
++#endif
++
+ #include "util/macro.h"  /* MKINT_BE48 */
+ 
+ static const char *_hex2str(char *str, const uint8_t *s, unsigned n)
+@@ -65,6 +72,9 @@ int main (int argc, char **argv)
+ {
+     int major, minor, micro, error_code = AACS_SUCCESS;
+     AACS *aacs = NULL;
++#ifdef USE_UDF
++    void *udf;
++#endif
+ 
+     if (argc < 2) {
+         fprintf(stderr, "Usage: aacs_info <path-to-disc-root> [<path-to-config-file>]\n");
+@@ -79,6 +89,12 @@ int main (int argc, char **argv)
+         exit(EXIT_FAILURE);
+     }
+ 
++#ifdef USE_UDF
++    udf = open_udf(argv[1]);
++    if (udf)
++      aacs_set_fopen(aacs, udf, open_udf_file);
++#endif
++
+     error_code = aacs_open_device(aacs, argv[1], argc > 2 ? argv[2] : NULL);
+ 
+     if (error_code) {
+@@ -126,5 +142,9 @@ int main (int argc, char **argv)
+     _dump_rl("Drive", rl, num_entries, mkb_version);
+     aacs_free_rl(&rl);
+ 
++#ifdef USE_UDF
++    close_udf(udf);
++#endif
++
+     return EXIT_SUCCESS;
+ }
+diff --git a/src/examples/udf_fs.c b/src/examples/udf_fs.c
+new file mode 100644
+index 0000000..94244e6
+--- /dev/null
++++ b/src/examples/udf_fs.c
+@@ -0,0 +1,97 @@
++/*
++ * This file is part of libaacs
++ * Copyright (C) 2010-2022  VideoLAN
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library. If not, see
++ * <http://www.gnu.org/licenses/>.
++ */
++
++#include "udf_fs.h"
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include <udfread/udfread.h>
++
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
++
++static void _udf_file_close(AACS_FILE_H *fp)
++{
++    udfread_file_close(fp->internal);
++    free(fp);
++}
++
++static int64_t _udf_file_seek(AACS_FILE_H *fp, int64_t offset, int32_t origin)
++{
++    return udfread_file_seek(fp->internal, offset, origin);
++}
++
++static int64_t _udf_file_tell(AACS_FILE_H *fp)
++{
++    return udfread_file_tell(fp->internal);
++}
++
++static int64_t _udf_file_read(AACS_FILE_H *fp, uint8_t *buf, int64_t size)
++{
++    return udfread_file_read(fp->internal, buf, size);
++}
++
++AACS_FILE_H *open_udf_file(void *udf, const char *filename)
++{
++    AACS_FILE_H *fp = calloc(1, sizeof(*fp));
++    if (!fp) {
++        return NULL;
++    }
++    fp->close    = _udf_file_close;
++    fp->seek     = _udf_file_seek;
++    fp->read     = _udf_file_read;
++    fp->tell     = _udf_file_tell;
++    fp->internal = udfread_file_open(udf, filename);
++    if (!fp->internal) {
++        fprintf(stderr, "udfread_file_open('%s') failed\n", filename);
++        free(fp);
++        fp = NULL;
++    }
++    return fp;
++}
++
++void *open_udf(const char *path)
++{
++    struct stat sb;
++    if (stat(path, &sb) == -1)
++        return NULL;
++    if (!S_ISBLK(sb.st_mode))
++        return NULL;
++
++    udfread *udf = udfread_init();
++    if (!udf) {
++        fprintf(stderr, "udfread_init() failed\n");
++        return NULL;
++    }
++    if (udfread_open(udf, path) < 0) {
++        fprintf(stderr, "udfread_open(%s) failed\n", path);
++        udfread_close(udf);
++        return NULL;
++    }
++    return udf;
++}
++
++void close_udf(void *p)
++{
++    if (p)
++        udfread_close(p);
++}
+diff --git a/src/examples/udf_fs.h b/src/examples/udf_fs.h
+new file mode 100644
+index 0000000..6ac63e3
+--- /dev/null
++++ b/src/examples/udf_fs.h
+@@ -0,0 +1,31 @@
++/*
++ * This file is part of libaacs
++ * Copyright (C) 2010-2022  npzacs
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library. If not, see
++ * <http://www.gnu.org/licenses/>.
++ */
++
++#ifndef _AACS_INFO_UDF_FS_H
++#define _AACS_INFO_UDF_FS_H
++
++#include <libaacs/aacs.h>
++#include "file/filesystem.h"
++
++void close_udf(void *p);
++void *open_udf(const char *path);
++
++AACS_FILE_H *open_udf_file(void *udf, const char *filename);
++
++#endif // _AACS_INFO_UDF_FS_H
+-- 
+2.43.0
+

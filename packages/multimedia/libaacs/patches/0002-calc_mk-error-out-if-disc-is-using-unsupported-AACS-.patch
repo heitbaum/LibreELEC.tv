@@ -1,0 +1,51 @@
+From f746f4ebe56cbed294cfda51edb13cbf39a7f395 Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Tue, 1 Mar 2022 12:00:56 +0000
+Subject: [PATCH 02/12] calc_mk: error out if disc is using unsupported AACS
+ version
+
+---
+ src/libaacs/aacs.c | 7 +++++++
+ src/libaacs/aacs.h | 1 +
+ 2 files changed, 8 insertions(+)
+
+diff --git a/src/libaacs/aacs.c b/src/libaacs/aacs.c
+index eeb9d05..2dedefe 100644
+--- a/src/libaacs/aacs.c
++++ b/src/libaacs/aacs.c
+@@ -659,6 +659,12 @@ static int _calc_mk(AACS *aacs, uint8_t *mk, pk_list *pkl, dk_list *dkl)
+         _update_rl(mkb);
+     }
+ 
++    if (aacs->cc && aacs->cc->aacs2) {
++        /* note: this does not detect HDMV only discs */
++        BD_DEBUG(DBG_AACS | DBG_CRIT, "Error calculating media key: disc is using AACS2\n");
++        return AACS_ERROR_UNSUPPORTED_DISC;
++    }
++
+     /* try device keys first */
+     if (dkl) {
+         result = _calc_mk_dks(mkb, dkl, mk);
+@@ -1264,6 +1270,7 @@ const char *aacs_error_str(int err)
+        [-AACS_ERROR_MMC_FAILURE]      = "MMC failure",
+        [-AACS_ERROR_NO_DK]            = "No matching device key",
+        [-AACS_ERROR_UNKNOWN]          = "Error",
++       [-AACS_ERROR_UNSUPPORTED_DISC] = "Unsupported AACS version",
+     };
+     err = -err;
+     if (err < 0 || (size_t)err >= sizeof(str) / sizeof(str[0]) || !str[err]) {
+diff --git a/src/libaacs/aacs.h b/src/libaacs/aacs.h
+index 4c1e293..e957622 100644
+--- a/src/libaacs/aacs.h
++++ b/src/libaacs/aacs.h
+@@ -40,6 +40,7 @@
+ #define AACS_ERROR_MMC_FAILURE    -7 /* MMC failed */
+ #define AACS_ERROR_NO_DK          -8 /* no matching device key */
+ #define AACS_ERROR_UNKNOWN        -9 /* some other failure, see logs */
++#define AACS_ERROR_UNSUPPORTED_DISC -10  /* unsupported AACS version */
+ 
+ AACS_PUBLIC const char *aacs_error_str(int error);
+ 
+-- 
+2.43.0
+
