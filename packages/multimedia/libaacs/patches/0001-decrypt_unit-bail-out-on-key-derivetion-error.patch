@@ -1,0 +1,25 @@
+From 2310c54767e4975207c6340a96f033c2498cc42b Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Tue, 1 Mar 2022 12:00:41 +0000
+Subject: [PATCH 01/12] decrypt_unit: bail out on key derivetion error
+
+Key data is uninitialized
+---
+ src/libaacs/aacs.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/libaacs/aacs.c b/src/libaacs/aacs.c
+index 61d21ac..eeb9d05 100644
+--- a/src/libaacs/aacs.c
++++ b/src/libaacs/aacs.c
+@@ -1217,6 +1217,7 @@ static int _decrypt_unit(AACS *aacs, uint8_t *out_buf, const uint8_t *in_buf, ui
+     crypto_err = crypto_aes128e(aacs->uk->uk[curr_uk].key, out_buf, key);
+     if (crypto_err) {
+         LOG_CRYPTO_ERROR(DBG_AACS, "unit key derivation failed", crypto_err);
++        return 1;
+     }
+ 
+     for (a = 0; a < 16; a++) {
+-- 
+2.43.0
+
