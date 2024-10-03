@@ -1,0 +1,26 @@
+From 04721e58d4ef82118ec9436009100158841ba1df Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Sun, 2 May 2021 19:50:43 +0000
+Subject: [PATCH 05/12] crypto.h: document return value
+
+---
+ src/libaacs/crypto.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/libaacs/crypto.h b/src/libaacs/crypto.h
+index c28d5e7..5b6690d 100644
+--- a/src/libaacs/crypto.h
++++ b/src/libaacs/crypto.h
+@@ -33,6 +33,9 @@ BD_PRIVATE void crypto_strerror(int err, char *buf, size_t buf_size);
+   } while (0)
+ 
+ BD_PRIVATE int  crypto_init(void) BD_USED;
++
++/* return value: 0 on success, error code on failure */
++
+ BD_PRIVATE int  crypto_aes128e(const uint8_t *key, const uint8_t *data, uint8_t *dst) BD_USED;
+ BD_PRIVATE int  crypto_aes128d(const uint8_t *key, const uint8_t *data, uint8_t *dst) BD_USED;
+ BD_PRIVATE int  crypto_aesg3(const uint8_t *D, uint8_t *lsubk, uint8_t* rsubk,
+-- 
+2.43.0
+
