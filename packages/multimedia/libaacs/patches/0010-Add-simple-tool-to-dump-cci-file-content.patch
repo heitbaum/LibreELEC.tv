@@ -1,0 +1,174 @@
+From e7955b1793e7847b30106f27b386d16f10e58e42 Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Sat, 5 Mar 2022 04:39:37 +0000
+Subject: [PATCH 10/12] Add simple tool to dump cci file content
+
+---
+ Makefile.am             |  11 +++-
+ src/devtools/cci_dump.c | 125 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 135 insertions(+), 1 deletion(-)
+ create mode 100644 src/devtools/cci_dump.c
+
+diff --git a/Makefile.am b/Makefile.am
+index 7d2a3f6..9509c6b 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -93,7 +93,7 @@ dist-hook:
+ # programs
+ #
+ 
+-noinst_PROGRAMS = parser_test uk_dump mkb_dump
++noinst_PROGRAMS = parser_test uk_dump mkb_dump cci_dump
+ bin_PROGRAMS = aacs_info
+ 
+ parser_test_SOURCES = \
+@@ -121,6 +121,15 @@ mkb_dump_SOURCES = \
+ 	src/util/logging.c
+ mkb_dump_CFLAGS = -std=c99
+ 
++cci_dump_SOURCES = \
++	src/devtools/cci_dump.c \
++	src/devtools/read_file.h \
++	src/libaacs/cci.h \
++	src/libaacs/cci_data.h \
++	src/libaacs/cci.c \
++	src/util/logging.c
++cci_dump_CFLAGS = -std=c99
++
+ aacs_info_SOURCES = src/examples/aacs_info.c
+ aacs_info_CFLAGS = -std=c99
+ aacs_info_LDADD = libaacs.la $(LIBUDFREAD_LIBS)
+diff --git a/src/devtools/cci_dump.c b/src/devtools/cci_dump.c
+new file mode 100644
+index 0000000..379ce23
+--- /dev/null
++++ b/src/devtools/cci_dump.c
+@@ -0,0 +1,125 @@
++/*
++ * This file is part of libaacs
++ * Copyright (C) 2020  VideoLAN
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library. If not, see
++ * <http://www.gnu.org/licenses/>.
++ */
++
++#include "util/strutl.h"
++#include "util/macro.h"
++#include "libaacs/cci.h"
++#include "libaacs/cci_data.h"
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#include "read_file.h"
++
++static void _cci_dump(const AACS_CCI *cci)
++{
++    const AACS_BASIC_CCI *bcci = cci_get_basic_cci(cci);
++    unsigned title;
++
++    if (!bcci) {
++        fprintf(stderr, "No AACS Basic CCI found\n");
++        return;
++    }
++
++    printf("Encrypted CPS unit: %s\n\n", (!cci_is_unencrypted(cci)) ? "Yes" : "No");
++    if (bcci->cci == 0)
++        printf("Encryption Plus Non-assertion                                   %d\n", bcci->epn);
++    printf("Copy Control Information                                        %d (0 = copy freely)\n", bcci->cci);
++    printf("High Definition Analog Output in High Definition Analog Form    %d\n", bcci->image_constraint);
++    printf("Output of decrypted content is allowed only for Digital Outputs %d\n", bcci->digital_only);
++    printf("Analog copy protection information                              %d\n", bcci->apstb);
++    printf("\nTitles: %d\n", bcci->num_titles);
++
++    printf("Basic titles: ");
++    for (title = 0; title < bcci->num_titles; title++)
++        if (!(bcci->title_type[title >> 3] & (1 << (title & 7))))
++            printf("%d ", title);
++    printf("\nEnhanced titles: ");
++    for (title = 0; title < bcci->num_titles; title++)
++        if (bcci->title_type[title >> 3] & (1 << (title & 7)))
++            printf("%d ", title);
++    printf("\n");
++}
++
++static void _raw_dump(const uint8_t *data, size_t size)
++{
++    uint32_t mask = 0;
++    size_t   l, b;
++
++    printf("Raw data:\n");
++
++    for (l = 0; l < size; l += 16) {
++
++        /* skip large empty areas */
++        mask <<= 8;
++        for (b = 0; b < 32 && l+b < size; b++)
++            mask |= data[l + b];
++        if (!mask)
++            continue;
++
++        printf("%04lx: ", (long)l);
++        for (b = 0; b < 8 && l+b < size; b++)
++            printf("%02x ", data[l + b]);
++        printf(" ");
++        for (b = 8; b < 16 && l+b < size; b++)
++            printf("%02x ", data[l + b]);
++        printf("        ");
++        for (b = 0; b < 8 && l+b < size; b++)
++            if (data[l+b]) printf("%02x ", data[l + b]); else printf("   ");
++        printf(" ");
++        for (b = 8; b < 16 && l+b < size; b++)
++            if (data[l+b]) printf("%02x ", data[l + b]); else printf("   ");
++        printf("\n");
++    }
++}
++
++int main (int argc, char **argv)
++{
++    AACS_CCI *cci;
++    uint8_t  *data;
++    size_t    size;
++
++    if (argc < 2) {
++        fprintf(stderr, "usage: cci_dump <CPSUnit?????.cci>\n");
++        exit(-1);
++    }
++
++    size = _read_file(argv[1], 16, 1024*1024, &data);
++    if (!size) {
++        exit(-1);
++    }
++
++    printf("CCI file size:      %zu bytes\n", size);
++    cci = cci_parse(data, size);
++
++    if (!cci) {
++        fprintf(stderr, "Parsing failed\n");
++        exit(-1);
++    }
++
++    _cci_dump(cci);
++
++    _raw_dump(data, size);
++
++    cci_free(&cci);
++    free(data);
++
++    return 0;
++}
+-- 
+2.43.0
+
