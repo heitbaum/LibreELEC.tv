@@ -1,0 +1,82 @@
+From 4152acdd501692fbdf22491b6f4b34fd7cbf59a6 Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Tue, 1 Mar 2022 11:16:58 +0000
+Subject: [PATCH 06/12] dirs_win32: check for errors
+
+---
+ src/file/dirs_win32.c | 42 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 29 insertions(+), 13 deletions(-)
+
+diff --git a/src/file/dirs_win32.c b/src/file/dirs_win32.c
+index 9f77a2e..515dfa8 100644
+--- a/src/file/dirs_win32.c
++++ b/src/file/dirs_win32.c
+@@ -32,6 +32,27 @@
+ #include <shlobj.h>
+ #include <limits.h>
+ 
++static char *_wide_to_utf8(wchar_t *wide)
++{
++    char *result;
++    int len;
++
++    len = WideCharToMultiByte (CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
++    if (len < 1) {
++        return NULL;
++    }
++
++    result = malloc(len);
++    if (!result) {
++        return NULL;
++    }
++
++    if (!WideCharToMultiByte (CP_UTF8, 0, wide, -1, result, len, NULL, NULL)) {
++        X_FREE(result);
++    }
++
++    return result;
++}
+ 
+ char *file_get_config_home(void)
+ {
+@@ -45,12 +66,10 @@ char *file_get_data_home(void)
+     /* Get the "Application Data" folder for the user */
+     if (S_OK == SHGetFolderPathW(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                  NULL, SHGFP_TYPE_CURRENT, wdir)) {
+-        int len = WideCharToMultiByte (CP_UTF8, 0, wdir, -1, NULL, 0, NULL, NULL);
+-        char *appdir = malloc(len);
+-        if (appdir) {
+-            WideCharToMultiByte (CP_UTF8, 0, wdir, -1, appdir, len, NULL, NULL);
+-        }
+-        return appdir;
++      appdir = _wide_to_utf8(wdir);
++      if (appdir) {
++          return appdir;
++      }
+     }
+ 
+     BD_DEBUG(DBG_FILE, "Can't find user configuration directory !\n");
+@@ -76,16 +95,13 @@ const char *file_get_config_system(const char *dir)
+         /* Get the "Application Data" folder for all users */
+         if (S_OK == SHGetFolderPathW(NULL, CSIDL_COMMON_APPDATA | CSIDL_FLAG_CREATE,
+                     NULL, SHGFP_TYPE_CURRENT, wdir)) {
+-            int len = WideCharToMultiByte (CP_UTF8, 0, wdir, -1, NULL, 0, NULL, NULL);
+-            appdir = malloc(len);
++            appdir = _wide_to_utf8(wdir);
+             if (appdir) {
+-                WideCharToMultiByte (CP_UTF8, 0, wdir, -1, appdir, len, NULL, NULL);
++                return appdir;
+             }
+-            return appdir;
+-        } else {
+-            BD_DEBUG(DBG_FILE, "Can't find common configuration directory !\n");
+-            return NULL;
+         }
++        BD_DEBUG(DBG_FILE, "Can't find common configuration directory !\n");
++        return NULL;
+     } else {
+         // next call
+         return NULL;
+-- 
+2.43.0
+

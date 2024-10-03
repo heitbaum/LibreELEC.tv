@@ -1,0 +1,39 @@
+From 37b8a4807aedf7ff86751d2c4d9a68efdc665d2f Mon Sep 17 00:00:00 2001
+From: hpi1 <hpi1@anonymous.org>
+Date: Mon, 7 Mar 2022 15:05:48 +0200
+Subject: [PATCH 12/12] Add missing include
+
+---
+ src/file/dirs_win32.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/file/dirs_win32.c b/src/file/dirs_win32.c
+index 515dfa8..9eb06cf 100644
+--- a/src/file/dirs_win32.c
++++ b/src/file/dirs_win32.c
+@@ -24,6 +24,7 @@
+ #include "dirs.h"
+ 
+ #include "util/logging.h"
++#include "util/macro.h"
+ 
+ #include <stdio.h>
+ #include <string.h>
+@@ -66,10 +67,10 @@ char *file_get_data_home(void)
+     /* Get the "Application Data" folder for the user */
+     if (S_OK == SHGetFolderPathW(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
+                                  NULL, SHGFP_TYPE_CURRENT, wdir)) {
+-      appdir = _wide_to_utf8(wdir);
+-      if (appdir) {
+-          return appdir;
+-      }
++        char *appdir = _wide_to_utf8(wdir);
++        if (appdir) {
++            return appdir;
++        }
+     }
+ 
+     BD_DEBUG(DBG_FILE, "Can't find user configuration directory !\n");
+-- 
+2.43.0
+

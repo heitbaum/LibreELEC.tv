@@ -1,0 +1,56 @@
+From 09fc423bea4294257d146a327c13483d37abed90 Mon Sep 17 00:00:00 2001
+From: npzacs <npzacs@gmail.com>
+Date: Sun, 6 Mar 2022 04:44:24 +0000
+Subject: [PATCH 11/12] Add const
+
+---
+ src/libaacs/cci.c | 6 +++---
+ src/libaacs/cci.h | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/libaacs/cci.c b/src/libaacs/cci.c
+index 31db36e..a63a2e1 100644
+--- a/src/libaacs/cci.c
++++ b/src/libaacs/cci.c
+@@ -171,12 +171,12 @@ void cci_free(AACS_CCI **pp)
+     }
+ }
+ 
+-int cci_is_unencrypted(AACS_CCI *cci)
++int cci_is_unencrypted(const AACS_CCI *cci)
+ {
+     unsigned int ii;
+ 
+     for (ii = 0; ii < cci->num_entry; ii++) {
+-        AACS_CCI_ENTRY *e = &cci->entry[ii];
++        const AACS_CCI_ENTRY *e = &cci->entry[ii];
+ 
+         if (e->type == cci_AACS_ENHANCED_TITLE_USAGE) {
+             BD_DEBUG(DBG_CCI, "Enhanced title usage CCI found\n");
+@@ -212,7 +212,7 @@ int cci_is_unencrypted(AACS_CCI *cci)
+     return 0;
+ }
+ 
+-AACS_BASIC_CCI *cci_get_basic_cci(AACS_CCI *cci)
++const AACS_BASIC_CCI *cci_get_basic_cci(const AACS_CCI *cci)
+ {
+     unsigned int ii;
+ 
+diff --git a/src/libaacs/cci.h b/src/libaacs/cci.h
+index 703e919..12d222f 100644
+--- a/src/libaacs/cci.h
++++ b/src/libaacs/cci.h
+@@ -29,8 +29,8 @@ typedef struct aacs_cci AACS_CCI;
+ BD_PRIVATE AACS_CCI *cci_parse(const void *data, size_t len);
+ BD_PRIVATE void      cci_free(AACS_CCI **);
+ 
+-BD_PRIVATE int cci_is_unencrypted(AACS_CCI *cci);
++BD_PRIVATE int cci_is_unencrypted(const AACS_CCI *cci);
+ 
+-BD_PRIVATE struct aacs_basic_cci *cci_get_basic_cci(AACS_CCI *cci);
++BD_PRIVATE const struct aacs_basic_cci *cci_get_basic_cci(const AACS_CCI *cci);
+ 
+ #endif /* AACS_CCI_H_ */
+-- 
+2.43.0
+
