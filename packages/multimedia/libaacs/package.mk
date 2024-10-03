@@ -11,8 +11,8 @@ PKG_DEPENDS_TARGET="toolchain libgcrypt"
 PKG_LONGDESC="Open implementation of the AACS (Advanced Access Content System) specification."
 PKG_TOOLCHAIN="autotools"
 
-PKG_CONFIGURE_OPTS_TARGET="--disable-werror \
-                           --disable-extra-warnings \
+PKG_CONFIGURE_OPTS_TARGET="
+                          
                            --disable-optimizations \
                            --with-libgcrypt-prefix=${SYSROOT_PREFIX}/usr \
                            --with-libgpg-error-prefix=${SYSROOT_PREFIX}/usr \
