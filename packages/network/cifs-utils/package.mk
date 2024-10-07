@@ -2,12 +2,12 @@
 # Copyright (C) 2024-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="cifs-utils"
-PKG_VERSION="7.0"
-PKG_SHA256="0defaab85bd3ea46ffc45ab41fb0d0ad54d05ae2cfaa7e503de86d4f12bc8161"
+PKG_VERSION="7.1"
+PKG_SHA256="a21123f76a4a6a36c9653189ba4918ebdf3cfcd3f9092730a47ff3450b5b5b2a"
 PKG_LICENSE="GPL-3.0-or-later"
 PKG_SITE="https://wiki.samba.org/index.php/LinuxCIFS_utils"
 PKG_URL="https://download.samba.org/pub/linux-cifs/cifs-utils/cifs-utils-${PKG_VERSION}.tar.bz2"
-PKG_DEPENDS_TARGET="toolchain"
+PKG_DEPENDS_TARGET="toolchain talloc"
 PKG_LONGDESC="Linux CIFS userspace utilities"
 PKG_BUILD_FLAGS="-cfg-libs"
 
