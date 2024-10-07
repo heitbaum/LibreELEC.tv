@@ -9,3 +9,12 @@ PKG_SITE="https://talloc.samba.org/"
 PKG_URL="https://www.samba.org/ftp/talloc/talloc-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="talloc is a hierarchical, reference counted memory pool system with destructors"
+PKG_BUILD_FLAGS="-cfg-libs"
+
+PKG_CONFIGURE_OPTS_TARGET="--cross-compile"
+
+pre_configure_target() {
+  # talloc uses its own build directory
+  cd ${PKG_BUILD}
+    rm -rf .${TARGET_NAME}
+}
