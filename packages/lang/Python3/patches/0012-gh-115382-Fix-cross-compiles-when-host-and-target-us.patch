@@ -39,18 +39,17 @@ Signed-off-by: Vincent Fazio <vfazio@gmail.com>
 Upstream-issue: https://github.com/python/cpython/issues/115382
 Upstream: https://github.com/python/cpython/pull/116294
 ---
- Lib/sysconfig.py             | 15 ++++++++++++++-
+ Lib/sysconfig/__main__.py    | 15 ++++++++++++++-
  Lib/test/libregrtest/main.py |  1 +
  Lib/test/pythoninfo.py       |  1 +
- Tools/scripts/run_tests.py   |  1 +
  configure                    |  2 +-
  configure.ac                 |  2 +-
  6 files changed, 19 insertions(+), 3 deletions(-)
 
-diff --git a/Lib/sysconfig.py b/Lib/sysconfig.py
+diff --git a/Lib/sysconfig/__main__.py b/Lib/sysconfig/__main__.py
 index 122d441bd1..260aec3127 100644
---- a/Lib/sysconfig.py
-+++ b/Lib/sysconfig.py
+--- a/Lib/sysconfig/__main__.py
++++ b/Lib/sysconfig/__main__.py
 @@ -533,7 +533,20 @@ def _init_posix(vars):
      """Initialize the module as appropriate for POSIX systems."""
      # _sysconfigdata is generated at build time, see _generate_posix_vars()
@@ -97,18 +96,6 @@ index 6efeaad812..d43e52c9e4 100644
          "__PYVENV_LAUNCHER__",
  
          # Sanitizer options
-diff --git a/Tools/scripts/run_tests.py b/Tools/scripts/run_tests.py
-index 445a34ae3e..4077a83424 100644
---- a/Tools/scripts/run_tests.py
-+++ b/Tools/scripts/run_tests.py
-@@ -42,6 +42,7 @@ def main(regrtest_args):
-             '_PYTHON_PROJECT_BASE',
-             '_PYTHON_HOST_PLATFORM',
-             '_PYTHON_SYSCONFIGDATA_NAME',
-+            "_PYTHON_SYSCONFIGDATA_PATH",
-             'PYTHONPATH'
-         }
-         environ = {
 diff --git a/configure b/configure
 index 6dc8a66e48..a69346db8c 100755
 --- a/configure
