@@ -2,8 +2,8 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="podman-bin"
-PKG_VERSION="5.2.3"
-PKG_SHA256="48461fc0cd518119b6f45ed65bfd4da6dad353013d21ec3de225a0c7e4460bb7"
+PKG_VERSION="5.2.4"
+PKG_SHA256="4e5609b9fffa26b46a135abda7049ac034d83dab402c507cbc9cb714c5bb7c5c"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="https://podman.io/"
 PKG_URL="https://github.com/containers/podman/archive/v${PKG_VERSION}.tar.gz"
@@ -12,7 +12,7 @@ PKG_LONGDESC="Podman: A tool for managing OCI containers and pods."
 PKG_TOOLCHAIN="manual"
 
 # Git commit of the matching release https://github.com/containers/podman
-export PKG_GIT_COMMIT="c5366a308e89edd9636b66faf79bd5cb18ed0905"
+export PKG_GIT_COMMIT="76d0859d9f6e5d7c84392da9dcd2fae3447f789d"
 
 PKG_PODMAN_BUILDTAGS="exclude_graphdriver_devicemapper \
                       exclude_graphdriver_btrfs \
