@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="containerd"
-PKG_VERSION="1.7.22"
-PKG_SHA256="8c5edde741b7596af63c021429a1212bd616350ed65a7b741eeffc47e27ee9a9"
+PKG_VERSION="1.7.23"
+PKG_SHA256="393bfde8ca1766a0bca3441e18eddc3f5a5c8d97ef676bde0d6c9903e1b0ec0c"
 PKG_LICENSE="APL"
 PKG_SITE="https://containerd.io"
 PKG_URL="https://github.com/containerd/containerd/archive/v${PKG_VERSION}.tar.gz"
@@ -13,7 +13,7 @@ PKG_LONGDESC="A daemon to control runC, built for performance and density."
 PKG_TOOLCHAIN="manual"
 
 # Git commit of the matching release https://github.com/containerd/containerd/releases
-export PKG_GIT_COMMIT="7f7fdf5fed64eb6a7caf99b3e12efcf9d60e311c"
+export PKG_GIT_COMMIT="57f17b0a6295a39009d861b89e3b3b87b005ca27"
 
 pre_make_target() {
 
