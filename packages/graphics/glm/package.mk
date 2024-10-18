@@ -3,7 +3,7 @@
 
 PKG_NAME="glm"
 PKG_VERSION="1.0.1"
-PKG_SHA256="3def0a1cf4f4cf612d2c50e54098ed1cf2cdce158b9887336f1130d7d2ae0ed2"
+PKG_SHA256="9f3174561fd26904b23f0db5e560971cbf9b3cbda0b280f04d5c379d03bf234c"
 PKG_LICENSE="MIT"
 PKG_SITE="https://glm.g-truc.net/"
 PKG_URL="https://github.com/g-truc/glm/archive/refs/tags/${PKG_VERSION}.tar.gz"
