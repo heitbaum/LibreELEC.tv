@@ -1,0 +1,17 @@
+--- a/Makefile	2024-10-26 10:47:30.597380704 +0000
++++ b/Makefile	2024-10-26 10:47:14.587263541 +0000
+@@ -10,8 +10,12 @@
+ 
+ KVERSION := $(shell uname -r)
+ 
++ARCH ?=
++CROSS_COMPILE ?=
++KSRC ?= /lib/modules/$(KVERSION)/build
++
+ all:
+-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
++	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd) modules
+ 
+ clean:
+-	$(MAKE) -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
++	$(MAKE) -C $(KSRC) M=$(PWD) clean
