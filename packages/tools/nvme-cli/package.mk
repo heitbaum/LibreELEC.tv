@@ -2,8 +2,8 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nvme-cli"
-PKG_VERSION="2.10.2"
-PKG_SHA256="b3c256959ff34124788aa96c8602c9cef00705d01cc3cb9322bf3269e00ae904"
+PKG_VERSION="2.11"
+PKG_SHA256="5e4dc73dbb488c6b1e6ad1c78d0c62b624076fcb0c052bd9039674a1dbd6517b"
 PKG_LICENSE="GPL"
 PKG_SITE="https://nvmexpress.org"
 PKG_URL="https://github.com/linux-nvme/nvme-cli/archive/refs/tags/v${PKG_VERSION}.tar.gz"
