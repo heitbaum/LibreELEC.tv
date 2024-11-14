@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC
 
 PKG_NAME="atf"
-PKG_VERSION="2.11.0"
-PKG_SHA256="8c0412be8ceca9d3838daa4b6e7bee7d5a6d591aa05170a3fba2cbc415e2f7fc"
+PKG_VERSION="2.12-rc0"
+PKG_SHA256="7a01c98986303fbf4de21faec53dddac4ccccb4a5e9ecdbb02af84e4e14ccba6"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="BSD-3c"
 PKG_SITE="https://github.com/ARM-software/arm-trusted-firmware"
@@ -25,7 +25,8 @@ make_target() {
   if [ "${ATF_PLATFORM}" = "imx8mq" ]; then
     CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="" CFLAGS="" make PLAT=${ATF_PLATFORM} LOG_LEVEL=0 bl31
   else
-    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="" CFLAGS="" make PLAT=${ATF_PLATFORM} bl31
+    # as of atf 2.12.0 - sun50i_a64 builds use LTO, include -ffat-lto-objects to support this
+    CROSS_COMPILE="${TARGET_KERNEL_PREFIX}" LDFLAGS="" CFLAGS="-ffat-lto-objects" make PLAT=${ATF_PLATFORM} bl31
   fi
 }
 
