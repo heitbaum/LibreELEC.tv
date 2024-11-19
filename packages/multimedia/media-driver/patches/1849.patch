@@ -1,0 +1,21 @@
+From bce85859e187af743d810d29560fc2b0e187fc67 Mon Sep 17 00:00:00 2001
+From: Blackteahamburger <blackteahamburger@outlook.com>
+Date: Thu, 29 Aug 2024 17:04:55 +0800
+Subject: [PATCH] Fix missing cstdint for GCC 15
+
+---
+ media_common/linux/common/os/mos_defs_specific.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/media_common/linux/common/os/mos_defs_specific.h b/media_common/linux/common/os/mos_defs_specific.h
+index c5b4143a33..d5f04d1f8a 100644
+--- a/media_common/linux/common/os/mos_defs_specific.h
++++ b/media_common/linux/common/os/mos_defs_specific.h
+@@ -29,6 +29,7 @@
+ 
+ #include <pthread.h>
+ #include <semaphore.h>
++#include <cstdint>
+ #include <string>
+ 
+ typedef pthread_mutex_t         MOS_MUTEX, *PMOS_MUTEX;         //!< mutex pointer
