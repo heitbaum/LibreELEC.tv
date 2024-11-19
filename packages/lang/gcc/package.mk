@@ -3,11 +3,12 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="gcc"
-PKG_VERSION="14.2.0"
-PKG_SHA256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9"
+PKG_VERSION="15-20241117"
+PKG_SHA256="e8d0ef61fd90038096abe6d5a5df5349d72664945c6fd91d994c06373109b137"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="https://gcc.gnu.org/"
 PKG_URL="https://ftpmirror.gnu.org/gcc/${PKG_NAME}-${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_URL="https://gcc.gnu.org/pub/gcc/snapshots/${PKG_VERSION}/gcc-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_BOOTSTRAP="ccache:host autoconf:host binutils:host gmp:host mpfr:host mpc:host zstd:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_DEPENDS_HOST="ccache:host autoconf:host binutils:host gmp:host mpfr:host mpc:host zstd:host glibc libxcrypt"
