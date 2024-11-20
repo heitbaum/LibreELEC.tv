@@ -14,4 +14,6 @@ if [ "${MOLD_SUPPORT}" = "yes" ]; then
   PKG_DEPENDS_TARGET+=" mold:host"
 fi
 
+TARGET_CFLAGS="-Wno-error=unterminated-string-initialization"
+
 PKG_CONFIGURE_OPTS_TARGET="--disable-obsolete-api"
