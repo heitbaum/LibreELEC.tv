@@ -14,6 +14,8 @@ PKG_STAMP="${KERNEL_TARGET} ${KERNEL_MAKE_EXTRACMD}"
 
 PKG_PATCH_DIRS="${LINUX}"
 
+TARGET_CFLAGS+=" -std=gnu11"
+
 case "${LINUX}" in
   amlogic)
     PKG_VERSION="5996393469d99560b7845d22c9eff00661de0724" # 6.12.9
@@ -50,7 +52,7 @@ fi
 
 if [ "${PKG_BUILD_PERF}" != "no" ] && grep -q ^CONFIG_PERF_EVENTS= ${PKG_KERNEL_CFG_FILE}; then
   PKG_BUILD_PERF="yes"
-  PKG_BUILD_TMON="yes"
+  PKG_BUILD_TMON="no"
   PKG_BUILD_CPUPOWER="yes"
   PKG_DEPENDS_TARGET+=" binutils elfutils libunwind zlib openssl"
 fi
