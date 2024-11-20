@@ -1,0 +1,74 @@
+--- a/configure	2023-07-29 13:42:22.000000000 +0000
++++ b/configure	2024-11-20 06:21:33.583948955 +0000
+@@ -6562,71 +6562,6 @@
+   # remove anything that might look like compiler output to our "||" expression
+   rm -f conftest* a.out b.out a.exe a_out.exe
+   cat >conftest.c <<EOF
+-/* The following provokes a segfault in the compiler on powerpc-apple-darwin.
+-   Extracted from tests/mpn/t-iord_u.c.  Causes Apple's gcc 3.3 build 1640 and
+-   1666 to segfault with e.g., -O2 -mpowerpc64.  */
+-
+-#if defined (__GNUC__) && ! defined (__cplusplus)
+-typedef unsigned long long t1;typedef t1*t2;
+-void g(){}
+-void h(){}
+-static __inline__ t1 e(t2 rp,t2 up,int n,t1 v0)
+-{t1 c,x,r;int i;if(v0){c=1;for(i=1;i<n;i++){x=up[i];r=x+1;rp[i]=r;}}return c;}
+-void f(){static const struct{t1 n;t1 src[9];t1 want[9];}d[]={{1,{0},{1}},};t1 got[9];int i;
+-for(i=0;i<1;i++){if(e(got,got,9,d[i].n)==0)h();g(i,d[i].src,d[i].n,got,d[i].want,9);if(d[i].n)h();}}
+-#else
+-int dummy;
+-#endif
+-
+-int main () { return 0; }
+-EOF
+-  echo "Test compile: long long reliability test 1" >&5
+-  gmp_compile="$cc $cflags $cppflags conftest.c >&5"
+-  if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$gmp_compile\""; } >&5
+-  (eval $gmp_compile) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then
+-    cc_works_part=yes
+-    if test "$cross_compiling" = no; then
+-      if { ac_try='./a.out || ./b.out || ./a.exe || ./a_out.exe || ./conftest'
+-  { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
+-  (eval $ac_try) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; }; then :;
+-      else
+-        cc_works_part=norun
+-      fi
+-    fi
+-  else
+-    cc_works_part=no
+-  fi
+-  if test "$cc_works_part" != yes; then
+-    echo "failed program was:" >&5
+-    cat conftest.c >&5
+-  fi
+-  rm -f conftest* a.out b.out a.exe a_out.exe
+-  case $cc_works_part in
+-    yes)
+-
+-      ;;
+-    no)
+-      gmp_prog_cc_works="no, long long reliability test 1"
+-      ;;
+-    norun)
+-      gmp_prog_cc_works="no, long long reliability test 1, program does not run"
+-      ;;
+-  esac
+-fi
+-
+-
+-
+-
+-if test "$gmp_prog_cc_works" = yes; then
+-  # remove anything that might look like compiler output to our "||" expression
+-  rm -f conftest* a.out b.out a.exe a_out.exe
+-  cat >conftest.c <<EOF
+ /* The following provokes an internal compiler error on powerpc-apple-darwin.
+    Extracted from mpz/cfdiv_q_2exp.c.  Causes Apple's gcc 3.3 build 1640 and
+    1666 to get an ICE with -O1 -mpowerpc64.  */
