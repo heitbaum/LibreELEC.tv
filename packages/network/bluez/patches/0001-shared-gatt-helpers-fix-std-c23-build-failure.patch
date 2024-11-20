@@ -1,0 +1,60 @@
+From 51bc0c2dab73ceab1084cf3db4254488051fdc7b Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Wed, 20 Nov 2024 12:56:01 +0000
+Subject: [PATCH] shared/gatt-helpers: fix -std=c23 build failure
+
+gcc-15 switched to -std=c23 by default:
+
+    https://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=55e3bd376b2214e200fa76d12b67ff259b06c212
+
+As a result `bluez` fails the build as:
+
+    src/shared/gatt-helpers.c:1136:24: error: incompatible types when returning type '_Bool' but 'struct bt_gatt_request *' was expected
+     1136 |                 return false;
+          |                        ^~~~~
+    src/shared/gatt-helpers.c:1250:24: error: incompatible types when returning type '_Bool' but 'struct bt_gatt_request *' was expected
+     1250 |                 return false;
+          |                        ^~~~~
+    src/shared/gatt-helpers.c:1478:24: error: incompatible types when returning type '_Bool' but 'struct bt_gatt_request *' was expected
+     1478 |                 return false;
+          |                        ^~~~~
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ src/shared/gatt-helpers.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/shared/gatt-helpers.c b/src/shared/gatt-helpers.c
+index 50fcb269b..f1fa6300a 100644
+--- a/src/shared/gatt-helpers.c
++++ b/src/shared/gatt-helpers.c
+@@ -1133,7 +1133,7 @@ struct bt_gatt_request *bt_gatt_discover_included_services(struct bt_att *att,
+ 	uint8_t pdu[6];
+ 
+ 	if (!att)
+-		return false;
++		return NULL;
+ 
+ 	op = new0(struct bt_gatt_request, 1);
+ 	op->att = att;
+@@ -1247,7 +1247,7 @@ struct bt_gatt_request *bt_gatt_discover_characteristics(struct bt_att *att,
+ 	uint8_t pdu[6];
+ 
+ 	if (!att)
+-		return false;
++		return NULL;
+ 
+ 	op = new0(struct bt_gatt_request, 1);
+ 	op->att = att;
+@@ -1475,7 +1475,7 @@ struct bt_gatt_request *bt_gatt_discover_descriptors(struct bt_att *att,
+ 	uint8_t pdu[4];
+ 
+ 	if (!att)
+-		return false;
++		return NULL;
+ 
+ 	op = new0(struct bt_gatt_request, 1);
+ 	op->att = att;
+-- 
+2.43.0
+
