@@ -54,7 +54,7 @@ fi
 
 if [ "${PKG_BUILD_PERF}" != "no" ] && grep -q ^CONFIG_PERF_EVENTS= ${PKG_KERNEL_CFG_FILE}; then
   PKG_BUILD_PERF="yes"
-  PKG_BUILD_TMON="yes"
+  PKG_BUILD_TMON="no"
   PKG_BUILD_CPUPOWER="yes"
   PKG_DEPENDS_TARGET+=" binutils elfutils libunwind zlib openssl"
 fi
