@@ -1,0 +1,28 @@
+From 9529ab36d059030aac1ac8a90ca95878445ee48e Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Wed, 20 Nov 2024 12:47:35 +0000
+Subject: [PATCH 1/2] shell:
+
+    src/shared/shell.c:365:24: error: incompatible types when returning type '_Bool' but 'struct input *' was expected
+      365 |                 return false;
+          |                        ^~~~~
+---
+ src/shared/shell.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/shell.c b/src/shared/shell.c
+index a8fa87696..aa6c16c8c 100644
+--- a/src/shared/shell.c
++++ b/src/shared/shell.c
+@@ -362,7 +362,7 @@ static struct input *input_new(int fd)
+ 
+ 	io = io_new(fd);
+ 	if (!io)
+-		return false;
++		return NULL;
+ 
+ 	input = new0(struct input, 1);
+ 	input->io = io;
+-- 
+2.43.0
+
