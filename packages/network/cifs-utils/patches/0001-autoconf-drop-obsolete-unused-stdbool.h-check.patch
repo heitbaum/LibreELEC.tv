@@ -1,0 +1,37 @@
+From da5a6104e577451e4bfc1f38870fe2a8e9722a88 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 22 Nov 2024 13:33:43 +0000
+Subject: [PATCH] autoconf: drop obsolete unused stdbool.h check
+
+Link: https://www.gnu.org/software/autoconf/manual/autoconf-2.72/html_node/Particular-Headers.html
+
+With configure as shipped using GNU Autoconf 2.69 for cifs-utils 7.1
+configure fails when compiling with -std=c23 (gcc 15):
+
+    checking for stdbool.h... (cached) no
+    configure: error: necessary header(s) not found
+
+Using GNU Autoconf 2.72 to create the configure file does allow the build
+to complete, but as the HAVE_STDBOOL_H is unused - drop the check entirely.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index b84c41f..47c6069 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -127,7 +127,7 @@ AC_CHECK_FUNCS(clock_gettime, [], [
+ AC_SUBST(RT_LDADD)
+ 
+ # Checks for header files.
+-AC_CHECK_HEADERS([arpa/inet.h ctype.h fcntl.h inttypes.h limits.h mntent.h netdb.h stddef.h stdint.h stdbool.h stdlib.h stdio.h errno.h string.h strings.h sys/mount.h sys/param.h sys/socket.h sys/time.h syslog.h unistd.h], , [AC_MSG_ERROR([necessary header(s) not found])])
++AC_CHECK_HEADERS([arpa/inet.h ctype.h fcntl.h inttypes.h limits.h mntent.h netdb.h stddef.h stdint.h stdlib.h stdio.h errno.h string.h strings.h sys/mount.h sys/param.h sys/socket.h sys/time.h syslog.h unistd.h], , [AC_MSG_ERROR([necessary header(s) not found])])
+ 
+ # do we have sys/fsuid.h and setfsuid()?
+ AC_CHECK_HEADERS([sys/fsuid.h])
+-- 
+2.43.0
+
