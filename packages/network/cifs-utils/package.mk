@@ -10,6 +10,7 @@ PKG_URL="https://download.samba.org/pub/linux-cifs/cifs-utils/cifs-utils-${PKG_V
 PKG_DEPENDS_TARGET="toolchain talloc"
 PKG_LONGDESC="Linux CIFS userspace utilities"
 PKG_BUILD_FLAGS="-cfg-libs"
+PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_func_realloc_0_nonnull=yes \
