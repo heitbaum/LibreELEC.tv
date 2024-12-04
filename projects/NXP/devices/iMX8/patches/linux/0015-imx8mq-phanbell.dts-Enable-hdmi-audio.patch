@@ -1,0 +1,58 @@
+commit 72de9177fe380bda3bb11eea1aa08a243a55d154
+Author: Michael Brooks <michaelbrooks@google.com>
+Date:   Wed Nov 13 15:07:28 2019 -0800
+
+    Adds support for HDMI audio
+    
+    Uses SAI4 for HDMI output. Doesn't implement HDMI ARC as it's
+    not needed for the dev board. Uses SAI4.
+    
+    Change-Id: I74e5600d6baa325c7fe4a62f6e29176ba02af44e
+    Tested: Audio output via HDMI
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index e67ac412dcb5..6c0555155082 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -53,6 +53,22 @@
+ 		status = "okay";
+ 	};
+ 
++	sound-hdmi {
++		compatible = "fsl,imx8mq-evk-cdnhdmi",
++				"fsl,imx-audio-cdnhdmi";
++		model = "imx-audio-hdmi";
++		audio-cpu = <&sai4>;
++		protocol = <1>;
++		hdmi-out;
++		constraint-rate = <44100>,
++				<88200>,
++				<176400>,
++				<32000>,
++				<48000>,
++				<96000>,
++				<192000>;
++	};
++
+ 	busfreq {
+ 		status = "disabled";
+ 	};
+@@ -243,6 +259,18 @@
+ 	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
+ };
+ 
++&sai4 {
++	assigned-clocks = <&clk IMX8MQ_CLK_SAI4>;
++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
++	assigned-clock-rates = <24576000>;
++	clocks = <&clk IMX8MQ_CLK_SAI4_IPG>, <&clk IMX8MQ_CLK_DUMMY>,
++		<&clk IMX8MQ_CLK_SAI4_ROOT>, <&clk IMX8MQ_CLK_DUMMY>,
++		<&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_AUDIO_PLL1_OUT>,
++		<&clk IMX8MQ_AUDIO_PLL2_OUT>;
++	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
++	status = "okay";
++};
++
+ &i2c2 {
+ 	status = "okay";
+ 
