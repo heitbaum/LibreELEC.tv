@@ -116,7 +116,7 @@ index a3b9d615a3b4..5ce4fc21443e 100644
 +	cs-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>,
 +		   <&gpio3 2 GPIO_ACTIVE_HIGH>;
 +	num-cs = <2>;
-+	status = "okay";
++	status = "disabled";
 +
 +	spidev@0 {
 +		compatible = "rohm,dh2228fv";
