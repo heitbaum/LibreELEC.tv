@@ -14,16 +14,15 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot
 index e67ac412dcb5..6c0555155082 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -53,6 +53,22 @@
+@@ -53,6 +53,29 @@
  		status = "okay";
  	};
  
 +	sound-hdmi {
-+		compatible = "fsl,imx8mq-evk-cdnhdmi",
-+				"fsl,imx-audio-cdnhdmi";
-+		model = "imx-audio-hdmi";
-+		audio-cpu = <&sai4>;
-+		protocol = <1>;
++		compatible = "fsl,imx-audio-hdmi";
++		model = "audio-hdmi";
++		audio-cpu = <&sai1>;
++		protocol = <0>;
 +		hdmi-out;
 +		constraint-rate = <44100>,
 +				<88200>,
@@ -32,21 +31,31 @@ index e67ac412dcb5..6c0555155082 100644
 +				<48000>,
 +				<96000>,
 +				<192000>;
++		status = "okay";
++	};
++
++	hdmi_audio: hdmi_audio {
++		compatible = "fsl,imx-audio-hdmi";
++		model = "imx-hdmi";
++		hdmi_out;
++		status = "okay";
 +	};
 +
  	busfreq {
  		status = "disabled";
  	};
-@@ -243,6 +259,18 @@
- 	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
+@@ -243,6 +259,20 @@
+ 	};
  };
  
-+&sai4 {
-+	assigned-clocks = <&clk IMX8MQ_CLK_SAI4>;
++&sai1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_sai1>;
++	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
 +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
 +	assigned-clock-rates = <24576000>;
-+	clocks = <&clk IMX8MQ_CLK_SAI4_IPG>, <&clk IMX8MQ_CLK_DUMMY>,
-+		<&clk IMX8MQ_CLK_SAI4_ROOT>, <&clk IMX8MQ_CLK_DUMMY>,
++	clocks = <&clk IMX8MQ_CLK_SAI1_IPG>, <&clk IMX8MQ_CLK_DUMMY>,
++		<&clk IMX8MQ_CLK_SAI1_ROOT>, <&clk IMX8MQ_CLK_DUMMY>,
 +		<&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_AUDIO_PLL1_OUT>,
 +		<&clk IMX8MQ_AUDIO_PLL2_OUT>;
 +	clock-names = "bus", "mclk0", "mclk1", "mclk2", "mclk3", "pll8k", "pll11k";
@@ -56,3 +65,14 @@ index e67ac412dcb5..6c0555155082 100644
  &i2c2 {
  	status = "okay";
  
+@@ -707,4 +698,10 @@
+ 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
+ 		>;
+ 	};
++
++	pinctrl_sai1: sai1grp {
++		fsl,pins = <
++			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC	0xd6
++		>;
++	};
+ };
