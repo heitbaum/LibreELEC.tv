@@ -9,17 +9,7 @@ PKG_SITE="https://github.com/hyperrealm/libconfig"
 PKG_URL="https://github.com/hyperrealm/libconfig/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A C/C++ configuration file library."
-PKG_TOOLCHAIN="autotools"
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-static \
-                           --disable-shared \
-                           --disable-doc \
-                           --disable-examples \
-                           --disable-tests \
-                           --with-sysroot=${SYSROOT_PREFIX}"
-
-pre_configure_target() {
-  cd ..
-  rm -rf .${TARGET_NAME}
-  rm lib/grammar.c
-}
+PKG_CMAKE_OPTS_TARGET="-DBUILD_SHARED_LIBS=OFF \
+                       -DBUILD_EXAMPLES=OFF \
+                       -DBUILD_TESTS=OFF"

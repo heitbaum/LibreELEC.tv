@@ -1,0 +1,78 @@
+From 5670e592ea9d30bc7d810d35e6e81375173f352e Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Tue, 10 Dec 2024 10:23:13 +0000
+Subject: [PATCH] cmake: build pkgconfig files
+
+---
+ lib/CMakeLists.txt          | 18 ++++++++++++++++++
+ lib/libconfig++.pc.cmake.in | 12 ++++++++++++
+ lib/libconfig.pc.cmake.in   | 12 ++++++++++++
+ 3 files changed, 42 insertions(+)
+ create mode 100644 lib/libconfig++.pc.cmake.in
+ create mode 100644 lib/libconfig.pc.cmake.in
+
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index d87b8b4..00bff60 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -148,3 +148,21 @@ install(FILES
+     "${CMAKE_CURRENT_BINARY_DIR}/libconfigConfigVersion.cmake"
+     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/libconfig"
+     )
++
++if (UNIX)
++    configure_file(
++        ${CMAKE_CURRENT_SOURCE_DIR}/libconfig.pc.cmake.in
++        ${CMAKE_CURRENT_BINARY_DIR}/libconfig.pc @ONLY
++        )
++
++    configure_file(
++        ${CMAKE_CURRENT_SOURCE_DIR}/libconfig++.pc.cmake.in
++        ${CMAKE_CURRENT_BINARY_DIR}/libconfig++.pc @ONLY
++        )
++
++    install(FILES
++        ${CMAKE_CURRENT_BINARY_DIR}/libconfig.pc
++        ${CMAKE_CURRENT_BINARY_DIR}/libconfig++.pc
++        DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
++        )
++endif (UNIX)
+diff --git a/lib/libconfig++.pc.cmake.in b/lib/libconfig++.pc.cmake.in
+new file mode 100644
+index 0000000..fb9a24b
+--- /dev/null
++++ b/lib/libconfig++.pc.cmake.in
+@@ -0,0 +1,12 @@
++libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
++includedir=@CMAKE_INSTALL_PREFIX@/include
++
++Name: libconfig++
++Description: C++ Configuration File Library
++Version: @PROJECT_VERSION@
++URL: http://www.hyperrealm.com/main.php?s=libconfig
++Requires:
++Conflicts:
++Libs: -L${libdir} -lconfig++
++Libs.private:
++Cflags: -I${includedir}
+diff --git a/lib/libconfig.pc.cmake.in b/lib/libconfig.pc.cmake.in
+new file mode 100644
+index 0000000..b01b5e5
+--- /dev/null
++++ b/lib/libconfig.pc.cmake.in
+@@ -0,0 +1,12 @@
++libdir=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@
++includedir=@CMAKE_INSTALL_PREFIX@/include
++
++Name: libconfig
++Description: C Configuration File Library
++Version: @PROJECT_VERSION@
++URL: http://www.hyperrealm.com/main.php?s=libconfig
++Requires:
++Conflicts:
++Libs: -L${libdir} -lconfig
++Libs.private:
++Cflags: -I${includedir}
+-- 
+2.43.0
+
