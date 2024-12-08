@@ -3,10 +3,10 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="hyperion"
-PKG_VERSION="9059f7f32804ed12e10061fc3c95e055e755f83b"
-PKG_SHA256="9c644986b1d2fc71c150f973884767464fa54c692874cb8688c18958e1752679"
-PKG_VERSION_DATE="2020-05-20"
-PKG_REV="1"
+PKG_VERSION="fb413cd7e8825ffc26925013f57ac93a774f12bc"
+PKG_SHA256="fafa4eeddacb15a8fd96b0e69fac400faa735c6e1ccd78673c9d96b0ac84d7a3"
+PKG_VERSION_DATE="2019-08-19"
+PKG_REV="0"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/hyperion-project/hyperion"
@@ -36,7 +36,6 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON \
                        -DENABLE_AMLOGIC=OFF \
                        ${PKG_DISPMANX_SUPPORT} \
                        ${PKG_FB_SUPPORT} \
-                       -DENABLE_OPENCV=OFF \
                        -DENABLE_OSX=OFF \
                        -DUSE_SYSTEM_PROTO_LIBS=ON \
                        -DENABLE_SPIDEV=ON \
