@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="proftpd"
-PKG_VERSION="1.3.8b"
-PKG_SHA256="183ab7c6107de271a2959ff268f55c9b6c76b2cf0029e6584fccc019686601e0"
+PKG_VERSION="1.3.9rc2"
+PKG_SHA256="ffec3df8dc9f727203255b467bba9404b17b9ea3b61715ceb477c2417e081b76"
 PKG_REV="0"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
