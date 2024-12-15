@@ -2,9 +2,9 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="zabbix"
-PKG_VERSION="7.0.0"
-PKG_SHA256="520641483223f680ef6e685284b556ba34a496d886a38dc3bca085cde21031b1"
-PKG_REV="1"
+PKG_VERSION="6.2.1"
+PKG_SHA256="f3d6b7cf4e67d820ce7d28cd54ac67724f7453f261f668877e6410cd21ab9ea1"
+PKG_REV="100"
 PKG_ARCH="any"
 PKG_LICENSE="GPL-2.0"
 PKG_SITE="https://www.zabbix.com"
