@@ -2,14 +2,16 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="zabbix"
-PKG_VERSION="6.2.1"
-PKG_SHA256="f3d6b7cf4e67d820ce7d28cd54ac67724f7453f261f668877e6410cd21ab9ea1"
+PKG_VERSION="5.4.9"
+PKG_VERSION="6.0.0beta3"
+PKG_SHA256="baa11bfcfe54f35fdb3f28f401f89e4a93e2ec96bb27f0ce30c0c2a7b60f8b27"
 PKG_REV="100"
 PKG_ARCH="any"
 PKG_LICENSE="GPL-2.0"
 PKG_SITE="https://www.zabbix.com"
 PKG_URL="https://cdn.zabbix.com/${PKG_NAME}/sources/stable/$(get_pkg_version_maj_min)/${PKG_NAME}-${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain curl libevent libssh2 pcre2 sqlite zlib"
+PKG_URL="https://cdn.zabbix.com/${PKG_NAME}/sources/development/$(get_pkg_version_maj_min)/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_DEPENDS_TARGET="toolchain curl libevent libssh2 pcre sqlite zlib"
 PKG_SECTION="service"
 PKG_LONGDESC="Zabbix is an enterprise-class open source distributed monitoring solution."
 
