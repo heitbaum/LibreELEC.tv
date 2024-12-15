@@ -1,0 +1,501 @@
+diff -ur a/src/libs/zbxavailability/Makefile.in b/src/libs/zbxavailability/Makefile.in
+--- a/src/libs/zbxavailability/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxavailability/Makefile.in	2022-01-24 05:48:50.428230322 +0000
+@@ -134,7 +134,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/avail_protocol.Po \
+diff -ur a/src/libs/zbxcommshigh/Makefile.in b/src/libs/zbxcommshigh/Makefile.in
+--- a/src/libs/zbxcommshigh/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxcommshigh/Makefile.in	2022-01-24 05:27:57.187955875 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/comms.Po
+diff -ur a/src/libs/zbxdb/Makefile.in b/src/libs/zbxdb/Makefile.in
+--- a/src/libs/zbxdb/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxdb/Makefile.in	2022-01-24 05:28:22.077892352 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxdb_a-db.Po
+diff -ur a/src/libs/zbxdbcache/Makefile.in b/src/libs/zbxdbcache/Makefile.in
+--- a/src/libs/zbxdbcache/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxdbcache/Makefile.in	2022-01-24 05:29:13.801093621 +0000
+@@ -138,7 +138,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxdbcache_a-dbcache.Po \
+diff -ur a/src/libs/zbxdbhigh/Makefile.in b/src/libs/zbxdbhigh/Makefile.in
+--- a/src/libs/zbxdbhigh/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxdbhigh/Makefile.in	2022-01-24 05:29:37.164367272 +0000
+@@ -145,7 +145,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxdbhigh_a-db.Po \
+diff -ur a/src/libs/zbxdbupgrade/Makefile.in b/src/libs/zbxdbupgrade/Makefile.in
+--- a/src/libs/zbxdbupgrade/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxdbupgrade/Makefile.in	2022-01-24 05:28:46.494496691 +0000
+@@ -145,7 +145,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/dbupgrade.Po \
+diff -ur a/src/libs/zbxdiag/Makefile.in b/src/libs/zbxdiag/Makefile.in
+--- a/src/libs/zbxdiag/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxdiag/Makefile.in	2022-01-24 05:48:03.991660949 +0000
+@@ -137,7 +137,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/diag.Po ./$(DEPDIR)/diag_proxy.Po \
+diff -ur a/src/libs/zbxembed/Makefile.in b/src/libs/zbxembed/Makefile.in
+--- a/src/libs/zbxembed/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxembed/Makefile.in	2022-01-24 05:46:55.795162457 +0000
+@@ -135,7 +135,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/console.Po ./$(DEPDIR)/duktape.Po \
+diff -ur a/src/libs/zbxeval/Makefile.in b/src/libs/zbxeval/Makefile.in
+--- a/src/libs/zbxeval/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxeval/Makefile.in	2022-01-24 05:49:17.361505877 +0000
+@@ -134,7 +134,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/calc.Po ./$(DEPDIR)/execute.Po \
+diff -ur a/src/libs/zbxhistory/Makefile.in b/src/libs/zbxhistory/Makefile.in
+--- a/src/libs/zbxhistory/Makefile.in	2021-12-23 08:49:11.000000000 +0000
++++ b/src/libs/zbxhistory/Makefile.in	2022-01-24 05:44:45.845488646 +0000
+@@ -134,7 +134,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/history.Po \
+diff -ur a/src/libs/zbxicmpping/Makefile.in b/src/libs/zbxicmpping/Makefile.in
+--- a/src/libs/zbxicmpping/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxicmpping/Makefile.in	2022-01-24 05:32:11.593997639 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/icmpping.Po
+diff -ur a/src/libs/zbxmemory/Makefile.in b/src/libs/zbxmemory/Makefile.in
+--- a/src/libs/zbxmemory/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxmemory/Makefile.in	2022-01-24 05:30:09.274285226 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/memalloc.Po
+diff -ur a/src/libs/zbxprometheus/Makefile.in b/src/libs/zbxprometheus/Makefile.in
+--- a/src/libs/zbxprometheus/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxprometheus/Makefile.in	2022-01-24 05:47:19.798435481 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/zbxprometheus.Po
+diff -ur a/src/libs/zbxself/Makefile.in b/src/libs/zbxself/Makefile.in
+--- a/src/libs/zbxself/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxself/Makefile.in	2022-01-24 05:43:56.268946223 +0000
+@@ -141,7 +141,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/selfmon.Po \
+diff -ur a/src/libs/zbxserver/Makefile.in b/src/libs/zbxserver/Makefile.in
+--- a/src/libs/zbxserver/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxserver/Makefile.in	2022-01-24 05:30:33.517556608 +0000
+@@ -149,7 +149,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxserver_a-evalfunc.Po \
+diff -ur a/src/libs/zbxtasks/Makefile.in b/src/libs/zbxtasks/Makefile.in
+--- a/src/libs/zbxtasks/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxtasks/Makefile.in	2022-01-24 05:44:22.165548015 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/task.Po
+diff -ur a/src/libs/zbxtrends/Makefile.in b/src/libs/zbxtrends/Makefile.in
+--- a/src/libs/zbxtrends/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxtrends/Makefile.in	2022-01-24 05:48:27.588278573 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/cache.Po ./$(DEPDIR)/trends.Po
+diff -ur a/src/libs/zbxvault/Makefile.in b/src/libs/zbxvault/Makefile.in
+--- a/src/libs/zbxvault/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxvault/Makefile.in	2022-01-24 05:47:41.678380495 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/vault.Po
+diff -ur a/src/libs/zbxxml/Makefile.in b/src/libs/zbxxml/Makefile.in
+--- a/src/libs/zbxxml/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/libs/zbxxml/Makefile.in	2022-01-24 05:46:18.631922469 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxxml_a-xml.Po
+diff -ur a/src/zabbix_js/Makefile.in b/src/zabbix_js/Makefile.in
+--- a/src/zabbix_js/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_js/Makefile.in	2022-01-24 05:59:32.593392053 +0000
+@@ -144,7 +144,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/zabbix_js.Po
+diff -ur a/src/zabbix_proxy/datasender/Makefile.in b/src/zabbix_proxy/datasender/Makefile.in
+--- a/src/zabbix_proxy/datasender/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/datasender/Makefile.in	2022-01-24 05:58:19.066904511 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/datasender.Po
+diff -ur a/src/zabbix_proxy/heart/Makefile.in b/src/zabbix_proxy/heart/Makefile.in
+--- a/src/zabbix_proxy/heart/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/heart/Makefile.in	2022-01-24 05:56:10.373882641 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/heart.Po
+diff -ur a/src/zabbix_proxy/housekeeper/Makefile.in b/src/zabbix_proxy/housekeeper/Makefile.in
+--- a/src/zabbix_proxy/housekeeper/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/housekeeper/Makefile.in	2022-01-24 05:56:32.040497101 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/housekeeper.Po
+diff -ur a/src/zabbix_proxy/Makefile.in b/src/zabbix_proxy/Makefile.in
+--- a/src/zabbix_proxy/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/Makefile.in	2022-01-24 05:59:09.986780523 +0000
+@@ -208,7 +208,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxproxy_a-events.Po \
+@@ -1073,7 +1073,7 @@
+ 	$(MKDIR_P) "$(DESTDIR)$(PROXY_CONFIG_FILE).d"
+ 	$(MKDIR_P) "$(DESTDIR)$(EXTERNAL_SCRIPTS_PATH)"
+ 	$(MKDIR_P) "$(DESTDIR)$(LOAD_MODULE_PATH)"
+-	test -f "$(DESTDIR)$(PROXY_CONFIG_FILE)" || cp "../../conf/zabbix_proxy.conf" "$(DESTDIR)$(PROXY_CONFIG_FILE)"
++	test -f "$(DESTDIR)$(PROXY_CONFIG_FILE)" || cp "../../../conf/zabbix_proxy.conf" "$(DESTDIR)$(PROXY_CONFIG_FILE)"
+ 
+ # Tell versions [3.59,3.63) of GNU make to not export all variables.
+ # Otherwise a system limit (for SysV at least) may be exceeded.
+diff -ur a/src/zabbix_proxy/proxyconfig/Makefile.in b/src/zabbix_proxy/proxyconfig/Makefile.in
+--- a/src/zabbix_proxy/proxyconfig/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/proxyconfig/Makefile.in	2022-01-24 05:57:57.133624473 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/proxyconfig.Po
+diff -ur a/src/zabbix_proxy/taskmanager/Makefile.in b/src/zabbix_proxy/taskmanager/Makefile.in
+--- a/src/zabbix_proxy/taskmanager/Makefile.in	2021-12-23 08:49:12.000000000 +0000
++++ b/src/zabbix_proxy/taskmanager/Makefile.in	2022-01-24 05:58:41.626849616 +0000
+@@ -134,7 +134,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/server_tasks.Po \
+diff -ur a/src/zabbix_server/availability/Makefile.in b/src/zabbix_server/availability/Makefile.in
+--- a/src/zabbix_server/availability/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/availability/Makefile.in	2022-01-24 05:55:35.377300057 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/avail_manager.Po
+diff -ur a/src/zabbix_server/dbconfig/Makefile.in b/src/zabbix_server/dbconfig/Makefile.in
+--- a/src/zabbix_server/dbconfig/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/dbconfig/Makefile.in	2022-01-24 05:50:19.634702450 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/dbconfig.Po
+diff -ur a/src/zabbix_server/dbsyncer/Makefile.in b/src/zabbix_server/dbsyncer/Makefile.in
+--- a/src/zabbix_server/dbsyncer/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/dbsyncer/Makefile.in	2022-01-24 05:49:56.291420855 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/dbsyncer.Po
+diff -ur a/src/zabbix_server/discoverer/Makefile.in b/src/zabbix_server/discoverer/Makefile.in
+--- a/src/zabbix_server/discoverer/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/discoverer/Makefile.in	2022-01-24 05:50:41.347987189 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/discoverer.Po
+diff -ur a/src/zabbix_server/httppoller/Makefile.in b/src/zabbix_server/httppoller/Makefile.in
+--- a/src/zabbix_server/httppoller/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/httppoller/Makefile.in	2022-01-24 05:51:04.317935337 +0000
+@@ -134,7 +134,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/httpmacro.Po \
+diff -ur a/src/zabbix_server/ipmi/Makefile.in b/src/zabbix_server/ipmi/Makefile.in
+--- a/src/zabbix_server/ipmi/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/ipmi/Makefile.in	2022-01-24 05:53:52.394211995 +0000
+@@ -136,7 +136,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libipmi_a-checks_ipmi.Po \
+diff -ur a/src/zabbix_server/odbc/Makefile.in b/src/zabbix_server/odbc/Makefile.in
+--- a/src/zabbix_server/odbc/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/odbc/Makefile.in	2022-01-24 05:54:17.830818421 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxodbc_a-odbc.Po
+diff -ur a/src/zabbix_server/pinger/Makefile.in b/src/zabbix_server/pinger/Makefile.in
+--- a/src/zabbix_server/pinger/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/pinger/Makefile.in	2022-01-24 05:51:26.637884542 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/pinger.Po
+diff -ur a/src/zabbix_server/poller/Makefile.in b/src/zabbix_server/poller/Makefile.in
+--- a/src/zabbix_server/poller/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/poller/Makefile.in	2022-01-24 05:51:52.257825807 +0000
+@@ -155,7 +155,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/checks_internal_proxy.Po \
+diff -ur a/src/zabbix_server/preprocessor/Makefile.in b/src/zabbix_server/preprocessor/Makefile.in
+--- a/src/zabbix_server/preprocessor/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/preprocessor/Makefile.in	2022-01-24 05:55:08.524031009 +0000
+@@ -138,7 +138,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libpreprocessor_a-item_preproc.Po \
+diff -ur a/src/zabbix_server/scripts/Makefile.in b/src/zabbix_server/scripts/Makefile.in
+--- a/src/zabbix_server/scripts/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/scripts/Makefile.in	2022-01-24 05:54:41.934094451 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/scripts.Po
+diff -ur a/src/zabbix_server/selfmon/Makefile.in b/src/zabbix_server/selfmon/Makefile.in
+--- a/src/zabbix_server/selfmon/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/selfmon/Makefile.in	2022-01-24 05:52:38.767718113 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/selfmon.Po
+diff -ur a/src/zabbix_server/snmptrapper/Makefile.in b/src/zabbix_server/snmptrapper/Makefile.in
+--- a/src/zabbix_server/snmptrapper/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/snmptrapper/Makefile.in	2022-01-24 05:53:01.864330851 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/snmptrapper.Po
+diff -ur a/src/zabbix_server/trapper/Makefile.in b/src/zabbix_server/trapper/Makefile.in
+--- a/src/zabbix_server/trapper/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/trapper/Makefile.in	2022-01-24 05:52:16.964435421 +0000
+@@ -145,7 +145,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/active.Po ./$(DEPDIR)/nodecommand.Po \
+diff -ur a/src/zabbix_server/vmware/Makefile.in b/src/zabbix_server/vmware/Makefile.in
+--- a/src/zabbix_server/vmware/Makefile.in	2021-12-23 08:49:13.000000000 +0000
++++ b/src/zabbix_server/vmware/Makefile.in	2022-01-24 05:53:26.974271924 +0000
+@@ -133,7 +133,7 @@
+ am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+ am__v_at_0 = @
+ am__v_at_1 = 
+-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/include -I$(top_builddir)/../include
+ depcomp = $(SHELL) $(top_srcdir)/depcomp
+ am__maybe_remake_depfiles = depfiles
+ am__depfiles_remade = ./$(DEPDIR)/libzbxvmware_a-vmware.Po
