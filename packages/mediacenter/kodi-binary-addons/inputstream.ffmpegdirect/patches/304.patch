@@ -1,0 +1,456 @@
+From 92c7dd42d733d5eb4b39105fb50a0fcb33079b6c Mon Sep 17 00:00:00 2001
+From: Vasyl Gello <vasek.gello@gmail.com>
+Date: Fri, 9 Aug 2024 07:11:41 +0000
+Subject: [PATCH] Port FFmpeg 7.0.2 to ffmpegdirect Piers
+
+From https://github.com/xbmc/xbmc/pull/24972
+
+Signed-off-by: Vasyl Gello <vasek.gello@gmail.com>
+---
+ FindFFMPEG.cmake                              |  16 +--
+ ...peg-windows-configure-detect-openssl.patch |  10 +-
+ ...-windows-configure-fix-zlib-conflict.patch |  10 +-
+ ...dows-configure-allow-building-static.patch |  16 +--
+ ...peg-linux-fix-asm-binutil-since-2.41.patch |  58 --------
+ ...windows-dxva2-check-nullptr-surface.patch} |   3 +-
+ depends/common/ffmpeg/CMakeLists.txt          |   4 +-
+ depends/common/ffmpeg/ffmpeg.sha256           |   2 +-
+ depends/common/ffmpeg/ffmpeg.txt              |   2 +-
+ src/stream/FFmpegStream.cpp                   | 125 +++++-------------
+ 10 files changed, 66 insertions(+), 180 deletions(-)
+ delete mode 100644 depends/common/ffmpeg/0004-ffmpeg-linux-fix-asm-binutil-since-2.41.patch
+ rename depends/common/ffmpeg/{0005-ffmpeg-windows-dxva2-check-nullptr-surface.patch => 0004-ffmpeg-windows-dxva2-check-nullptr-surface.patch} (85%)
+
+diff --git a/FindFFMPEG.cmake b/FindFFMPEG.cmake
+index d03f3292..8b205382 100644
+--- a/FindFFMPEG.cmake
++++ b/FindFFMPEG.cmake
+@@ -33,14 +33,14 @@
+ #
+ 
+ # required ffmpeg library versions
+-set(REQUIRED_FFMPEG_VERSION 5.0.0)
+-set(_avcodec_ver ">=59.18.100")
+-set(_avfilter_ver ">=8.24.100")
+-set(_avformat_ver ">=59.16.100")
+-set(_avutil_ver ">=57.17.100")
+-set(_postproc_ver ">=56.3.100")
+-set(_swresample_ver ">=4.3.100")
+-set(_swscale_ver ">=6.4.100")
++set(REQUIRED_FFMPEG_VERSION 7.0.0)
++set(_avcodec_ver ">=61.3.100")
++set(_avfilter_ver ">=10.1.100")
++set(_avformat_ver ">=61.1.100")
++set(_avutil_ver ">=59.8.100")
++set(_postproc_ver ">=58.1.100")
++set(_swresample_ver ">=5.1.100")
++set(_swscale_ver ">=8.1.100")
+ 
+ # Allows building with external ffmpeg not found in system paths,
+ # without library version checks
+diff --git a/depends/common/ffmpeg/0001-ffmpeg-windows-configure-detect-openssl.patch b/depends/common/ffmpeg/0001-ffmpeg-windows-configure-detect-openssl.patch
+index 29f5a83e..05d7e456 100644
+--- a/depends/common/ffmpeg/0001-ffmpeg-windows-configure-detect-openssl.patch
++++ b/depends/common/ffmpeg/0001-ffmpeg-windows-configure-detect-openssl.patch
+@@ -1,17 +1,17 @@
+-From 08ae41e824e04ab48eafde763c72d1ff3e878a41 Mon Sep 17 00:00:00 2001
++From 6b0296b657b281cf326b96ab6cf3b8e1e6e620d2 Mon Sep 17 00:00:00 2001
+ From: Lukas Rusak <lorusak@gmail.com>
+ Date: Sat, 10 Apr 2021 08:16:11 -0700
+-Subject: [PATCH 1/4] ffmpeg: windows: configure: detect openssl
++Subject: [PATCH 1/3] ffmpeg: windows: configure: detect openssl
+ 
+ ---
+  configure | 2 ++
+  1 file changed, 2 insertions(+)
+ 
+ diff --git a/configure b/configure
+-index d7a3f507e8..4b85e881b1 100755
++index 8642513..84d0fa4 100755
+ --- a/configure
+ +++ b/configure
+-@@ -6728,6 +6728,8 @@ enabled openssl           && { check_pkg_config openssl openssl openssl/ssl.h OP
++@@ -7060,6 +7060,8 @@ enabled openssl           && { { check_pkg_config openssl "openssl >= 3.0.0" ope
+                                 check_lib openssl openssl/ssl.h SSL_library_init -lssl -lcrypto ||
+                                 check_lib openssl openssl/ssl.h SSL_library_init -lssl32 -leay32 ||
+                                 check_lib openssl openssl/ssl.h SSL_library_init -lssl -lcrypto -lws2_32 -lgdi32 ||
+@@ -21,5 +21,5 @@ index d7a3f507e8..4b85e881b1 100755
+  enabled pocketsphinx      && require_pkg_config pocketsphinx pocketsphinx pocketsphinx/pocketsphinx.h ps_init
+  enabled rkmpp             && { require_pkg_config rkmpp rockchip_mpp  rockchip/rk_mpi.h mpp_create &&
+ -- 
+-2.29.2
++2.39.2
+ 
+diff --git a/depends/common/ffmpeg/0002-ffmpeg-windows-configure-fix-zlib-conflict.patch b/depends/common/ffmpeg/0002-ffmpeg-windows-configure-fix-zlib-conflict.patch
+index 2a7c8f68..3538426b 100644
+--- a/depends/common/ffmpeg/0002-ffmpeg-windows-configure-fix-zlib-conflict.patch
++++ b/depends/common/ffmpeg/0002-ffmpeg-windows-configure-fix-zlib-conflict.patch
+@@ -1,17 +1,17 @@
+-From 1e57e7f49f1a74ee11d3c8dd5d407f35eecd5167 Mon Sep 17 00:00:00 2001
++From 500820158d64749311c243e7af599077ad68085e Mon Sep 17 00:00:00 2001
+ From: Lukas Rusak <lorusak@gmail.com>
+ Date: Sat, 10 Apr 2021 08:16:48 -0700
+-Subject: [PATCH 2/4] ffmpeg: windows: configure: fix zlib conflict
++Subject: [PATCH 2/3] ffmpeg: windows: configure: fix zlib conflict
+ 
+ ---
+  configure | 3 +++
+  1 file changed, 3 insertions(+)
+ 
+ diff --git a/configure b/configure
+-index 4b85e881b1..da457705d1 100755
++index 84d0fa4..2fcde55 100755
+ --- a/configure
+ +++ b/configure
+-@@ -7825,6 +7825,9 @@ print_config CONFIG_ "$config_files" $CONFIG_LIST       \
++@@ -8188,6 +8188,9 @@ print_config HAVE_   "$config_files" $HAVE_LIST
+  print_config CONFIG_ "$config_files" $CONFIG_LIST       \
+                                       $CONFIG_EXTRA      \
+  
+@@ -22,5 +22,5 @@ index 4b85e881b1..da457705d1 100755
+  
+  # Do not overwrite an unchanged config.h to avoid superfluous rebuilds.
+ -- 
+-2.29.2
++2.39.2
+ 
+diff --git a/depends/common/ffmpeg/0003-ffmpeg-windows-configure-allow-building-static.patch b/depends/common/ffmpeg/0003-ffmpeg-windows-configure-allow-building-static.patch
+index 0dee8c9d..2e27dd99 100644
+--- a/depends/common/ffmpeg/0003-ffmpeg-windows-configure-allow-building-static.patch
++++ b/depends/common/ffmpeg/0003-ffmpeg-windows-configure-allow-building-static.patch
+@@ -1,28 +1,28 @@
+-From efb771d944e96bcbb24635bcae99a43dffab262e Mon Sep 17 00:00:00 2001
++From 3563feddaf8a3f473999fca61e12624def63eba4 Mon Sep 17 00:00:00 2001
+ From: Lukas Rusak <lorusak@gmail.com>
+ Date: Sat, 10 Apr 2021 08:17:11 -0700
+-Subject: [PATCH 3/4] ffmpeg: windows: configure: allow building static
++Subject: [PATCH 3/3] ffmpeg: windows: configure: allow building static
+ 
+ ---
+  configure | 4 ++++
+  1 file changed, 4 insertions(+)
+ 
+ diff --git a/configure b/configure
+-index da457705d1..e3a8f45ff4 100755
++index 2fcde55..598439a 100755
+ --- a/configure
+ +++ b/configure
+-@@ -5566,6 +5566,8 @@ case $target_os in
+-         enabled shared && ! enabled small && test_cmd $windres --version && enable gnu_windres
++@@ -5784,6 +5784,8 @@ case $target_os in
+          enabled x86_32 && check_ldflags -Wl,--large-address-aware
++         add_cppflags -DWIN32_LEAN_AND_MEAN
+          shlibdir_default="$bindir_default"
+ +        LIBPREF=""
+ +        LIBSUF=".lib"
+          SLIBPREF=""
+          SLIBSUF=".dll"
+          SLIBNAME_WITH_VERSION='$(SLIBPREF)$(FULLNAME)-$(LIBVERSION)$(SLIBSUF)'
+-@@ -5615,6 +5617,8 @@ case $target_os in
+-         fi
++@@ -5835,6 +5837,8 @@ case $target_os in
+          enabled x86_32 && check_ldflags -LARGEADDRESSAWARE
++         add_cppflags -DWIN32_LEAN_AND_MEAN
+          shlibdir_default="$bindir_default"
+ +        LIBPREF=""
+ +        LIBSUF=".lib"
+@@ -30,5 +30,5 @@ index da457705d1..e3a8f45ff4 100755
+          SLIBSUF=".dll"
+          SLIBNAME_WITH_VERSION='$(SLIBPREF)$(FULLNAME)-$(LIBVERSION)$(SLIBSUF)'
+ -- 
+-2.29.2
++2.39.2
+ 
+diff --git a/depends/common/ffmpeg/0004-ffmpeg-linux-fix-asm-binutil-since-2.41.patch b/depends/common/ffmpeg/0004-ffmpeg-linux-fix-asm-binutil-since-2.41.patch
+deleted file mode 100644
+index 1364bfd1..00000000
+--- a/depends/common/ffmpeg/0004-ffmpeg-linux-fix-asm-binutil-since-2.41.patch
++++ /dev/null
+@@ -1,58 +0,0 @@
+---- a/libavcodec/x86/mathops.h
+-+++ b/libavcodec/x86/mathops.h
+-@@ -35,12 +35,20 @@
+- static av_always_inline av_const int MULL(int a, int b, unsigned shift)
+- {
+-     int rt, dummy;
+-+    if (__builtin_constant_p(shift))
+-     __asm__ (
+-         "imull %3               \n\t"
+-         "shrdl %4, %%edx, %%eax \n\t"
+-         :"=a"(rt), "=d"(dummy)
+--        :"a"(a), "rm"(b), "ci"((uint8_t)shift)
+-+        :"a"(a), "rm"(b), "i"(shift & 0x1F)
+-     );
+-+    else
+-+        __asm__ (
+-+            "imull %3               \n\t"
+-+            "shrdl %4, %%edx, %%eax \n\t"
+-+            :"=a"(rt), "=d"(dummy)
+-+            :"a"(a), "rm"(b), "c"((uint8_t)shift)
+-+        );
+-     return rt;
+- }
+- 
+-@@ -113,19 +121,31 @@ __asm__ volatile(\
+- // avoid +32 for shift optimization (gcc should do that ...)
+- #define NEG_SSR32 NEG_SSR32
+- static inline  int32_t NEG_SSR32( int32_t a, int8_t s){
+-+    if (__builtin_constant_p(s))
+-     __asm__ ("sarl %1, %0\n\t"
+-          : "+r" (a)
+--         : "ic" ((uint8_t)(-s))
+-+         : "i" (-s & 0x1F)
+-     );
+-+    else
+-+        __asm__ ("sarl %1, %0\n\t"
+-+               : "+r" (a)
+-+               : "c" ((uint8_t)(-s))
+-+        );
+-     return a;
+- }
+- 
+- #define NEG_USR32 NEG_USR32
+- static inline uint32_t NEG_USR32(uint32_t a, int8_t s){
+-+    if (__builtin_constant_p(s))
+-     __asm__ ("shrl %1, %0\n\t"
+-          : "+r" (a)
+--         : "ic" ((uint8_t)(-s))
+-+         : "i" (-s & 0x1F)
+-     );
+-+    else
+-+        __asm__ ("shrl %1, %0\n\t"
+-+               : "+r" (a)
+-+               : "c" ((uint8_t)(-s))
+-+        );
+-     return a;
+- }
+- 
+diff --git a/depends/common/ffmpeg/0005-ffmpeg-windows-dxva2-check-nullptr-surface.patch b/depends/common/ffmpeg/0004-ffmpeg-windows-dxva2-check-nullptr-surface.patch
+similarity index 85%
+rename from depends/common/ffmpeg/0005-ffmpeg-windows-dxva2-check-nullptr-surface.patch
+rename to depends/common/ffmpeg/0004-ffmpeg-windows-dxva2-check-nullptr-surface.patch
+index b3e57285..56de304e 100644
+--- a/depends/common/ffmpeg/0005-ffmpeg-windows-dxva2-check-nullptr-surface.patch
++++ b/depends/common/ffmpeg/0004-ffmpeg-windows-dxva2-check-nullptr-surface.patch
+@@ -1,7 +1,8 @@
+ diff --git a/libavcodec/dxva2.c b/libavcodec/dxva2.c
++index 5902563..33dceec 100644
+ --- a/libavcodec/dxva2.c
+ +++ b/libavcodec/dxva2.c
+-@@ -777,7 +777,7 @@ unsigned ff_dxva2_get_surface_index(const AVCodecContext *avctx,
++@@ -782,7 +782,7 @@ unsigned ff_dxva2_get_surface_index(const AVCodecContext *avctx,
+  #if CONFIG_D3D11VA
+      if (avctx->pix_fmt == AV_PIX_FMT_D3D11)
+          return (intptr_t)frame->data[1];
+diff --git a/depends/common/ffmpeg/CMakeLists.txt b/depends/common/ffmpeg/CMakeLists.txt
+index 66d757ce..1c80fddf 100644
+--- a/depends/common/ffmpeg/CMakeLists.txt
++++ b/depends/common/ffmpeg/CMakeLists.txt
+@@ -112,10 +112,10 @@ if(NOT WIN32)
+       list(APPEND EXTRA_CONF --arch=aarch64)
+       list(APPEND EXTRA_CONF --disable-filter=yadif_videotoolbox)
+     endif()
+-    list(APPEND EXTRA_CONF --disable-decoder=mpeg_xvmc --disable-crystalhd --enable-videotoolbox
++    list(APPEND EXTRA_CONF --disable-decoder=mpeg_xvmc --enable-videotoolbox
+                            --target-os=darwin)
+   elseif(CORE_SYSTEM_NAME STREQUAL osx)
+-    list(APPEND EXTRA_CONF --disable-decoder=mpeg_xvmc --disable-crystalhd --enable-videotoolbox
++    list(APPEND EXTRA_CONF --disable-decoder=mpeg_xvmc --enable-videotoolbox
+                            --target-os=darwin
+                            --disable-securetransport)
+   endif()
+diff --git a/depends/common/ffmpeg/ffmpeg.sha256 b/depends/common/ffmpeg/ffmpeg.sha256
+index fa8ee93a..455b6f26 100644
+--- a/depends/common/ffmpeg/ffmpeg.sha256
++++ b/depends/common/ffmpeg/ffmpeg.sha256
+@@ -1 +1 @@
+-9a1fa94608300e835bf89bdfcd7d77deceba67bff3494f609816f84bd69a459e
++5eb46d18d664a0ccadf7b0adee03bd3b7fa72893d667f36c69e202a807e6d533
+diff --git a/depends/common/ffmpeg/ffmpeg.txt b/depends/common/ffmpeg/ffmpeg.txt
+index 2d01c290..90fe8e33 100644
+--- a/depends/common/ffmpeg/ffmpeg.txt
++++ b/depends/common/ffmpeg/ffmpeg.txt
+@@ -1 +1 @@
+-ffmpeg https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n6.0.tar.gz
++ffmpeg https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n7.0.2.tar.gz
+diff --git a/src/stream/FFmpegStream.cpp b/src/stream/FFmpegStream.cpp
+index 8bf474f3..c77e09dd 100644
+--- a/src/stream/FFmpegStream.cpp
++++ b/src/stream/FFmpegStream.cpp
+@@ -1012,74 +1012,7 @@ bool FFmpegStream::OpenWithCURL(const AVInputFormat* iformat)
+   if (iformat == nullptr)
+   {
+     // let ffmpeg decide which demuxer we have to open
+-    bool trySPDIFonly = (m_curlInput->GetContent() == "audio/x-spdif-compressed");
+-
+-    if (!trySPDIFonly)
+-      av_probe_input_buffer(m_ioContext, &iformat, strFile.c_str(), NULL, 0, 0);
+-
+-    // Use the more low-level code in case we have been built against an old
+-    // FFmpeg without the above av_probe_input_buffer(), or in case we only
+-    // want to probe for spdif (DTS or IEC 61937) compressed audio
+-    // specifically, or in case the file is a wav which may contain DTS or
+-    // IEC 61937 (e.g. ac3-in-wav) and we want to check for those formats.
+-    if (trySPDIFonly || (iformat && strcmp(iformat->name, "wav") == 0))
+-    {
+-      AVProbeData pd;
+-      int probeBufferSize = 32768;
+-      std::unique_ptr<uint8_t[]> probe_buffer (new uint8_t[probeBufferSize + AVPROBE_PADDING_SIZE]);
+-
+-      // init probe data
+-      pd.buf = probe_buffer.get();
+-      pd.filename = strFile.c_str();
+-
+-      // read data using avformat's buffers
+-      pd.buf_size = avio_read(m_ioContext, pd.buf, probeBufferSize);
+-      if (pd.buf_size <= 0)
+-      {
+-        Log(LOGLEVEL_ERROR, "%s - error reading from input stream, %s", __FUNCTION__, CURL::GetRedacted(strFile).c_str());
+-        return false;
+-      }
+-      memset(pd.buf + pd.buf_size, 0, AVPROBE_PADDING_SIZE);
+-
+-      // restore position again
+-      avio_seek(m_ioContext , 0, SEEK_SET);
+-
+-      // the advancedsetting is for allowing the user to force outputting the
+-      // 44.1 kHz DTS wav file as PCM, so that an A/V receiver can decode
+-      // it (this is temporary until we handle 44.1 kHz passthrough properly)
+-      if (trySPDIFonly || (iformat && strcmp(iformat->name, "wav") == 0)) // && !CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_VideoPlayerIgnoreDTSinWAV))
+-      {
+-        // check for spdif and dts
+-        // This is used with wav files and audio CDs that may contain
+-        // a DTS or AC3 track padded for S/PDIF playback. If neither of those
+-        // is present, we assume it is PCM audio.
+-        // AC3 is always wrapped in iec61937 (ffmpeg "spdif"), while DTS
+-        // may be just padded.
+-        const AVInputFormat* iformat2 = av_find_input_format("spdif");
+-
+-        if (iformat2 && iformat2->read_probe(&pd) > AVPROBE_SCORE_MAX / 4)
+-        {
+-          iformat = iformat2;
+-        }
+-        else
+-        {
+-          // not spdif or no spdif demuxer, try dts
+-          iformat2 = av_find_input_format("dts");
+-
+-          if (iformat2 && iformat2->read_probe(&pd) > AVPROBE_SCORE_MAX / 4)
+-          {
+-            iformat = iformat2;
+-          }
+-          else if (trySPDIFonly)
+-          {
+-            // not dts either, return false in case we were explicitly
+-            // requested to only check for S/PDIF padded compressed audio
+-            Log(LOGLEVEL_DEBUG, "%s - not spdif or dts file, falling back", __FUNCTION__);
+-            return false;
+-          }
+-        }
+-      }
+-    }
++    av_probe_input_buffer(m_ioContext, &iformat, strFile.c_str(), NULL, 0, 0);
+ 
+     if (!iformat)
+     {
+@@ -1535,7 +1468,7 @@ bool FFmpegStream::SeekTime(double time, bool backwards, double* startpts)
+ 
+     if (ret >= 0)
+     {
+-      if (m_pFormatContext->iformat->read_seek)
++      if (!(m_pFormatContext->iformat->flags & AVFMT_NOTIMESTAMPS))
+         m_seekToKeyFrame = true;
+ 
+         m_currentPts = STREAM_NOPTS_VALUE;
+@@ -2059,43 +1992,49 @@ DemuxStream* FFmpegStream::AddStream(int streamIdx)
+         st->colorRange = pStream->codecpar->color_range;
+         st->hdr_type = DetermineHdrType(pStream);
+ 
+-        // https://github.com/FFmpeg/FFmpeg/blob/release/5.0/doc/APIchanges
+-        size_t size = 0;
+-        uint8_t* side_data = nullptr;
++        // https://github.com/FFmpeg/FFmpeg/blob/release/7.0/doc/APIchanges
++        const AVPacketSideData* sideData = nullptr;
+ 
+         if (st->hdr_type == StreamHdrType::HDR_TYPE_DOLBYVISION)
+         {
+-          side_data = av_stream_get_side_data(pStream, AV_PKT_DATA_DOVI_CONF, &size);
+-          if (side_data && size)
++
++          sideData =
++              av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                                      pStream->codecpar->nb_coded_side_data, AV_PKT_DATA_DOVI_CONF);
++          if (sideData && sideData->size)
+           {
+-            st->dovi = *reinterpret_cast<AVDOVIDecoderConfigurationRecord*>(side_data);
++            st->dovi = *reinterpret_cast<const AVDOVIDecoderConfigurationRecord*>(sideData->data);
+           }
+         }
+ 
+-        side_data = av_stream_get_side_data(pStream, AV_PKT_DATA_MASTERING_DISPLAY_METADATA, &size);
+-        if (side_data && size)
++        sideData = av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                                           pStream->codecpar->nb_coded_side_data,
++                                           AV_PKT_DATA_MASTERING_DISPLAY_METADATA);
++        if (sideData && sideData->size)
+         {
+           st->masteringMetaData = std::make_shared<AVMasteringDisplayMetadata>(
+-              *reinterpret_cast<AVMasteringDisplayMetadata*>(side_data));
++              *reinterpret_cast<const AVMasteringDisplayMetadata*>(sideData->data));
+         }
+ 
+-        side_data = av_stream_get_side_data(pStream, AV_PKT_DATA_CONTENT_LIGHT_LEVEL, &size);
+-        if (side_data && size)
++        sideData = av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                                           pStream->codecpar->nb_coded_side_data,
++                                           AV_PKT_DATA_CONTENT_LIGHT_LEVEL);
++        if (sideData && sideData->size)
+         {
+           st->contentLightMetaData = std::make_shared<AVContentLightMetadata>(
+-              *reinterpret_cast<AVContentLightMetadata*>(side_data));
++              *reinterpret_cast<const AVContentLightMetadata*>(sideData->data));
+         }
+ 
+-        AVDictionaryEntry* rtag = av_dict_get(pStream->metadata, "rotate", NULL, 0);
+-        uint8_t* displayMatrixSideData =
+-            av_stream_get_side_data(pStream, AV_PKT_DATA_DISPLAYMATRIX, nullptr);
+-        if (displayMatrixSideData)
++        sideData = av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                                           pStream->codecpar->nb_coded_side_data,
++                                           AV_PKT_DATA_DISPLAYMATRIX);
++        if (sideData)
+         {
+-          const double tetha =
+-              av_display_rotation_get(reinterpret_cast<int32_t*>(displayMatrixSideData));
+-          if (!std::isnan(tetha))
++          const double theta =
++              av_display_rotation_get(reinterpret_cast<const int32_t*>(sideData->data));
++          if (!std::isnan(theta))
+           {
+-            st->iOrientation = ((static_cast<int>(-tetha) % 360) + 360) % 360;
++            st->iOrientation = ((static_cast<int>(-theta) % 360) + 360) % 360;
+           }
+         }
+ 
+@@ -2271,7 +2210,9 @@ StreamHdrType FFmpegStream::DetermineHdrType(AVStream* pStream)
+ {
+   StreamHdrType hdrType = StreamHdrType::HDR_TYPE_NONE;
+ 
+-  if (av_stream_get_side_data(pStream, AV_PKT_DATA_DOVI_CONF, nullptr)) // DoVi
++  if (av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                              pStream->codecpar->nb_coded_side_data,
++                              AV_PKT_DATA_DOVI_CONF)) // DoVi
+     hdrType = StreamHdrType::HDR_TYPE_DOLBYVISION;
+   else if (pStream->codecpar->color_trc == AVCOL_TRC_SMPTE2084) // HDR10
+     hdrType = StreamHdrType::HDR_TYPE_HDR10;
+@@ -2279,7 +2220,9 @@ StreamHdrType FFmpegStream::DetermineHdrType(AVStream* pStream)
+     hdrType = StreamHdrType::HDR_TYPE_HLG;
+   // file could be SMPTE2086 which FFmpeg currently returns as unknown
+   // so use the presence of static metadata to detect it
+-  else if (av_stream_get_side_data(pStream, AV_PKT_DATA_MASTERING_DISPLAY_METADATA, nullptr))
++  else if (av_packet_side_data_get(pStream->codecpar->coded_side_data,
++                                   pStream->codecpar->nb_coded_side_data,
++                                   AV_PKT_DATA_MASTERING_DISPLAY_METADATA))
+     hdrType = StreamHdrType::HDR_TYPE_HDR10;
+ 
+   return hdrType;
