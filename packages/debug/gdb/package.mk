@@ -38,12 +38,19 @@ PKG_CONFIGURE_OPTS_COMMON="bash_cv_have_mbstate_t=set \
 
 PKG_CONFIGURE_OPTS_TARGET="${PKG_CONFIGURE_OPTS_COMMON} \
                            --with-libexpat-prefix=${SYSROOT_PREFIX}/usr \
-                           --with-libgmp-prefix=${SYSROOT_PREFIX}/usr"
+                           --with-libgmp-prefix=${SYSROOT_PREFIX}/usr \
+                           --cache-file=config.cache"
 
 PKG_CONFIGURE_OPTS_HOST="${PKG_CONFIGURE_OPTS_COMMON} \
                          --target=${TARGET_NAME}"
 
 pre_configure_target() {
+  mkdir ~p readline
+  cat >readline/config.cache <<EOF
+ac_cv_type_signal=void
+bash_cv_void_sighandler=yes
+EOF
+
   CC_FOR_BUILD="${HOST_CC}"
   CFLAGS_FOR_BUILD="${HOST_CFLAGS}"
 }
