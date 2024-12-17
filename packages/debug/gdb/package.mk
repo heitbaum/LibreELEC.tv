@@ -3,11 +3,12 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="gdb"
-PKG_VERSION="15.2"
-PKG_SHA256="83350ccd35b5b5a0cba6b334c41294ea968158c573940904f00b92f76345314d"
+PKG_VERSION="16.0.50.20241217"
+PKG_SHA256="47006325c239cebf068222571adcba01508f814c3302faf0fbc42484d9bee02b"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.gnu.org/software/gdb/"
 PKG_URL="https://ftp.gnu.org/gnu/gdb/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_URL="https://sourceware.org/pub/gdb/snapshots/current/gdb-weekly-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="toolchain expat gmp mpfr ncurses zlib"
 PKG_DEPENDS_HOST="toolchain:host expat:host gmp:host mpfr:host ncurses:host zlib:host"
 PKG_LONGDESC="GNU Project debugger, allows you to see what is going on inside another program while it executes."
