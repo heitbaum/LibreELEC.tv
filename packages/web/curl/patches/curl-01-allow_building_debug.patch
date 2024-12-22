@@ -14,3 +14,18 @@ When building debug image avoid:
        -Wmissing-declarations               # clang  1.0  gcc  2.7
        -Wmissing-prototypes                 # clang  1.0  gcc  1.0
        -Wnested-externs                     # clang  1.0  gcc  2.7
+@@ -88,6 +87,14 @@
+       -Wwrite-strings                      # clang  1.0  gcc  1.4
+     )
+ 
++    if(NOT (ENABLE_DEBUG OR ENABLE_CURLDEBUG))
++      # If building DEBUG images, do not error on -Winline as in may not
++      # be supported
++      list(APPEND WPICKY_ENABLE
++        -Winline                           # clang  1.0  gcc  1.0
++      )
++    endif()
++
+     # Always enable with clang, version dependent with gcc
+     set(WPICKY_COMMON_OLD
+       -Waddress                            # clang  2.7  gcc  4.3
