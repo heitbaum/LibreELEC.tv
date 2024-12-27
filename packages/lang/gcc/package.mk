@@ -53,8 +53,6 @@ GCC_COMMON_CONFIGURE_OPTS="--target=${TARGET_NAME} \
                            --disable-libssp \
                            --enable-__cxa_atexit"
 
-#--with-default-libstdcxx-abi=gcc4-compatible
-
 PKG_CONFIGURE_OPTS_BOOTSTRAP="${GCC_COMMON_CONFIGURE_OPTS} \
                               --enable-cloog-backend=isl \
                               --disable-decimal-float \
