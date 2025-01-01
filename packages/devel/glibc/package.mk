@@ -55,7 +55,7 @@ pre_configure_target() {
   export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-O.|-O2|g")
 
   export CFLAGS=$(echo ${CFLAGS} | sed -e "s|-Wunused-but-set-variable||g")
-  export CFLAGS="${CFLAGS} -Wno-unused-variable -Wno-error=attributes"
+  export CFLAGS="${CFLAGS} -Wno-unused-variable"
 
   if [ -n "${PROJECT_CFLAGS}" ]; then
     export CFLAGS=$(echo ${CFLAGS} | sed -e "s|${PROJECT_CFLAGS}||g")
