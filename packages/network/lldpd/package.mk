@@ -2,8 +2,8 @@
 # Copyright (C) 2020-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="lldpd"
-PKG_VERSION="1.0.18"
-PKG_SHA256="e2ea97b4387165c768161626a370979baa977e3d3a43fe75bb05d2f76aa825ad"
+PKG_VERSION="a75be4bb3a2edbba1e93e942baac93d48eb115e4"
+PKG_SHA256="eb65912e023a1c009ca7878fce19e25ce320da302199b63209ad1cf9052e696f"
 PKG_LICENSE="ISC"
 PKG_SITE="https://github.com/lldpd/lldpd"
 PKG_URL="https://github.com/lldpd/lldpd/archive/${PKG_VERSION}.tar.gz"
