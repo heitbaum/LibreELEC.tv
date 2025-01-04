@@ -2,8 +2,8 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pcre2"
-PKG_VERSION="10.44"
-PKG_SHA256="d34f02e113cf7193a1ebf2770d3ac527088d485d4e047ed10e5d217c6ef5de96"
+PKG_VERSION="10.45-RC1"
+PKG_SHA256="50956df9cd900a6dcfa6396fb946f9e64f99ca3b335a1b4f99bba9134f58214e"
 PKG_LICENSE="BSD"
 PKG_SITE="http://www.pcre.org/"
 PKG_URL="https://github.com/PCRE2Project/pcre2/releases/download/pcre2-${PKG_VERSION}/pcre2-${PKG_VERSION}.tar.bz2"
