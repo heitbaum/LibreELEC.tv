@@ -8,17 +8,22 @@ PKG_LICENSE="ISC"
 PKG_SITE="https://github.com/lldpd/lldpd"
 PKG_URL="https://github.com/lldpd/lldpd/archive/${PKG_VERSION}.tar.gz"
 PKG_LONGDESC="implementation of IEEE 802.1ab (LLDP)"
-PKG_DEPENDS_TARGET="toolchain libevent"
+PKG_DEPENDS_TARGET="toolchain libcap libevent"
 PKG_TOOLCHAIN="configure"
 
 PKG_CONFIGURE_OPTS_TARGET="export \
                            --with-sysroot=${SYSROOT_PREFIX} \
                            --localstatedir=/var \
+                           --runstatedir=/run \
+                           --with-privsep-chroot=/run/lldpd/chroot \
+                           --with-lldpd-ctl-socket=/run/lldpd/socket \
+                           --with-lldpd-pid-file=/run/lldpd/pid \
 			   --without-embedded-libevent \
 			   --with-readline=no \
 	                   --prefix=/usr \
                            --sysconfdir=/etc \
-	                   --with-privsep-user=_lldpd
+	                   --disable-privsep \
+	                   --with-privsep-user=_lldpd \
                            --with-privsep-group=_lldpd"
 
 pre_configure_target() {
