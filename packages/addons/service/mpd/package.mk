@@ -62,7 +62,7 @@ PKG_MESON_OPTS_TARGET="-Dadplug=disabled \
                        -Dmpcdec=disabled \
                        -Dmpg123=disabled \
                        -Dneighbor=false \
-                       -Dnfs=enabled \
+                       -Dnfs=disabled \
                        -Dopenal=disabled \
                        -Dopus=enabled \
                        -Doss=disabled \
