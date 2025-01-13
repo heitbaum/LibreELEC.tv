@@ -903,3 +903,27 @@ index fc9c3fee1..345c83943 100644
 -- 
 2.43.0
 
+From da6efd6361fcf7a44cbb24e3058b38bee7be1ad6 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 13 Jan 2025 22:33:43 +0000
+Subject: [PATCH] plugins/meson.build: revert unintentional static link change
+
+Minor revert of 9db7144d0fa4512335070a984690f3f5034210a5
+- no change was to be done to meson.build.
+---
+ src/decoder/plugins/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/decoder/plugins/meson.build b/src/decoder/plugins/meson.build
+index b804493117..cd67404941 100644
+--- a/src/decoder/plugins/meson.build
++++ b/src/decoder/plugins/meson.build
+@@ -108,7 +108,7 @@ if libmodplug_dep.found()
+   ]
+ endif
+ 
+-libopenmpt_dep = dependency('libopenmpt', required: get_option('openmpt'), static: true)
++libopenmpt_dep = dependency('libopenmpt', required: get_option('openmpt'))
+ decoder_features.set('ENABLE_OPENMPT', libopenmpt_dep.found())
+ decoder_features.set('HAVE_LIBOPENMPT_VERSION_0_5', libopenmpt_dep.version().version_compare('>= 0.5'))
+ if libopenmpt_dep.found()
