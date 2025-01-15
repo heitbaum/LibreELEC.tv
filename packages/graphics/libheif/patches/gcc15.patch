@@ -1,0 +1,11 @@
+--- a/libheif/file.cc	2025-02-14 11:54:33.000000000 +0000
++++ b/libheif/file.cc	2025-02-17 00:06:47.800646339 +0000
+@@ -1021,7 +1021,7 @@
+ #endif
+   }
+   // TODO: brotli
+-  else {
++  else if (size > 0) {
+     // uncompressed data, plain copy
+ 
+     data_array.resize(size);
