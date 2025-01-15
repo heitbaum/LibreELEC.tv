@@ -2,7 +2,7 @@
 # Copyright (C) 2023-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="aspnet8-runtime"
-PKG_VERSION="8.0.11"
+PKG_VERSION="8.0.12"
 PKG_LICENSE="MIT"
 PKG_SITE="https://dotnet.microsoft.com/"
 PKG_DEPENDS_TARGET="toolchain"
@@ -11,16 +11,16 @@ PKG_TOOLCHAIN="manual"
 
 case "${ARCH}" in
   "aarch64")
-    PKG_SHA256="4f83cb39dbd515ea8319a8c2c32f041a2972301343cd31621c4bb402a300cfd6"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/64a9f696-b039-4a73-b705-288fbf9c2e8f/c36bc24d6d359c019408b4f94ee67b59/aspnetcore-runtime-8.0.11-linux-arm64.tar.gz"
+    PKG_SHA256="1c2b31eb0d1059f259822c651362d870efd21c5308a037dcc389a5e459b05573"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/8953c6fe-3542-4cee-b022-a50e029882a5/1bbce821b1ae97ed11b305dd708c0437/aspnetcore-runtime-8.0.12-linux-arm64.tar.gz"
     ;;
   "arm")
-    PKG_SHA256="a3b38882b0df6b1d320a921111e678d792658af23d36dadb678bca9f9c98bc19"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/003f180b-e695-4094-bc3f-ef6473883d43/e861cb56edd58b05b03b5a92cf995f12/aspnetcore-runtime-8.0.11-linux-arm.tar.gz"
+    PKG_SHA256="5299c03e7de25e61e0c49cec0ca80642f541c142833c1ded9881c730f010da75"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/26fe9c15-40f6-4eb5-88fd-63d98eb259fa/c36789f8460b7e20371c38129d7fc160/aspnetcore-runtime-8.0.12-linux-arm.tar.gz"
     ;;
   "x86_64")
-    PKG_SHA256="3fc75c38783b282140d2e2513c570f76991101b3f895b67a6ae8fba2a2d96399"
-    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/6f89757c-3dde-4c3a-96a0-b04b1bde2c92/6a3591b360ed0f9d1118b97560b89625/aspnetcore-runtime-8.0.11-linux-x64.tar.gz"
+    PKG_SHA256="8a441b42051607dc914b14b1a6271abbf81f72ba0579fcb21aabd8e845d68a70"
+    PKG_URL="https://download.visualstudio.microsoft.com/download/pr/df752f45-7e9f-4d13-8568-a88adda5aa04/9d59726fb38525b4956cbb1e1fe8a2c8/aspnetcore-runtime-8.0.12-linux-x64.tar.gz"
     ;;
 esac
 PKG_SOURCE_NAME="aspnetcore-runtime_${PKG_VERSION}_${ARCH}.tar.gz"
