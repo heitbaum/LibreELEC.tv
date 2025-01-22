@@ -11,18 +11,10 @@ PKG_URL="https://curl.haxx.se/download/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="toolchain zlib openssl rtmpdump libidn2 nghttp2"
 PKG_LONGDESC="Client and library for (HTTP, HTTPS, FTP, ...) transfers."
 
-if [ "${DEBUG}" = "yes" ]; then
-  PKG_CMAKE_OPTS_DEBUG="-DENABLE_DEBUG=ON \
-                        -DENABLE_CURLDEBUG=OFF"
-aaaaa
-else
-  PKG_CMAKE_OPTS_DEBUG="-DENABLE_DEBUG=OFF \
-                        -DENABLE_CURLDEBUG=OFF"
-fi
-
-PKG_CMAKE_OPTS_TARGET="${PKG_CMAKE_OPTS_DEBUG} \
+PKG_CMAKE_OPTS_TARGET="-DENABLE_DEBUG=OFF \
                        -DCURL_LTO=ON \
                        -DCURL_WERROR=ON \
+                       -DENABLE_CURLDEBUG=OFF \
                        -DENABLE_ARES=OFF \
                        -DCURL_DISABLE_HTTP=OFF \
                        -DCURL_DISABLE_FTP=OFF \
