@@ -33,6 +33,7 @@ do
     fi
   fi
   CHANGE_HASH=yes scripts/get ${pkgname}
+  fullhash=${pkgver}
   [ ${#pkgver} -eq 40 ] && pkgver="githash ${pkgver:0:7}"
 
   # update PKG_GIT_COMMIT
@@ -65,6 +66,21 @@ do
     [[ "${pkggitcommit}" = "null" ]] && \
       pkggitcommit=$(curl -m 5 -sL "${github_api_token}" "${tag_object_url}" | jq -r '.sha')
     sed -e "s|^export PKG_GIT_COMMIT=.*|export PKG_GIT_COMMIT=\"${pkggitcommit}\"|" -i "${pkgmk}"
+  fi
+
+  if [[ ${pkgname} = tvheadend43 ]]; then
+    [ -d tvheadend.git ] || git clone https://github.com/tvheadend/tvheadend.git tvheadend.git
+    pushd .
+    cd tvheadend.git
+      git co master
+      git fetch
+      git pull --rebase
+      git co ${fullhash}
+      TVH_VER=$(support/version)
+      git co master
+      tvhver=${TVH_VER/\~[a-z0-9]*/}
+    popd
+    sed -e "s|^PKG_VERSION_NUMBER=.*|PKG_VERSION_NUMBER=\"${tvhver}\"|" -i "${pkgmk}"
   fi
 
   if [[ ${pkgname} = @(btrfs-progs|rsyslog|syncthing|oscam|ffmpeg-tools|tvheadend42|tvheadend43|jellyfin|tinc|librespot|minisatip|mariadb|docker|prometheus-node-exporter) ]]; then
