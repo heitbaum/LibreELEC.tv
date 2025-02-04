@@ -1,0 +1,15 @@
+--- a/dnn/download_model.sh	2024-03-11 22:48:36.000000000 +0000
++++ b/dnn/download_model.sh	2025-02-04 08:21:28.437906112 +0000
+@@ -5,6 +5,11 @@
+ 
+ if [ ! -f $model ]; then
+         echo "Downloading latest model"
+-        wget https://media.xiph.org/opus/models/$model
++        if command -v wget >/dev/null; then
++          wget -O $model https://media.xiph.org/opus/models/$model
++        else
++          # if wget is not available use curl
++          curl -o $model https://media.xiph.org/opus/models/$model
++        fi
+ fi
+ tar xvomf $model
