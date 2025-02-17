@@ -2,9 +2,9 @@
 # Copyright (C) 2021-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="prometheus-node-exporter"
-PKG_VERSION="1.8.2"
-PKG_SHA256="f615c70be816550498dd6a505391dbed1a896705eff842628de13a1fa7654e8f"
-PKG_REV="0"
+PKG_VERSION="1.9.0"
+PKG_SHA256="247abb555f3ffc7f194d2ef71b60b0403ee296df2f6883afd33e97bf57214303"
+PKG_REV="1"
 PKG_LICENSE="Apache License 2.0"
 PKG_SITE="https://github.com/prometheus/node_exporter"
 PKG_URL="https://github.com/prometheus/node_exporter/archive/refs/tags/v${PKG_VERSION}.tar.gz"
