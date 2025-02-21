@@ -614,6 +614,7 @@ strip = '$TARGET_STRIP'
 pkg-config = '$PKG_CONFIG'
 llvm-config = '$SYSROOT_PREFIX/usr/bin/llvm-config'
 libgcrypt-config = '$SYSROOT_PREFIX/usr/bin/libgcrypt-config'
+rust = '$TOOLCHAIN/bin/rustc'
 
 [build_machine]
 system = 'linux'
