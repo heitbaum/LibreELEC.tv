@@ -132,6 +132,13 @@ get_graphicdrivers() {
     COMPOSITE_SUPPORT="yes"
   fi
 
+  if listcontains "${GRAPHIC_DRIVERS}" "nouveau"; then
+    GALLIUM_DRIVERS+=" nouveau"
+    XORG_DRIVERS+=" nouveau"
+    VULKAN_DRIVERS_MESA+=" nouveau"
+    COMPOSITE_SUPPORT="yes"
+  fi
+
   # remove duplicate entries
   GALLIUM_DRIVERS="$(echo ${GALLIUM_DRIVERS} | xargs -n1 | sort -u | xargs)"
   GRAPHIC_DRIVERS="$(echo ${GRAPHIC_DRIVERS} | xargs -n1 | sort -u | xargs)"
