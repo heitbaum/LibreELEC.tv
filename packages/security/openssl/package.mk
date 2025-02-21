@@ -50,6 +50,8 @@ configure_host() {
 
 makeinstall_host() {
   make install_sw
+  mkdir -p ${TOOLCHAIN}/etc/ssl
+  cp ${PKG_DIR}/cert/cacert.pem ${TOOLCHAIN}/etc/ssl/cert.pem
 }
 
 pre_configure_target() {
