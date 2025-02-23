@@ -34,7 +34,7 @@ case "${LINUX}" in
     PKG_SHA256="f011f6c8ea471df1b3dbbdd1eb261b29c92e43360503c3ebd005beec2155b66a"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
     PKG_PATCH_DIRS="default rtlwifi/6.14 rtlwifi/after-6.14"
-    PKG_VERSION="6.14-rc3"
+    PKG_VERSION="6.14-rc4"
     PKG_SHA256=""
     PKG_URL="https://git.kernel.org/torvalds/t/${PKG_NAME}-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default rtlwifi/after-6.14"
