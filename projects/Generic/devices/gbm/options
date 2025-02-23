@@ -5,7 +5,7 @@
   OPENGLES="mesa"
 
 # Vulkan implementation to use (vulkan-loader / no)
-  VULKAN="vulkan-loader"
+  VULKAN="no"
 
 # Displayserver to use (weston / x11 / no)
   DISPLAYSERVER="no"
@@ -22,4 +22,4 @@
 # Mesa 3D Graphic drivers to use (all / crocus,i915,iris,r300,r600,radeonsi,vmware,virtio)
 # Space separated list is supported,
 # e.g. GRAPHIC_DRIVERS="crocus i915 iris r300 r600 radeonsi vmware virtio"
-  GRAPHIC_DRIVERS="crocus i915 iris r300 r600 radeonsi vmware virtio nouveau"
+  GRAPHIC_DRIVERS="crocus i915 iris r300 r600 radeonsi vmware virtio"
