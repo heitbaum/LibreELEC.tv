@@ -31,11 +31,13 @@ make_target() {
 }
 
 makeinstall_target() {
+  mkdir -p ${INSTALL}/$(get_full_module_dir)/fs/${PKG_NAME}
+    cp module/*.ko ${INSTALL}/$(get_full_module_dir)/fs/${PKG_NAME}
   # Install kernel modules to standard fs/zfs directory
-  mkdir -p ${INSTALL}/$(get_full_module_dir)/fs/zfs
-  find $PKG_BUILD/module -name "*.ko" -exec cp {} ${INSTALL}/$(get_full_module_dir)/fs/zfs/ \;
+  #mkdir -p ${INSTALL}/$(get_full_module_dir)/fs/zfs
+  #find $PKG_BUILD/module -name "*.ko" -exec cp {} ${INSTALL}/$(get_full_module_dir)/fs/zfs/ \;
   # Install user-space tools
-  make install DESTDIR=$INSTALL
+  #make install DESTDIR=$INSTALL
   # Generate module dependencies
-  ${KERNEL_CROSS_COMPILE}depmod -a -b ${INSTALL} 6.12.15
+  #${KERNEL_CROSS_COMPILE}depmod -a -b ${INSTALL} 6.12.15
 }
