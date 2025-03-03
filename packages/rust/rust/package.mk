@@ -24,16 +24,8 @@ configure_host() {
 
   case "${TARGET_ARCH}" in
     "arm")
-      case "${TARGET_SUBARCH}" in
-        "armv7ve")
-          # for armv7ve target we specify the subarch. ie armv7ve
-          cp -a ${PKG_DIR}/targets/armv7ve-libreelec-linux-gnueabihf.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
-          ;;
-        *)
-          # the arm target is special because we specify the subarch. ie armv8a
-          cp -a ${PKG_DIR}/targets/arm-libreelec-linux-gnueabihf.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
-          ;;
-      esac
+      # the arm target is special because we specify the subarch. ie armv8a
+      cp -a ${PKG_DIR}/targets/arm-libreelec-linux-gnueabihf.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
       ;;
     "aarch64" | "x86_64")
       cp -a ${PKG_DIR}/targets/${TARGET_NAME}.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
