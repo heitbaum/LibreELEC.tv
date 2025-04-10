@@ -14,4 +14,5 @@ PKG_BUILD_FLAGS="-sysroot -cfg-libs"
 PKG_CONFIGURE_OPTS_TARGET="--disable-nls \
         --without-libsigsegv-prefix \
         --without-libiconv-prefix \
-        --without-libintl-prefix"
+        --without-libintl-prefix \
+        gl_cv_func_strcasecmp_works=yes"
