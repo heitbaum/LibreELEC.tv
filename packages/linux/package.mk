@@ -34,10 +34,6 @@ case "${LINUX}" in
     PKG_SHA256="c5c682a354ea3190139357a57d34a79e5c37221ace823a938e10116b577a2e1b"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
     PKG_PATCH_DIRS="default rtlwifi/after-6.14"
-    PKG_VERSION="6.15-rc2"
-    PKG_SHA256=""
-    PKG_URL="https://git.kernel.org/torvalds/t/${PKG_NAME}-${PKG_VERSION}.tar.gz"
-    PKG_PATCH_DIRS="default"
     ;;
 esac
 
