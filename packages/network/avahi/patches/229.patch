@@ -1,0 +1,1014 @@
+From d56c3a27e3bbaac5f44b7c2f667a6cb56ec6a254 Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 1/7] reconfirm: Allow more flexible cache timeouts
+
+Changes the cache expiration function to allow for more
+flexible timeouts. Also changes several hard-coded values
+to use the new constant.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-core/cache.c | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/avahi-core/cache.c b/avahi-core/cache.c
+index 454aac53a..9f94d3d9f 100644
+--- a/avahi-core/cache.c
++++ b/avahi-core/cache.c
+@@ -32,6 +32,8 @@
+ #include "log.h"
+ #include "rr-util.h"
+ 
++#define ONE_SECOND          1000000
++
+ static void remove_entry(AvahiCache *c, AvahiCacheEntry *e) {
+     AvahiCacheEntry *t;
+ 
+@@ -161,6 +163,7 @@ static AvahiCacheEntry *lookup_record(AvahiCache *c, AvahiRecord *r) {
+     return avahi_cache_walk(c, r->key, lookup_record_callback, r);
+ }
+ 
++static void update_state_set_timer(AvahiCache *c, AvahiCacheEntry *e, AvahiCacheEntryState state, AvahiUsec usec);
+ static void next_expiry(AvahiCache *c, AvahiCacheEntry *e, unsigned percent);
+ 
+ static void elapse_func(AvahiTimeEvent *t, void *userdata) {
+@@ -263,13 +266,13 @@ static void next_expiry(AvahiCache *c, AvahiCacheEntry *e, unsigned percent) {
+     update_time_event(c, e);
+ }
+ 
+-static void expire_in_one_second(AvahiCache *c, AvahiCacheEntry *e, AvahiCacheEntryState state) {
++static void update_state_set_timer(AvahiCache *c, AvahiCacheEntry *e, AvahiCacheEntryState state, AvahiUsec usec) {
+     assert(c);
+     assert(e);
+ 
+     e->state = state;
+     gettimeofday(&e->expiry, NULL);
+-    avahi_timeval_add(&e->expiry, 1000000); /* 1s */
++    avahi_timeval_add(&e->expiry, usec);
+     update_time_event(c, e);
+ }
+ 
+@@ -287,7 +290,7 @@ void avahi_cache_update(AvahiCache *c, AvahiRecord *r, int cache_flush, const Av
+         AvahiCacheEntry *e;
+ 
+         if ((e = lookup_record(c, r)))
+-            expire_in_one_second(c, e, AVAHI_CACHE_GOODBYE_FINAL);
++            update_state_set_timer(c, e, AVAHI_CACHE_GOODBYE_FINAL, ONE_SECOND);
+ 
+     } else {
+         AvahiCacheEntry *e = NULL, *first;
+@@ -307,8 +310,8 @@ void avahi_cache_update(AvahiCache *c, AvahiRecord *r, int cache_flush, const Av
+ 
+                     t = avahi_timeval_diff(&now, &e->timestamp);
+ 
+-                    if (t > 1000000)
+-                        expire_in_one_second(c, e, AVAHI_CACHE_REPLACE_FINAL);
++                    if (t > ONE_SECOND)
++                        update_state_set_timer(c, e, AVAHI_CACHE_REPLACE_FINAL, ONE_SECOND);
+                 }
+             }
+ 
+@@ -423,7 +426,7 @@ int avahi_cache_entry_half_ttl(AvahiCache *c, AvahiCacheEntry *e) {
+ 
+     gettimeofday(&now, NULL);
+ 
+-    age = (unsigned) (avahi_timeval_diff(&now, &e->timestamp)/1000000);
++    age = (unsigned) (avahi_timeval_diff(&now, &e->timestamp)/ONE_SECOND);
+ 
+ /*     avahi_log_debug("age: %lli, ttl/2: %u", age, e->record->ttl);  */
+ 
+@@ -464,7 +467,7 @@ static void* start_poof_callback(AvahiCache *c, AvahiKey *pattern, AvahiCacheEnt
+             break;
+ 
+         case AVAHI_CACHE_POOF:
+-            if (avahi_timeval_diff(&now, &e->poof_timestamp) < 1000000)
++            if (avahi_timeval_diff(&now, &e->poof_timestamp) < ONE_SECOND)
+               break;
+ 
+             e->poof_timestamp = now;
+@@ -474,7 +477,7 @@ static void* start_poof_callback(AvahiCache *c, AvahiKey *pattern, AvahiCacheEnt
+             /* This is the 4th time we got no response, so let's
+              * fucking remove this entry. */
+             if (e->poof_num > 3)
+-              expire_in_one_second(c, e, AVAHI_CACHE_POOF_FINAL);
++                update_state_set_timer(c, e, AVAHI_CACHE_POOF_FINAL, ONE_SECOND);
+             break;
+ 
+         default:
+
+From e250b7cea4a7f4966e255798c34dcb456a37e610 Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 2/7] reconfirm: Add support to avahi core
+
+Adds support to avahi core for reconfirming a record, as
+described in RFC 6762 section 10.4. Four states were added
+to the cache entry to manage re-querying the record. If
+the service is no longer available then four separate
+queries are issued at an interval of 1.5 seconds. If a
+response is received before the final state then the
+states ends up being reset to AVAHI_CACHE_VALID. If a
+response is not received within 6 seconds then the entry
+is removed from the cache.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-core/Makefile.am |   3 +-
+ avahi-core/cache.c     |  32 ++++++++++++
+ avahi-core/cache.h     |   7 ++-
+ avahi-core/reconfirm.c | 115 +++++++++++++++++++++++++++++++++++++++++
+ avahi-core/reconfirm.h |  30 +++++++++++
+ docs/TODO              |   2 +-
+ 6 files changed, 186 insertions(+), 3 deletions(-)
+ create mode 100644 avahi-core/reconfirm.c
+ create mode 100644 avahi-core/reconfirm.h
+
+diff --git a/avahi-core/Makefile.am b/avahi-core/Makefile.am
+index 2f0959677..ebbc8f9ab 100644
+--- a/avahi-core/Makefile.am
++++ b/avahi-core/Makefile.am
+@@ -83,7 +83,8 @@ libavahi_core_la_SOURCES = \
+ 	querier.c querier.h \
+ 	addr-util.h addr-util.c \
+ 	domain-util.h domain-util.c \
+-	dns-srv-rr.h
++	dns-srv-rr.h \
++	reconfirm.c reconfirm.h
+ 
+ if HAVE_NETLINK
+ libavahi_core_la_SOURCES += \
+diff --git a/avahi-core/cache.c b/avahi-core/cache.c
+index 9f94d3d9f..8e0a1bb35 100644
+--- a/avahi-core/cache.c
++++ b/avahi-core/cache.c
+@@ -33,6 +33,7 @@
+ #include "rr-util.h"
+ 
+ #define ONE_SECOND          1000000
++#define RECONFIRM_TIMEOUT   1500000
+ 
+ static void remove_entry(AvahiCache *c, AvahiCacheEntry *e) {
+     AvahiCacheEntry *t;
+@@ -182,6 +183,7 @@ static void elapse_func(AvahiTimeEvent *t, void *userdata) {
+         case AVAHI_CACHE_POOF_FINAL:
+         case AVAHI_CACHE_GOODBYE_FINAL:
+         case AVAHI_CACHE_REPLACE_FINAL:
++        case AVAHI_CACHE_RECONFIRM_FINAL:
+ 
+             remove_entry(e->cache, e);
+ 
+@@ -208,6 +210,24 @@ static void elapse_func(AvahiTimeEvent *t, void *userdata) {
+             e->state = AVAHI_CACHE_EXPIRY_FINAL;
+             percent = 100;
+             break;
++
++        case AVAHI_CACHE_RECONFIRM1:
++            avahi_interface_post_query(e->cache->interface, e->record->key, 1, NULL);
++            update_state_set_timer(e->cache, e, AVAHI_CACHE_RECONFIRM2, RECONFIRM_TIMEOUT);
++            e = NULL;
++            break;
++
++        case AVAHI_CACHE_RECONFIRM2:
++            avahi_interface_post_query(e->cache->interface, e->record->key, 1, NULL);
++            update_state_set_timer(e->cache, e, AVAHI_CACHE_RECONFIRM3, RECONFIRM_TIMEOUT);
++            e = NULL;
++            break;
++
++        case AVAHI_CACHE_RECONFIRM3:
++            avahi_interface_post_query(e->cache->interface, e->record->key, 1, NULL);
++            update_state_set_timer(e->cache, e, AVAHI_CACHE_RECONFIRM_FINAL, RECONFIRM_TIMEOUT);
++            e = NULL;
++            break;
+     }
+ 
+     if (e) {
+@@ -433,6 +453,18 @@ int avahi_cache_entry_half_ttl(AvahiCache *c, AvahiCacheEntry *e) {
+     return age >= e->record->ttl/2;
+ }
+ 
++void avahi_cache_entry_reconfirm(AvahiCacheEntry *e) {
++    assert(e);
++
++    avahi_interface_post_query(e->cache->interface, e->record->key, 1, NULL);
++
++    /* Only start the timer if one is not already running. Restarting
++     * a timer in the middle of an existing reconfirm can prevent the
++     * record from ever being removed. */
++    if (!avahi_cache_entry_reconfirming(e))
++        update_state_set_timer(e->cache, e, AVAHI_CACHE_RECONFIRM1, RECONFIRM_TIMEOUT);
++}
++
+ void avahi_cache_flush(AvahiCache *c) {
+     assert(c);
+ 
+diff --git a/avahi-core/cache.h b/avahi-core/cache.h
+index 8ef88c926..bcbfc3f19 100644
+--- a/avahi-core/cache.h
++++ b/avahi-core/cache.h
+@@ -37,7 +37,11 @@ typedef enum {
+     AVAHI_CACHE_POOF,       /* Passive observation of failure */
+     AVAHI_CACHE_POOF_FINAL,
+     AVAHI_CACHE_GOODBYE_FINAL,
+-    AVAHI_CACHE_REPLACE_FINAL
++    AVAHI_CACHE_REPLACE_FINAL,
++    AVAHI_CACHE_RECONFIRM1,
++    AVAHI_CACHE_RECONFIRM2,
++    AVAHI_CACHE_RECONFIRM3,
++    AVAHI_CACHE_RECONFIRM_FINAL
+ } AvahiCacheEntryState;
+ 
+ typedef struct AvahiCacheEntry AvahiCacheEntry;
+@@ -88,6 +92,7 @@ typedef void* AvahiCacheWalkCallback(AvahiCache *c, AvahiKey *pattern, AvahiCach
+ void* avahi_cache_walk(AvahiCache *c, AvahiKey *pattern, AvahiCacheWalkCallback cb, void* userdata);
+ 
+ int avahi_cache_entry_half_ttl(AvahiCache *c, AvahiCacheEntry *e);
++void avahi_cache_entry_reconfirm(AvahiCacheEntry *e);
+ 
+ /** Start the "Passive observation of Failure" algorithm for all
+  * records of the specified key. The specified address is  */
+diff --git a/avahi-core/reconfirm.c b/avahi-core/reconfirm.c
+new file mode 100644
+index 000000000..5479af1b6
+--- /dev/null
++++ b/avahi-core/reconfirm.c
+@@ -0,0 +1,115 @@
++/***
++  Copyright (c) 2017-2019 Nate Karstens, Garmin International, Inc. <nate.karstens@garmin.com>
++
++  This file is part of avahi.
++
++  avahi is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as
++  published by the Free Software Foundation; either version 2.1 of the
++  License, or (at your option) any later version.
++
++  avahi is distributed in the hope that it will be useful, but WITHOUT
++  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
++  Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public
++  License along with avahi; if not, write to the Free Software
++  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++  USA.
++***/
++
++#ifdef HAVE_CONFIG_H
++#include <config.h>
++#endif
++
++#include <stdlib.h>
++#include <stdio.h>
++
++#include <avahi-common/malloc.h>
++#include <avahi-common/error.h>
++#include <avahi-common/domain.h>
++
++#include "core.h"
++#include "internal.h"
++#include "lookup.h"
++#include "iface.h"
++#include "cache.h"
++#include "log.h"
++#include "reconfirm.h"
++
++static void* lookup_reconfirm_record(AvahiCache *c, AvahiKey *pattern, AvahiCacheEntry *e, void* userdata) {
++    assert(c);
++    assert(pattern);
++    assert(e);
++
++    if (avahi_record_equal_no_ttl(e->record, userdata))
++        return e;
++
++    return NULL;
++}
++
++static void record_browser_callback(
++    AvahiSRecordBrowser *b,
++    AvahiIfIndex interface,
++    AvahiProtocol protocol,
++    AvahiBrowserEvent event,
++    AvahiRecord *record,
++    AvahiLookupResultFlags flags,
++    void* userdata) {
++
++    AvahiRecord *reconfirm_record = userdata;
++    AvahiInterface *i;
++    AvahiCacheEntry *e;
++
++    switch (event) {
++        case AVAHI_BROWSER_NEW:
++            assert(flags & AVAHI_LOOKUP_RESULT_CACHED);
++
++            if (!(avahi_record_equal_no_ttl(record, reconfirm_record)))
++                return;
++
++            if (!(i = avahi_interface_monitor_get_interface(b->server->monitor, interface, protocol))) {
++                b->server->error = AVAHI_ERR_INVALID_INTERFACE;
++                return;
++            }
++
++            if (!(e = avahi_cache_walk(i->cache, record->key, lookup_reconfirm_record, record))) {
++                b->server->error = AVAHI_ERR_INVALID_RECORD;
++                return;
++            }
++
++            avahi_cache_entry_reconfirm(e);
++
++            break;
++
++        case AVAHI_BROWSER_REMOVE:
++            break;
++
++        case AVAHI_BROWSER_CACHE_EXHAUSTED:
++            avahi_s_record_browser_free(b);
++            avahi_record_unref(reconfirm_record);
++            break;
++
++        case AVAHI_BROWSER_ALL_FOR_NOW:
++        case AVAHI_BROWSER_FAILURE:
++            break;
++    }
++}
++
++int avahi_record_reconfirm(
++    AvahiServer *server,
++    AvahiIfIndex interface,
++    AvahiProtocol protocol,
++    AvahiRecord *r) {
++
++    assert(server);
++    assert(r);
++
++    if (!(avahi_s_record_browser_new(server, interface, protocol, r->key, 0, record_browser_callback, avahi_record_ref(r)))) {
++        avahi_record_unref(r);
++        return 0;
++    }
++
++    return 1;
++}
+diff --git a/avahi-core/reconfirm.h b/avahi-core/reconfirm.h
+new file mode 100644
+index 000000000..88bb8432d
+--- /dev/null
++++ b/avahi-core/reconfirm.h
+@@ -0,0 +1,30 @@
++#ifndef fooreconfirmhfoo
++#define fooreconfirmhfoo
++
++/***
++  Copyright (c) 2017-2019 Nate Karstens, Garmin International, Inc. <nate.karstens@garmin.com>
++
++  This file is part of avahi.
++
++  avahi is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as
++  published by the Free Software Foundation; either version 2.1 of the
++  License, or (at your option) any later version.
++
++  avahi is distributed in the hope that it will be useful, but WITHOUT
++  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General
++  Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public
++  License along with avahi; if not, write to the Free Software
++  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++  USA.
++***/
++
++#include "core.h"
++#include "internal.h"
++
++int avahi_record_reconfirm(AvahiServer *server, AvahiIfIndex interface, AvahiProtocol protocol, AvahiRecord *r);
++
++#endif
+diff --git a/docs/TODO b/docs/TODO
+index e8511053d..9b84907df 100644
+--- a/docs/TODO
++++ b/docs/TODO
+@@ -9,7 +9,6 @@ later:
+ * long lived queries
+ * libavahi-compat-libdns_sd: implement kDNSServiceFlagsNoAutoRename and missing functions
+ * libavahi-compat-howl: implement missing functions
+-* add API to allow user to tell the server that some service is not reachable
+ * gtk3
+ * qt5
+ * goodbye/hello on sleep/suspend/wake
+@@ -115,3 +114,4 @@ done:
+ * Expose AvahiSRecordBrowser over D-BUS and implement in avahi-client
+ * avahi-publish-* rewrites in C, update man pages
+ * Add static host configuration like static services [lathiat]
++* add API to allow user to tell the server that some service is not reachable
+
+From 2a8ddc6b64021c26d5fa236894431011d0549749 Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 3/7] reconfirm: Keep record off known-answer list
+
+Prevents the record being reconfirmed from being included
+in the list of known answers.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-core/cache.c       | 9 +++++++++
+ avahi-core/cache.h       | 1 +
+ avahi-core/query-sched.c | 2 +-
+ 3 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/avahi-core/cache.c b/avahi-core/cache.c
+index 8e0a1bb35..9911f1420 100644
+--- a/avahi-core/cache.c
++++ b/avahi-core/cache.c
+@@ -453,6 +453,15 @@ int avahi_cache_entry_half_ttl(AvahiCache *c, AvahiCacheEntry *e) {
+     return age >= e->record->ttl/2;
+ }
+ 
++int avahi_cache_entry_reconfirming(AvahiCacheEntry *e) {
++    assert(e);
++
++    return ((e->state == AVAHI_CACHE_RECONFIRM1) ||
++            (e->state == AVAHI_CACHE_RECONFIRM2) ||
++            (e->state == AVAHI_CACHE_RECONFIRM3) ||
++            (e->state == AVAHI_CACHE_RECONFIRM_FINAL));
++}
++
+ void avahi_cache_entry_reconfirm(AvahiCacheEntry *e) {
+     assert(e);
+ 
+diff --git a/avahi-core/cache.h b/avahi-core/cache.h
+index bcbfc3f19..3092018b3 100644
+--- a/avahi-core/cache.h
++++ b/avahi-core/cache.h
+@@ -92,6 +92,7 @@ typedef void* AvahiCacheWalkCallback(AvahiCache *c, AvahiKey *pattern, AvahiCach
+ void* avahi_cache_walk(AvahiCache *c, AvahiKey *pattern, AvahiCacheWalkCallback cb, void* userdata);
+ 
+ int avahi_cache_entry_half_ttl(AvahiCache *c, AvahiCacheEntry *e);
++int avahi_cache_entry_reconfirming(AvahiCacheEntry *e);
+ void avahi_cache_entry_reconfirm(AvahiCacheEntry *e);
+ 
+ /** Start the "Passive observation of Failure" algorithm for all
+diff --git a/avahi-core/query-sched.c b/avahi-core/query-sched.c
+index 805189026..64a332bfd 100644
+--- a/avahi-core/query-sched.c
++++ b/avahi-core/query-sched.c
+@@ -194,7 +194,7 @@ static void* known_answer_walk_callback(AvahiCache *c, AvahiKey *pattern, AvahiC
+     assert(e);
+     assert(s);
+ 
+-    if (avahi_cache_entry_half_ttl(c, e))
++    if (avahi_cache_entry_half_ttl(c, e) || avahi_cache_entry_reconfirming(e))
+         return NULL;
+ 
+     if (!(ka = avahi_new0(AvahiKnownAnswer, 1))) {
+
+From f224544306c3bae32296041a72f13513918beec0 Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 4/7] reconfirm: Query PTR record with SRV record
+
+Automatically queries the PTR record if the given record
+is an SRV record. Removing the PTR record from the cache
+leads to the service being removed.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-core/reconfirm.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/avahi-core/reconfirm.c b/avahi-core/reconfirm.c
+index 5479af1b6..7d8de8097 100644
+--- a/avahi-core/reconfirm.c
++++ b/avahi-core/reconfirm.c
+@@ -103,6 +103,8 @@ int avahi_record_reconfirm(
+     AvahiProtocol protocol,
+     AvahiRecord *r) {
+ 
++    AvahiRecord *r_assoc;
++
+     assert(server);
+     assert(r);
+ 
+@@ -111,5 +113,30 @@ int avahi_record_reconfirm(
+         return 0;
+     }
+ 
++    /* If reconfirming an SRV record then also reconfirm the associated PTR record */
++    if (r->key->type == AVAHI_DNS_TYPE_SRV) {
++        char service[AVAHI_LABEL_MAX], type[AVAHI_DOMAIN_NAME_MAX], domain[AVAHI_DOMAIN_NAME_MAX], name[AVAHI_DOMAIN_NAME_MAX];
++
++        if (avahi_service_name_split(r->key->name, service, sizeof(service), type, sizeof(type), domain, sizeof(domain)) < 0) {
++            avahi_log_warn(__FILE__": Failed to split '%s'", r->key->name);
++            return 0;
++        }
++
++        snprintf(name, sizeof(name), "%s.%s", type, domain);
++
++        if (!(r_assoc = avahi_record_new_full(name, r->key->clazz, AVAHI_DNS_TYPE_PTR, 0)))
++            return 0;
++
++        if (!(r_assoc->data.ptr.name = avahi_strdup(r->key->name))) {
++            avahi_record_unref(r_assoc);
++            return 0;
++        }
++
++        if (!(avahi_s_record_browser_new(server, interface, protocol, r_assoc->key, 0, record_browser_callback, r_assoc))) {
++            avahi_record_unref(r_assoc);
++            return 0;
++        }
++    }
++
+     return 1;
+ }
+
+From aa749d2eb06f6c99043a71fe07fcc292fda94a5b Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 5/7] reconfirm: Add daemon support
+
+Adds a D-Bus message to the daemon to start reconfirming
+a record.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-daemon/dbus-protocol.c                  | 50 +++++++++++++++++++
+ avahi-daemon/org.freedesktop.Avahi.Server.xml | 20 ++++++++
+ 2 files changed, 70 insertions(+)
+
+diff --git a/avahi-daemon/dbus-protocol.c b/avahi-daemon/dbus-protocol.c
+index 2765cf370..2cd6a9038 100644
+--- a/avahi-daemon/dbus-protocol.c
++++ b/avahi-daemon/dbus-protocol.c
+@@ -51,6 +51,7 @@
+ #include <avahi-core/core.h>
+ #include <avahi-core/lookup.h>
+ #include <avahi-core/publish.h>
++#include <avahi-core/reconfirm.h>
+ 
+ #include "dbus-protocol.h"
+ #include "dbus-util.h"
+@@ -997,6 +998,52 @@ static DBusHandlerResult dbus_prepare_record_browser_object(RecordBrowserInfo **
+     return avahi_dbus_respond_path(c, m, i->path);
+ }
+ 
++static DBusHandlerResult dbus_start_reconfirm(DBusConnection *c, DBusMessage *m, DBusError *error) {
++    int32_t interface, protocol;
++    uint32_t flags, size;
++    char *name;
++    uint16_t type, clazz;
++    void *rdata;
++    AvahiRecord *r;
++    int result;
++
++    if (!dbus_message_get_args(
++            m, error,
++            DBUS_TYPE_INT32, &interface,
++            DBUS_TYPE_INT32, &protocol,
++            DBUS_TYPE_STRING, &name,
++            DBUS_TYPE_UINT16, &clazz,
++            DBUS_TYPE_UINT16, &type,
++            DBUS_TYPE_UINT32, &flags,
++            DBUS_TYPE_INVALID) || !name ||
++        avahi_dbus_read_rdata (m, 6, &rdata, &size)) {
++        return dbus_parsing_error("Error parsing Server::ReconfirmRecord message", error);
++    }
++
++    if (!AVAHI_IF_VALID(interface) || (interface == AVAHI_IF_UNSPEC))
++        return avahi_dbus_respond_error(c, m, AVAHI_ERR_INVALID_INTERFACE, NULL);
++
++    if (!avahi_is_valid_domain_name(name))
++        return avahi_dbus_respond_error(c, m, AVAHI_ERR_INVALID_DOMAIN_NAME, NULL);
++
++    if (!(r = avahi_record_new_full(name, clazz, type, 0)))
++        return avahi_dbus_respond_error(c, m, AVAHI_ERR_NO_MEMORY, NULL);
++
++    if (!rdata || (avahi_rdata_parse(r, rdata, size) < 0)) {
++        avahi_record_unref(r);
++        return avahi_dbus_respond_error(c, m, AVAHI_ERR_INVALID_RDATA, NULL);
++    }
++
++    result = avahi_record_reconfirm(avahi_server, (AvahiIfIndex) interface, (AvahiProtocol) protocol, r);
++
++    avahi_record_unref(r);
++
++    if (!result)
++        return avahi_dbus_respond_error(c, m, AVAHI_ERR_INVALID_RECORD, NULL);
++
++    return avahi_dbus_respond_ok(c, m);
++}
++
+ static DBusHandlerResult dbus_select_common_methods(DBusConnection *c, DBusMessage *m, AVAHI_GCC_UNUSED void *userdata, const char *iface, DBusError *error) {
+     if (dbus_message_is_method_call(m, DBUS_INTERFACE_INTROSPECTABLE, "Introspect"))
+         return avahi_dbus_handle_introspect(c, m, "org.freedesktop.Avahi.Server.xml");
+@@ -1051,6 +1098,9 @@ static DBusHandlerResult dbus_select_common_methods(DBusConnection *c, DBusMessa
+ 
+     } else if (dbus_message_is_method_call(m, iface, "ResolveService")) {
+         return dbus_create_sync_service_resolver_object(c, m, error);
++
++    } else if (dbus_message_is_method_call(m, iface, "ReconfirmRecord")) {
++        return dbus_start_reconfirm(c, m, error);
+     }
+ 
+     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+diff --git a/avahi-daemon/org.freedesktop.Avahi.Server.xml b/avahi-daemon/org.freedesktop.Avahi.Server.xml
+index d119aeb6b..17834553f 100644
+--- a/avahi-daemon/org.freedesktop.Avahi.Server.xml
++++ b/avahi-daemon/org.freedesktop.Avahi.Server.xml
+@@ -214,6 +214,16 @@
+       <arg name="path" type="o" direction="out"/>
+     </method>
+ 
++    <method name="ReconfirmRecord">
++      <arg name="interface" type="i" direction="in"/>
++      <arg name="protocol" type="i" direction="in"/>
++      <arg name="name" type="s" direction="in"/>
++      <arg name="clazz" type="q" direction="in"/>
++      <arg name="type" type="q" direction="in"/>
++      <arg name="flags" type="u" direction="in"/>
++      <arg name="rdata" type="ay" direction="in"/>
++    </method>
++
+   </interface>
+ 
+   <interface name="org.freedesktop.Avahi.Server2">
+@@ -401,5 +411,15 @@
+       <arg name="path" type="o" direction="out"/>
+     </method>
+ 
++    <method name="ReconfirmRecord">
++      <arg name="interface" type="i" direction="in"/>
++      <arg name="protocol" type="i" direction="in"/>
++      <arg name="name" type="s" direction="in"/>
++      <arg name="clazz" type="q" direction="in"/>
++      <arg name="type" type="q" direction="in"/>
++      <arg name="flags" type="u" direction="in"/>
++      <arg name="rdata" type="ay" direction="in"/>
++    </method>
++
+   </interface>
+ </node>
+
+From c870fcb6c20995b4437c03172fd6addd601077fa Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 6/7] reconfirm: Add client library support
+
+Adds support for the reconfirm operation to the
+avahi client and dns_sd compatibility libraries.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-client/browser.c               | 92 ++++++++++++++++++++++++++++
+ avahi-client/lookup.h                | 11 ++++
+ avahi-common/defs.h                  |  3 +
+ avahi-compat-libdns_sd/compat.c      | 35 +++++++++++
+ avahi-compat-libdns_sd/dns_sd.h      |  4 +-
+ avahi-compat-libdns_sd/funcs.txt     |  4 +-
+ avahi-compat-libdns_sd/unsupported.c | 14 -----
+ 7 files changed, 145 insertions(+), 18 deletions(-)
+
+diff --git a/avahi-client/browser.c b/avahi-client/browser.c
+index fa4a9a80e..08f90fcbe 100644
+--- a/avahi-client/browser.c
++++ b/avahi-client/browser.c
+@@ -103,6 +103,21 @@ static void defer_timeout_callback(AvahiTimeout *t, void *userdata) {
+     avahi_domain_browser_free(db);
+ }
+ 
++static int append_rdata(DBusMessage *message, const void *rdata, size_t size) {
++    DBusMessageIter iter, sub;
++
++    assert(message);
++
++    dbus_message_iter_init_append(message, &iter);
++
++    if (!(dbus_message_iter_open_container(&iter, DBUS_TYPE_ARRAY, DBUS_TYPE_BYTE_AS_STRING, &sub)) ||
++        !(dbus_message_iter_append_fixed_array(&sub, DBUS_TYPE_BYTE, &rdata, size)) ||
++        !(dbus_message_iter_close_container(&iter, &sub)))
++        return -1;
++
++    return 0;
++}
++
+ AvahiDomainBrowser* avahi_domain_browser_new(
+     AvahiClient *client,
+     AvahiIfIndex interface,
+@@ -1025,3 +1040,80 @@ DBusHandlerResult avahi_record_browser_event(AvahiClient *client, AvahiBrowserEv
+     dbus_error_free (&error);
+     return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+ }
++
++/* Reconfirm Record */
++
++int avahi_reconfirm_record(
++    AvahiClient *client,
++    AvahiIfIndex interface,
++    AvahiProtocol protocol,
++    const char *name,
++    uint16_t clazz,
++    uint16_t type,
++    const void* rdata,
++    size_t size,
++    AvahiReconfirmRecordFlags flags) {
++
++    DBusMessage *message = NULL, *reply = NULL;
++    DBusError error;
++    int32_t i_interface, i_protocol;
++    uint32_t u_flags;
++    int r;
++
++    assert(name);
++
++    dbus_error_init(&error);
++
++    if (!(message = dbus_message_new_method_call(AVAHI_DBUS_NAME, AVAHI_DBUS_PATH_SERVER, AVAHI_DBUS_INTERFACE_SERVER, "ReconfirmRecord"))) {
++        r = AVAHI_ERR_NO_MEMORY;
++        goto fail;
++    }
++
++    i_interface = (int32_t) interface;
++    i_protocol = (int32_t) protocol;
++    u_flags = (uint32_t) flags;
++
++    if (!dbus_message_append_args(
++            message,
++            DBUS_TYPE_INT32, &i_interface,
++            DBUS_TYPE_INT32, &i_protocol,
++            DBUS_TYPE_STRING, &name,
++            DBUS_TYPE_UINT16, &clazz,
++            DBUS_TYPE_UINT16, &type,
++            DBUS_TYPE_UINT32, &u_flags,
++            DBUS_TYPE_INVALID) || append_rdata(message, rdata, size) < 0) {
++        r = AVAHI_ERR_NO_MEMORY;
++        goto fail;
++    }
++
++    if (!(reply = dbus_connection_send_with_reply_and_block(client->bus, message, -1, &error)) ||
++        dbus_error_is_set (&error)) {
++        r = AVAHI_ERR_DBUS_ERROR;
++        goto fail;
++    }
++
++    if (!dbus_message_get_args(reply, &error, DBUS_TYPE_INVALID) ||
++        dbus_error_is_set (&error)) {
++        r = AVAHI_ERR_DBUS_ERROR;
++        goto fail;
++    }
++
++    dbus_message_unref(message);
++    dbus_message_unref(reply);
++
++    return AVAHI_OK;
++
++fail:
++    if (dbus_error_is_set(&error)) {
++        r = avahi_error_dbus_to_number(error.name);
++        dbus_error_free(&error);
++    }
++
++    if (message)
++        dbus_message_unref(message);
++
++    if (reply)
++        dbus_message_unref(reply);
++
++    return r;
++}
+diff --git a/avahi-client/lookup.h b/avahi-client/lookup.h
+index 9df28fc32..795449c15 100644
+--- a/avahi-client/lookup.h
++++ b/avahi-client/lookup.h
+@@ -319,6 +319,17 @@ int avahi_record_browser_free(AvahiRecordBrowser *);
+ 
+ /** @} */
+ 
++int avahi_reconfirm_record(
++    AvahiClient *client,
++    AvahiIfIndex interface,
++    AvahiProtocol protocol,
++    const char *name,
++    uint16_t clazz,
++    uint16_t type,
++    const void* rdata,
++    size_t size,
++    AvahiReconfirmRecordFlags flags);
++
+ AVAHI_C_DECL_END
+ 
+ #endif
+diff --git a/avahi-common/defs.h b/avahi-common/defs.h
+index 49c8a8c0c..48888dbd4 100644
+--- a/avahi-common/defs.h
++++ b/avahi-common/defs.h
+@@ -309,6 +309,9 @@ typedef enum {
+     AVAHI_DOMAIN_BROWSER_MAX
+ } AvahiDomainBrowserType;
+ 
++/** Flags for reconfirming a record */
++typedef int AvahiReconfirmRecordFlags;
++
+ /** @} */
+ 
+ /** \cond fulldocs */
+diff --git a/avahi-compat-libdns_sd/compat.c b/avahi-compat-libdns_sd/compat.c
+index 3ea359e61..3d2297e48 100644
+--- a/avahi-compat-libdns_sd/compat.c
++++ b/avahi-compat-libdns_sd/compat.c
+@@ -1370,3 +1370,38 @@ DNSServiceErrorType DNSSD_API DNSServiceQueryRecord (
+ 
+     return ret;
+ }
++
++DNSServiceErrorType DNSSD_API DNSServiceReconfirmRecord(
++    AVAHI_GCC_UNUSED DNSServiceFlags flags,
++    uint32_t interfaceIndex,
++    const char *fullname,
++    uint16_t rrtype,
++    uint16_t rrclass,
++    uint16_t rdlen,
++    const void *rdata) {
++
++    DNSServiceRef sdref;
++    int error;
++
++    AVAHI_WARN_LINKAGE;
++
++    if (!fullname)
++        return kDNSServiceErr_BadParam;
++
++    if (interfaceIndex == kDNSServiceInterfaceIndexAny)
++        return kDNSServiceErr_BadParam;
++
++    if (!(sdref = sdref_new()))
++        return kDNSServiceErr_Unknown;
++
++    if (!(sdref->client = avahi_client_new(avahi_simple_poll_get(sdref->simple_poll), 0, NULL, NULL, &error)))
++        goto finish;
++
++    error = avahi_reconfirm_record(sdref->client, (AvahiIfIndex)interfaceIndex, AVAHI_PROTO_UNSPEC, fullname, rrclass, rrtype, rdata, rdlen, 0);
++
++finish:
++
++    sdref_unref(sdref);
++
++    return map_error(error);
++}
+diff --git a/avahi-compat-libdns_sd/dns_sd.h b/avahi-compat-libdns_sd/dns_sd.h
+index 5f7da4f53..231051259 100644
+--- a/avahi-compat-libdns_sd/dns_sd.h
++++ b/avahi-compat-libdns_sd/dns_sd.h
+@@ -1250,8 +1250,8 @@ DNSServiceErrorType DNSSD_API DNSServiceQueryRecord
+  *
+  * flags:           Currently unused, reserved for future use.
+  *
+- * interfaceIndex:  If non-zero, specifies the interface of the record in question.
+- *                  Passing 0 causes all instances of this record to be reconfirmed.
++ * interfaceIndex:  Specifies the interface of the record in question.
++ *                  Must not be kDNSServiceInterfaceIndexAny.
+  *
+  * fullname:        The resource record's full domain name.
+  *
+diff --git a/avahi-compat-libdns_sd/funcs.txt b/avahi-compat-libdns_sd/funcs.txt
+index bf96aa5df..62c23c401 100644
+--- a/avahi-compat-libdns_sd/funcs.txt
++++ b/avahi-compat-libdns_sd/funcs.txt
+@@ -8,6 +8,8 @@ DNSServiceRegister
+ DNSServiceBrowse
+ DNSServiceResolve
+ DNSServiceConstructFullName
++DNSServiceQueryRecord
++DNSServiceReconfirmRecord
+ 
+ TXTRecordCreate
+ TXTRecordDeallocate
+@@ -23,8 +25,6 @@ TXTRecordGetItemAtIndex
+ -- Unsupported but Relevant --
+ 
+ DNSServiceRegisterRecord
+-DNSServiceQueryRecord
+-DNSServiceReconfirmRecord
+ DNSServiceCreateConnection
+ DNSServiceAddRecord
+ DNSServiceUpdateRecord
+diff --git a/avahi-compat-libdns_sd/unsupported.c b/avahi-compat-libdns_sd/unsupported.c
+index 4e94f702d..f238f777b 100644
+--- a/avahi-compat-libdns_sd/unsupported.c
++++ b/avahi-compat-libdns_sd/unsupported.c
+@@ -45,20 +45,6 @@ DNSServiceErrorType DNSSD_API DNSServiceRegisterRecord (
+     return kDNSServiceErr_Unsupported;
+ }
+ 
+-DNSServiceErrorType DNSSD_API DNSServiceReconfirmRecord (
+-    AVAHI_GCC_UNUSED DNSServiceFlags flags,
+-    AVAHI_GCC_UNUSED uint32_t interfaceIndex,
+-    AVAHI_GCC_UNUSED const char *fullname,
+-    AVAHI_GCC_UNUSED uint16_t rrtype,
+-    AVAHI_GCC_UNUSED uint16_t rrclass,
+-    AVAHI_GCC_UNUSED uint16_t rdlen,
+-    AVAHI_GCC_UNUSED const void *rdata) {
+-
+-    AVAHI_WARN_UNSUPPORTED;
+-
+-    return kDNSServiceErr_Unsupported;
+-}
+-
+ DNSServiceErrorType DNSSD_API DNSServiceCreateConnection(AVAHI_GCC_UNUSED DNSServiceRef *sdRef) {
+     AVAHI_WARN_UNSUPPORTED;
+ 
+
+From 4e4221b5497ac0164eeb7a3be58038844755541f Mon Sep 17 00:00:00 2001
+From: Nate Karstens <nate.karstens@garmin.com>
+Date: Tue, 14 Nov 2023 10:00:00 -0600
+Subject: [PATCH 7/7] reconfirm: Add test code
+
+Adds client test code for the reconfirm operation.
+
+Signed-off-by: Nate Karstens <nate.karstens@garmin.com>
+---
+ avahi-client/client-test.c | 44 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
+
+diff --git a/avahi-client/client-test.c b/avahi-client/client-test.c
+index da0e43ad7..a7111d735 100644
+--- a/avahi-client/client-test.c
++++ b/avahi-client/client-test.c
+@@ -173,6 +173,34 @@ ar = avahi_address_resolver_new(client, interface, protocol, a, 0, avahi_address
+     avahi_address_snprint (addr, sizeof (addr), a);
+     printf ("HOST-NAME-RESOLVER: Callback on HostNameResolver, interface (%d), protocol (%d), event (%d), name (%s), address (%s), data (%s)\n", interface, protocol, event, name, addr, (char*)userdata);
+ }
++
++static void avahi_record_browser_callback (
++    AvahiRecordBrowser *b,
++    AvahiIfIndex interface,
++    AvahiProtocol protocol,
++    AvahiBrowserEvent event,
++    const char *name,
++    uint16_t clazz,
++    uint16_t type,
++    const void *rdata,
++    size_t size,
++    AVAHI_GCC_UNUSED AvahiLookupResultFlags flags,
++    AVAHI_GCC_UNUSED void *userdata) {
++
++    AvahiClient *client;
++
++    printf ("RECORD-BROWSER: Callback on RecordBrowser, interface (%d), protocol (%d), event (%d), name (%s), clazz (%d), type (%d), size (%zu), flags (0x%x)\n", interface, protocol, event, name, clazz, type, size, flags);
++
++    if (event != AVAHI_BROWSER_NEW)
++        return;
++
++    client = avahi_record_browser_get_client(b);
++
++    printf ("Reconfirming record\n");
++
++    avahi_reconfirm_record(client, interface, protocol, name, clazz, type, rdata, size, 0);
++}
++
+ static void test_free_domain_browser(AVAHI_GCC_UNUSED AvahiTimeout *timeout, void* userdata)
+ {
+     AvahiServiceBrowser *b = userdata;
+@@ -187,6 +215,13 @@ static void test_free_entry_group (AVAHI_GCC_UNUSED AvahiTimeout *timeout, void*
+     avahi_entry_group_free (g);
+ }
+ 
++static void test_free_record_browser(AVAHI_GCC_UNUSED AvahiTimeout *timeout, void* userdata)
++{
++    AvahiRecordBrowser *r = userdata;
++    printf ("Freeing record browser\n");
++    avahi_record_browser_free (r);
++}
++
+ static void test_entry_group_reset (AVAHI_GCC_UNUSED AvahiTimeout *timeout, void* userdata)
+ {
+     AvahiEntryGroup *g = userdata;
+@@ -219,6 +254,7 @@ int main (AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[]) {
+     AvahiServiceBrowser *sb;
+     AvahiServiceTypeBrowser *st;
+     AvahiHostNameResolver *hnr;
++    AvahiRecordBrowser *rb;
+     AvahiAddress *aar;
+     const char *ret;
+     int error;
+@@ -302,6 +338,12 @@ int main (AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[]) {
+     else
+         printf ("Successfully created hostname resolver object\n");
+ 
++    rb = avahi_record_browser_new (avahi, AVAHI_IF_UNSPEC, AVAHI_PROTO_UNSPEC, "Lathiat's Site._http._tcp.local", AVAHI_DNS_CLASS_IN, AVAHI_DNS_TYPE_SRV, 0, avahi_record_browser_callback, NULL);
++    if (rb == NULL)
++        printf ("Failed to create record browser object\n");
++    else
++        printf ("Successfully created record browser object\n");
++
+     aar = avahi_address_parse ("224.0.0.251", AVAHI_PROTO_UNSPEC, &a);
+     if (aar == NULL) {
+         printf ("failed to create address object\n");
+@@ -325,6 +367,8 @@ int main (AVAHI_GCC_UNUSED int argc, AVAHI_GCC_UNUSED char *argv[]) {
+     poll_api->timeout_new(poll_api, &tv, test_free_entry_group, group);
+     avahi_elapse_time(&tv, 25000, 0);
+     poll_api->timeout_new(poll_api, &tv, test_free_domain_browser, sb);
++    avahi_elapse_time(&tv, 28000, 0);
++    poll_api->timeout_new(poll_api, &tv, test_free_record_browser, rb);
+ 
+     avahi_elapse_time(&tv, 30000, 0);
+     poll_api->timeout_new(poll_api, &tv, terminate, NULL);
