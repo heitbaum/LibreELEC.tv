@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
+
+# path to the version file
+DISTRIBUTION_PATH="distributions/LibreELEC/version"
+
+# prevents executing from wrong folder
+[ -f ${DISTRIBUTION_PATH} ] || { echo "${DISTRIBUTION_PATH}: No such file or directory" && exit; }
+
+# update a package.mk file with the multiple sha
+updatemultiplesha()
+{
+file=$1
+sha1=$2
+sha2=$3
+sha3=$4
+
+sed -i '
+# by default - do not print anything
+/^  "aarch64")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha1}'"/
+    P
+    D
+  }
+}
+/^  "arm")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha2}'"/
+    P
+    D
+  }
+}
+/^  "x86_64")$/ {
+  # append a line
+  N
+  # if PKG_SHA256= found, print the first line
+  /\n    PKG_SHA256="/  {
+    s/\(PKG_SHA256="\).*"/\1'${sha3}'"/
+    P
+    D
+  }
+}' ${file}
+}
+
+getsha()
+{
+  t=$(mktemp) && 
+  wget "$1" -qO "$t" && 
+    set -- $(sha256sum "$t"); echo $1
+  rm "$t"
+}
+
+# main code
+pkgver=$1
+[ $# -ne 1 ] && { echo "Usage: $0 PKG_VERSION"; exit 1; }
+
+# update filebrowser package to "pkgver" version
+echo "Starting update of filebrowser to $pkgver."
+pkgmk="packages/addons/service/filebrowser/package.mk"
+sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${pkgver}\"|" -i "${pkgmk}"
+
+export $(grep "^PKG_REV=" "${pkgmk}" | tr -d '"')
+new_pkg_rev=$(($PKG_REV+1))
+sed -e "s|^PKG_REV=.*|PKG_REV=\"${new_pkg_rev}\"|" -i "${pkgmk}"
+
+sha1url="https://github.com/filebrowser/filebrowser/releases/download/v${pkgver}/linux-arm64-filebrowser.tar.gz"
+sha2url="https://github.com/filebrowser/filebrowser/releases/download/v${pkgver}/linux-armv7-filebrowser.tar.gz"
+sha3url="https://github.com/filebrowser/filebrowser/releases/download/v${pkgver}/linux-amd64-filebrowser.tar.gz"
+
+sha1=$(getsha ${sha1url})
+sha2=$(getsha ${sha2url})
+sha3=$(getsha ${sha3url})
+
+updatemultiplesha $pkgmk $sha1 $sha2 $sha3
+
+git commit -m "filebrowser: update to ${pkgver} and addon (${new_pkg_rev})" packages/addons/service/filebrowser/package.mk
