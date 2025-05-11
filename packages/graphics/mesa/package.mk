@@ -64,7 +64,7 @@ if listcontains "${GRAPHIC_DRIVERS}" "etnaviv"; then
 fi
 
 if listcontains "${GRAPHIC_DRIVERS}" "(iris|panfrost)"; then
-  PKG_DEPENDS_TARGET+=" mesa:host"
+  PKG_DEPENDS_TARGET+=" mesa-host:host"
   PKG_MESON_OPTS_TARGET+=" -Dmesa-clc=system -Dprecomp-compiler=system"
 fi
 
