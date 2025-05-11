@@ -121,6 +121,25 @@ fi
 makeinstall_host() {
   host_files="src/compiler/clc/mesa_clc src/compiler/spirv/vtn_bindgen2 src/panfrost/clc/panfrost_compile"
 
+  BUILD_REUSABLE="yes" # temp code
+
+  if [ "${BUILD_REUSABLE}" = "yes" ]; then
+    # Build the reusable mesa:host for both local and to be added to a GitHub release
+    strip ${host_files}
+    upx --lzma ${host_files}
+
+    MESA_HOST_SOURCES="${SOURCES}/mesa-host"
+    mkdir -p "${MESA_HOST_SOURCES}"
+
+    MESA_HOST="mesa-host-${OS_VERSION}-${PKG_VERSION}"
+    tar cf ${MESA_HOST_SOURCES}/${MESA_HOST}-${MACHINE_HARDWARE_NAME}.tar --transform='s|.*/||' ${host_files}
+    sha256sum ${MESA_HOST_SOURCES}/${MESA_HOST}-${MACHINE_HARDWARE_NAME}.tar | \
+      cut -d" " -f1 >${MESA_HOST_SOURCES}/${MESA_HOST}-${MACHINE_HARDWARE_NAME}.tar.sha256
+    # temp handler to generate URL file
+    echo "https://github.com/heitbaum/mesa-host/releases/download/${OS_VERSION}-${PKG_VERSION}/${MESA_HOST}-${MACHINE_HARDWARE_NAME}.tar" \
+      >${MESA_HOST_SOURCES}/${MESA_HOST}-${MACHINE_HARDWARE_NAME}.tar.url
+  fi
+
   mkdir -p "${TOOLCHAIN}/bin"
     cp -a ${host_files} "${TOOLCHAIN}/bin"
 }
