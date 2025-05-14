@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nmap"
-PKG_VERSION="7.96"
-PKG_SHA256="98ae7a4f2fb66c1a3d482af8f00137283b917223446b46e7a20b06eabedf8c8a"
+PKG_VERSION="7.97"
+PKG_SHA256="af98f27925c670c257dd96a9ddf2724e06cb79b2fd1e0d08c9206316be1645c0"
 PKG_LICENSE="GPL"
 PKG_SITE="https://nmap.org/"
 PKG_URL="https://nmap.org/dist/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
