@@ -9,7 +9,8 @@ PKG_LICENSE="Apache-2.0"
 PKG_SITE="http://llvm.org/"
 PKG_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-${PKG_VERSION}/llvm-project-${PKG_VERSION/-/}.src.tar.xz"
 PKG_DEPENDS_HOST="toolchain:host"
-PKG_DEPENDS_TARGET="toolchain llvm:host zlib"
+#PKG_DEPENDS_TARGET="toolchain llvm:host zlib"
+PKG_DEPENDS_TARGET="toolchain zlib"
 PKG_LONGDESC="Low-Level Virtual Machine (LLVM) is a compiler infrastructure."
 PKG_TOOLCHAIN="cmake"
 
@@ -118,14 +119,33 @@ post_makeinstall_host() {
 }
 
 pre_configure_target() {
+  case "${TARGET_ARCH}" in
+    "aarch64")
+      LLVM_BUILD_TARGETS="AArch64"
+      # build clang (required to build libclc runtime for imagination mesa driver)
+      # llvm:target is only required to build mesa imagination for some aarch64 targets
+      LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS='clang' \
+                        -DCLANG_LINK_CLANG_DYLIB=ON"
+      ;;
+    "x86_64")
+      LLVM_BUILD_TARGETS+="X86\;AMDGPU"
+      #LLVM_BUILD_TARGETS="AMDGPU"
+      # do not build clang (not needed)
+      # llvm:target is only required to build mesa amd on x86_64 targets
+      #LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS=''"
+      LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS='clang' \
+                        -DCLANG_LINK_CLANG_DYLIB=ON"
+      ;;
+  esac
+
   mkdir -p ${PKG_BUILD}/.${TARGET_NAME}
   cd ${PKG_BUILD}/.${TARGET_NAME}
   PKG_CMAKE_OPTS_TARGET="${PKG_CMAKE_OPTS_COMMON} \
                          -DCMAKE_BINARY_DIR=${PKG_BUILD}/.${TARGET_NAME} \
                          -DLLVM_NATIVE_BUILD=${PKG_BUILD}/.${TARGET_NAME}/native \
                          -DCMAKE_CROSSCOMPILING=ON \
-                         -DLLVM_ENABLE_PROJECTS='' \
-                         -DLLVM_TARGETS_TO_BUILD=AMDGPU \
+                         ${LLVM_BUILD_CLANG} \
+                         -DLLVM_TARGETS_TO_BUILD=${LLVM_BUILD_TARGETS} \
                          -DLLVM_TARGET_ARCH="${TARGET_ARCH}" \
                          -DLLVM_TABLEGEN=${TOOLCHAIN}/bin/llvm-tblgen"
 }
