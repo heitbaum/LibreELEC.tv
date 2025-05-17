@@ -64,7 +64,30 @@ if listcontains "${GRAPHIC_DRIVERS}" "etnaviv"; then
 fi
 
 if listcontains "${GRAPHIC_DRIVERS}" "(iris|panfrost)"; then
-  PKG_DEPENDS_TARGET+=" mesa:host"
+  if [[ "${USE_REUSABLE}" = @(auto|force) ]]; then
+    # obtain the reusable mesa:host tools
+    file=/tmp/mesa.check
+    if [[ ! -f ${file} || $(($(date +%s) - $(stat -c %Y "$file"))) -gt 60 ]]; then
+      ${SCRIPTS}/get mesa-reusable 2> /dev/null
+      echo $? > ${file}
+      [[ "$(cat ${file})" = 1 ]] && build_msg "CLR_WARNING" "WARNING" "Reusable mesa:host tools were not able to be downloaded."
+    fi
+    if [[ "$(cat ${file})" = 0 ]]; then
+      # if the reusable tools are available
+      PKG_DEPENDS_UNPACK+=" mesa-reusable"
+    else
+      if [ "${USE_REUSABLE}" = "force" ]; then
+        # Fail
+        build_msg "CLR_WARNING" "WARNING" "USE_REUSABLE is set to force. exiting."
+        exit 1
+      elif [ "${USE_REUSABLE}" = "auto" ]; then
+        # Proceed with build of mesa:host
+        PKG_DEPENDS_TARGET+=" mesa:host"
+      fi
+    fi
+  else
+    PKG_DEPENDS_TARGET+=" mesa:host"
+  fi
   PKG_MESON_OPTS_TARGET+=" -Dmesa-clc=system -Dprecomp-compiler=system"
 fi
 

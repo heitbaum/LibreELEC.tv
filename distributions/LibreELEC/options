@@ -278,3 +278,6 @@
 #   - mesa:host
 #   - save-local (saves a copy in sources/reusable/<package>
   BUILD_REUSABLE="mesa:host save-local"
+
+# should reusable host tools be used (auto / force / no)
+  USE_REUSABLE="auto"
