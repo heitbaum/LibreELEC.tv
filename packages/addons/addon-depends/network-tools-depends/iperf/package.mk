@@ -2,8 +2,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="iperf"
-PKG_VERSION="3.18"
-PKG_SHA256="ef9ffabf16926701a11c9b7e95dccdf64ff304b7b20dcb6f28aed06b240b7e99"
+PKG_VERSION="3.19"
+PKG_SHA256="da5cff29e4945b2ee05dcf9a0c67768cc000dc1b122935bce3492c4e36f6b5e9"
 PKG_LICENSE="BSD"
 PKG_SITE="http://software.es.net/iperf/"
 PKG_URL="https://github.com/esnet/iperf/archive/${PKG_VERSION}.tar.gz"
