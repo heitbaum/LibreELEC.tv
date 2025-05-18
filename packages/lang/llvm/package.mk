@@ -134,7 +134,7 @@ pre_configure_target() {
       # llvm:target is only required to build mesa amd on x86_64 targets
       #LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS=''"
       LLVM_BUILD_CLANG="-DLLVM_ENABLE_PROJECTS='clang' \
-                        -DCLANG_LINK_CLANG_DYLIB=ON"
+                        -DCLANG_LINK_CLANG_DYLIB=OFF"
       ;;
   esac
 
