@@ -277,4 +277,4 @@
 #   - all (for all host tools to be built)
 #   - mesa:host
 #   - save-local (saves a copy in sources/reusable/<package>
-  BUILD_REUSABLE=""
+  BUILD_REUSABLE="mesa:host save-local"
