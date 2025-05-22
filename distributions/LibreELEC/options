@@ -280,7 +280,7 @@
 #   - mesa:host
 #   - cargo:host (with rust:host)
 #   - save-local (saves a copy in sources/<package>-reusable
-  BUILD_REUSABLE=""
+  BUILD_REUSABLE="mesa:host save-local"
 
 # should reusable host tools be used:
 #   - yes (always, fail when not available)
