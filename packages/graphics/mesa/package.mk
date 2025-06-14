@@ -98,12 +98,6 @@ else
   PKG_MESON_OPTS_TARGET+=" -Dgallium-va=disabled"
 fi
 
-if listcontains "${GRAPHIC_DRIVERS}" "vmware"; then
-  PKG_MESON_OPTS_TARGET+=" -Dgallium-xa=enabled"
-else
-  PKG_MESON_OPTS_TARGET+=" -Dgallium-xa=disabled"
-fi
-
 if [ "${OPENGLES_SUPPORT}" = "yes" ]; then
   PKG_MESON_OPTS_TARGET+=" -Dgles1=disabled -Dgles2=enabled"
 else
