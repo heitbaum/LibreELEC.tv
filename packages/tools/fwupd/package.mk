@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
+
+PKG_NAME="fwupd"
+PKG_VERSION="2.0.19"
+PKG_SHA256="3bb7a4a1e2d00f0ab513e4c667d7bf5a3ff34a9802757849d3fedf07dd40ddbb"
+PKG_LICENSE="LGPL-2.1-or-later"
+PKG_SITE="https://fwupd.org"
+PKG_URL="https://github.com/fwupd/fwupd/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
+PKG_DEPENDS_TARGET="toolchain gpgme libarchive libjcat libusb libxmlb sqlite xz"
+PKG_DEPENDS_CONFIG="xz"
+PKG_LONGDESC="A system daemon to allow session software to update firmware"
+
+PKG_MESON_OPTS_TARGET="-Dbuild=all \
+                       -Ddocs=disabled \
+                       -Defi_os_dir=libreelec \
+                       -Dfirmware-packager=false \
+                       -Dman=false \
+                       -Dpassim=disabled \
+                       -Dplugin_flashrom=disabled \
+                       -Dplugin_uefi_capsule_splash=false \
+                       -Dsupported_build=enabled \
+                       -Dsystemd=disabled \
+                       -Dtests=false \
+                       -Dvendor_ids_dir=/usr/share/hwdata"
+
+post_makeinstall_target() {
+  echo "[fwupd]"            >  ${INSTALL}/etc/fwupd/fwupd.conf
+  echo "EspLocation=/flash" >> ${INSTALL}/etc/fwupd/fwupd.conf
+  chmod 640 ${INSTALL}/etc/fwupd/fwupd.conf
+
+  #safe_remove ${INSTALL}/etc
+  #safe_remove ${INSTALL}/usr/lib
+}
