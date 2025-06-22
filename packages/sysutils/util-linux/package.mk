@@ -48,6 +48,7 @@ PKG_CONFIGURE_OPTS_TARGET="${UTILLINUX_CONFIG_DEFAULT} \
                            --disable-all-programs \
                            --enable-libuuid \
                            --enable-libblkid \
+                           --enable-libfdisk \
                            --enable-libmount \
                            --enable-libsmartcols \
                            --enable-losetup \
