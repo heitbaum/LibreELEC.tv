@@ -1,0 +1,341 @@
+From f8001121b16b9cedf0d9b39c28ce9839dbd80119 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 22 Jun 2025 11:13:25 +0000
+Subject: [PATCH 2/2] crypto
+
+---
+ configure.ac                      | 38 +++++++++++++++++++------------
+ src/udiskslinuxblock.c            | 12 +++++++++-
+ src/udiskslinuxencrypted.c        | 10 +++++++-
+ src/udiskslinuxencryptedhelpers.c | 36 ++++++++++++++++++++++++++++-
+ src/udiskslinuxencryptedhelpers.h |  4 +++-
+ 5 files changed, 82 insertions(+), 18 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 47640852..35761370 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -539,25 +539,35 @@ if test "x$enable_daemon" = "xyes"; then
+   fi
+ 
+   # libblockdev crypto
+-  SAVE_CFLAGS=$CFLAGS
+-  SAVE_LDFLAGS=$LDFLAGS
++  have_crypto=no
++  AC_ARG_ENABLE(crypto,
++                AS_HELP_STRING([--enable-crypto], [enable BLOCKDEV CRYPTO support]),
++ 	        [],
++ 	        [enable_crypto=yes])
++  if test "x$enable_crypto" = "xyes"; then
++    SAVE_CFLAGS=$CFLAGS
++    SAVE_LDFLAGS=$LDFLAGS
+ 
+-  CFLAGS="$GLIB_CFLAGS"
+-  LDFLAGS="$GLIB_LIBS"
+-  AC_MSG_CHECKING([libblockdev-crypto presence])
+-  AC_TRY_COMPILE([#include <blockdev/crypto.h>], [],
+-                 [AC_MSG_RESULT([yes])
+-                 have_crypto=yes],
+-                 [AC_MSG_RESULT([no])
+-                 have_crypto=no])
++    CFLAGS="$GLIB_CFLAGS"
++    LDFLAGS="$GLIB_LIBS"
++    AC_MSG_CHECKING([libblockdev-crypto presence])
++    AC_TRY_COMPILE([#include <blockdev/crypto.h>], [],
++                   [AC_MSG_RESULT([yes])
++                   have_crypto=yes],
++                   [AC_MSG_RESULT([no])
++                   have_crypto=no])
+ 
+-  CFLAGS=$SAVE_CFLAGS
+-  LDFLAGS=$SAVE_LDFLAGS
++    CFLAGS=$SAVE_CFLAGS
++    LDFLAGS=$SAVE_LDFLAGS
+ 
+-  if test "x$have_crypto" = "xno"; then
+-    AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
++    if test "x$have_crypto" = "xno"; then
++      AC_MSG_ERROR([BLOCKDEV CRYPTO support requested but header or library not found])
++    fi
++    AC_DEFINE([HAVE_CRYPTO], 1, [Define to 1 to enable BLOCKDEV CRYPTO])
+   fi
+ 
++  AM_CONDITIONAL(HAVE_CRYPTO, test "x$have_crypto" = "xyes")
++
+   # libblockdev nvme
+   SAVE_CFLAGS=$CFLAGS
+   SAVE_LDFLAGS=$LDFLAGS
+diff --git a/src/udiskslinuxblock.c b/src/udiskslinuxblock.c
+index 829dd5f7..7fb5af9e 100644
+--- a/src/udiskslinuxblock.c
++++ b/src/udiskslinuxblock.c
+@@ -42,7 +42,9 @@
+ 
+ #include <blockdev/part.h>
+ #include <blockdev/fs.h>
+-#include <blockdev/crypto.h>
++#ifdef HAVE_CRYPTO
++#  include <blockdev/crypto.h>
++#endif
+ #include <blockdev/swap.h>
+ 
+ #include "udiskslogging.h"
+@@ -1207,6 +1209,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
+ 
+   if (udisks_daemon_get_enable_tcrypt (daemon))
+     {
++#ifdef HAVE_CRYPTO
+       seems_encrypted = bd_crypto_device_seems_encrypted (device_file, &error);
+       if (error != NULL)
+         {
+@@ -1214,6 +1217,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
+                           device_file, error->message, g_quark_to_string (error->domain), error->code);
+           g_clear_error (&error);
+         }
++#endif /* HAVE_CRYPTO */
+     }
+ 
+   if (seems_encrypted)
+@@ -1238,6 +1242,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
+                                  g_udev_device_get_property (device->udev_device, "ID_FS_UUID"));
+   if ((!s || strlen (s) == 0) && udisks_linux_block_is_bitlk (iface))
+     {
++#ifdef HAVE_CRYPTO
+       BDCryptoBITLKInfo *bitlk_info;
+ 
+       /* Attempt to retrieve bitlk uuid from the on-disk header */
+@@ -1253,6 +1258,7 @@ udisks_linux_block_update (UDisksLinuxBlock       *block,
+                      device_file, error->message);
+           g_error_free (error);
+         }
++#endif /* HAVE_CRYPTO */
+     }
+   udisks_block_set_id_uuid (iface, s);
+   g_free (s);
+@@ -1660,6 +1666,7 @@ has_whitespace (const gchar *s)
+ static gchar *
+ make_block_luksname (UDisksBlock *block, GError **error)
+ {
++#ifdef HAVE_CRYPTO
+   BDCryptoLUKSInfo *info = NULL;
+ 
+   udisks_linux_block_encrypted_lock (block);
+@@ -1675,6 +1682,9 @@ make_block_luksname (UDisksBlock *block, GError **error)
+     }
+   else
+     return NULL;
++#else
++  return NULL;
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ static gboolean
+diff --git a/src/udiskslinuxencrypted.c b/src/udiskslinuxencrypted.c
+index 9bcbd2f0..1fd9cc9e 100644
+--- a/src/udiskslinuxencrypted.c
++++ b/src/udiskslinuxencrypted.c
+@@ -27,7 +27,9 @@
+ #include <string.h>
+ #include <stdlib.h>
+ 
+-#include <blockdev/crypto.h>
++#ifdef HAVE_CRYPTO
++#  include <blockdev/crypto.h>
++#endif
+ 
+ #include <glib/gstdio.h>
+ 
+@@ -161,6 +163,7 @@ static void
+ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
+                       UDisksLinuxBlockObject *object)
+ {
++#ifdef HAVE_CRYPTO
+   UDisksLinuxDevice *device;
+   BDCryptoLUKSInfo *info = NULL;
+   GError *error = NULL;
+@@ -184,6 +187,7 @@ update_metadata_size (UDisksLinuxEncrypted   *encrypted,
+ 
+   g_object_unref (device);
+   bd_crypto_luks_info_free (info);
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ static void
+@@ -1026,6 +1030,7 @@ handle_resize (UDisksEncrypted       *encrypted,
+                guint64                size,
+                GVariant              *options)
+ {
++#ifdef HAVE_CRYPTO
+   UDisksObject *object = NULL;
+   UDisksBlock *block;
+   UDisksObject *cleartext_object = NULL;
+@@ -1190,6 +1195,9 @@ handle_resize (UDisksEncrypted       *encrypted,
+   udisks_string_wipe_and_free (effective_passphrase);
+   bd_crypto_keyslot_context_free (context);
+   return TRUE; /* returning TRUE means that we handled the method invocation */
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ /* ---------------------------------------------------------------------------------------------------- */
+diff --git a/src/udiskslinuxencryptedhelpers.c b/src/udiskslinuxencryptedhelpers.c
+index 94a31836..bf30c9c0 100644
+--- a/src/udiskslinuxencryptedhelpers.c
++++ b/src/udiskslinuxencryptedhelpers.c
+@@ -21,7 +21,9 @@
+  */
+ 
+ #include <glib.h>
+-#include <blockdev/crypto.h>
++#ifdef HAVE_CRYPTO
++#  include <blockdev/crypto.h>
++#endif
+ 
+ #include "udisksthreadedjob.h"
+ #include "udiskslinuxencryptedhelpers.h"
+@@ -31,6 +33,7 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
+                       gpointer            user_data,
+                       GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   BDCryptoLUKSVersion luks_version;
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   BDCryptoKeyslotContext *context = NULL;
+@@ -59,6 +62,9 @@ gboolean luks_format_job_func (UDisksThreadedJob  *job,
+   ret = bd_crypto_luks_format (data->device, NULL, 0, context, 0, luks_version, NULL, error);
+   bd_crypto_keyslot_context_free (context);
+   return ret;
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean luks_open_job_func (UDisksThreadedJob  *job,
+@@ -66,6 +72,7 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
+                     gpointer            user_data,
+                     GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   BDCryptoKeyslotContext *context = NULL;
+   gboolean ret = FALSE;
+@@ -79,6 +86,9 @@ gboolean luks_open_job_func (UDisksThreadedJob  *job,
+   ret = bd_crypto_luks_open (data->device, data->map_name, context, data->read_only, error);
+   bd_crypto_keyslot_context_free (context);
+   return ret;
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean luks_close_job_func (UDisksThreadedJob  *job,
+@@ -86,8 +96,12 @@ gboolean luks_close_job_func (UDisksThreadedJob  *job,
+                     gpointer            user_data,
+                     GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   return bd_crypto_luks_close (data->map_name, error);
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
+@@ -95,6 +109,7 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
+                           gpointer            user_data,
+                           GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   BDCryptoKeyslotContext *context = NULL;
+   BDCryptoKeyslotContext *ncontext = NULL;
+@@ -116,6 +131,9 @@ gboolean luks_change_key_job_func (UDisksThreadedJob  *job,
+   bd_crypto_keyslot_context_free (context);
+   bd_crypto_keyslot_context_free (ncontext);
+   return ret;
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
+@@ -123,6 +141,7 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
+                                gpointer            user_data,
+                                GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   BDCryptoKeyslotContext *context = NULL;
+   gboolean ret = FALSE;
+@@ -144,6 +163,9 @@ gboolean tcrypt_open_job_func (UDisksThreadedJob  *job,
+                            data->read_only, error);
+   bd_crypto_keyslot_context_free (context);
+   return ret;
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
+@@ -151,8 +173,12 @@ gboolean tcrypt_close_job_func (UDisksThreadedJob  *job,
+                                 gpointer            user_data,
+                                 GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   return bd_crypto_tc_close (data->map_name, error);
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
+@@ -160,6 +186,7 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
+                               gpointer            user_data,
+                               GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   BDCryptoKeyslotContext *context = NULL;
+   gboolean ret = FALSE;
+@@ -172,6 +199,9 @@ gboolean bitlk_open_job_func (UDisksThreadedJob  *job,
+   ret = bd_crypto_bitlk_open (data->device, data->map_name, context, data->read_only, error);
+   bd_crypto_keyslot_context_free (context);
+   return ret;
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+ 
+ gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
+@@ -179,6 +209,10 @@ gboolean bitlk_close_job_func (UDisksThreadedJob  *job,
+                                gpointer            user_data,
+                                GError            **error)
+ {
++#ifdef HAVE_CRYPTO
+   CryptoJobData *data = (CryptoJobData*) user_data;
+   return bd_crypto_bitlk_close (data->map_name, error);
++#else
++  return FALSE; /* returning FALSE as udisks was compiled with out crypto support */
++#endif /* HAVE_CRYPTO */
+ }
+diff --git a/src/udiskslinuxencryptedhelpers.h b/src/udiskslinuxencryptedhelpers.h
+index 87586c87..13287db6 100644
+--- a/src/udiskslinuxencryptedhelpers.h
++++ b/src/udiskslinuxencryptedhelpers.h
+@@ -24,7 +24,9 @@
+ #define __UDISKS_LINUX_ENCRYPTED_HELPERS_H__
+ 
+ #include <glib.h>
+-#include <blockdev/crypto.h>
++#ifdef HAVE_CRYPTO
++#  include <blockdev/crypto.h>
++#endif
+ 
+ #include "udisksthreadedjob.h"
+ 
+-- 
+2.43.0
+
