@@ -10,7 +10,6 @@ PKG_URL="https://gnupg.org/ftp/gcrypt/gpgme/gpgme-${PKG_VERSION}.tar.bz2"
 PKG_DEPENDS_TARGET="toolchain libassuan libgpg-error"
 PKG_LONGDESC="GnuPG Made Easy (GPGME) is a library designed to make access to GnuPG easier for applications"
 PKG_TOOLCHAIN="autotools"
-PKG_BUILD_FLAGS="-sysroot"
 
 PKG_CONFIGURE_OPTS_TARGET="--enable-languages=cl \
                            --disable-static \
