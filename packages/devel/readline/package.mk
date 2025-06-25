@@ -3,11 +3,12 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="readline"
-PKG_VERSION="8.3-rc1"
-PKG_SHA256="4df532d8e46e726bb216c63304163a174542cc870109abfe23177fac9e605425"
+PKG_VERSION="8.3-rc2"
+PKG_SHA256="f7a444d1ac5c3c21a8fa8130d0d616f9e5218b215a25c69ba8de053d695add44"
 PKG_LICENSE="MIT"
 PKG_SITE="http://www.gnu.org/software/readline/"
 PKG_URL="https://ftpmirror.gnu.org/readline/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_URL="https://ftp.gnu.org/pub/gnu/readline/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="autotools:host gcc:host ncurses"
 PKG_LONGDESC="The GNU Readline library provides a set of functions for use by applications that allow users to edit command lines as they are typed in."
 PKG_BUILD_FLAGS="+pic"
