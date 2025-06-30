@@ -8,7 +8,7 @@ PKG_SHA256="140c2d0b899fcf853ee92b26373c9dc228dbcde0820a4246693f4328a27466fa"
 PKG_LICENSE="LGPL-2.1-or-later"
 PKG_SITE="http://www.gtk.org/"
 PKG_URL="https://ftp.gnome.org/pub/gnome/sources/gdk-pixbuf/${PKG_VERSION:0:4}/gdk-pixbuf-${PKG_VERSION}.tar.xz"
-PKG_DEPENDS_TARGET="toolchain glib libjpeg-turbo libpng jasper shared-mime-info tiff"
+PKG_DEPENDS_TARGET="toolchain glib glycin libjpeg-turbo libpng jasper shared-mime-info tiff"
 PKG_DEPENDS_CONFIG="shared-mime-info"
 PKG_LONGDESC="GdkPixbuf is a a GNOME library for image loading and manipulation."
 
@@ -25,10 +25,12 @@ pre_configure_target() {
                          -Dman=false \
                          -Drelocatable=false \
                          -Dinstalled_tests=false \
-                         -Dglycin=disabled \
+                         -Dglycin=enabled \
                          -Dtests=false"
 
   if [ "${DISPLAYSERVER}" != "x11" ]; then
     PKG_MESON_OPTS_TARGET+=" -Dbuiltin_loaders=all"
   fi
+
+  export PKG_CONFIG_PATH="$(get_install_dir glycin)/usr/lib/pkgconfig:$(get_install_dir libseccomp)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
 }
