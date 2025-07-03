@@ -1,0 +1,45 @@
+From 47f234390bb796209532c80207f971c2b716c00d Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 22 Jun 2025 14:23:07 +0000
+Subject: [PATCH 1/2] mm.
+
+---
+ src/udisksdaemon.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/src/udisksdaemon.c b/src/udisksdaemon.c
+index cdb9e647..a78fd937 100644
+--- a/src/udisksdaemon.c
++++ b/src/udisksdaemon.c
+@@ -323,7 +323,9 @@ udisks_daemon_constructed (GObject *object)
+   BDPluginSpec part_plugin = {BD_PLUGIN_PART, NULL};
+   BDPluginSpec swap_plugin = {BD_PLUGIN_SWAP, NULL};
+   BDPluginSpec loop_plugin = {BD_PLUGIN_LOOP, NULL};
++#ifdef HAVE_MDRAID
+   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
++#endif
+   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
+   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
+   BDPluginSpec nvme_plugin = {BD_PLUGIN_NVME, NULL};
+@@ -331,8 +333,16 @@ udisks_daemon_constructed (GObject *object)
+   /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
+      Additional plugins are required by various modules, but they make sure
+      plugins are loaded themselves. */
+-  BDPluginSpec *plugins[] = {&part_plugin, &swap_plugin, &loop_plugin, &mdraid_plugin,
+-                             &fs_plugin, &crypto_plugin, &nvme_plugin, NULL};
++  BDPluginSpec *plugins[] = {&part_plugin,
++                             &swap_plugin,
++                             &loop_plugin,
++#ifdef HAVE_MDRAID
++                             &mdraid_plugin,
++#endif
++                             &fs_plugin,
++                             &crypto_plugin,
++                             &nvme_plugin,
++                             NULL};
+   BDPluginSpec **plugin_p = NULL;
+   error = NULL;
+ 
+-- 
+2.43.0
+
