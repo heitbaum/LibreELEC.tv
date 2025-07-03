@@ -1,0 +1,36 @@
+From d5d9b4f76a74b2ccf6bfc6cd1abffa75a23db0e1 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 22 Jun 2025 14:23:59 +0000
+Subject: [PATCH 2/2] c
+
+---
+ src/udisksdaemon.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/udisksdaemon.c b/src/udisksdaemon.c
+index a78fd937..1f344f66 100644
+--- a/src/udisksdaemon.c
++++ b/src/udisksdaemon.c
+@@ -327,7 +327,9 @@ udisks_daemon_constructed (GObject *object)
+   BDPluginSpec mdraid_plugin = {BD_PLUGIN_MDRAID, NULL};
+ #endif
+   BDPluginSpec fs_plugin = {BD_PLUGIN_FS, NULL};
++#ifdef HAVE_CRYPTO
+   BDPluginSpec crypto_plugin = {BD_PLUGIN_CRYPTO, NULL};
++#endif
+   BDPluginSpec nvme_plugin = {BD_PLUGIN_NVME, NULL};
+ 
+   /* The core daemon needs the part, swap, loop, mdraid, fs and crypto plugins.
+@@ -340,7 +342,9 @@ udisks_daemon_constructed (GObject *object)
+                              &mdraid_plugin,
+ #endif
+                              &fs_plugin,
++#ifdef HAVE_CRYPTO
+                              &crypto_plugin,
++#endif
+                              &nvme_plugin,
+                              NULL};
+   BDPluginSpec **plugin_p = NULL;
+-- 
+2.43.0
+
