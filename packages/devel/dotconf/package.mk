@@ -1,6 +1,6 @@
 PKG_NAME="dotconf"
-PKG_VERSION="1.3"
-PKG_SHA256="7f1ecf40de1ad002a065a321582ed34f8c14242309c3547ad59710ae3c805653"
+PKG_VERSION="1.4.1"
+PKG_SHA256="5922c46cacf99b2ecc4853d28a2bda4a489292e73276e604bd9cba29dfca892d"
 PKG_LICENSE="LGPL-2.1"
 PKG_SITE="https://github.com/williamh"
 PKG_URL="https://github.com/williamh/dotconf/archive/refs/tags/v${PKG_VERSION}.tar.gz"
