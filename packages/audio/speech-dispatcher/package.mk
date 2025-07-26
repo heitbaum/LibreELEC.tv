@@ -1,6 +1,6 @@
 PKG_NAME="speech-dispatcher"
-PKG_VERSION="0.11.4"
-PKG_SHA256="8c09221bb72d9db5c89cfd7b919771832b86c3a3772d645601696494edf566b9"
+PKG_VERSION="0.12.1"
+PKG_SHA256="b14a5238d287d2dcce4dd42bbd66ca65fa228e7e683708267f7b34036f7ba4b4"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://freebsoft.org/speechd"
 PKG_URL="https://github.com/brailcom/speechd/releases/download/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.gz"
