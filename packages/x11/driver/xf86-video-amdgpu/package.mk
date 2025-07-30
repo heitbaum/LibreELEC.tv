@@ -3,19 +3,18 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xf86-video-amdgpu"
-PKG_VERSION="23.0.0"
-PKG_SHA256="4f04f0ea66f3ced0dcc58f617409860163a19c4e8c285cfb5285f36ba09cc061"
+PKG_VERSION="25.0.0"
+PKG_SHA256="7653cead024a6820ed1139958503278d78b4b3f80befcacf54ce87a5199b0ce2"
 PKG_ARCH="x86_64"
 PKG_LICENSE="OSS"
 PKG_SITE="https://www.x.org/wiki/RadeonFeature/"
 PKG_URL="https://www.x.org/archive/individual/driver/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="toolchain libdrm xorg-server"
 PKG_LONGDESC="Xorg driver for AMD Radeon GPUs using the amdgpu kernel driver."
-PKG_TOOLCHAIN="autotools"
 
-PKG_CONFIGURE_OPTS_TARGET="--enable-udev \
-                           --enable-glamor \
-                           --with-xorg-module-dir=${XORG_PATH_MODULES}"
+PKG_MESON_OPTS_TARGET="-Dudev=enabled \
+                       -Dglamor=enabled \
+                       -Dmoduledir=${XORG_PATH_MODULES}"
 
 post_makeinstall_target() {
   rm -r ${INSTALL}/usr/share
