@@ -20,15 +20,18 @@ pre_configure_host() {
 
 configure_host() {
 
-  mkdir -p ${PKG_BUILD}/targets
+  #mkdir -p ${PKG_BUILD}/targets
+  mkdir -p ${TOOLCHAIN}/lib/rustlib
 
   case "${TARGET_ARCH}" in
     "arm")
       # the arm target is special because we specify the subarch. ie armv8a
-      cp -a ${PKG_DIR}/targets/arm-libreelec-linux-gnueabihf.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
+      #cp -a ${PKG_DIR}/targets/arm-libreelec-linux-gnueabihf.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
+      cp -a ${PKG_DIR}/targets/arm-libreelec-linux-gnueabihf.json ${TOOLCHAIN}/lib/rustlib/${TARGET_NAME}.json
       ;;
     "aarch64" | "x86_64")
-      cp -a ${PKG_DIR}/targets/${TARGET_NAME}.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
+      #cp -a ${PKG_DIR}/targets/${TARGET_NAME}.json ${PKG_BUILD}/targets/${TARGET_NAME}.json
+      cp -a ${PKG_DIR}/targets/${TARGET_NAME}.json ${TOOLCHAIN}/lib/rustlib/${TARGET_NAME}.json
       ;;
   esac
 
@@ -113,7 +116,9 @@ make_host() {
   unset CPPFLAGS
   unset LDFLAGS
 
-  export RUST_TARGET_PATH="${PKG_BUILD}/targets/"
+  mkdir -p ${TOOLCHAIN}/lib/rustlib
+  #export RUST_TARGET_PATH="${PKG_BUILD}/targets/"
+  export RUST_TARGET_PATH="${TOOLCHAIN}/lib/rustlib"
   export HOST_CMAKE="${TOOLCHAIN}/bin/cmake"
   export HOST_CMAKE_TOOLCHAIN_FILE="${CMAKE_CONF}"
 
@@ -127,5 +132,5 @@ makeinstall_host() {
   mkdir -p ${TOOLCHAIN}/lib/rustlib
     cp -a build/${RUST_HOST}/stage2/lib/* ${TOOLCHAIN}/lib
 
-    cp -a ${PKG_BUILD}/targets/*.json ${TOOLCHAIN}/lib/rustlib/
+    #cp -a ${PKG_BUILD}/targets/*.json ${TOOLCHAIN}/lib/rustlib/
 }
