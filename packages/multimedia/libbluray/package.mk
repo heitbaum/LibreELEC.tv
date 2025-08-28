@@ -25,7 +25,7 @@ PKG_MESON_OPTS_TARGET="-Ddefault_library=shared \
                        -Denable_devtools=false \
                        -Denable_examples=false \
                        -Dbdj_jar=disabled \
-                       -Djava9=false \
+                       -Djava9=true \
                        -Dembed_udfread=true \
                        -Dfontconfig=enabled \
                        -Dfreetype=enabled \
