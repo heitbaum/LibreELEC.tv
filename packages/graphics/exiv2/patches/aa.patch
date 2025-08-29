@@ -1,0 +1,29 @@
+--- a/meson.build	2025-04-30 04:59:36.106230126 +0000
++++ b/meson.build	2025-04-30 05:29:57.446264929 +0000
+@@ -6,13 +6,18 @@
+   default_options: ['warning_level=0', 'cpp_std=c++20'],
+ )
+ 
++exiv_api = configuration_data()
++
+ cpp = meson.get_compiler('cpp')
+ if host_machine.system() == 'windows' and get_option('default_library') != 'static'
+   cargs = '-DEXIV2API=__declspec(dllexport)'
++  exiv_api.set('EXIV2API', '__declspec(dllexport)') 
+ elif cpp.has_function_attribute('visibility:default')
+   cargs = '-DEXIV2API=__attribute__((visibility("default")))'
++  exiv_api.set('EXIV2API', '__attribute__((visibility("default")))') 
+ else
+   cargs = '-DEXIV2API='
++  exiv_api.set('EXIV2API', '') 
+ endif
+ 
+ if host_machine.system() == 'windows'
+@@ -23,8 +28,7 @@
+   endif
+ endif
+ 
+-exiv_api = configuration_data()
+ exiv_conf = configure_file(output: 'exiv2lib_export.h', configuration: exiv_api)
+ 
+ cdata = configuration_data()
