@@ -13,7 +13,7 @@ diff --git a/no-exit.patch b/no-exit.patch
 index cc3e048b..8caf3f53 100644
 --- a/no-exit.patch
 +++ b/no-exit.patch
-@@ -588,9 +588,9 @@ index e199178..afd931b 100644
+@@ -575,9 +575,9 @@ index e199178..afd931b 100644
       const edOptions* g_ops)
   {
  @@ -559,7 +569,7 @@ edOutput(const char* filename, const XmlEdAction* ops, int ops_count,
@@ -24,7 +24,7 @@ index cc3e048b..8caf3f53 100644
  -        exit(EXIT_BAD_FILE);
  +        return EXIT_BAD_FILE;
       }
-@@ -658,7 +658,7 @@ index e199178..afd931b 100644
+@@ -645,7 +645,7 @@ index e199178..afd931b 100644
           if (arg[0] == '-')
           {
               if (ops_count >= max_ops_count)
@@ -33,7 +33,7 @@ index cc3e048b..8caf3f53 100644
   
       if (i >= argc)
       {
-@@ -682,7 +682,6 @@ index e199178..afd931b 100644
+@@ -669,7 +669,6 @@ index e199178..afd931b 100644
       xmlFree(ops);
       cleanupNSArr(ns_arr);
       xmlCleanupParser();
