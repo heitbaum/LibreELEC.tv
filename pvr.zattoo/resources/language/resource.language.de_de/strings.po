@@ -198,6 +198,12 @@ msgctxt "#30116"
 msgid "1&1 TV"
 msgstr "1&1 TV"
 
+#. Selection value for setting defined with id #30099
+#: pvr.zattoo/resources/settings.xml
+msgctxt "#30117"
+msgid "Galaxus TV"
+msgstr "Galaxus TV"
+
 #. Notification message to show on screen if username or password not set
 #: src/client.cpp
 msgctxt "#30200"
