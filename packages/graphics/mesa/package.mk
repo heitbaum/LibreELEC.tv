@@ -108,21 +108,6 @@ else
   PKG_MESON_OPTS_TARGET+=" -Dvulkan-drivers="
 fi
 
-pre_configure_host() {
-  if listcontains "${BUILD_REUSABLE}" "(all|mesa:host)"; then
-    case "${MACHINE_HARDWARE_NAME}" in
-      "aarch64")
-        # build with -march=armv8-a for greater host compatibility
-        CFLAGS=$(echo ${CFLAGS} | sed -e "s|-march=native|-march=armv8-a|")
-        ;;
-      "x86_64")
-        # build with -march=x86-64 for greater host compatibility
-        CFLAGS=$(echo ${CFLAGS} | sed -e "s|-march=native|-march=x86-64|")
-        ;;
-    esac
-  fi
-}
-
 makeinstall_host() {
   host_files="src/compiler/clc/mesa_clc src/compiler/spirv/vtn_bindgen2 src/panfrost/clc/panfrost_compile"
 
