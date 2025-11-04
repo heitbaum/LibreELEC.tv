@@ -18,7 +18,6 @@ PKG_ADDON_NAME="System Tools"
 PKG_ADDON_TYPE="xbmc.python.script"
 
 PKG_DEPENDS_TARGET="toolchain \
-                    7-zip \
                     autossh \
                     bottom \
                     diffutils \
@@ -64,9 +63,6 @@ fi
 
 addon() {
   mkdir -p ${ADDON_BUILD}/${PKG_ADDON_ID}/{bin,data,lib,lib.private}
-
-    # 7-zip
-    cp -P $(get_install_dir 7-zip)/usr/bin/7zz ${ADDON_BUILD}/${PKG_ADDON_ID}/bin
 
     # autossh
     cp -P $(get_install_dir autossh)/usr/bin/autossh ${ADDON_BUILD}/${PKG_ADDON_ID}/bin
