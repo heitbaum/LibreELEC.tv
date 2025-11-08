@@ -12,6 +12,7 @@ PKG_DEPENDS_HOST="ccache:host cmake:host"
 PKG_DEPENDS_TARGET="cmake:host gcc:host"
 PKG_LONGDESC="zlib data compression library for the next generation systems"
 PKG_TOOLCHAIN="cmake-make"
+PKG_BUILD_FLAGS="+pic"
 
 PKG_CMAKE_OPTS_HOST="-DZLIB_COMPAT=ON"
 
