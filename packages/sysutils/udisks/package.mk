@@ -2,8 +2,8 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="udisks"
-PKG_VERSION="2.11.0"
-PKG_SHA256="0bf30151fe8d9d2fb59b57f6630739dfbbd16417dee69ec57d43b37335bd649a"
+PKG_VERSION="2.10.1"
+PKG_SHA256="b75734ccf602540dedb4068bec206adcb508a4c003725e117ae8f994d92d8ece"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="https://storaged.org"
 PKG_URL="https://github.com/storaged-project/udisks/releases/download/${PKG_NAME}-${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
