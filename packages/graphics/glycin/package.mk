@@ -2,8 +2,8 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="glycin"
-PKG_VERSION="2.0.5"
-PKG_SHA256="3caae32bbf3508830d0d450749d825698ff0ebd41a174033c533f4d924b2ca5b"
+PKG_VERSION="2.0.7"
+PKG_SHA256="05ebdd3c038cdc987d675cb802753d2b0c13516d8d87f4486e825ce1aea3519a"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.gtk.org/"
 PKG_URL="https://gitlab.gnome.org/GNOME/glycin/-/archive/${PKG_VERSION}/glycin-${PKG_VERSION}.tar.bz2"
