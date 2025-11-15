@@ -1,0 +1,45 @@
+From 54700b0a68bcb1ef439644c43ab5c4d65d5e51b0 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Fri, 5 Sep 2025 16:29:38 +0000
+Subject: [PATCH 11/33] spi: sunxi: wait for TX/RX fifo reset done
+
+Once reset SPI TX or RX fifo, the underlying hardware need to take
+some time to actually settle down, the two bits will automatically
+clear to 0, so use a poll mechanism to check status bits to make sure
+it's done correctly.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ drivers/spi/spi-sunxi.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/spi/spi-sunxi.c b/drivers/spi/spi-sunxi.c
+index e00532a371b..cf41905c7b7 100644
+--- a/drivers/spi/spi-sunxi.c
++++ b/drivers/spi/spi-sunxi.c
+@@ -347,7 +347,7 @@ static int sun4i_spi_xfer(struct udevice *dev, unsigned int bitlen,
+ 	struct sun4i_spi_priv *priv = dev_get_priv(bus);
+ 	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
+ 
+-	u32 len = bitlen / 8;
++	u32 rst, val, len = bitlen / 8;
+ 	u8 nbytes;
+ 	int ret;
+ 
+@@ -363,8 +363,11 @@ static int sun4i_spi_xfer(struct udevice *dev, unsigned int bitlen,
+ 		sun4i_spi_set_cs(bus, slave_plat->cs[0], true);
+ 
+ 	/* Reset FIFOs */
+-	setbits_le32(SPI_REG(priv, SPI_FCR), SPI_BIT(priv, SPI_FCR_RF_RST) |
+-		     SPI_BIT(priv, SPI_FCR_TF_RST));
++	rst = SPI_BIT(priv, SPI_FCR_RF_RST) | SPI_BIT(priv, SPI_FCR_TF_RST);
++	setbits_le32(SPI_REG(priv, SPI_FCR), rst);
++	ret = readl_poll_timeout(SPI_REG(priv, SPI_FCR), val, !(rst & val), 20);
++	if (ret)
++		return -EBUSY;
+ 
+ 	while (len) {
+ 		/* Setup the transfer now... */
+-- 
+2.53.0
+
