@@ -1,0 +1,1533 @@
+From 9dfe63de94d536db65e05af8545aaced5705becb Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Tue, 14 Apr 2026 07:16:21 +0000
+Subject: [PATCH 27/33] pci: sunxi: enable PCIe Root-Complex support for A733
+ SoC
+
+Allwinner A733 SoC has PCIe Controllers which support Root-Complex mode,
+Add this driver to enable it.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ drivers/pci/Kconfig           |   9 +
+ drivers/pci/Makefile          |   1 +
+ drivers/pci/pcie-sunxi-plat.c | 467 ++++++++++++++++++++++++++++++
+ drivers/pci/pcie-sunxi.h      | 475 +++++++++++++++++++++++++++++++
+ drivers/pci/pcie_sunxi_rc.c   | 522 ++++++++++++++++++++++++++++++++++
+ 5 files changed, 1474 insertions(+)
+ create mode 100644 drivers/pci/pcie-sunxi-plat.c
+ create mode 100644 drivers/pci/pcie-sunxi.h
+ create mode 100644 drivers/pci/pcie_sunxi_rc.c
+
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 8fc57895a78..af22f9863ff 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -467,4 +467,13 @@ config PCIE_DW_IMX
+ 	  Say Y here if you want to enable DW PCIe controller support on
+ 	  iMX SoCs.
+ 
++config PCIE_SUNXI
++	bool "Allwinner PCIe controller support"
++	depends on ARCH_SUNXI
++	select REGMAP
++	select SYSCON
++	help
++	  Say Y here if you want to enable DW PCIe controller support on
++	  Allwinner SoCs.
++
+ endif
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 98f3c226f63..52a39f94637 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -57,3 +57,4 @@ obj-$(CONFIG_PCIE_XILINX_NWL) += pcie-xilinx-nwl.o
+ obj-$(CONFIG_PCIE_PLDA_COMMON) += pcie_plda_common.o
+ obj-$(CONFIG_PCIE_STARFIVE_JH7110) += pcie_starfive_jh7110.o
+ obj-$(CONFIG_PCIE_DW_IMX) += pcie_dw_imx.o
++obj-$(CONFIG_PCIE_SUNXI) += pcie_sunxi_rc.o pcie-sunxi-plat.o
+diff --git a/drivers/pci/pcie-sunxi-plat.c b/drivers/pci/pcie-sunxi-plat.c
+new file mode 100644
+index 00000000000..266d67b8442
+--- /dev/null
++++ b/drivers/pci/pcie-sunxi-plat.c
+@@ -0,0 +1,467 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * (C) Copyright 2020 - 2024
++ * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
++ *
++ * Allwinner PCIE plat driver
++ */
++
++#include <linux/types.h>
++#include <linux/delay.h>
++#include <asm/arch/clock.h>
++#include <power/regulator.h>
++//#include <sunxi_power/axp.h>
++#include <dm.h>
++//#include <sys_config.h>
++#include <sunxi_gpio.h>
++#include "pci.h"
++#include "pcie-sunxi.h"
++
++/* PCIE */
++#define ITS_PCIE_RST                    16
++#define ITS_PCIE_CLK_GATING_BIT 1
++#define PCIE_AUX_CLK_GATING_BIT 31
++#define PCIE_AXI_SLV_GATING_BIT 31
++#define PCIE_BRG_REG_RST                17
++#define PCIE_BRG_REG_PWRUP_RST  16
++
++extern struct sunxi_pcie_port pcie_port;
++struct sunxi_pcie pci;
++
++/* Indexed by PCI_EXP_LNKCAP_SLS, PCI_EXP_LNKSTA_CLS */
++const unsigned char pcie_link_speed[] = {
++	PCI_SPEED_UNKNOWN,		/* 0 */
++	PCIE_SPEED_2_5GT,		/* 1 */
++	PCIE_SPEED_5_0GT,		/* 2 */
++	PCIE_SPEED_8_0GT,		/* 3 */
++	PCIE_SPEED_16_0GT,		/* 4 */
++	PCIE_SPEED_32_0GT,		/* 5 */
++};
++
++#define SUNXI_PCIE_CCM_BASE (0x2002000 +0x570)
++struct sunxi_pcie_ccm_reg {
++	u32 resv0;
++	u32 its_bgr_reg; // 0x0574
++	u32 resv[0x382];
++	u32 pcie_aux_clk_reg;
++	u32 pcie_axi_slv_clk_reg;
++	u32 resv1;
++	u32 pcie_bgr_reg;
++};
++
++int sunxi_pcie_cfg_write(void __iomem *addr, int size, ulong val)
++{
++	if ((uintptr_t)addr & (size - 1))
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	if (size == 4)
++		writel(val, addr);
++	else if (size == 2)
++		writew(val, addr);
++	else if (size == 1)
++		writeb(val, addr);
++	else
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++int sunxi_pcie_cfg_read(void __iomem *addr, int size, ulong *val)
++{
++	if ((uintptr_t)addr & (size - 1)) {
++		*val = 0;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
++
++	if (size == 4) {
++		*val = readl(addr);
++	} else if (size == 2) {
++		*val = readw(addr);
++	} else if (size == 1) {
++		*val = readb(addr);
++	} else {
++		*val = 0;
++		return PCIBIOS_BAD_REGISTER_NUMBER;
++	}
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
++void sunxi_pcie_writel(u32 val, struct sunxi_pcie *pcie, u32 offset)
++{
++	writel(val, pcie->app_base + offset);
++}
++
++u32 sunxi_pcie_readl(struct sunxi_pcie *pcie, u32 offset)
++{
++	return readl(pcie->app_base + offset);
++}
++
++static void sunxi_pcie_write_dbi(struct sunxi_pcie *pci, u32 reg, size_t size, u32 val)
++{
++	int ret;
++
++	ret = sunxi_pcie_cfg_write(pci->dbi_base + reg, size, val);
++	if (ret)
++		printf("Write DBI address failed\n");
++}
++
++static ulong sunxi_pcie_read_dbi(struct sunxi_pcie *pci, u32 reg, size_t size)
++{
++	int ret;
++	ulong val;
++
++	ret = sunxi_pcie_cfg_read(pci->dbi_base + reg, size, &val);
++	if (ret)
++		printf("Read DBI address failed\n");
++
++	return val;
++}
++
++void sunxi_pcie_writel_dbi(struct sunxi_pcie *pci, u32 reg, u32 val)
++{
++	sunxi_pcie_write_dbi(pci, reg, 0x4, val);
++}
++
++u32 sunxi_pcie_readl_dbi(struct sunxi_pcie *pci, u32 reg)
++{
++	return sunxi_pcie_read_dbi(pci, reg, 0x4);
++}
++
++void sunxi_pcie_writew_dbi(struct sunxi_pcie *pci, u32 reg, u16 val)
++{
++	sunxi_pcie_write_dbi(pci, reg, 0x2, val);
++}
++
++u16 sunxi_pcie_readw_dbi(struct sunxi_pcie *pci, u32 reg)
++{
++	return sunxi_pcie_read_dbi(pci, reg, 0x2);
++}
++
++void sunxi_pcie_writeb_dbi(struct sunxi_pcie *pci, u32 reg, u8 val)
++{
++	sunxi_pcie_write_dbi(pci, reg, 0x1, val);
++}
++
++u8 sunxi_pcie_readb_dbi(struct sunxi_pcie *pci, u32 reg)
++{
++	return sunxi_pcie_read_dbi(pci, reg, 0x1);
++}
++
++void sunxi_pcie_dbi_ro_wr_en(struct sunxi_pcie *pci)
++{
++	u32 val;
++
++	val = sunxi_pcie_readl_dbi(pci, PCIE_MISC_CONTROL_1_CFG);
++	val |= (0x1 << 0);
++	sunxi_pcie_writel_dbi(pci, PCIE_MISC_CONTROL_1_CFG, val);
++}
++
++void sunxi_pcie_dbi_ro_wr_dis(struct sunxi_pcie *pci)
++{
++	u32 val;
++
++	val = sunxi_pcie_readl_dbi(pci, PCIE_MISC_CONTROL_1_CFG);
++	val &= ~(0x1 << 0);
++	sunxi_pcie_writel_dbi(pci, PCIE_MISC_CONTROL_1_CFG, val);
++}
++
++void sunxi_pcie_plat_ltssm_enable(struct sunxi_pcie *pcie)
++{
++	u32 val;
++
++	val = sunxi_pcie_readl(pcie, PCIE_LTSSM_CTRL);
++	val |= PCIE_LINK_TRAINING;
++	sunxi_pcie_writel(val, pcie, PCIE_LTSSM_CTRL);
++}
++
++void sunxi_pcie_plat_ltssm_disable(struct sunxi_pcie *pcie)
++{
++	u32 val;
++
++	val = sunxi_pcie_readl(pcie, PCIE_LTSSM_CTRL);
++	val &= ~PCIE_LINK_TRAINING;
++	sunxi_pcie_writel(val, pcie, PCIE_LTSSM_CTRL);
++}
++
++static u8 __sunxi_pcie_find_next_cap(struct sunxi_pcie *pci, u8 cap_ptr,
++						u8 cap)
++{
++	u8 cap_id, next_cap_ptr;
++	u16 reg;
++
++	if (!cap_ptr)
++		return 0;
++
++	reg = sunxi_pcie_readw_dbi(pci, cap_ptr);
++	cap_id = (reg & CAP_ID_MASK);
++
++	if (cap_id > PCI_CAP_ID_MAX)
++		return 0;
++
++	if (cap_id == cap)
++		return cap_ptr;
++
++	next_cap_ptr = (reg & NEXT_CAP_PTR_MASK) >> 8;
++	return __sunxi_pcie_find_next_cap(pci, next_cap_ptr, cap);
++}
++
++static u8 sunxi_pcie_plat_find_capability(struct sunxi_pcie *pci, u8 cap)
++{
++	u8 next_cap_ptr;
++	u16 reg;
++
++	reg = sunxi_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
++	next_cap_ptr = (reg & CAP_ID_MASK);
++
++	return __sunxi_pcie_find_next_cap(pci, next_cap_ptr, cap);
++}
++
++static void sunxi_pcie_plat_set_link_cap(struct sunxi_pcie *pci, u32 link_gen)
++{
++	u32 cap, ctrl2, link_speed = 0;
++
++	u8 offset = sunxi_pcie_plat_find_capability(pci, PCI_CAP_ID_EXP);
++
++	cap = sunxi_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
++	ctrl2 = sunxi_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCTL2);
++	ctrl2 &= ~PCI_EXP_LNKCTL2_TLS;
++
++	switch (pcie_link_speed[link_gen]) {
++	case PCIE_SPEED_2_5GT:
++		link_speed = PCI_EXP_LNKCTL2_TLS_2_5GT;
++		break;
++	case PCIE_SPEED_5_0GT:
++		link_speed = PCI_EXP_LNKCTL2_TLS_5_0GT;
++		break;
++	case PCIE_SPEED_8_0GT:
++		link_speed = PCI_EXP_LNKCTL2_TLS_8_0GT;
++		break;
++	case PCIE_SPEED_16_0GT:
++		link_speed = PCI_EXP_LNKCTL2_TLS_16_0GT;
++		break;
++	default:
++		/* Use hardware capability */
++		// link_speed = FIELD_GET(PCI_EXP_LNKCAP_SLS, cap);
++		// ctrl2 &= ~PCI_EXP_LNKCTL2_HASD;
++		break;
++	}
++
++	sunxi_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCTL2, ctrl2 | link_speed);
++
++	cap &= ~((u32)PCI_EXP_LNKCAP_SLS);
++	sunxi_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, cap | link_speed);
++}
++
++void sunxi_pcie_plat_set_rate(struct sunxi_pcie *pci)
++{
++	u32 val;
++
++	sunxi_pcie_plat_set_link_cap(pci, pci->link_gen);
++	/* set the number of lanes */
++	val = sunxi_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
++	val &= ~PORT_LINK_MODE_MASK;
++	switch (pci->lanes) {
++	case 1:
++		val |= PORT_LINK_MODE_1_LANES;
++		break;
++	case 2:
++		val |= PORT_LINK_MODE_2_LANES;
++		break;
++	case 4:
++		val |= PORT_LINK_MODE_4_LANES;
++		break;
++	default:
++		printf("num-lanes %u: invalid value\n", pci->lanes);
++		return;
++	}
++	sunxi_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
++
++	/* set link width speed control register */
++	val = sunxi_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
++	switch (pci->lanes) {
++	case 1:
++		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
++		break;
++	case 2:
++		val |= PORT_LOGIC_LINK_WIDTH_2_LANES;
++		break;
++	case 4:
++		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
++		break;
++	}
++	sunxi_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++}
++
++static int sunxi_pcie_plat_power_on(struct sunxi_pcie *pci)
++{
++	int ret;
++
++	ret = device_get_supply_regulator(pci->dev, "pcie1v8-supply",
++					  &pci->pcie1v8_supply);
++
++	if (ret && ret != -ENOENT) {
++		printf("failed to get vpcie1v2 supply (ret=%d)\n", ret);
++		return ret;
++	}
++
++	ret = device_get_supply_regulator(pci->dev, "pcie3v3-supply",
++					  &pci->pcie3v3_supply);
++	if (ret && ret != -ENOENT) {
++		printf("failed to get vpcie3v3 supply (ret=%d)\n", ret);
++		return ret;
++	}
++
++	regulator_set_value(pci->pcie1v8_supply, 1800000);
++
++	regulator_set_value(pci->pcie3v3_supply, 3300000);
++
++	udelay(2000);
++	return 0;
++}
++
++static void sunxi_pcie_plat_power_off(struct sunxi_pcie *pci)
++{
++	if (pci->pcie3v3_supply)
++		regulator_set_enable(pci->pcie3v3_supply, false);
++	if (pci->pcie1v8_supply)
++		regulator_set_enable(pci->pcie1v8_supply, false);
++}
++
++static int sunxi_pcie_plat_clk_setup(struct sunxi_pcie *pci)
++{
++	unsigned long reg_value = 0;
++	struct sunxi_pcie_ccm_reg *const ccm =
++		(struct sunxi_pcie_ccm_reg *)SUNXI_PCIE_CCM_BASE;
++
++	if (pci->drvdata->need_pcie_rst) {
++		reg_value = readl(&ccm->pcie_bgr_reg);
++		reg_value |= BIT(PCIE_BRG_REG_RST) | BIT(PCIE_BRG_REG_PWRUP_RST);
++		writel(reg_value, &ccm->pcie_bgr_reg);
++	}
++
++	reg_value = readl(&ccm->pcie_aux_clk_reg);
++	reg_value |= BIT(PCIE_AUX_CLK_GATING_BIT);
++	writel(reg_value, &ccm->pcie_aux_clk_reg);
++
++#ifndef CONFIG_MACH_SUN55IW3
++	if (pci->drvdata->has_pcie_slv_clk) {
++		reg_value = readl(&ccm->pcie_axi_slv_clk_reg);
++		if (pci->drvdata->pcie_slv_clk_400m)
++			reg_value |= (2 << 24);
++		reg_value |= BIT(PCIE_AXI_SLV_GATING_BIT);
++		writel(reg_value, &ccm->pcie_axi_slv_clk_reg);
++	}
++
++	if (pci->drvdata->has_pcie_its_clk) {
++		reg_value = readl(&ccm->its_bgr_reg);
++		reg_value |= BIT(ITS_PCIE_RST) | BIT(ITS_PCIE_CLK_GATING_BIT);
++		writel(reg_value, &ccm->its_bgr_reg);
++	}
++#endif
++
++	return 0;
++}
++
++static void sunxi_pcie_plat_clk_exit(struct sunxi_pcie *pci)
++{
++	unsigned long reg_value = 0;
++	struct sunxi_pcie_ccm_reg *const ccm =
++		(struct sunxi_pcie_ccm_reg *)SUNXI_PCIE_CCM_BASE;
++
++#ifndef CONFIG_MACH_SUN55IW3
++	if (pci->drvdata->has_pcie_its_clk) {
++		reg_value = readl(&ccm->its_bgr_reg);
++		reg_value &= ~(BIT(ITS_PCIE_RST) | BIT(ITS_PCIE_CLK_GATING_BIT));
++		writel(reg_value, &ccm->its_bgr_reg);
++	}
++
++	if (pci->drvdata->has_pcie_slv_clk) {
++		reg_value = readl(&ccm->pcie_axi_slv_clk_reg);
++		reg_value &= ~BIT(PCIE_AXI_SLV_GATING_BIT);
++		writel(reg_value, &ccm->pcie_axi_slv_clk_reg);
++	}
++#endif
++
++	reg_value = readl(&ccm->pcie_aux_clk_reg);
++	reg_value &= ~BIT(PCIE_AUX_CLK_GATING_BIT);
++	writel(reg_value, &ccm->pcie_aux_clk_reg);
++
++	if (pci->drvdata->need_pcie_rst) {
++		reg_value = readl(&ccm->pcie_bgr_reg);
++		reg_value &= ~(BIT(PCIE_BRG_REG_RST) | BIT(PCIE_BRG_REG_PWRUP_RST));
++		writel(reg_value, &ccm->pcie_bgr_reg);
++	}
++}
++
++static int sunxi_pcie_plat_combo_phy_init(struct sunxi_pcie *pci)
++{
++	int ret;
++
++	ret = generic_phy_init(pci->phy);
++	if (ret) {
++		printf("fail to init phy, err %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++#if 0
++static void sunxi_pcie_plat_combo_phy_deinit(struct sunxi_pcie *pci)
++{
++	generic_phy_exit(pci->phy);
++}
++#endif
++
++int sunxi_pcie_plat_hw_init(struct udevice *dev)
++{
++	struct sunxi_pcie *pci = dev_get_priv(dev);
++	int ret;
++
++	ret = sunxi_pcie_plat_power_on(pci);
++	if (ret)
++		return ret;
++
++	ret = sunxi_pcie_plat_clk_setup(pci);
++	if (ret)
++		goto err0;
++
++	ret = sunxi_pcie_plat_combo_phy_init(pci);
++	if (ret)
++		goto err1;
++
++	return 0;
++
++err1:
++	sunxi_pcie_plat_clk_exit(pci);
++err0:
++	sunxi_pcie_plat_power_off(pci);
++
++	return ret;
++}
++
++void sunxi_pcie_plat_init(struct udevice *dev)
++{
++	struct sunxi_pcie *pci = dev_get_priv(dev);
++	pci->dbi_base = (void *)SUNXI_PCIE_DBI_ADDR;
++
++	pci->app_base = pci->dbi_base + PCIE_USER_DEFINED_REGISTER;
++
++	pci->lanes = 1;
++
++	pci->pcie_port.dbi_base = pci->dbi_base;
++	pci->pcie_port.cfg0_base = SUNXI_PCIE_CFG_ADDR;
++	pci->pcie_port.cfg0_size = SUNXI_PCIE_CFG_SIZE;
++	pci->pcie_port.io_base = SUNXI_PCIE_IO_ADDR;
++	pci->pcie_port.io_size = SUNXI_PCIE_IO_SIZE;
++	pci->pcie_port.mem_base = SUNXI_PCIE_MEM_ADDR;
++	pci->pcie_port.mem_size = SUNXI_PCIE_MEM_SIZE;
++	pci->pcie_port.va_cfg0_base = (void *)pci->pcie_port.cfg0_base;
++	pci->pcie_port.cpu_pcie_addr_quirk = pci->drvdata->cpu_pcie_addr_quirk;
++	if (pci->pcie_port.cpu_pcie_addr_quirk) {
++		pci->pcie_port.cfg0_base -= PCIE_CPU_BASE;
++		pci->pcie_port.io_base   -= PCIE_CPU_BASE;
++	}
++}
+diff --git a/drivers/pci/pcie-sunxi.h b/drivers/pci/pcie-sunxi.h
+new file mode 100644
+index 00000000000..5adc96ccb95
+--- /dev/null
++++ b/drivers/pci/pcie-sunxi.h
+@@ -0,0 +1,475 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * (C) Copyright 2020 - 2024
++ * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
++ *
++ * Allwinner PCIe controller driver
++ */
++
++#ifndef _PCIE_SUNXI_H
++#define _PCIE_SUNXI_H
++
++#include <asm/io.h>
++#include <asm/gpio.h>
++#include <clk.h>
++#include <reset.h>
++#include <generic-phy.h>
++
++#define SUNXI_PCIE_MODULE_VERSION	"1.1.1"
++
++#define SUNXI_PCIE_BASE		0x06000000
++#define SUNXI_PCIE_DBI_ADDR	SUNXI_PCIE_BASE
++#define SUNXI_PCIE_CFG_ADDR	0x20000000
++#define SUNXI_PCIE_IO_ADDR	0x21000000
++#define SUNXI_PCIE_MEM_ADDR	0x22000000
++#define SUNXI_PCIE_ROOT_ADDR	0x20000000
++
++#define SUNXI_PCIE_DBI_SIZE	0x480000
++#define SUNXI_PCIE_CFG_SIZE	0x01000000
++#define SUNXI_PCIE_IO_SIZE	0x01000000
++#define SUNXI_PCIE_MEM_SIZE	0x07000000
++#define SUNXI_PCIE_ROOT_SIZE	0x01000000
++
++#define SUNXI_CFG_RW_SIZE 0x04
++
++#define PCIE_PORT_LINK_CONTROL			0x710
++#define PORT_LINK_MODE_MASK			(0x3f << 16)
++#define PORT_LINK_MODE_1_LANES			(0x1 << 16)
++#define PORT_LINK_MODE_2_LANES			(0x3 << 16)
++#define PORT_LINK_MODE_4_LANES			(0x7 << 16)
++#define PORT_LINK_LPBK_ENABLE		        (0x1 << 2)
++
++#define PCIE_LINK_WIDTH_SPEED_CONTROL		0x80C
++#define PORT_LOGIC_SPEED_CHANGE			(0x1 << 17)
++#define PORT_LOGIC_LINK_WIDTH_MASK		(0x1ff << 8)
++#define PORT_LOGIC_LINK_WIDTH_1_LANES		(0x1 << 8)
++#define PORT_LOGIC_LINK_WIDTH_2_LANES		(0x2 << 8)
++#define PORT_LOGIC_LINK_WIDTH_4_LANES		(0x4 << 8)
++
++#define PCIE_ATU_VIEWPORT			0x900
++#define PCIE_ATU_REGION_INBOUND			(0x1 << 31)
++#define PCIE_ATU_REGION_OUTBOUND		(0x0 << 31)
++#define PCIE_ATU_REGION_INDEX2			(0x2 << 0)
++#define PCIE_ATU_REGION_INDEX1			(0x1 << 0)
++#define PCIE_ATU_REGION_INDEX0			(0x0 << 0)
++
++#define PCIE_ATU_INDEX0				0x0
++#define PCIE_ATU_INDEX1				0x1
++#define PCIE_ATU_INDEX2				0x2
++#define PCIE_ATU_INDEX3				0x3
++#define PCIE_ATU_INDEX4				0x4
++#define PCIE_ATU_INDEX5				0x5
++#define PCIE_ATU_INDEX6				0x6
++#define PCIE_ATU_INDEX7				0x7
++
++#define PCIE_EP_REBAR_SIZE_32M			0x200
++
++#define PCIE_ATU_CR1_OUTBOUND(reg)		(0x300000 + ((reg) * 0x200))
++#define PCIE_ATU_TYPE_MEM			(0x0 << 0)
++#define PCIE_ATU_TYPE_IO			(0x2 << 0)
++#define PCIE_ATU_TYPE_CFG0			(0x4 << 0)
++#define PCIE_ATU_TYPE_CFG1			(0x5 << 0)
++#define PCIE_ATU_CR2_OUTBOUND(reg)		(0x300004 + ((reg) * 0x200))
++#define PCIE_ATU_DMA_BYPASS			BIT(27)
++#define PCIE_ATU_BAR_MODE_ENABLE		BIT(30)
++#define PCIE_ATU_ENABLE				BIT(31)
++
++#define PCIE_ATU_LOWER_BASE_OUTBOUND(reg)	(0x300008 + ((reg) * 0x200))
++#define PCIE_ATU_UPPER_BASE_OUTBOUND(reg)	(0x30000c + ((reg) * 0x200))
++#define PCIE_ATU_LIMIT_OUTBOUND(reg)		(0x300010 + ((reg) * 0x200))
++#define PCIE_ATU_LOWER_TARGET_OUTBOUND(reg)	(0x300014 + ((reg) * 0x200))
++#define PCIE_ATU_UPPER_TARGET_OUTBOUND(reg)	(0x300018 + ((reg) * 0x200))
++
++#define PCIE_ATU_CR1_INBOUND(reg)		(0x300100 + ((reg) * 0x200))
++#define PCIE_ATU_TYPE_MEM			(0x0 << 0)
++#define PCIE_ATU_TYPE_IO			(0x2 << 0)
++#define PCIE_ATU_TYPE_CFG0			(0x4 << 0)
++#define PCIE_ATU_TYPE_CFG1			(0x5 << 0)
++#define PCIE_ATU_FUNC_NUM(pf)			((pf) << 20)
++#define PCIE_ATU_CR2_INBOUND(reg)		(0x300104 + ((reg) * 0x200))
++#define PCIE_ATU_MATCH_MODE			BIT(30)
++#define PCIE_ATU_FUNC_NUM_MATCH_EN		BIT(19)
++#define PCIE_ATU_FUNC_NUM(pf)			((pf) << 20)
++
++#define PCIE_ATU_LOWER_BASE_INBOUND(reg)	(0x300108 + ((reg) * 0x200))
++#define PCIE_ATU_UPPER_BASE_INBOUND(reg)	(0x30010c + ((reg) * 0x200))
++#define PCIE_ATU_LIMIT_INBOUND(reg)		(0x300110 + ((reg) * 0x200))
++#define PCIE_ATU_LOWER_TARGET_INBOUND(reg)	(0x300114 + ((reg) * 0x200))
++#define PCIE_ATU_UPPER_TARGET_INBOUND(reg)	(0x300118 + ((reg) * 0x200))
++
++#define PCIE_ATU_BUS(x)				(((x) & 0xff) << 24)
++#define PCIE_ATU_DEV(x)				(((x) & 0x1f) << 19)
++#define PCIE_ATU_FUNC(x)			(((x) & 0x7) << 16)
++
++#define PCIE_MISC_CONTROL_1_CFG			0x8bc
++#define PCIE_TYPE1_CLASS_CODE_REV_ID_REG	0x08
++
++#define PCIE_ADDRESS_ALIGNING			(~0x3)
++#define PCIE_HIGH_16				16
++#define PCIE_BAR_NUM				6
++#define PCIE_MEM_FLAGS				0x4
++#define PCIE_IO_FLAGS				0x1
++#define PCIE_BAR_REG				0x4
++#define PCIE_HIGH16_MASK			0xffff0000
++#define PCIE_LOW16_MASK				0x0000ffff
++#define PCIE_INTERRUPT_LINE_MASK		0xffff00ff
++#define PCIE_INTERRUPT_LINE_ENABLE		0x00000100
++#define	PCIE_PRIMARY_BUS_MASK			0xff000000
++#define PCIE_PRIMARY_BUS_ENABLE			0x00010100
++#define PCIE_MEMORY_MASK			0xfff00000
++
++#define PCIE_CPU_BASE				0x20000000
++
++#define PCIE_TYPE0_STATUS_COMMAND_REG		0x4
++
++#define PCIE_DBI2_BASE				0x100000
++#define DBI2_FUNC_OFFSET			0x10000
++#define BAR_ENABLE				0x1
++
++#define RESBAR_CAP_REG				0x4 /* from PCIe spec4.0 7.8.6  */
++#define  RESBAR_SIZE_MASK			0xfffff0
++#define RESBAR_CTL_REG				0x8
++#define RESBAR_NEXT_BAR				0x8
++#define SIZE_OF_1MB				20 /* 2^20 = 0x100000 */
++
++#define PCIE_COMBO_PHY_BGR		0x04
++#define PHY_ACLK_EN			BIT(17)
++#define PHY_HCLK_EN			BIT(16)
++#define PHY_TERSTN			BIT(1)
++#define PHY_PW_UP_RSTN			BIT(0)
++#define PCIE_COMBO_PHY_CTL		0x10
++#define PHY_USE_SEL			BIT(31)	/* 0:PCIE; 1:USB3 */
++#define	PHY_CLK_SEL			BIT(30) /* 0:internal clk; 1:exteral clk */
++#define PHY_BIST_EN			BIT(16)
++#define PHY_PIPE_SW			BIT(9)
++#define PHY_PIPE_SEL			BIT(8)  /* 0:PIPE resetn ctrl by PCIE ctrl; 1:PIPE resetn ctrl by  */
++#define PHY_PIPE_CLK_INVERT		BIT(4)
++#define PHY_FPGA_SYS_RSTN		BIT(1)  /* for PFGA  */
++#define PHY_RSTN			BIT(0)
++
++#define NEXT_CAP_PTR_MASK		0xff00
++#define CAP_ID_MASK			0x00ff
++
++/* Error values that may be returned by PCI functions */
++#define PCIBIOS_SUCCESSFUL		0x00
++#define PCIBIOS_FUNC_NOT_SUPPORTED	0x81
++#define PCIBIOS_BAD_VENDOR_ID		0x83
++#define PCIBIOS_DEVICE_NOT_FOUND	0x86
++#define PCIBIOS_BAD_REGISTER_NUMBER	0x87
++#define PCIBIOS_SET_FAILED		0x88
++#define PCIBIOS_BUFFER_TOO_SMALL	0x89
++
++/*
++ * Maximum number of MSI IRQs can be 256 per controller. But keep
++ * it 32 as of now. Probably we will never need more than 32. If needed,
++ * then increment it in multiple of 32.
++ */
++#define INT_PCI_MSI_NR			32
++#define MAX_MSI_IRQS			256
++#define MAX_MSI_IRQS_PER_CTRL		32
++#define MAX_MSI_CTRLS			(MAX_MSI_IRQS / MAX_MSI_IRQS_PER_CTRL)
++#define MSI_REG_CTRL_BLOCK_SIZE		12
++
++/* #define MAX_MSI_IRQS			32 */
++/* #define MAX_MSI_CTRLS		(MAX_MSI_IRQS / 32) */
++#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
++#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
++#define LINK_CONTROL2_LINK_STATUS2	0xa0
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIE		20
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
++#define SPEED_CHANGE_USLEEP_MIN		100
++#define SPEED_CHANGE_USLEEP_MAX		1000
++
++#define PCIE_MSI_ADDR_LO		0x820
++#define PCIE_MSI_ADDR_HI		0x824
++#define PCIE_MSI_INTR_ENABLE(reg)	(0x828 + ((reg) * 0x0c))
++/* #define PCIE_MSI_INTR_MASK(reg)	(0x82C + ((reg) * 0x0c)) */
++/* #define PCIE_MSI_INTR_STATUS(reg)	(0x830 + ((reg) * 0x0c)) */
++/* #define PCIE_MSI_INTR_ENABLE		0x828 */
++#define PCIE_MSI_INTR_MASK		0x82C
++#define PCIE_MSI_INTR_STATUS		0x830
++
++#define PCIE_CTRL_MGMT_BASE		0x900000
++
++#define PCIE_USER_DEFINED_REGISTER	0x400000
++#define PCIE_VER			0x00
++#define PCIE_ADDR_PAGE_CFG		0x04
++#define PCIE_AWMISC_CTRL		0x200
++#define PCIE_ARMISC_CTRL		0x220
++#define PCIE_LTSSM_CTRL			0xc00
++#define PCIE_LINK_TRAINING		BIT(0) /* 0:disable; 1:enable  */
++#define DEVICE_TYPE_MASK		GENMASK(7, 4)
++#define DEVICE_TYPE_RC			BIT(6)
++#define PCIE_INT_ENABLE_CLR		0xE04  /* BIT(1):RDLH_LINK_MASK; BIT(0):SMLH_LINK_MASK  */
++#define PCIE_LINK_STAT			0xE0C  /* BIT(1):RDLH_LINK;      BIT(0):SMLH_LINK  */
++#define RDLH_LINK_UP			BIT(1)
++#define SMLH_LINK_UP			BIT(0)
++#define PCIE_LINK_INT_EN		(BIT(0) | BIT(1))
++
++#define PCIE_PHY_CFG			0x800
++#define SYS_CLK				0
++#define PAD_CLK				1
++#define PCIE_LINK_UP_MASK		(0x3<<16)
++
++#define PCIE_RC_RP_ATS_BASE		0x400000
++
++#define SUNXI_PCIE_BAR_CFG_CTRL_DISABLED		0x0
++#define SUNXI_PCIE_BAR_CFG_CTRL_IO_32BITS		0x1
++#define SUNXI_PCIE_BAR_CFG_CTRL_MEM_32BITS		0x4
++#define SUNXI_PCIE_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
++#define SUNXI_PCIE_BAR_CFG_CTRL_MEM_64BITS		0x6
++#define SUNXI_PCIE_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
++
++#define SUNXI_PCIE_EP_MSI_CTRL_REG			0x90
++#define SUNXI_PCIE_EP_MSI_CTRL_MMC_OFFSET		17
++#define SUNXI_PCIE_EP_MSI_CTRL_MMC_MASK			GENMASK(19, 17)
++#define SUNXI_PCIE_EP_MSI_CTRL_MME_OFFSET		20
++#define SUNXI_PCIE_EP_MSI_CTRL_MME_MASK			GENMASK(22, 20)
++#define SUNXI_PCIE_EP_MSI_CTRL_ME			BIT(16)
++#define SUNXI_PCIE_EP_MSI_CTRL_MASK_MSI_CAP		BIT(24)
++#define SUNXI_PCIE_EP_DUMMY_IRQ_ADDR			0x1
++
++#define PCIE_PHY_FUNC_CFG		(PCIE_CTRL_MGMT_BASE + 0x2c0)
++#define PCIE_RC_BAR_CONF		(PCIE_CTRL_MGMT_BASE + 0x300)
++
++//ECC
++#define PCIE_RASDP_ERR_PROT_CTRL_OFF			0X1F0
++#define PCIE_RASDP_ERR_INJ_CTRL_OFF			0X204
++#define PCIE_RASDP_UNCORR_COUNTER_CTRL_OFF		0X1FC
++#define PCIE_RASDP_UNCORR_COUNTER_REPORT_OFF		0X200
++#define PCIE_RASDP_UNCORR_ERROR_LOCATION_OFF		0X20C
++#define PCIE_RASDP_ERROR_MODR_CLEAR_OFF			0X214
++
++#define PCIE_RASDP_CORR_COUNTER_CTRL_OFF		0X1F4
++#define PCIE_RASDP_CORR_COUNTER_REPORT_OFF		0X1F8
++#define PCIE_RASDP_CORR_ERROR_LOCATION_OFF		0X208
++
++#define PCIE_SII_INT_MASK_RES2				0XE10
++#define PCIE_SII_INT_RES2				0XE18
++#define APP_PARITY_ERRS2_MASK				BIT(12)
++#define APP_PARITY_ERRS1_MASK				BIT(11)
++#define APP_PARITY_ERRS0_MASK				BIT(10)
++#define SLV_RASDP_ERR_MODE_MASK				BIT(9)
++#define MATR_RASDP_ERR_MODE_MASK			BIT(8)
++#define RASDP_ERR_PENDING 				(BIT(8) | BIT(9) | BIT(10) | BIT(11) | BIT(12))
++#define PCIE_SII_INT_RES2_ECC_MASK 			GENMASK(12, 8)
++
++#define  PCI_EXP_LNKCTL2_TLS		0x000f
++#define PCI_EXP_LNKCTL2_TLS_2_5GT	0x0001 /* Supported Speed 2.5GT/s */
++#define PCI_EXP_LNKCTL2_TLS_5_0GT	0x0002 /* Supported Speed 5GT/s */
++#define PCI_EXP_LNKCTL2_TLS_8_0GT	0x0003 /* Supported Speed 8GT/s */
++#define PCI_EXP_LNKCTL2_TLS_16_0GT	0x0004 /* Supported Speed 16GT/s */
++#define PCI_EXP_LNKCTL2_TLS_32_0GT	0x0005 /* Supported Speed 32GT/s */
++#define PCI_EXP_LNKCTL2_HASD		0x0020 /* HW Autonomous Speed Disable */
++
++#define PCI_EXP_LNKCAP		12	/* Link Capabilities */
++#define PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
++#define PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
++#define PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
++#define PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
++#define PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
++#define PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
++#define PCI_EXP_LNKCAP_L1EL	0x00038000 /* L1 Exit Latency */
++#define PCI_EXP_LNKCAP_CLKPM	0x00040000 /* Clock Power Management */
++#define PCI_EXP_LNKCAP_SDERC	0x00080000 /* Surprise Down Error Reporting Capable */
++#define PCI_EXP_LNKCAP_DLLLARC	0x00100000 /* Data Link Layer Link Active Reporting Capable */
++#define PCI_EXP_LNKCAP_LBNC	0x00200000 /* Link Bandwidth Notification Capability */
++#define PCI_EXP_LNKCAP_PN	0xff000000 /* Port Number */
++
++#define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
++#define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
++#define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
++#define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
++#define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
++
++
++
++/* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define PCI_REBAR_CAP_SIZES		0x00FFFFF0  /* supported BAR sizes */
++#define PCI_REBAR_CTRL		8	/* control register */
++#define PCI_REBAR_CTRL_BAR_IDX		0x00000007  /* BAR index */
++#define PCI_REBAR_CTRL_NBAR_MASK	0x000000E0  /* # of resizable BARs */
++#define PCI_REBAR_CTRL_NBAR_SHIFT	5	    /* shift for # of BARs */
++#define PCI_REBAR_CTRL_BAR_SIZE	0x00001F00  /* BAR size */
++#define PCI_REBAR_CTRL_BAR_SHIFT	8	    /* shift for BAR size */
++
++#define  PCI_HEADER_TYPE_MASK		0x7f
++
++
++#define PCI_STD_NUM_BARS	6	/* Number of standard BARs */
++enum sunxi_pcie_device_mode {
++	SUNXI_PCIE_EP_TYPE,
++	SUNXI_PCIE_RC_TYPE,
++};
++
++/* See matching string table in pci_speed_string() */
++enum pci_bus_speed {
++	PCI_SPEED_33MHz			= 0x00,
++	PCI_SPEED_66MHz			= 0x01,
++	PCI_SPEED_66MHz_PCIX		= 0x02,
++	PCI_SPEED_100MHz_PCIX		= 0x03,
++	PCI_SPEED_133MHz_PCIX		= 0x04,
++	PCI_SPEED_66MHz_PCIX_ECC	= 0x05,
++	PCI_SPEED_100MHz_PCIX_ECC	= 0x06,
++	PCI_SPEED_133MHz_PCIX_ECC	= 0x07,
++	PCI_SPEED_66MHz_PCIX_266	= 0x09,
++	PCI_SPEED_100MHz_PCIX_266	= 0x0a,
++	PCI_SPEED_133MHz_PCIX_266	= 0x0b,
++	AGP_UNKNOWN			= 0x0c,
++	AGP_1X				= 0x0d,
++	AGP_2X				= 0x0e,
++	AGP_4X				= 0x0f,
++	AGP_8X				= 0x10,
++	PCI_SPEED_66MHz_PCIX_533	= 0x11,
++	PCI_SPEED_100MHz_PCIX_533	= 0x12,
++	PCI_SPEED_133MHz_PCIX_533	= 0x13,
++	PCIE_SPEED_2_5GT		= 0x14,
++	PCIE_SPEED_5_0GT		= 0x15,
++	PCIE_SPEED_8_0GT		= 0x16,
++	PCIE_SPEED_16_0GT		= 0x17,
++	PCIE_SPEED_32_0GT		= 0x18,
++	PCI_SPEED_UNKNOWN		= 0xff,
++};
++
++struct sunxi_pcie_of_data {
++	const struct sunxi_pcie_ep_ops *ops;
++	enum sunxi_pcie_device_mode mode;
++	u32 func_offset;
++	bool cpu_pcie_addr_quirk;
++	bool has_pcie_slv_clk;
++	bool need_pcie_rst;
++	bool pcie_slv_clk_400m;
++	bool has_pcie_its_clk;
++	bool has_pcie_ecc;
++};
++
++struct sunxi_pcie_ep_func {
++	struct list_head list;
++	u8 func_no;
++	u8 msi_cap;
++	u8 msix_cap;
++};
++
++struct sunxi_pcie_ep {
++	struct pci_epc		*epc;
++	struct list_head	func_list;
++	const struct sunxi_pcie_ep_ops *ops;
++	phys_addr_t		phys_base;
++	size_t			addr_size;
++	size_t			page_size;
++	u8			bar_to_atu[PCI_STD_NUM_BARS];
++	phys_addr_t		*outbound_addr;
++	u32			num_ib_windows;
++	u32			num_ob_windows;
++	unsigned long		*ib_window_map;
++	unsigned long		*ob_window_map;
++	u8			max_functions;
++	void __iomem		*msi_mem;
++	phys_addr_t		msi_mem_phys;
++	struct pci_bar	*epf_bar[PCI_STD_NUM_BARS];
++};
++
++struct sunxi_pcie_ep_ops {
++	void	(*ep_init)(struct sunxi_pcie_ep *ep);
++	// int	(*raise_irq)(struct sunxi_pcie_ep *ep, u8 func_no,
++	// 		     enum pci_epc_irq_type type, u16 interrupt_num);
++	const struct pci_epc_features *(*get_features)(struct sunxi_pcie_ep *ep);
++	unsigned int (*func_conf_select)(struct sunxi_pcie_ep *ep, u8 func_no);
++};
++
++struct sunxi_pcie_port {
++	struct device			*dev;
++	void __iomem			*dbi_base;
++	u32				cfg0_base;
++	void __iomem			*va_cfg0_base;
++	u32				cfg0_size;
++	resource_size_t			io_base;
++	phys_addr_t			io_bus_addr;
++	u32				io_size;
++	phys_addr_t			mem_base;
++	u32				mem_size;
++	u32				num_ob_windows;
++	struct sunxi_pcie_host_ops	*ops;
++	struct sunxi_pcie		*pcie;
++	int				msi_irq;
++	struct irq_domain		*irq_domain;
++	struct irq_domain		*msi_domain;
++	struct pci_host_bridge		*bridge;
++	// raw_spinlock_t			lock;
++	unsigned long			msi_map[BITS_TO_LONGS(INT_PCI_MSI_NR)];
++	bool				has_its;
++	bool				cpu_pcie_addr_quirk;
++};
++
++struct sunxi_pci_edma_chan;
++
++struct sunxi_pcie {
++	struct udevice		*dev;
++	void		*dbi_base;
++	void 		*app_base;
++    // fdt_addr_t dbi_phys_base;
++#if defined(CONFIG_AW_FPGA_S4) || defined(CONFIG_AW_FPGA_V7)
++	void __iomem		*phy_base;
++	void __iomem		*clk_base;
++	struct regmap		*phy_i2c;
++#endif
++	int			link_gen;
++	int		first_busno;
++	struct sunxi_pcie_port	pcie_port;
++	struct sunxi_pcie_ep	ep;
++	struct clk		pcie_aux;
++	struct clk		pcie_slv;
++	struct clk		pcie_its;
++	struct reset_ctl    pcie_rst;
++	struct reset_ctl    pwrup_rst;
++	struct reset_ctl    pcie_its_rst;
++	struct phy *phy;
++	struct dma_trx_obj	*dma_obj;
++	const struct sunxi_pcie_of_data *drvdata;
++	struct gpio_desc	pwr_gpio;
++	struct gpio_desc	rst_gpio;
++	struct gpio_desc	wake_gpio;
++	u32			lanes;
++	u32			num_edma;
++	unsigned long		*rd_edma_map;
++	unsigned long		*wr_edma_map;
++	struct sunxi_pci_edma_chan	*dma_wr_chn;
++	struct sunxi_pci_edma_chan	*dma_rd_chn;
++	struct udevice *pcie1v8_supply;
++	struct udevice *pcie3v3_supply;
++};
++
++#define to_sunxi_pcie_from_pp(x)	\
++		container_of((x), struct sunxi_pcie, pcie_port)
++
++#define to_sunxi_pcie_from_ep(endpoint)   \
++		container_of((endpoint), struct sunxi_pcie, ep)
++
++void sunxi_pcie_plat_init(struct udevice *dev);
++int sunxi_pcie_plat_hw_init(struct udevice *dev);
++
++void sunxi_pcie_plat_set_rate(struct sunxi_pcie *pci);
++void sunxi_pcie_plat_set_mode(struct sunxi_pcie *pci);
++void sunxi_pcie_plat_ltssm_enable(struct sunxi_pcie *pci);
++void sunxi_pcie_plat_ltssm_disable(struct sunxi_pcie *pci);
++
++int sunxi_pcie_cfg_write(void __iomem *addr, int size, ulong val);
++int sunxi_pcie_cfg_read(void __iomem *addr, int size, ulong *val);
++
++u32 sunxi_pcie_readl(struct sunxi_pcie *pcie, u32 offset);
++void sunxi_pcie_writel(u32 val, struct sunxi_pcie *pcie, u32 offset);
++
++void sunxi_pcie_writel_dbi(struct sunxi_pcie *pci, u32 reg, u32 val);
++u32 sunxi_pcie_readl_dbi(struct sunxi_pcie *pci, u32 reg);
++void sunxi_pcie_writew_dbi(struct sunxi_pcie *pci, u32 reg, u16 val);
++u16 sunxi_pcie_readw_dbi(struct sunxi_pcie *pci, u32 reg);
++void sunxi_pcie_writeb_dbi(struct sunxi_pcie *pci, u32 reg, u8 val);
++u8 sunxi_pcie_readb_dbi(struct sunxi_pcie *pci, u32 reg);
++
++void sunxi_pcie_dbi_ro_wr_en(struct sunxi_pcie *pci);
++void sunxi_pcie_dbi_ro_wr_dis(struct sunxi_pcie *pci);
++
++#endif /* _PCIE_SUNXI_H */
+diff --git a/drivers/pci/pcie_sunxi_rc.c b/drivers/pci/pcie_sunxi_rc.c
+new file mode 100644
+index 00000000000..361cc6a96d9
+--- /dev/null
++++ b/drivers/pci/pcie_sunxi_rc.c
+@@ -0,0 +1,522 @@
++// SPDX-License-Identifier: GPL-2.0+
++/*
++ * (C) Copyright 2020 - 2024
++ * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
++ *
++ * Allwinner DesignWare based PCIe host controller driver
++ */
++
++#include <clk.h>
++#include <dm.h>
++#include <generic-phy.h>
++#include <pci.h>
++#include <power-domain.h>
++#include <power/regulator.h>
++#include <reset.h>
++#include <syscon.h>
++#include <asm/io.h>
++#include <asm-generic/gpio.h>
++#include <asm/arch-sunxi/clock.h>
++#include <linux/iopoll.h>
++#include <linux/ioport.h>
++#include <sunxi_gpio.h>
++#include "pcie-sunxi.h"
++
++#define CONFIG_PCIE_PERST_GPIO "PE13"
++#define CONFIG_PCIE_WAKE_GPIO  "PE12"
++#define CONFIG_PCIE_POWER_GPIO "PE11"
++
++DECLARE_GLOBAL_DATA_PTR;
++
++#define sunxi_pcie_DBG			0
++
++#define __pcie_dev_print_emit(fmt, ...) \
++({ \
++	printf(fmt, ##__VA_ARGS__); \
++})
++
++#ifdef dev_err
++#undef dev_err
++#define dev_err(dev, fmt, ...) \
++({ \
++	if (dev) \
++		__pcie_dev_print_emit("%s: " fmt, dev->name, \
++				##__VA_ARGS__); \
++})
++#endif
++
++#ifdef dev_info
++#undef dev_info
++#define dev_info dev_err
++#endif
++
++#ifdef DEBUG
++#define dev_dbg dev_err
++#else
++#define dev_dbg(dev, fmt, ...)					\
++({								\
++	if (0)							\
++		__dev_printk(7, dev, fmt, ##__VA_ARGS__);	\
++})
++#endif
++
++#define msleep(a)		udelay((a) * 1000)
++
++static int sunxi_pcie_addr_valid(pci_dev_t d, int first_busno)
++{
++	if ((PCI_BUS(d) == first_busno) && (PCI_DEV(d) > 0))
++		return 0;
++	if ((PCI_BUS(d) == first_busno + 1) && (PCI_DEV(d) > 0))
++		return 0;
++
++	return 1;
++}
++
++static void sunxi_pcie_prog_outbound_atu(struct sunxi_pcie_port *pp, int index, int type,
++					u64 cpu_addr, u64 pci_addr, u32 size)
++{
++	struct sunxi_pcie *pci = to_sunxi_pcie_from_pp(pp);
++
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_LOWER_BASE_OUTBOUND(index), lower_32_bits(cpu_addr));
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_UPPER_BASE_OUTBOUND(index), upper_32_bits(cpu_addr));
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_LIMIT_OUTBOUND(index), lower_32_bits(cpu_addr + size - 1));
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET_OUTBOUND(index), lower_32_bits(pci_addr));
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET_OUTBOUND(index), upper_32_bits(pci_addr));
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_CR1_OUTBOUND(index), type);
++	sunxi_pcie_writel_dbi(pci, PCIE_ATU_CR2_OUTBOUND(index), PCIE_ATU_ENABLE);
++}
++
++static int sunxi_pcie_rd_other_conf(struct sunxi_pcie_port *pp, pci_dev_t d, int where, int size, ulong *val)
++{
++	int ret = PCIBIOS_SUCCESSFUL, type;
++	u64 busdev;
++
++	busdev = PCIE_ATU_BUS(PCI_BUS(d)) | PCIE_ATU_DEV(PCI_DEV(d)) | PCIE_ATU_FUNC(PCI_FUNC(d));
++
++	if (PCI_BUS(d) != 0)
++		type = PCIE_ATU_TYPE_CFG0;
++	else
++		type = PCIE_ATU_TYPE_CFG1;
++
++	sunxi_pcie_prog_outbound_atu(pp, PCIE_ATU_INDEX0, type, pp->cfg0_base, busdev, pp->cfg0_size);
++
++	ret = sunxi_pcie_cfg_read(pp->va_cfg0_base + where, size, val);
++
++	return ret;
++}
++
++static int sunxi_pcie_wr_other_conf(struct sunxi_pcie_port *pp, pci_dev_t d, int where, int size, ulong val)
++{
++	int ret = PCIBIOS_SUCCESSFUL, type;
++	u64 busdev;
++
++	busdev = PCIE_ATU_BUS(PCI_BUS(d)) | PCIE_ATU_DEV(PCI_DEV(d)) | PCIE_ATU_FUNC(PCI_FUNC(d));
++
++	if (PCI_BUS(d) != 0)
++		type = PCIE_ATU_TYPE_CFG0;
++	else
++		type = PCIE_ATU_TYPE_CFG1;
++
++	sunxi_pcie_prog_outbound_atu(pp, PCIE_ATU_INDEX0, type, pp->cfg0_base, busdev, pp->cfg0_size);
++
++	ret = sunxi_pcie_cfg_write(pp->va_cfg0_base + where, size, val);
++
++	return ret;
++}
++
++static int sunxi_pcie_host_rd_own_conf(struct sunxi_pcie_port *pp, int where, int size, ulong *val)
++{
++	int ret;
++
++	ret = sunxi_pcie_cfg_read(pp->dbi_base + where, size, val);
++
++	return ret;
++}
++
++static int sunxi_pcie_host_wr_own_conf(struct sunxi_pcie_port *pp, int where, int size, ulong val)
++{
++	int ret;
++
++	ret = sunxi_pcie_cfg_write(pp->dbi_base + where, size, val);
++
++	return ret;
++}
++
++static int sunxi_pcie_read_config(const struct udevice *bus, pci_dev_t bdf,
++				 uint offset, ulong *value,
++				 enum pci_size_t size)
++{
++	struct sunxi_pcie *pcie = dev_get_priv(bus);
++	int ret, size_len = 4;
++
++	if (!sunxi_pcie_addr_valid(bdf, pcie->first_busno)) {
++		debug("- out of range\n");
++		*value = pci_get_ff(size);
++		return 0;
++	}
++
++	if (size == PCI_SIZE_8)
++		size_len = 1;
++	else if (size == PCI_SIZE_16)
++		size_len = 2;
++	else if (size == PCI_SIZE_32)
++		size_len = 4;
++
++	if (PCI_BUS(bdf) != 0)
++		ret = sunxi_pcie_rd_other_conf(&pcie->pcie_port, bdf, offset, size_len, value);
++	else
++		ret = sunxi_pcie_host_rd_own_conf(&pcie->pcie_port, offset, size_len, value);
++
++	return ret;
++}
++
++static int sunxi_pcie_write_config(struct udevice *bus, pci_dev_t bdf,
++				 uint offset, ulong value,
++				 enum pci_size_t size)
++{
++	struct sunxi_pcie *pcie = dev_get_priv(bus);
++	int ret, size_len = 4;
++
++	if (!sunxi_pcie_addr_valid(bdf, pcie->first_busno)) {
++		debug("- out of range\n");
++		return 0;
++	}
++
++	if (size == PCI_SIZE_8)
++		size_len = 1;
++	else if (size == PCI_SIZE_16)
++	size_len = 2;
++	else if (size == PCI_SIZE_32)
++		size_len = 4;
++
++	if (PCI_BUS(bdf) != 0)
++		ret = sunxi_pcie_wr_other_conf(&pcie->pcie_port, bdf, offset, size_len, value);
++	else
++		ret = sunxi_pcie_host_wr_own_conf(&pcie->pcie_port, offset, size_len, value);
++
++	return ret;
++}
++
++static void sunxi_pcie_host_setup_rc(struct sunxi_pcie_port *pp)
++{
++	ulong val, i;
++	phys_addr_t mem_base;
++	struct sunxi_pcie *pci = to_sunxi_pcie_from_pp(pp);
++
++	sunxi_pcie_plat_set_rate(pci);
++
++	/* setup RC BARs */
++	sunxi_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_0, 0x4);
++	sunxi_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x0);
++
++	/* setup interrupt pins */
++	val = sunxi_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
++	val &= PCIE_INTERRUPT_LINE_MASK;
++	val |= PCIE_INTERRUPT_LINE_ENABLE;
++	sunxi_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
++
++	/* setup bus numbers */
++	val = sunxi_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
++	val &= 0xff000000;
++	val |= 0x00ff0100;
++	sunxi_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
++
++	/* setup command register */
++	val = sunxi_pcie_readl_dbi(pci, PCI_COMMAND);
++
++	val &= PCIE_HIGH16_MASK;
++	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
++		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
++
++	sunxi_pcie_writel_dbi(pci, PCI_COMMAND, val);
++
++	//whether need to fixed me
++	if (IS_ENABLED(CONFIG_PCI_MSI) && !pp->has_its) {
++		for (i = 0; i < 8; i++) {
++			sunxi_pcie_host_wr_own_conf(pp, PCIE_MSI_INTR_ENABLE(i), 4, ~0);
++		}
++	}
++
++	//mem defualt to atu1 & io defualt to atu2
++	if (pp->cpu_pcie_addr_quirk)
++		mem_base = pp->mem_base - PCIE_CPU_BASE;
++	else
++		mem_base = pp->mem_base;
++
++	sunxi_pcie_prog_outbound_atu(pp, PCIE_ATU_INDEX1, PCIE_ATU_TYPE_MEM, mem_base,
++						SUNXI_PCIE_MEM_ADDR,
++						pp->mem_size);
++
++	sunxi_pcie_prog_outbound_atu(pp, PCIE_ATU_INDEX2, PCIE_ATU_TYPE_IO, pp->io_base,
++						SUNXI_PCIE_IO_ADDR,
++						pp->io_size);
++
++	sunxi_pcie_host_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
++
++	sunxi_pcie_dbi_ro_wr_en(pci);
++
++	sunxi_pcie_host_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++
++	sunxi_pcie_dbi_ro_wr_dis(pci);
++
++	sunxi_pcie_host_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
++	val |= PORT_LOGIC_SPEED_CHANGE;
++	sunxi_pcie_host_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
++}
++
++static int sunxi_pcie_host_link_up_status(struct sunxi_pcie_port *pp)
++{
++	u32 val;
++	int ret;
++	struct sunxi_pcie *pcie = to_sunxi_pcie_from_pp(pp);
++
++	val = sunxi_pcie_readl(pcie, PCIE_LINK_STAT);
++
++	if ((val & RDLH_LINK_UP) && (val & SMLH_LINK_UP))
++		ret = 1;
++	else
++		ret = 0;
++
++	return ret;
++}
++
++static int sunxi_pcie_host_link_up(struct sunxi_pcie_port *pp)
++{
++	 return sunxi_pcie_host_link_up_status(pp);
++}
++
++static int sunxi_pcie_host_wait_for_link(struct sunxi_pcie_port *pp)
++{
++	int retries;
++
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIE; retries++) {
++		if (sunxi_pcie_host_link_up(pp)) {
++			printf("pcie link up success\n");
++			return 0;
++		}
++		udelay(LINK_WAIT_USLEEP_MAX);
++	}
++
++	printf("Link up timeout\n");
++	return -ETIMEDOUT;
++}
++
++static int sunxi_pcie_host_establish_link(struct sunxi_pcie *pci)
++{
++	struct sunxi_pcie_port *pp = &pci->pcie_port;
++
++	if (sunxi_pcie_host_link_up(pp)) {
++		printf("pcie is already link up\n");
++		return 0;
++	}
++
++	sunxi_pcie_plat_ltssm_enable(pci);
++
++	return sunxi_pcie_host_wait_for_link(pp);
++}
++
++static int sunxi_pcie_host_wait_for_speed_change(struct sunxi_pcie *pci)
++{
++	u32 tmp;
++	unsigned int retries;
++
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIE; retries++) {
++		tmp = sunxi_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++		if (!(tmp & PORT_LOGIC_SPEED_CHANGE))
++			return 0;
++		udelay(SPEED_CHANGE_USLEEP_MAX);
++	}
++
++	printf("Speed change timeout\n");
++	return -ETIMEDOUT;
++}
++
++static int sunxi_pcie_host_speed_change(struct sunxi_pcie *pci, int gen)
++{
++	int val;
++	int ret;
++
++	sunxi_pcie_dbi_ro_wr_en(pci);
++	val = sunxi_pcie_readl_dbi(pci, LINK_CONTROL2_LINK_STATUS2);
++	val &= ~0xf;
++	val |= gen;
++	sunxi_pcie_writel_dbi(pci, LINK_CONTROL2_LINK_STATUS2, val);
++
++	val = sunxi_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val &= ~PORT_LOGIC_SPEED_CHANGE;
++	sunxi_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++
++	val = sunxi_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	val |= PORT_LOGIC_SPEED_CHANGE;
++	sunxi_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++
++	ret = sunxi_pcie_host_wait_for_speed_change(pci);
++	if (!ret)
++		printf("PCIe speed of Gen%d\n", gen);
++	else
++		printf("PCIe speed of Gen1\n");
++
++	sunxi_pcie_dbi_ro_wr_dis(pci);
++	return 0;
++}
++
++static void sunxi_pcie_host_init(struct udevice *dev)
++{
++	struct sunxi_pcie *pci = dev_get_priv(dev);
++	int ret;
++
++	ret = gpio_request_by_name(dev, "pwr-gpios", 0, &pci->pwr_gpio, GPIOD_IS_OUT);
++	if (ret) {
++		printf("dnx: fail to request power gpio\n");
++	}
++
++	ret = gpio_request_by_name(dev, "rst-gpios", 0, &pci->rst_gpio, GPIOD_IS_OUT);
++	if (ret) {
++		printf("dnx: fail to request reset gpio\n");
++	}
++
++	ret = gpio_request_by_name(dev, "wake-gpios", 0, &pci->wake_gpio, GPIOD_IS_OUT);
++	if (ret) {
++		printf("dnx: fail to request wake gpio\n");
++	}
++
++	dm_gpio_set_value(&pci->pwr_gpio, 0);
++	mdelay(100);
++	dm_gpio_set_value(&pci->pwr_gpio, 1);
++
++	sunxi_pcie_plat_ltssm_disable(pci);
++
++	dm_gpio_set_value(&pci->wake_gpio, 1);
++	dm_gpio_set_value(&pci->rst_gpio, 0);
++	mdelay(100);
++	dm_gpio_set_value(&pci->rst_gpio, 1);
++
++	sunxi_pcie_host_setup_rc(&pci->pcie_port);
++
++	sunxi_pcie_host_establish_link(pci);
++
++	sunxi_pcie_host_speed_change(pci, pci->link_gen);
++}
++
++static int sunxi_pcie_probe(struct udevice *dev)
++{
++	struct sunxi_pcie *pcie = dev_get_priv(dev);
++	struct udevice *ctlr = pci_get_controller(dev);
++	struct pci_controller *hose = dev_get_uclass_priv(ctlr);
++	struct udevice *pcie1v8_supply, *pcie3v3_supply;
++	int ret;
++
++	pcie->dev = dev;
++	pcie->first_busno = dev_seq(dev);
++	pcie->drvdata = (struct sunxi_pcie_of_data *)dev_get_driver_data(dev);
++	pcie->link_gen = dev_read_u32_default(dev, "max-link-speed", 1);
++	pcie->phy = kmalloc(sizeof(struct phy), __GFP_ZERO);
++
++
++	ret = device_get_supply_regulator(dev, "pcie1v8-supply", &pcie1v8_supply);
++	if (ret) {
++		printf("no pcie1v8-supply\n");
++	} else {
++		pcie->pcie1v8_supply = pcie1v8_supply;
++		ret = regulator_set_enable(pcie1v8_supply, true);
++		if (ret) {
++			printf("fail to enable pcie1v8-supply\n");
++			return ret;
++		}
++
++		ret = regulator_set_value(pcie1v8_supply, 1800000);
++		if (ret) {
++			printf("fail to set pcie1v8 voltage\n");
++			return ret;
++		}
++		printf("success to set pcie1v8 voltage\n");
++	}
++
++	ret = device_get_supply_regulator(dev, "pcie3v3-supply", &pcie3v3_supply);
++	if (ret) {
++		printf("no pcie3v3-supply\n");
++	} else {
++		pcie->pcie3v3_supply = pcie3v3_supply;
++		ret = regulator_set_enable(pcie3v3_supply, true);
++		if (ret) {
++			printf("fail to enable pcie3v3-supply\n");
++			return ret;
++		}
++
++		ret = regulator_set_value(pcie3v3_supply, 3300000);
++		if (ret) {
++			printf("fail to set pcie3v3 voltage\n");
++			return ret;
++		}
++		printf("success to set pcie3v3 voltage\n");
++	}
++
++	ret = generic_phy_get_by_name(dev, "pcie-phy", pcie->phy);
++
++	if (ret < 0) {
++		printf("%s-%d: failed get pcie-phy %d\n", __func__, __LINE__, ret);
++		return -EINVAL;
++	}
++
++	/* PCI I/O space */
++	pci_set_region(&hose->regions[0],
++			SUNXI_PCIE_IO_ADDR,
++			SUNXI_PCIE_IO_ADDR,
++			SUNXI_PCIE_IO_SIZE, PCI_REGION_IO);
++
++
++	/* System memory space */
++	pci_set_region(&hose->regions[1],
++			SUNXI_PCIE_MEM_ADDR,
++			SUNXI_PCIE_MEM_ADDR,
++			SUNXI_PCIE_MEM_SIZE, PCI_REGION_MEM);
++	hose->region_count = 2;
++
++	sunxi_pcie_plat_init(dev);
++
++	sunxi_pcie_plat_hw_init(dev);
++
++	/* Start the controller. */
++	sunxi_pcie_host_init(dev);
++
++	return 0;
++}
++
++static const struct dm_pci_ops sunxi_pcie_ops = {
++	.read_config	= sunxi_pcie_read_config,
++	.write_config	= sunxi_pcie_write_config,
++};
++
++static const struct sunxi_pcie_of_data	sunxi_pcie_rc_v210_of_data = {
++	.mode = SUNXI_PCIE_RC_TYPE,
++	.cpu_pcie_addr_quirk = true,
++};
++
++static const struct sunxi_pcie_of_data	sunxi_pcie_rc_v300_of_data = {
++	.mode = SUNXI_PCIE_RC_TYPE,
++	.has_pcie_slv_clk = true,
++	.need_pcie_rst = true,
++	.pcie_slv_clk_400m = true,
++	.has_pcie_its_clk = true,
++};
++
++static const struct udevice_id sunxi_pcie_ids[] = {
++	{
++		.compatible = "allwinner,sunxi-pcie-v210-rc",
++		.data = (ulong)&sunxi_pcie_rc_v210_of_data,
++	},
++	{
++		.compatible = "allwinner,sunxi-pcie-v300-rc",
++		.data = (ulong)&sunxi_pcie_rc_v300_of_data,
++	},
++	{ }
++};
++
++U_BOOT_DRIVER(sunxi_pcie) = {
++	.name			= "pcie_dw_sunxi",
++	.id			= UCLASS_PCI,
++	.of_match		= sunxi_pcie_ids,
++	.ops			= &sunxi_pcie_ops,
++	.probe			= sunxi_pcie_probe,
++	.priv_auto		= sizeof(struct sunxi_pcie),
++};
+-- 
+2.53.0
+

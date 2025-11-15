@@ -1,0 +1,433 @@
+From 897e19b21ea4daf3eee3033a5ed64f1c3fa664f8 Mon Sep 17 00:00:00 2001
+From: Junhui Liu <junhui.liu@pigmoral.tech>
+Date: Sun, 31 Aug 2025 12:38:11 +0800
+Subject: [PATCH 17/33] net: add gmac0 initial support
+
+Signed-off-by: Junhui Liu <junhui.liu@pigmoral.tech>
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ drivers/net/Kconfig             |   9 +
+ drivers/net/Makefile            |   1 +
+ drivers/net/dwc_eth_qos.c       |  10 +
+ drivers/net/dwc_eth_qos.h       |   1 +
+ drivers/net/dwc_eth_qos_sunxi.c | 346 ++++++++++++++++++++++++++++++++
+ 5 files changed, 367 insertions(+)
+ create mode 100644 drivers/net/dwc_eth_qos_sunxi.c
+
+diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+index fce8004e134..9a3b3de1e6a 100644
+--- a/drivers/net/Kconfig
++++ b/drivers/net/Kconfig
+@@ -284,6 +284,15 @@ config DWC_ETH_QOS_STARFIVE
+ 	  The Synopsys Designware Ethernet QOS IP block with specific
+ 	  configuration used in STARFIVE  JH7110 soc.
+ 
++config DWC_ETH_QOS_SUNXI
++	bool "Synopsys DWC Ethernet QOS device support for Allwinner SoCs"
++	depends on DWC_ETH_QOS && ARCH_SUNXI
++	select SYSCON
++	select REGMAP
++	help
++	  The Synopsys Designware Ethernet QOS IP block with specific
++	  configuration used in Allwinner soc.
++
+ config E1000
+ 	bool "Intel PRO/1000 Gigabit Ethernet support"
+ 	depends on PCI
+diff --git a/drivers/net/Makefile b/drivers/net/Makefile
+index 5bb40480d88..97b7ff56299 100644
+--- a/drivers/net/Makefile
++++ b/drivers/net/Makefile
+@@ -27,6 +27,7 @@ obj-$(CONFIG_DWC_ETH_XGMAC) += dwc_eth_xgmac.o
+ obj-$(CONFIG_DWC_ETH_XGMAC_SOCFPGA) += dwc_eth_xgmac_socfpga.o
+ obj-$(CONFIG_DWC_ETH_QOS_STARFIVE) += dwc_eth_qos_starfive.o
+ obj-$(CONFIG_DWC_ETH_QOS_STM32) += dwc_eth_qos_stm32.o
++obj-$(CONFIG_DWC_ETH_QOS_SUNXI) += dwc_eth_qos_sunxi.o
+ obj-$(CONFIG_E1000) += e1000.o
+ obj-$(CONFIG_E1000_SPI) += e1000_spi.o
+ obj-$(CONFIG_EEPRO100) += eepro100.o
+diff --git a/drivers/net/dwc_eth_qos.c b/drivers/net/dwc_eth_qos.c
+index 8a396d0b29e..e42deeb4348 100644
+--- a/drivers/net/dwc_eth_qos.c
++++ b/drivers/net/dwc_eth_qos.c
+@@ -1654,6 +1654,16 @@ static const struct udevice_id eqos_ids[] = {
+ 		.compatible = "adi,sc59x-dwmac-eqos",
+ 		.data = (ulong)&eqos_adi_config
+ 	},
++#endif
++#if IS_ENABLED(CONFIG_DWC_ETH_QOS_SUNXI)
++	{
++		.compatible = "allwinner,sun55i-a523-gmac200",
++		.data = (ulong)&eqos_sunxi_config
++	},
++	{
++		.compatible = "allwinner,sun60i-a733-gmac210",
++		.data = (ulong)&eqos_sunxi_config
++	},
+ #endif
+ 	{ }
+ };
+diff --git a/drivers/net/dwc_eth_qos.h b/drivers/net/dwc_eth_qos.h
+index ba16f1a37cb..f6fc6164707 100644
+--- a/drivers/net/dwc_eth_qos.h
++++ b/drivers/net/dwc_eth_qos.h
+@@ -316,3 +316,4 @@ extern struct eqos_config eqos_stm32mp15_config;
+ extern struct eqos_config eqos_stm32mp25_config;
+ extern struct eqos_config eqos_jh7110_config;
+ extern struct eqos_config eqos_adi_config;
++extern struct eqos_config eqos_sunxi_config;
+diff --git a/drivers/net/dwc_eth_qos_sunxi.c b/drivers/net/dwc_eth_qos_sunxi.c
+new file mode 100644
+index 00000000000..ca57c6def30
+--- /dev/null
++++ b/drivers/net/dwc_eth_qos_sunxi.c
+@@ -0,0 +1,346 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright 2024 Allwinner
++ */
++
++#include <linux/bitfield.h>
++#include <linux/bitops.h>
++#include <clk.h>
++#include <dm/device.h>
++#include <dm/device_compat.h>
++#include <dm.h>
++#include <net.h>
++#include <power/regulator.h>
++#include <phy.h>
++#include <regmap.h>
++#include <syscon.h>
++
++#include <asm/io.h>
++
++#include "dwc_eth_qos.h"
++
++#define GMAC200_SYSCON_REG		0x34
++#define   GMAC200_SYSCON_RMII_EN	BIT(13) /* 1: enable RMII (overrides EPIT) */
++#define   GMAC200_SYSCON_ETXDC_MASK	GENMASK(12, 10)
++#define   GMAC200_SYSCON_ERXDC_MASK	GENMASK(9, 5)
++#define   GMAC200_SYSCON_EPIT		BIT(2) /* 1: RGMII, 0: MII */
++#define   GMAC200_SYSCON_ETCS_MASK	GENMASK(1, 0)
++
++#define GMAC210_CFG_REG			0x00
++#define   GMAC210_CFG_ETXDC_H		GENMASK(17, 16)
++#define   GMAC210_CFG_PHY_SEL		BIT(15)
++#define   GMAC210_CFG_ENDIAN_MODE	BIT(14)
++#define   GMAC210_CFG_RMII_EN		BIT(13)
++#define   GMAC210_CFG_ETXDC_L		GENMASK(12, 10)
++#define   GMAC210_CFG_ERXDC		GENMASK(9, 5)
++#define   GMAC210_CFG_ERXIE		BIT(4)
++#define   GMAC210_CFG_ETXIE		BIT(3)
++#define   GMAC210_CFG_EPIT		BIT(2)
++#define   GMAC210_CFG_ETCS		GENMASK(1, 0)
++#define GMAC210_PTP_TIMESTAMP_L_REG	0x40
++#define GMAC210_PTP_TIMESTAMP_H_REG	0x48
++#define GMAC210_STAT_INT_REG		0x4C
++#define   GMAC210_STAT_PWR_DOWN_ACK	BIT(4)
++#define   GMAC210_STAT_SBD_TX_CLK_GATE	BIT(3)
++#define   GMAC210_STAT_LPI_INT		BIT(1)
++#define   GMAC210_STAT_PMT_INT		BIT(0)
++#define GMAC210_CLK_GATE_CFG_REG	0x80
++#define   GMAC210_CLK_GATE_CFG_RX	BIT(7)
++#define   GMAC210_CLK_GATE_CFG_PTP_REF	BIT(6)
++#define   GMAC210_CLK_GATE_CFG_CSR	BIT(5)
++#define   GMAC210_CLK_GATE_CFG_TX	BIT(4)
++#define   GMAC210_CLK_GATE_CFG_APP	BIT(3)
++
++#define GMAC_ETCS_MII		0x0
++#define GMAC_ETCS_EXT_GMII	0x1
++#define GMAC_ETCS_INT_GMII	0x2
++
++struct sunxi_platform_data {
++	struct reset_ctl_bulk resets;
++	struct clk_bulk clks;
++	struct udevice *phy_reg;
++};
++
++static ulong eqos_get_tick_clk_rate_sunxi(struct udevice *dev)
++{
++	struct eqos_priv *eqos = dev_get_priv(dev);
++
++	return clk_get_rate(&eqos->clk_master_bus);
++}
++
++static int gmac210_set_cfg(struct udevice *dev, phy_interface_t interface_type)
++{
++	void __iomem *cfg_base;
++	u32 val, reg = 0;
++
++	cfg_base = (void __iomem *)dev_read_addr_index_ptr(dev, 1);
++	if (!cfg_base) {
++		dev_err(dev, "cannot find cfg reg base\n");
++		return -EINVAL;
++	}
++
++	if (!dev_read_u32(dev, "tx-internal-delay-ps", &val)) {
++		if (val % 100) {
++			dev_err(dev, "tx-delay must be a multiple of 100\n");
++			return -EINVAL;
++		}
++		val /= 100;
++		dev_dbg(dev, "set tx-delay to %x\n", val);
++		if (!FIELD_FIT(GMAC210_CFG_ETXDC_H, val >> 3) ||
++		    !FIELD_FIT(GMAC210_CFG_ETXDC_L, val & 0x7)) {
++			dev_err(dev, "Invalid TX clock delay: %d\n", val);
++			return -EINVAL;
++		}
++
++		reg |= FIELD_PREP(GMAC210_CFG_ETXDC_H, val >> 3);
++		reg |= FIELD_PREP(GMAC210_CFG_ETXDC_L, val & 0x7);
++	}
++
++	if (!dev_read_u32(dev, "rx-internal-delay-ps", &val)) {
++		if (val % 100) {
++			dev_err(dev, "rx-delay must be a multiple of 100\n");
++			return -EINVAL;
++		}
++		val /= 100;
++		dev_dbg(dev, "set rx-delay to %x\n", val);
++		if (!FIELD_FIT(GMAC210_CFG_ERXDC, val)) {
++			dev_err(dev, "Invalid RX clock delay: %d\n", val);
++			return -EINVAL;
++		}
++
++		reg |= FIELD_PREP(GMAC210_CFG_ERXDC, val);
++	}
++
++	switch (interface_type) {
++	case PHY_INTERFACE_MODE_MII:
++		/* default */
++		break;
++	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID:
++		reg |= GMAC210_CFG_EPIT | GMAC_ETCS_INT_GMII;
++		break;
++	case PHY_INTERFACE_MODE_RMII:
++		reg |= GMAC210_CFG_RMII_EN;
++		break;
++	default:
++		dev_err(dev, "Unsupported interface mode: %s\n",
++			phy_interface_strings[interface_type]);
++		return -EINVAL;
++	}
++
++	writel(reg, cfg_base + GMAC210_CFG_REG);
++
++	return 0;
++}
++
++static int gmac200_set_syscon(struct udevice *dev, phy_interface_t interface_type)
++{
++	struct regmap *regmap;
++	u32 val, reg = 0;
++	int ret;
++
++	regmap = syscon_regmap_lookup_by_phandle(dev, "syscon");
++	if (IS_ERR(regmap)) {
++		dev_err(dev, "Unable to map syscon\n");
++		return PTR_ERR(regmap);
++	}
++
++	if (!dev_read_u32(dev, "tx-internal-delay-ps", &val)) {
++		if (val % 100) {
++			dev_err(dev, "tx-delay must be a multiple of 100\n");
++			return -EINVAL;
++		}
++		val /= 100;
++		dev_dbg(dev, "set tx-delay to %x\n", val);
++		if (!FIELD_FIT(GMAC200_SYSCON_ETXDC_MASK, val)) {
++			dev_err(dev, "Invalid TX clock delay: %d\n", val);
++			return -EINVAL;
++		}
++
++		reg |= FIELD_PREP(GMAC200_SYSCON_ETXDC_MASK, val);
++	}
++
++	if (!dev_read_u32(dev, "rx-internal-delay-ps", &val)) {
++		if (val % 100) {
++			dev_err(dev, "rx-delay must be a multiple of 100\n");
++			return -EINVAL;
++		}
++		val /= 100;
++		dev_dbg(dev, "set rx-delay to %x\n", val);
++		if (!FIELD_FIT(GMAC200_SYSCON_ERXDC_MASK, val)) {
++			dev_err(dev, "Invalid RX clock delay: %d\n", val);
++			return -EINVAL;
++		}
++
++		reg |= FIELD_PREP(GMAC200_SYSCON_ERXDC_MASK, val);
++	}
++
++	switch (interface_type) {
++	case PHY_INTERFACE_MODE_MII:
++		/* default */
++		break;
++	case PHY_INTERFACE_MODE_RGMII:
++	case PHY_INTERFACE_MODE_RGMII_ID:
++	case PHY_INTERFACE_MODE_RGMII_RXID:
++	case PHY_INTERFACE_MODE_RGMII_TXID:
++		reg |= GMAC200_SYSCON_EPIT | GMAC_ETCS_INT_GMII;
++		break;
++	case PHY_INTERFACE_MODE_RMII:
++		reg |= GMAC200_SYSCON_RMII_EN;
++		break;
++	default:
++		dev_err(dev, "Unsupported interface mode: %s\n",
++			phy_interface_strings[interface_type]);
++		return -EINVAL;
++	}
++
++	ret = regmap_write(regmap, GMAC200_SYSCON_REG, reg);
++	if (ret < 0) {
++		dev_err(dev, "Failed to write to syscon\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int eqos_start_clks_sunxi(struct udevice *dev)
++{
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data = pdata->priv_pdata;
++
++	return clk_enable_bulk(&data->clks);
++}
++
++static int eqos_stop_clks_sunxi(struct udevice *dev)
++{
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data = pdata->priv_pdata;
++
++	return clk_disable_bulk(&data->clks);
++}
++
++static int eqos_start_resets_sunxi(struct udevice *dev)
++{
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data = pdata->priv_pdata;
++	int ret;
++
++	ret = reset_deassert_bulk(&data->resets);
++	if (ret)
++		return ret;
++
++	if (device_is_compatible(dev, "allwinner,sun55i-a523-gmac200"))
++		ret = gmac200_set_syscon(dev, pdata->phy_interface);
++	else if (device_is_compatible(dev, "allwinner,sun60i-a733-gmac210"))
++		ret = gmac210_set_cfg(dev, pdata->phy_interface);
++	else {
++		dev_err(dev, "Unsupported GMAC controller\n");
++		return -EINVAL;
++	}
++
++	return ret;
++}
++
++static int eqos_stop_resets_sunxi(struct udevice *dev)
++{
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data = pdata->priv_pdata;
++
++	return reset_assert_bulk(&data->resets);
++}
++
++static int eqos_probe_resources_sunxi(struct udevice *dev)
++{
++	struct eqos_priv *eqos = dev_get_priv(dev);
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data;
++	int ret;
++
++	ret = eqos_get_base_addr_dt(dev);
++	if (ret) {
++		pr_err("eqos_get_base_addr_dt failed: %d\n", ret);
++		return ret;
++	}
++
++	data = calloc(1, sizeof(struct sunxi_platform_data));
++	if (!data)
++		return -ENOMEM;
++
++	pdata->priv_pdata = data;
++	pdata->phy_interface = eqos->config->interface(dev);
++	if (pdata->phy_interface == PHY_INTERFACE_MODE_NA) {
++		pr_err("Invalid PHY interface\n");
++		return -EINVAL;
++	}
++
++	ret = clk_get_by_name(dev, "stmmaceth", &eqos->clk_master_bus);
++	if (ret) {
++		dev_err(dev, "clk_get_by_name(stmmaceth) failed: %d\n", ret);
++		return ret;
++	}
++
++	ret = reset_get_bulk(dev, &data->resets);
++
++	if (ret < 0)
++		return ret;
++
++	ret = clk_get_bulk(dev, &data->clks);
++	if (ret < 0) {
++		dev_err(dev, "clk_get_bulk() failed: %d\n", ret);
++		return ret;
++	}
++
++#ifdef CONFIG_DM_REGULATOR
++	device_get_supply_regulator(dev, "phy-supply", &data->phy_reg);
++	if (data->phy_reg) {
++		ret = regulator_set_enable_if_allowed(data->phy_reg, true);
++		if (ret) {
++			printf("%s: Error enabling phy supply\n", dev->name);
++			return ret;
++		}
++	}
++#endif
++
++	return 0;
++}
++
++static int eqos_remove_resources_sunxi(struct udevice *dev)
++{
++	struct eth_pdata *pdata = dev_get_plat(dev);
++	struct sunxi_platform_data *data = pdata->priv_pdata;
++
++	clk_disable_bulk(&data->clks);
++
++	return 0;
++}
++
++static struct eqos_ops eqos_sunxi_ops = {
++	.eqos_inval_desc = eqos_inval_desc_generic,
++	.eqos_flush_desc = eqos_flush_desc_generic,
++	.eqos_inval_buffer = eqos_inval_buffer_generic,
++	.eqos_flush_buffer = eqos_flush_buffer_generic,
++	.eqos_probe_resources = eqos_probe_resources_sunxi,
++	.eqos_remove_resources = eqos_remove_resources_sunxi,
++	.eqos_stop_resets = eqos_stop_resets_sunxi,
++	.eqos_start_resets = eqos_start_resets_sunxi,
++	.eqos_stop_clks = eqos_stop_clks_sunxi,
++	.eqos_start_clks = eqos_start_clks_sunxi,
++	.eqos_calibrate_pads = eqos_null_ops,
++	.eqos_disable_calibration = eqos_null_ops,
++	.eqos_set_tx_clk_speed = eqos_null_ops,
++	.eqos_get_enetaddr = eqos_null_ops,
++	.eqos_get_tick_clk_rate = eqos_get_tick_clk_rate_sunxi
++};
++
++struct eqos_config __maybe_unused eqos_sunxi_config = {
++	.reg_access_always_ok = false,
++	.mdio_wait = 10000,
++	.swr_wait = 5000,
++	.config_mac = EQOS_MAC_RXQ_CTRL0_RXQ0EN_ENABLED_DCB,
++	.config_mac_mdio = EQOS_MAC_MDIO_ADDRESS_CR_150_250,
++	.axi_bus_width = EQOS_AXI_WIDTH_64,
++	.interface = dev_read_phy_mode,
++	.ops = &eqos_sunxi_ops
++};
+-- 
+2.53.0
+

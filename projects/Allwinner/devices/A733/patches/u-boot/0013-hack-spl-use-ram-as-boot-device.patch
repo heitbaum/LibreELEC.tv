@@ -1,0 +1,33 @@
+From 0e3fff0c6c62b44a89fac37e0cd5ce4d1beb3222 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Thu, 31 Jul 2025 22:11:03 +0000
+Subject: [PATCH 13/33] hack: spl: use ram as boot device
+
+Force to use ram as first boot device, which will chainload
+the u-boot fit image located in DDR space.
+
+After DDR initialization, use sunxi-fel to preload U-Boot fit image
+to DDR address 0x4D000000, then booting it there.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/mach-sunxi/board.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
+index 72c9fc413cb..64002ae7e59 100644
+--- a/arch/arm/mach-sunxi/board.c
++++ b/arch/arm/mach-sunxi/board.c
+@@ -292,6 +292,9 @@ uint32_t sunxi_get_boot_device(void)
+ {
+ 	int boot_source = sunxi_get_boot_source();
+ 
++#ifdef CONFIG_MACH_SUN60I_A733
++	return BOOT_DEVICE_RAM;
++#endif
+ 	/*
+ 	 * When booting from the SD card or NAND memory, the "eGON.BT0"
+ 	 * signature is expected to be found in memory at the address 0x0004
+-- 
+2.53.0
+

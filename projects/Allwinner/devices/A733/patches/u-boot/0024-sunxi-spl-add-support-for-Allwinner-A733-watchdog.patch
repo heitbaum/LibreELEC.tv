@@ -1,0 +1,82 @@
+From 2be5d8f8a9c348dc6fdecd1db1839d2781893b8a Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Thu, 28 Aug 2025 12:08:55 +0000
+Subject: [PATCH 24/33] sunxi: spl: add support for Allwinner A733 watchdog
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/include/asm/arch-sunxi/cpu_sunxi_ncat2.h | 1 +
+ arch/arm/include/asm/arch-sunxi/watchdog.h        | 8 ++++++--
+ arch/arm/mach-sunxi/board.c                       | 7 +++++--
+ 3 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/include/asm/arch-sunxi/cpu_sunxi_ncat2.h b/arch/arm/include/asm/arch-sunxi/cpu_sunxi_ncat2.h
+index e12a8c18c8f..4081719c8b7 100644
+--- a/arch/arm/include/asm/arch-sunxi/cpu_sunxi_ncat2.h
++++ b/arch/arm/include/asm/arch-sunxi/cpu_sunxi_ncat2.h
+@@ -10,6 +10,7 @@
+ #ifdef CONFIG_MACH_SUN60I_A733
+ 
+ #define SUNXI_CCM_BASE			0x02002000
++#define SUNXI_WDT_BASE			0x02050000
+ #define SUNXI_TIMER_BASE		0x02052000
+ 
+ #define SUNXI_TWI0_BASE			0x02510000
+diff --git a/arch/arm/include/asm/arch-sunxi/watchdog.h b/arch/arm/include/asm/arch-sunxi/watchdog.h
+index 14a6e89ccfa..e325062bc59 100644
+--- a/arch/arm/include/asm/arch-sunxi/watchdog.h
++++ b/arch/arm/include/asm/arch-sunxi/watchdog.h
+@@ -11,6 +11,7 @@
+ 
+ #define WDT_CTRL_RESTART	(0x1 << 0)
+ #define WDT_CTRL_KEY		(0x0a57 << 1)
++#define WDT_CFG_KEY			(0x16aa << 16)
+ 
+ #define WDT_SRST_REG		0x08
+ 
+@@ -35,14 +36,17 @@ struct sunxi_wdog {
+ 
+ struct sunxi_wdog {
+ 	u32 irq_en;		/* 0x00 */
+-	u32 irq_sta;		/* 0x04 */
++	u32 irq_sta;	/* 0x04 */
++#if defined(CONFIG_MACH_SUN60I_A733)
++	u32 srst;		/* 0x08 */
++#else
+ 	u32 res1[2];
++#endif
+ 	u32 ctl;		/* 0x10 */
+ 	u32 cfg;		/* 0x14 */
+ 	u32 mode;		/* 0x18 */
+ 	u32 res2;
+ };
+-
+ #endif
+ 
+ #endif /* _SUNXI_WATCHDOG_H_ */
+diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
+index 64002ae7e59..0a5b5a08a50 100644
+--- a/arch/arm/mach-sunxi/board.c
++++ b/arch/arm/mach-sunxi/board.c
+@@ -522,13 +522,16 @@ void reset_cpu(void)
+ 	/* WDOG is broken for some H6 rev. use the R_WDOG instead */
+ 	static const struct sunxi_wdog *wdog =
+ 		(struct sunxi_wdog *)SUNXI_R_WDOG_BASE;
++#elif defined(CONFIG_MACH_SUN60I_A733)
++	static const struct sunxi_wdog *wdog =
++		(struct sunxi_wdog *)SUNXI_WDT_BASE;
+ #else
+ 	static const struct sunxi_wdog *wdog =
+ 		((struct sunxi_timer_reg *)SUNXI_TIMER_BASE)->wdog;
+ #endif
+ 	/* Set the watchdog for its shortest interval (.5s) and wait */
+-	writel(WDT_CFG_RESET, &wdog->cfg);
+-	writel(WDT_MODE_EN, &wdog->mode);
++	writel(WDT_CFG_KEY | WDT_CFG_RESET, &wdog->cfg);
++	writel(WDT_CFG_KEY | WDT_MODE_EN, &wdog->mode);
+ 	writel(WDT_CTRL_KEY | WDT_CTRL_RESTART, &wdog->ctl);
+ 	while (1) { }
+ #endif
+-- 
+2.53.0
+

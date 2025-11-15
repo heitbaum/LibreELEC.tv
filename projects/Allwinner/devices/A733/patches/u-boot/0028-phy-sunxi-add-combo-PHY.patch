@@ -1,0 +1,645 @@
+From 6fd17739492b01c6111e40245a982aa152dc2b12 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Tue, 14 Apr 2026 07:18:09 +0000
+Subject: [PATCH 28/33] phy: sunxi: add combo PHY
+
+Enable PCIe functionality has been added and tested.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ drivers/phy/Kconfig                  |   6 +
+ drivers/phy/Makefile                 |   2 +
+ drivers/phy/sunxi-cadence-combophy.c | 584 +++++++++++++++++++++++++++
+ 3 files changed, 592 insertions(+)
+ create mode 100644 drivers/phy/sunxi-cadence-combophy.c
+
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 09810b62b51..c176cb7cb03 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -332,6 +332,12 @@ config PHY_XILINX_ZYNQMP
+ 	  Enable this to support ZynqMP High Speed Gigabit Transceiver
+ 	  that is part of ZynqMP SoC.
+ 
++config AW_CADENCE_COMBOPHY
++	tristate "Allwinner Cadence ComboPHY driver"
++	depends on PHY
++	help
++	  Enable this to support Allwinner Cadence Comb PHY
++
+ source "drivers/phy/rockchip/Kconfig"
+ source "drivers/phy/cadence/Kconfig"
+ source "drivers/phy/ti/Kconfig"
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index 83102349669..41b7e63d533 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -7,6 +7,7 @@ obj-y += allwinner/
+ obj-y += marvell/
+ obj-y += rockchip/
+ obj-y += socionext/
++ccflags-$(CONFIG_AW_CADENCE_COMBOPHY) += -I$(srctree)/dts/upstream/include
+ 
+ obj-$(CONFIG_$(PHASE_)PHY) += phy-uclass.o
+ obj-$(CONFIG_$(PHASE_)NOP_PHY) += nop-phy.o
+@@ -42,6 +43,7 @@ obj-$(CONFIG_PHY_NPCM_USB) += phy-npcm-usb.o
+ obj-$(CONFIG_$(PHASE_)PHY_IMX8MQ_USB) += phy-imx8mq-usb.o
+ obj-$(CONFIG_PHY_IMX8M_PCIE) += phy-imx8m-pcie.o
+ obj-$(CONFIG_PHY_XILINX_ZYNQMP) += phy-zynqmp.o
++obj-$(CONFIG_AW_CADENCE_COMBOPHY) += sunxi-cadence-combophy.o
+ obj-y += cadence/
+ obj-y += ti/
+ obj-y += qcom/
+diff --git a/drivers/phy/sunxi-cadence-combophy.c b/drivers/phy/sunxi-cadence-combophy.c
+new file mode 100644
+index 00000000000..5e47b80fd1a
+--- /dev/null
++++ b/drivers/phy/sunxi-cadence-combophy.c
+@@ -0,0 +1,584 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * (C) Copyright 2024
++ * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
++ *
++ * Allwinner USB3.0/PCIE/DisplayPort Combo PHY driver
++ */
++
++#include <dm.h>
++#include <fdtdec.h>
++#include <fdt_support.h>
++#include <iotrace.h>
++#include <dm/device.h>
++#include <dm/ofnode.h>
++#include <dm/of_access.h>
++#include <generic-phy.h>
++#include <dt-bindings/phy/phy.h>
++#include <clk.h>
++#include <dm/devres.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/bitops.h>
++#include <reset.h>
++
++#define msleep(a)    udelay(a * 1000)
++#define phy_set_mask(width, shift)   ((width?((-1U) >> (32-width)):0)  << (shift))
++#define phy_clear_mask(width, shift)   (~(phy_set_mask(width, shift)))
++
++#define phy_readl(addr) readl(addr)
++#define phy_readw(addr) readw(addr)
++#define phy_writel(addr, val) writel(val, addr)
++#define phy_writew(addr, val) writew(val, addr)
++
++struct sunxi_cadence_combophy {
++	const char *name;
++	int type;
++	ulong top_reg;
++	ulong phy_reg;
++	struct clk clk;
++	struct clk bus_clk;
++	struct phy phy;
++	struct sunxi_cadence_phy *sunxi_cphy;
++};
++
++struct sunxi_cadence_phy {
++	ulong top_subsys_reg;
++	ulong top_combo_reg;
++	struct udevice *dev;
++	struct clk serdes_clk;
++	struct clk dcxo_serdes0_clk;
++	struct clk dcxo_serdes1_clk;
++	struct reset_ctl bus_rst;
++
++	struct sunxi_cadence_combophy *combo0;
++	struct sunxi_cadence_combophy *combo1;
++	struct sunxi_cadence_combophy *aux_hpd;
++
++};
++
++enum phy_type_e {
++	COMBO_PHY0 = 0,
++	COMBO_PHY1,
++};
++
++/* sysrtc */
++#define DCXO_SERDES1_GATING			BIT(5)
++
++/* serdes */
++#define SUBSYS_PCIE_BGR				0x4
++#define SUBSYS_PCIE_GATING			(BIT(16) | BIT(17) | BIT(18))
++#define SUBSYS_DBG_CTL				0xf0
++#define SUBSYS_DISABLE_COMBO1_AUTOGATING	BIT(29)
++#define SUBSYS_COMB1_PIPE			0xc44
++#define SUBSYS_COMB1_PIPE_PCIE			0x1
++
++static void sunxi_cadence_phy_pcie_phy_init(struct sunxi_cadence_phy *sunxi_cphy)
++{
++	struct sunxi_cadence_combophy *combo1 = sunxi_cphy->combo1;
++	u32 val;
++
++	writel(0x01100001, combo1->top_reg + 0x4);
++
++	writew(0x1a, combo1->phy_reg + 0x44);
++
++	writew(0x34, combo1->phy_reg + 0x54);
++	writew(0xda, combo1->phy_reg + 0x58);
++
++	writew(0x34, combo1->phy_reg + 0x64);
++	writew(0xda, combo1->phy_reg + 0x68);
++
++	writew(0x82, combo1->phy_reg + 0xc8);
++	writew(0x82, combo1->phy_reg + 0xca);
++
++	writew(0x1a, combo1->phy_reg + 0xe8);
++
++	writew(0x20, combo1->phy_reg + 0x208);
++	writew(0x7, combo1->phy_reg + 0x20a);
++	writew(0x20, combo1->phy_reg + 0x218);
++	writew(0x7, combo1->phy_reg + 0x21a);
++	writew(0x30c, combo1->phy_reg + 0x228);
++	writew(0x7, combo1->phy_reg + 0x22a);
++
++	writew(0x7, combo1->phy_reg + 0x248);
++	writew(0x3, combo1->phy_reg + 0x24a);
++	writew(0xf, combo1->phy_reg + 0x24c);
++	writew(0x132, combo1->phy_reg + 0x250);
++
++	writew(0x208, combo1->phy_reg + 0x8180);
++	writew(0x9c, combo1->phy_reg + 0x8184);
++
++	writew(0x1a, combo1->phy_reg + 0x10088);
++	writew(0x82, combo1->phy_reg + 0x1008a);
++	writew(0x1a, combo1->phy_reg + 0x10098);
++	writew(0x82, combo1->phy_reg + 0x1009a);
++
++	writew(0xa28, combo1->phy_reg + 0x8246);
++
++	val = readl(combo1->top_reg + 0x100);
++	val &= ~0x30;
++	writel(val, combo1->top_reg + 0x100);
++
++	writew(0x4, combo1->phy_reg + 0x128);
++	writew(0x4, combo1->phy_reg + 0x148);
++	writew(0x4, combo1->phy_reg + 0x1a8);
++
++	writew(0x509, combo1->phy_reg + 0x348);
++	writew(0x509, combo1->phy_reg + 0x368);
++	writew(0x509, combo1->phy_reg + 0x388);
++	writew(0xf00, combo1->phy_reg + 0x34a);
++	writew(0xf00, combo1->phy_reg + 0x36a);
++	writew(0xf00, combo1->phy_reg + 0x38a);
++	writew(0xf08, combo1->phy_reg + 0x34c);
++	writew(0xf08, combo1->phy_reg + 0x36c);
++	writew(0xf08, combo1->phy_reg + 0x38c);
++
++	writew(0x180, combo1->phy_reg + 0x120);
++	writew(0x133, combo1->phy_reg + 0x140);
++	writew(0x133, combo1->phy_reg + 0x1a0);
++	writew(0x9d8a, combo1->phy_reg + 0x122);
++	writew(0xb13b, combo1->phy_reg + 0x142);
++	writew(0xb13b, combo1->phy_reg + 0x1a2);
++	writew(0x2, combo1->phy_reg + 0x124);
++	writew(0x2, combo1->phy_reg + 0x144);
++	writew(0x2, combo1->phy_reg + 0x1a4);
++	writew(0x102, combo1->phy_reg + 0x126);
++	writew(0xce, combo1->phy_reg + 0x146);
++	writew(0xce, combo1->phy_reg + 0x1a6);
++
++	writew(0x22, combo1->phy_reg + 0x340);
++	writew(0x22, combo1->phy_reg + 0x360);
++	writew(0x22, combo1->phy_reg + 0x380);
++
++	writew(0x1, combo1->phy_reg + 0x130);
++	writew(0x1, combo1->phy_reg + 0x150);
++	writew(0x1, combo1->phy_reg + 0x1b0);
++	writew(0x45f, combo1->phy_reg + 0x132);
++	writew(0x2f0, combo1->phy_reg + 0x152);
++	writew(0x399, combo1->phy_reg + 0x1b2);
++	writew(0x6b, combo1->phy_reg + 0x134);
++	writew(0x68, combo1->phy_reg + 0x154);
++	writew(0x68, combo1->phy_reg + 0x1b4);
++	writew(0x4, combo1->phy_reg + 0x136);
++	writew(0x4, combo1->phy_reg + 0x156);
++	writew(0x4, combo1->phy_reg + 0x1b6);
++
++	writew(0x104, combo1->phy_reg + 0x108);
++	writew(0x104, combo1->phy_reg + 0x188);
++	writew(0x5, combo1->phy_reg + 0x10a);
++	writew(0x5, combo1->phy_reg + 0x18a);
++	writew(0x337, combo1->phy_reg + 0x10c);
++	writew(0x337, combo1->phy_reg + 0x18c);
++	writew(0x3dbe, combo1->phy_reg + 0x110);
++	writew(0x3dbe, combo1->phy_reg + 0x190);
++	writew(0x3, combo1->phy_reg + 0x104);
++	writew(0x3, combo1->phy_reg + 0x184);
++
++	writew(0x14, combo1->phy_reg + 0x138);
++	writew(0x14, combo1->phy_reg + 0x1b8);
++	writew(0x192, combo1->phy_reg + 0x13c);
++	writew(0x192, combo1->phy_reg + 0x1bc);
++	writew(0x6, combo1->phy_reg + 0x13e);
++	writew(0x6, combo1->phy_reg + 0x1be);
++
++	writew(0x0, combo1->phy_reg + 0x103c0);
++	writew(0x19, combo1->phy_reg + 0x102e2);
++	writew(0x19, combo1->phy_reg + 0x102e4);
++
++	writew(0x1, combo1->phy_reg + 0x103fe);
++
++	val = readl(combo1->phy_reg + 0x98);
++	val &= ~0x3;
++	val |= 0x2;
++	writel(val, combo1->phy_reg + 0x98);
++
++	val = readl(combo1->phy_reg + 0xa8);
++	val &= ~0x3;
++	val |= 0x2;
++	writel(val, combo1->phy_reg + 0xa8);
++
++	val = readl(combo1->phy_reg + 0xd8);
++	val &= ~0x3;
++	val |= 0x2;
++	writel(val, combo1->phy_reg + 0xd8);
++
++	val = readl(combo1->top_reg);
++	writel(val | 0x1, combo1->top_reg);
++	val = readl(combo1->top_reg + 0x100);
++	writel(val | 0x1, combo1->top_reg + 0x100);
++
++	val = readl(combo1->top_reg + 0x900);
++	while (true) {
++		udelay(100);
++		val = readl(combo1->top_reg + 0x900);
++		if (val & BIT(0))
++			break;
++	}
++
++	val = readw(combo1->phy_reg + 0xa0);
++	val |= 0x220;
++	val &= ~0x2;
++	val = 0x270;
++	writew(val, combo1->phy_reg + 0xa0);
++
++	val = readw(combo1->phy_reg + 0x98);
++	val |= BIT(4);
++	writew(val, combo1->phy_reg + 0x98);
++
++	val = readw(combo1->phy_reg + 0x18000);
++	val |= BIT(0);
++	writew(val, combo1->phy_reg + 0x18000);
++
++	val = readl(combo1->top_reg + 0x4);
++	val |= BIT(28);
++	writel(val, combo1->top_reg + 0x4);
++}
++
++static int sunxi_cadence_phy_combo1_pcie_init(struct sunxi_cadence_phy *sunxi_cphy)
++{
++	int ret;
++	u32 val;
++#if 0
++	ret = clk_set_rate(&sunxi_cphy->serdes_clk, 100000000);
++	if (ret) {
++		printf("dnx: %s %d: fail\n", __func__, __LINE__);
++		return ret;
++	}
++#endif
++	ret = clk_prepare_enable(&sunxi_cphy->serdes_clk);
++	if (ret) {
++		printf("dnx: %s %d: fail\n", __func__, __LINE__);
++		return ret;
++	}
++
++	ret = clk_prepare_enable(&sunxi_cphy->dcxo_serdes1_clk);
++	if (ret) {
++		printf("dnx: %s %d: fail\n", __func__, __LINE__);
++		return ret;
++	}
++
++	ret = reset_deassert(&sunxi_cphy->bus_rst);
++	if (ret) {
++		printf("dnx: %s %d: fail\n", __func__, __LINE__);
++		return ret;
++	}
++
++	val = readl(sunxi_cphy->top_subsys_reg + SUBSYS_PCIE_BGR);
++	writel(val | SUBSYS_PCIE_GATING, sunxi_cphy->top_subsys_reg + SUBSYS_PCIE_BGR);
++
++	val = readl(sunxi_cphy->top_subsys_reg + SUBSYS_DBG_CTL);
++	writel(val | SUBSYS_DISABLE_COMBO1_AUTOGATING, sunxi_cphy->top_subsys_reg + SUBSYS_DBG_CTL);
++
++	writel(SUBSYS_COMB1_PIPE_PCIE, sunxi_cphy->top_combo_reg + SUBSYS_COMB1_PIPE);
++
++	sunxi_cadence_phy_pcie_phy_init(sunxi_cphy);
++
++	return 0;
++}
++
++static void sunxi_cadence_phy_combo1_pcie_exit(struct sunxi_cadence_phy *sunxi_cphy)
++{
++	reset_assert(&sunxi_cphy->bus_rst);
++	clk_disable(&sunxi_cphy->serdes_clk);
++	clk_disable(&sunxi_cphy->dcxo_serdes1_clk);
++}
++
++
++static int sunxi_cadence_phy_combo1_init(struct phy *phy)
++{
++	struct sunxi_cadence_phy *sunxi_cphy = dev_get_priv(phy->dev);
++	int ret = 0;
++
++	ret = sunxi_cadence_phy_combo1_pcie_init(sunxi_cphy);
++
++	return ret;
++}
++
++static int sunxi_cadence_phy_combo1_exit(struct phy *phy)
++{
++	struct sunxi_cadence_phy *sunxi_cphy = dev_get_priv(phy->dev);
++
++	sunxi_cadence_phy_combo1_pcie_exit(sunxi_cphy);
++
++	return 0;
++}
++
++static fdt_addr_t new_fdtdec_get_addr_size_fixed(const void *blob, int node,
++		const char *prop_name, int index, int na,
++		int ns, fdt_size_t *sizep,
++		bool translate)
++{
++	const fdt32_t *prop, *prop_end;
++	const fdt32_t *prop_addr, *prop_size, *prop_after_size;
++	int len;
++	fdt_addr_t addr;
++
++	prop = fdt_getprop(blob, node, prop_name, &len);
++	if (!prop) {
++		pr_err("(not found)\n");
++		return FDT_ADDR_T_NONE;
++	}
++	prop_end = prop + (len / sizeof(*prop));
++
++	prop_addr = prop + (index * (na + ns));
++	prop_size = prop_addr + na;
++	prop_after_size = prop_size + ns;
++	if (prop_after_size > prop_end) {
++		pr_err("(not enough data: expected >= %d cells, got %d cells)\n",
++		      (u32)(prop_after_size - prop), ((u32)(prop_end - prop)));
++		return FDT_ADDR_T_NONE;
++	}
++
++#if CONFIG_IS_ENABLED(OF_TRANSLATE)
++	if (translate)
++		addr = fdt_translate_address(blob, node, prop_addr);
++	else
++#endif
++		addr = fdtdec_get_number(prop_addr, na);
++
++	if (sizep) {
++		*sizep = fdtdec_get_number(prop_size, ns);
++		pr_debug("addr=%08llx, size=%llx\n", (unsigned long long)addr,
++		      (unsigned long long)*sizep);
++	} else {
++		pr_debug("addr=%08llx\n", (unsigned long long)addr);
++	}
++
++	return addr;
++}
++
++
++int sunxi_cadence_phy_create(struct udevice *dev, ofnode np,
++			     struct sunxi_cadence_combophy *combophy, enum phy_type_e type)
++{
++	struct sunxi_cadence_phy *sunxi_cphy = dev_get_priv(dev);
++	fdt_size_t size = 0;
++	fdt_addr_t addr = 0;
++	int ret;
++
++	switch (type) {
++	case COMBO_PHY0:
++		combophy->name = strdup("combophy0");
++		combophy->type = PHY_TYPE_DP;
++		break;
++	case COMBO_PHY1:
++		combophy->name = strdup("combophy1");
++		combophy->type = PHY_TYPE_PCIE;
++		break;
++	default:
++		pr_err("not support phy type (%d)\n", type);
++		return -EINVAL;
++	}
++
++	ret = clk_get_by_name(dev, "phy-clk", &combophy->clk);
++	if (ret < 0) {
++		pr_debug("Maybe there is no clk for phy (%s)\n", combophy->name);
++	}
++
++	ret = clk_get_by_name(dev, "phy-bus-clk", &combophy->bus_clk);
++	if (ret < 0) {
++		pr_debug("Maybe there is no bus clk for phy (%s)\n", combophy->name);
++	}
++
++	addr = new_fdtdec_get_addr_size_fixed((const void *)gd->fdt_blob,
++		ofnode_to_offset(np), "reg", 0, 1, 1, &size, false);
++	if (addr == FDT_ADDR_T_NONE)
++		return -ENOMEM;
++
++	combophy->top_reg = addr;
++	addr = new_fdtdec_get_addr_size_fixed((const void *)gd->fdt_blob,
++		ofnode_to_offset(np), "reg", 1, 1, 1, &size, false);
++
++	if (addr == FDT_ADDR_T_NONE) {
++		combophy->phy_reg = 0; /* equal to NULL */
++		pr_debug("Maybe there is no phy reg for %s\n", combophy->name);
++	} else
++		combophy->phy_reg = addr;
++
++	combophy->sunxi_cphy = sunxi_cphy;
++	return 0;
++}
++
++static int sunxi_cadence_phy_serdes_init(struct sunxi_cadence_phy *sunxi_cphy)
++{
++	return 0;
++}
++
++static int sunxi_cadence_phy_parse_dt(struct udevice *dev)
++{
++	int ret;
++	fdt_addr_t addr;
++	struct sunxi_cadence_phy *sunxi_cphy = dev_get_priv(dev);
++	ofnode child;
++
++	/* parse top register, which determide general configuration such as mode */
++	addr = dev_read_addr_index(dev, 0);
++	if (addr == FDT_ADDR_T_NONE) {
++		printf("fail to get addr for sunxi_cphy top_subsys_reg!\n");
++		return -ENXIO;
++	}
++	sunxi_cphy->top_subsys_reg = (ulong)addr;
++
++	addr = dev_read_addr_index(dev, 1);
++	if (addr == FDT_ADDR_T_NONE) {
++		printf("fail to get addr for sunxi_cphy top_combo_reg!\n");
++		return -ENXIO;
++	}
++	sunxi_cphy->top_combo_reg = (ulong)addr;
++
++	ret = clk_get_by_name(dev, "serdes-clk", &sunxi_cphy->serdes_clk);
++	if (ret < 0) {
++		printf("failed to get serdes clock for sunxi cadence phy\n");
++		return -ENXIO;
++	}
++
++	ret = clk_get_by_name(dev, "dcxo-serdes0-clk", &sunxi_cphy->dcxo_serdes0_clk);
++	if (ret < 0) {
++		printf("failed to get dcxo serdes0 clock for sunxi cadence phy\n");
++		return -ENXIO;
++	}
++
++	ret = clk_get_by_name(dev, "dcxo-serdes1-clk", &sunxi_cphy->dcxo_serdes1_clk);
++	if (ret < 0) {
++		printf("failed to get dcxo serdes1 clock for sunxi cadence phy\n");
++		return -ENXIO;
++	}
++
++	ret = reset_get_by_name(dev, "bus", &sunxi_cphy->bus_rst);
++	if (ret < 0) {
++		printf("failed to get bus reset for sunxi cadence phy\n");
++		return -ENXIO;
++	}
++
++	ofnode_for_each_subnode(child, dev_ofnode(dev)) {
++		if (strstr(ofnode_get_name(child), "combo-phy1")) {
++			sunxi_cphy->combo1 = devm_kzalloc(dev,
++								sizeof(*sunxi_cphy->combo1), GFP_KERNEL);
++			if (!sunxi_cphy->combo1)
++				return -ENOMEM;
++
++			/* create combophy1 */
++			ret = sunxi_cadence_phy_create(dev,
++								child, sunxi_cphy->combo1, COMBO_PHY1);
++			if (ret) {
++				printf("failed to create cadence combophy1, ret:%d\n", ret);
++				goto err_node_put;
++			}
++		}
++	}
++
++	return 0;
++
++err_node_put:
++
++	return ret;
++}
++
++static int sunxi_cadence_phy_probe(struct udevice *dev)
++{
++	int ret;
++	struct sunxi_cadence_phy *sunxi_cphy;
++
++	sunxi_cphy = devm_kzalloc(dev, sizeof(*sunxi_cphy), GFP_KERNEL);
++	if (!sunxi_cphy)
++		return -ENOMEM;
++
++	sunxi_cphy->dev = dev;
++
++	ret = sunxi_cadence_phy_parse_dt(dev);
++	if (ret)
++		return -EINVAL;
++
++	ret = sunxi_cadence_phy_serdes_init(sunxi_cphy);
++	if (ret)
++		return -EINVAL;
++
++	return 0;
++}
++
++/*******************************************************************
++ * Note:
++ * The features support by phy are listed as follow. From the table,
++ * we can know that PCIE/DP/DP_AUX has their only one specific conmophy
++ * the use, and USB3.1 can select between combo0 and combo1.
++ *
++ * So, we assume: DP only use combo0, PCIE only use combo1, USB may
++ * choose combo0 firstly.
++ *
++ * Some complex situation need to be solved later:
++ * How to compliance with all three module exist, USB/PCIE/DP ?
++ *  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
++ * |             | USB3.1 | PCIE | DisplayPort | DP_AUX  |
++ * |_ _ _ _ _ _ _|_ _ _ _ |_ _ _ |_ _ _ _ _ _ _|_ _ _ _ _|
++ * | Combophy0   |   O    |  X   |      O      |    X    |
++ * |_ _ _ _ _ _ _|_ _ _ _ |_ _ _ |_ _ _ _ _ _ _|_ _ _ _ _|
++ * | Combophy1   |   O    |  O   |      X      |    X    |
++ * |_ _ _ _ _ _ _|_ _ _ _ |_ _ _ |_ _ _ _ _ _ _|_ _ _ _ _|
++ * | AUX_HPD_PHY |   X    |  X   |      X      |    O    |
++ * |_ _ _ _ _ _  |_ _ _ _ |_ _ _ |_ _ _ _ _ _ _|_ _ _ _ _|
++ *
++ *******************************************************************/
++static int sunxi_cadence_phy_xlate(struct phy *phy,
++					  struct ofnode_phandle_args *args)
++{
++	if (args->args_count < 1) {
++		printf("invalid number of arguments\n");
++		return -EINVAL;
++	}
++
++	if (args->args_count)
++		phy->id = args->args[1];
++	else
++		phy->id = PHY_NONE;
++
++	pr_info("%s: phy_id = %ld\n", __func__, phy->id);
++
++	return 0;
++}
++
++static int sunxi_cadence_phy_init(struct phy *phy)
++{
++	int ret = -EINVAL;
++
++	switch (phy->id) {
++	case PHY_TYPE_PCIE:
++		ret = sunxi_cadence_phy_combo1_init(phy);
++		break;
++	}
++
++	return ret;
++}
++
++static int sunxi_cadence_phy_exit(struct phy *phy)
++{
++	int ret = -EINVAL;
++
++	switch (phy->id) {
++	case PHY_TYPE_PCIE:
++		ret = sunxi_cadence_phy_combo1_exit(phy);
++		break;
++	}
++
++	return ret;
++}
++
++static const struct phy_ops sunxi_cadence_phy_ops = {
++	.init		= sunxi_cadence_phy_init,
++	.exit		= sunxi_cadence_phy_exit,
++	.of_xlate       = sunxi_cadence_phy_xlate,
++};
++
++static const struct udevice_id sunxi_cadence_phy_of_match_table[] = {
++	{
++		.compatible = "allwinner,cadence-combophy",
++	},
++};
++
++U_BOOT_DRIVER(sunxi_cadence_combophy) = {
++	.name	= "sunxi_cadence_combophy",
++	.id	= UCLASS_PHY,
++	.of_match = sunxi_cadence_phy_of_match_table,
++	.ops = &sunxi_cadence_phy_ops,
++	.probe = sunxi_cadence_phy_probe,
++	.priv_auto = sizeof(struct sunxi_cadence_phy),
++};
+-- 
+2.53.0
+
