@@ -1,0 +1,132 @@
+From f92eb4c0d67b92bf1176bd21c349207492f5de06 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Mon, 18 Aug 2025 21:12:19 +0000
+Subject: [PATCH 05/33] gpio: a733: add initial support
+
+In A733 SoC, the GPIO IP block has changed its arrangement, so initial
+GPIO base address and bank size need to be adjusted.
+
+Introduce new SUNXI_NEW2_PINCTRL in order to reuse the driver in future.
+
+There is no PA bank exist in A733, but introducing a virtual one as offset
+0x80, and with the bank size 0x80, it will iterate other bank correctly
+starting from PB as offset 0x100.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ drivers/gpio/Kconfig      |  7 +++++++
+ drivers/gpio/sunxi_gpio.c | 17 ++++++++++++++---
+ include/sunxi_gpio.h      | 14 ++++++++++++++
+ 3 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index 60c5c54688e..def3f7dcbf1 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -454,6 +454,13 @@ config SUNXI_NEW_PINCTRL
+ 	The Allwinner D1 and other new SoCs use a different register map
+ 	for the GPIO block, which we need to know about in the SPL.
+ 
++config SUNXI_A733_PINCTRL
++	bool
++	depends on SUNXI_GPIO
++	---help---
++	The Allwinner A733 SoCs use a different register map
++	for the GPIO block, which we need to know about in the SPL.
++
+ config XILINX_GPIO
+ 	bool "Xilinx GPIO driver"
+ 	depends on DM_GPIO
+diff --git a/drivers/gpio/sunxi_gpio.c b/drivers/gpio/sunxi_gpio.c
+index 094c45a6927..e41aa3be5d3 100644
+--- a/drivers/gpio/sunxi_gpio.c
++++ b/drivers/gpio/sunxi_gpio.c
+@@ -38,18 +38,26 @@
+ 
+ #define GPIO_DAT_REG_OFFSET	0x10
+ 
+-#define GPIO_DRV_REG_OFFSET	0x14
+ 
+ /*		Newer SoCs use a slightly different register layout */
+ #ifdef CONFIG_SUNXI_NEW_PINCTRL
+ /* pin drive strength: 4 bits per pin */
++#define GPIO_DRV_REG_OFFSET	0x14
+ #define GPIO_DRV_INDEX(pin)	((pin) / 8)
+ #define GPIO_DRV_OFFSET(pin)	(((pin) % 8) * 4)
+ 
+ #define GPIO_PULL_REG_OFFSET	0x24
+ 
++#elif CONFIG_SUNXI_A733_PINCTRL
++#define GPIO_DRV_REG_OFFSET	0x20
++#define GPIO_DRV_INDEX(pin)	((pin) / 8)
++#define GPIO_DRV_OFFSET(pin)	(((pin) % 8) * 4)
++
++#define GPIO_PULL_REG_OFFSET	0x30
++
+ #else /* older generation pin controllers */
+ /* pin drive strength: 2 bits per pin */
++#define GPIO_DRV_REG_OFFSET	0x14
+ #define GPIO_DRV_INDEX(pin)	((pin) / 16)
+ #define GPIO_DRV_OFFSET(pin)	(((pin) % 16) * 2)
+ 
+@@ -62,15 +70,18 @@
+ static void* BANK_TO_GPIO(int bank)
+ {
+ 	void *pio_base;
++	u32 bank_size;
+ 
+ 	if (bank < SUNXI_GPIO_L) {
+-		pio_base = (void *)(uintptr_t)SUNXI_PIO_BASE;
++		pio_base = (void *)(uintptr_t)(SUNXI_PIO_BASE + SUNXI_PIO_OFFSET);
++		bank_size = SUNXI_PINCTRL_BANK_SIZE;
+ 	} else {
+ 		pio_base = (void *)(uintptr_t)SUNXI_R_PIO_BASE;
++		bank_size = SUNXI_R_PINCTRL_BANK_SIZE;
+ 		bank -= SUNXI_GPIO_L;
+ 	}
+ 
+-	return pio_base + bank * SUNXI_PINCTRL_BANK_SIZE;
++	return pio_base + bank * bank_size;
+ }
+ 
+ void sunxi_gpio_set_cfgbank(void *bank_base, int pin_offset, u32 val)
+diff --git a/include/sunxi_gpio.h b/include/sunxi_gpio.h
+index 12b54c8dda4..80161fe61db 100644
+--- a/include/sunxi_gpio.h
++++ b/include/sunxi_gpio.h
+@@ -19,6 +19,9 @@
+ #elif defined(CONFIG_SUN50I_GEN_H6)
+ #define SUNXI_PIO_BASE		0x0300b000
+ #define SUNXI_R_PIO_BASE	0x07022000
++#elif defined(CONFIG_MACH_SUN60I_A733)
++#define SUNXI_PIO_BASE		0x02000000
++#define SUNXI_R_PIO_BASE	0x07025000
+ #elif defined(CONFIG_SUNXI_GEN_NCAT2)
+ #define SUNXI_PIO_BASE		0x02000000
+ #define SUNXI_R_PIO_BASE	0x07022000
+@@ -172,11 +175,22 @@ enum sunxi_gpio_number {
+ #ifdef CONFIG_SUNXI_NEW_PINCTRL
+ 	#define SUNXI_PINCTRL_BANK_SIZE	0x30
+ 	#define SUNXI_GPIO_DISABLE	0xf
++#elif CONFIG_SUNXI_A733_PINCTRL
++	#define SUNXI_PINCTRL_BANK_SIZE	0x80
++	#define SUNXI_GPIO_DISABLE	0xf
+ #else
+ 	#define SUNXI_PINCTRL_BANK_SIZE	0x24
+ 	#define SUNXI_GPIO_DISABLE	0x7
+ #endif
+ 
++#if CONFIG_SUNXI_A733_PINCTRL
++#define SUNXI_PIO_OFFSET		0x80 /* offset for virtual PA port */
++#define SUNXI_R_PINCTRL_BANK_SIZE	0x30
++#else
++#define SUNXI_PIO_OFFSET		0x00
++#define SUNXI_R_PINCTRL_BANK_SIZE	SUNXI_PINCTRL_BANK_SIZE
++#endif
++
+ /* GPIO pin pull-up/down config */
+ #define SUNXI_GPIO_PULL_DISABLE	0
+ #define SUNXI_GPIO_PULL_UP	1
+-- 
+2.53.0
+

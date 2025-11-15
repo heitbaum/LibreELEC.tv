@@ -1,0 +1,126 @@
+From faaa8e3a01fd0434c3ccce03c4c156d4393dc75e Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Wed, 10 Sep 2025 09:31:22 +0800
+Subject: [PATCH 18/33] sunxi: net: a733: enable ethernet/gmac0 support
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 21 +++++++++
+ arch/arm/dts/sun60i-a733.dtsi          | 62 ++++++++++++++++++++++++++
+ 2 files changed, 83 insertions(+)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index f7861e45f82..93aec13c6d5 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -88,6 +88,27 @@
+ 	status = "okay";
+ };
+ 
++&gmac0 {
++	phy-mode = "rgmii-id";
++	phy-handle = <&ext_rgmii1_phy>;
++	phy-supply = <&reg_swout1>;
++
++	tx-internal-delay-ps = <1200>;
++	rx-internal-delay-ps = <1000>;
++
++	status = "okay";
++};
++
++&mdio0 {
++	ext_rgmii1_phy: ethernet-phy@1 {
++		compatible = "ethernet-phy-ieee802.3-c22";
++		reg = <1>;
++		reset-gpios = <&pio 7 16 GPIO_ACTIVE_LOW>; /* PH16 */
++		reset-assert-us = <10000>;
++		reset-deassert-us = <150000>;
++	};
++};
++
+ &r_i2c0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm/dts/sun60i-a733.dtsi b/arch/arm/dts/sun60i-a733.dtsi
+index d19ea9e478a..04c9908d0b5 100644
+--- a/arch/arm/dts/sun60i-a733.dtsi
++++ b/arch/arm/dts/sun60i-a733.dtsi
+@@ -158,6 +158,26 @@
+ 				drive-strength = <30>;
+ 				bias-pull-up;
+ 			};
++
++			gmac0_pins: gmac0-pins {
++				pins = "PH0", "PH1", "PH2", "PH3", "PH4", "PH5",
++				       "PH6", "PH7", "PH8", "PH9", "PH10",
++				       "PH11", "PH12","PH13", "PH14", "PH15";
++				allwinner,pinmux = <5>;
++				function = "gmac0";
++				drive-strength = <30>;
++				bias-pull-up;
++			};
++
++			gmac1_pins: gmac1-pins {
++				pins = "PJ0", "PJ1", "PJ2", "PJ3", "PJ4", "PJ5",
++				       "PJ6", "PJ7", "PJ8", "PJ9", "PJ10",
++				       "PJ11", "PJ12","PJ13", "PJ14", "PJ15";
++				allwinner,pinmux = <5>;
++				function = "gmac1";
++				drive-strength = <30>;
++				bias-pull-up;
++			};
+ 		};
+ 
+ 		ccu: clock-controller@2002000 {
+@@ -459,6 +479,48 @@
+ 			status = "disabled";
+ 		};
+ 
++		gmac0: ethernet@4500000 {
++			compatible = "allwinner,sun60i-a733-gmac210",
++				     "snps,dwmac-5.20";
++			reg = <0x04500000 0x8000>, <0x04508000 0x8000>;
++			clocks = <&ccu CLK_BUS_GMAC0>, <&ccu CLK_MBUS_GMAC0>, <&ccu CLK_GMAC0_PHY>;
++			clock-names = "stmmaceth", "pclk", "phy";
++			interrupts = <GIC_SPI 172 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 173 IRQ_TYPE_LEVEL_HIGH>, <GIC_SPI 174 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "macirq", "eth_lpi", "tx0_irq", "rx0_irq";
++			pinctrl-names = "default";
++			pinctrl-0 = <&gmac0_pins>;
++			resets = <&ccu RST_BUS_GMAC0>;
++			snps,fixed-burst;
++			snps,en-tx-lpi-clockgating;
++			snps,axi-config = <&gmac0_stmmac_axi_setup>;
++			snps,mtl-rx-config = <&gmac0_mtl_rx_setup>;
++			snps,mtl-tx-config = <&gmac0_mtl_tx_setup>;
++			status = "disabled";
++
++			mdio0: mdio {
++				compatible = "snps,dwmac-mdio";
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++
++			gmac0_mtl_rx_setup: rx-queues-config {
++				snps,rx-queues-to-use = <1>;
++				queue0 {};
++			};
++
++			gmac0_mtl_tx_setup: tx-queues-config {
++				snps,tx-queues-to-use = <1>;
++				queue0 {};
++			};
++
++			gmac0_stmmac_axi_setup: stmmac-axi-config {
++				snps,blen = <256 128 64 32 16 8 4>;
++				snps,rd_osr_lmt = <0xf>;
++				snps,wr_osr_lmt = <0xf>;
++			};
++		};
++
+ 		nmi_intc: interrupt-controller@7010320 {
+ 			compatible = "allwinner,sun55i-a523-nmi";
+ 			reg = <0x07010320 0xc>;
+-- 
+2.53.0
+

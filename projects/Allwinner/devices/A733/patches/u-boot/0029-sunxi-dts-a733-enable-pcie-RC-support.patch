@@ -1,0 +1,209 @@
+From bb230f0a26af1f759c41e1fe24f45db887134f39 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Tue, 14 Apr 2026 08:00:07 +0000
+Subject: [PATCH 29/33] sunxi: dts: a733: enable pcie RC support
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 34 ++++++++-
+ arch/arm/dts/sun60i-a733.dtsi          | 95 +++++++++++++++++++++++---
+ 2 files changed, 117 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index 604369b99ea..9878b1be633 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -128,9 +128,9 @@
+ 		regulators {
+ 			reg_dcdc1: dcdc1 {
+ 				regulator-always-on;
+-				regulator-min-microvolt = <900000>;
+-				regulator-max-microvolt = <1160000>;
+-				regulator-name = "vdd-cpul";
++				regulator-min-microvolt = <1000000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-name = "vdd-3v3";
+ 			};
+ 
+ 			reg_swout1: swout1 {
+@@ -153,6 +153,20 @@
+ 				regulator-name = "vcc-mipi-dsi";
+ 			};
+ 
++			reg_bldo1: bldo1 {
++				regulator-always-on;
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-name = "vcc-pe";
++			};
++
++			reg_bldo2: bldo2 {
++				regulator-always-on;
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <1800000>;
++				regulator-name = "vcc-pd";
++			};
++
+ 			/* Supplies the SYSFB */
+ 			reg_dcdc2_323: dcdc2 {
+ 				regulator-always-on;
+@@ -221,3 +235,17 @@
+ 		spi-max-frequency = <20000000>;
+ 	};
+ };
++
++&serdes {
++	status = "okay";
++	combophy0: combo-phy0@6c01000 {
++		lane_invert = <0 0 0 0>;
++		lane_remap = <2 3 0 1>;
++	};
++};
++
++&pcie_rc {
++	status = "okay";
++	pcie1v8-supply = <&reg_bldo1>;
++	pcie3v3-supply = <&reg_dcdc1>;
++};
+diff --git a/arch/arm/dts/sun60i-a733.dtsi b/arch/arm/dts/sun60i-a733.dtsi
+index b2a55e8fde9..84219d71cf4 100644
+--- a/arch/arm/dts/sun60i-a733.dtsi
++++ b/arch/arm/dts/sun60i-a733.dtsi
+@@ -1,13 +1,16 @@
+ // SPDX-License-Identifier: (GPL-2.0-only OR MIT)
+ // Copyright (C) 2023-2024 Arm Ltd.
+ 
++#include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
+-#include <dt-bindings/clock/sun6i-rtc.h>
++#include <dt-bindings/clock/sun60i-a733-rtc.h>
+ #include <dt-bindings/clock/sun60i-a733-ccu.h>
+ #include <dt-bindings/clock/sun60i-a733-r-ccu.h>
+ #include <dt-bindings/reset/sun60i-a733-ccu.h>
+ #include <dt-bindings/reset/sun60i-a733-r-ccu.h>
+ 
++#define PHY_TYPE_PCIE          2
++
+ / {
+ 	interrupt-parent = <&gic>;
+ 	#address-cells = <2>;
+@@ -81,6 +84,27 @@
+ 		clock-output-names = "osc24M";
+ 	};
+ 
++	clk_serdes_phy_cfgv: dummy0-clk {
++		#clock-cells = <0>;
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "dummy0";
++	};
++
++	clk_dcxo_serdes0_gate: dummy1-clk {
++		#clock-cells = <0>;
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "dummy1";
++	};
++
++	clk_dcxo_serdes1_gate: dummy2-clk {
++		#clock-cells = <0>;
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "dummy2";
++	};
++
+ 	pmu {
+ 		compatible = "arm,cortex-a55-pmu";
+ 		interrupts = <GIC_PPI 7 IRQ_TYPE_LEVEL_HIGH>;
+@@ -159,6 +183,14 @@
+ 				bias-pull-up;
+ 			};
+ 
++			spi0_pins: spi0-pins {
++				pins = "PC2", "PC3" ,"PC4", "PC12";
++				allwinner,pinmux = <5>;
++				function = "spi0";
++				drive-strength = <30>;
++				bias-pull-up;
++			};
++
+ 			gmac0_pins: gmac0-pins {
+ 				pins = "PH0", "PH1", "PH2", "PH3", "PH4", "PH5",
+ 				       "PH6", "PH7", "PH8", "PH9", "PH10",
+@@ -178,14 +210,6 @@
+ 				drive-strength = <30>;
+ 				bias-pull-up;
+ 			};
+-
+-			spi0_pins: spi0-pins {
+-				pins = "PC2", "PC3" ,"PC4", "PC12";
+-				allwinner,pinmux = <5>;
+-				function = "spi0";
+-				drive-strength = <30>;
+-				bias-pull-up;
+-			};
+ 		};
+ 
+ 		ccu: clock-controller@2002000 {
+@@ -601,5 +625,58 @@
+ 			#clock-cells = <1>;
+ 		};
+ 
++		serdes: serdes@6c00000 {
++			compatible = "allwinner,cadence-combophy";
++			reg = <0x06c00000 0x400>, /* serdes top register part-1 */
++			      <0x06c06000 0x2000>, /* serdes top register part-2 */
++			      <0x0709016c 0x4>; /* sys-rtc */
++			clocks = <&ccu CLK_SERDES_PHY>,
++				 <&rtc CLK_HOSC_SERDES0>,
++				 <&rtc CLK_HOSC_SERDES1>;
++			clock-names = "serdes-clk",
++				      "dcxo-serdes0-clk",
++				      "dcxo-serdes1-clk";
++			resets = <&ccu RST_BUS_SERDES>;
++			reset-names = "bus";
++			#address-cells = <1>;
++			#size-cells = <1>;
++			ranges;
++			status = "disabled";
++
++			combophy1: combo-phy1@6c02000 {
++				reg = <0x06c02000 0xa00>, /* combophy1 top register */
++				      <0x06ca0000 0x20000>; /* combophy1 phy register*/
++				#phy-cells = <1>;
++			};
++		};
++
++		pcie_rc: pcie@6000000 {
++			compatible = "allwinner,sunxi-pcie-v300-rc";
++			reg = <0x06000000 0x480000>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x0 0xff>;
++			reg-names = "dbi";
++			device_type = "pci";
++			ranges = <0x00000800 0x20000000 0x20000000 0x01000000
++				  0x81000000 0x21000000 0x21000000 0x01000000
++				  0x82000000 0x22000000 0x22000000 0x0e000000>;
++			num-lanes = <1>;
++			pwr-gpios = <&pio 4 11 GPIO_ACTIVE_HIGH>;
++			rst-gpios = <&pio 4 13 GPIO_ACTIVE_HIGH>;
++			wake-gpios = <&pio 4 12 GPIO_ACTIVE_HIGH>;
++
++			phys = <&combophy1 PHY_TYPE_PCIE>;
++			phy-names = "pcie-phy";
++			#interrupt-cells = <1>;
++			num-edma = <4>;
++			max-link-speed = <3>;
++			num-ib-windows = <16>;
++			num-ob-windows = <16>;
++			linux,pci-domain = <0>;
++			status = "disabled";
++		};
++
++
+ 	};
+ };
+-- 
+2.53.0
+

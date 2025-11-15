@@ -1,0 +1,24 @@
+From f939935c47aef7d3e141fec356c1a6e7c0b9c1cd Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Wed, 10 Sep 2025 20:29:45 +0000
+Subject: [PATCH 23/33] doc: a733: add readme
+
+how to build & run u-boot, refer to this repo
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ README.A733.md | 2 ++
+ 1 file changed, 2 insertions(+)
+ create mode 100644 README.A733.md
+
+diff --git a/README.A733.md b/README.A733.md
+new file mode 100644
+index 00000000000..f3e5625bc73
+--- /dev/null
++++ b/README.A733.md
+@@ -0,0 +1,2 @@
++Please refer below repo for doc:
++ https://github.com/dlan17/a733
+-- 
+2.53.0
+

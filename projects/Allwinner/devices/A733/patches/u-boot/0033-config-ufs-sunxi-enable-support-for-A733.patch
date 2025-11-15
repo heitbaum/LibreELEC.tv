@@ -1,0 +1,31 @@
+From 6a998fbcf809b28b988918713b3dc1514551fff5 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Wed, 15 Apr 2026 08:03:30 +0000
+Subject: [PATCH 33/33] config: ufs: sunxi: enable support for A733
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ configs/radxa-cubie-a7a_defconfig | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configs/radxa-cubie-a7a_defconfig b/configs/radxa-cubie-a7a_defconfig
+index f112865f36a..b07afab5666 100644
+--- a/configs/radxa-cubie-a7a_defconfig
++++ b/configs/radxa-cubie-a7a_defconfig
+@@ -18,6 +18,7 @@ CONFIG_CMD_I2C=y
+ CONFIG_CMD_PCI=y
+ CONFIG_CMD_SF_TEST=y
+ CONFIG_CMD_SPI=y
++CONFIG_CMD_UFS=y
+ CONFIG_CMD_REGULATOR=y
+ CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_SYS_I2C_MVTWSI=y
+@@ -49,3 +50,5 @@ CONFIG_USB_EHCI_HCD=y
+ CONFIG_USB_OHCI_HCD=y
+ CONFIG_USB_MUSB_GADGET=y
+ CONFIG_USB_ETH_CDC=y
++CONFIG_UFS=y
++CONFIG_UFS_SUNXI=y
+-- 
+2.53.0
+

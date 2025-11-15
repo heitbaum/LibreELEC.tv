@@ -1,0 +1,32 @@
+From ed5850758f49edd48a379c509093d67ca11558cd Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Mon, 4 Aug 2025 21:45:48 +0000
+Subject: [PATCH 01/33] sunxi: a733: uart: setup serial console
+
+Setup correct UART base address for A733 SoC.
+
+According to Allwinner's board design, A733 SoC use the UART0 port
+for serial console, so config PB9-10 pins to setup pinmux.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/mach-sunxi/board.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-sunxi/board.c b/arch/arm/mach-sunxi/board.c
+index 432b1c10f92..72c9fc413cb 100644
+--- a/arch/arm/mach-sunxi/board.c
++++ b/arch/arm/mach-sunxi/board.c
+@@ -141,7 +141,8 @@ static int gpio_init(void)
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), SUN50I_H616_GPH_UART0);
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), SUN50I_H616_GPH_UART0);
+ 	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
+-#elif CONFIG_CONS_INDEX == 1 && defined(CONFIG_MACH_SUN55I_A523)
++#elif CONFIG_CONS_INDEX == 1 && (defined(CONFIG_MACH_SUN55I_A523) || \
++				defined(CONFIG_MACH_SUN60I_A733))
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(9), 2);
+ 	sunxi_gpio_set_cfgpin(SUNXI_GPB(10), 2);
+ 	sunxi_gpio_set_pull(SUNXI_GPB(10), SUNXI_GPIO_PULL_UP);
+-- 
+2.53.0
+

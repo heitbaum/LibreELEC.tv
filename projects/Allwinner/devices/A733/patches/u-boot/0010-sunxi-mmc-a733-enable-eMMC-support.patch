@@ -1,0 +1,38 @@
+From 16dfb50f798b2e2d711023f99e37db747110cbad Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Tue, 19 Aug 2025 23:11:29 +0000
+Subject: [PATCH 10/33] sunxi: mmc: a733: enable eMMC support
+
+The SMHC2 controller on A733 SoC support 8bit data bus width,
+SDR and DDR mode, eMMC v5.1 standard, add DT node to enable it.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index 7e60eb7a39d..00dbe2d7070 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -40,6 +40,17 @@
+ 	status = "okay";
+ };
+ 
++&mmc2 {
++	bus-width = <8>;
++	cap-mmc-hw-reset;
++	mmc-ddr-1_8v;
++	mmc-hs200-1_8v;
++	non-removable;
++	vmmc-supply = <&reg_cldo5>;
++	vqmmc-supply = <&reg_swout2>;
++	status = "okay";
++};
++
+ &r_i2c0 {
+ 	status = "okay";
+ 
+-- 
+2.53.0
+
