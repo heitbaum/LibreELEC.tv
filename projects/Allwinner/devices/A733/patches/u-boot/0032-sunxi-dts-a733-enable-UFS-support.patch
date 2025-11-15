@@ -1,0 +1,47 @@
+From e04aca73fb26ee79ac0d699b6a2e7dc98201fcfc Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Wed, 15 Apr 2026 08:04:12 +0000
+Subject: [PATCH 32/33] sunxi: dts: a733: enable UFS support
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 4 ++++
+ arch/arm/dts/sun60i-a733.dtsi          | 7 +++++++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index 9878b1be633..64da094343e 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -109,6 +109,10 @@
+ 	};
+ };
+ 
++&ufs {
++	status = "okay";
++};
++
+ &r_i2c0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm/dts/sun60i-a733.dtsi b/arch/arm/dts/sun60i-a733.dtsi
+index 84219d71cf4..92edec8780f 100644
+--- a/arch/arm/dts/sun60i-a733.dtsi
++++ b/arch/arm/dts/sun60i-a733.dtsi
+@@ -553,6 +553,13 @@
+ 			};
+ 		};
+ 
++		ufs: ufs@4520000 {
++			compatible = "allwinner,sunxi-ufs";
++			reg = <0x4520000 0x10000>;
++			interrupts = <GIC_SPI 165 IRQ_TYPE_EDGE_RISING>;
++			status = "disabled";
++		};
++
+ 		nmi_intc: interrupt-controller@7010320 {
+ 			compatible = "allwinner,sun55i-a523-nmi";
+ 			reg = <0x07010320 0xc>;
+-- 
+2.53.0
+

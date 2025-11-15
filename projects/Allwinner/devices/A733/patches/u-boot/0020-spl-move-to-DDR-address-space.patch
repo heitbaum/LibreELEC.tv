@@ -1,0 +1,57 @@
+From e8c133261edc2f453f52132872a2d9f6f9fb41aa Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Mon, 27 Oct 2025 20:51:57 +0000
+Subject: [PATCH 20/33] spl: move to DDR address space
+
+move U-boot SPL to the DDR space, which is the default load
+address when booting via vendor boot0.
+
+| image   |---vendor specific---|---------mainline U-boot ----------|
+| section |----vendor header----|---SPL header---|--- U-boot SPL ---|
+| length  |       0x640         |      0x60      |      0xXXX       |
+| address |<-0x48000000         |<-0x48000640    |<-0x480006a0      |
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/mach-sunxi/Kconfig | 2 +-
+ common/spl/Kconfig          | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-sunxi/Kconfig b/arch/arm/mach-sunxi/Kconfig
+index 0aa25362751..016b50b3c49 100644
+--- a/arch/arm/mach-sunxi/Kconfig
++++ b/arch/arm/mach-sunxi/Kconfig
+@@ -215,7 +215,7 @@ config SUNXI_SRAM_ADDRESS
+ 	hex
+ 	default 0x10000 if MACH_SUN9I || MACH_SUN50I || MACH_SUN50I_H5
+ 	default 0x44000 if MACH_SUN55I_A523
+-	default 0x47000 if MACH_SUN60I_A733
++	default 0x48000640 if MACH_SUN60I_A733
+ 	default 0x20000 if SUN50I_GEN_H6 || SUNXI_GEN_NCAT2
+ 	default 0x0
+ 	---help---
+diff --git a/common/spl/Kconfig b/common/spl/Kconfig
+index 90aeb940004..693a7cc3b64 100644
+--- a/common/spl/Kconfig
++++ b/common/spl/Kconfig
+@@ -281,7 +281,7 @@ config SPL_TEXT_BASE
+ 	default 0x40301350 if OMAP54XX
+ 	default 0x10060 if MACH_SUN50I || MACH_SUN50I_H5 || MACH_SUN9I
+ 	default 0x44060 if MACH_SUN55I_A523
+-	default 0x47060 if MACH_SUN60I_A733
++	default 0x480006a0 if MACH_SUN60I_A733
+ 	default 0x20060 if SUN50I_GEN_H6 || SUNXI_GEN_NCAT2
+ 	default 0x00060 if ARCH_SUNXI
+ 	default 0xfffc0000 if ARCH_ZYNQMP
+@@ -437,7 +437,7 @@ config SPL_STACK
+ 	default 0x52a00 if MACH_SUN50I_H616
+ 	default 0x40000 if MACH_SUN8I_R528 || MACH_SUN50I_A133
+ 	default 0x44000 if MACH_SUN55I_A523
+-	default 0x5A000 if MACH_SUN60I_A733
++	default 0x4805a000 if MACH_SUN60I_A733
+ 	default 0x54000 if MACH_SUN50I || MACH_SUN50I_H5
+ 	default 0x18000 if MACH_SUN9I
+ 	default 0x8000 if ARCH_SUNXI
+-- 
+2.53.0
+

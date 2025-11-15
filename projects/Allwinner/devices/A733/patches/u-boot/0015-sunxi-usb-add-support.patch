@@ -1,0 +1,170 @@
+From 231d297248e7797585659aef5eb3803bc5f6edf6 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Wed, 20 Aug 2025 21:35:50 +0800
+Subject: [PATCH 15/33] sunxi: usb: add support
+
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 37 +++++++++++
+ arch/arm/dts/sun60i-a733.dtsi          | 91 ++++++++++++++++++++++++++
+ 2 files changed, 128 insertions(+)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index 00dbe2d7070..f7861e45f82 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -27,6 +27,16 @@
+ 		regulator-max-microvolt = <5000000>;
+ 		regulator-always-on;
+ 	};
++
++	reg_usb_vbus: vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb-vbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc5v>;
++		gpio = <&r_pio 0 2 GPIO_ACTIVE_HIGH>;	/* PL2 */
++		enable-active-high;
++	};
+ };
+ 
+ &uart0 {
+@@ -51,6 +61,33 @@
+ 	status = "okay";
+ };
+ 
++&usb_otg {
++	dr_mode = "peripheral";
++	status = "okay";
++};
++
++&usbphy {
++	usb0_vbus-supply = <&reg_vcc5v>;
++	usb1_vbus-supply = <&reg_usb_vbus>;
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&ehci1 {
++	status = "okay";
++};
++
++&ohci1 {
++	status = "okay";
++};
++
+ &r_i2c0 {
+ 	status = "okay";
+ 
+diff --git a/arch/arm/dts/sun60i-a733.dtsi b/arch/arm/dts/sun60i-a733.dtsi
+index d6bcb806fad..d19ea9e478a 100644
+--- a/arch/arm/dts/sun60i-a733.dtsi
++++ b/arch/arm/dts/sun60i-a733.dtsi
+@@ -368,6 +368,97 @@
+ 			#size-cells = <0>;
+ 		};
+ 
++		usb_otg: usb@4100000 {
++			compatible = "allwinner,sun55i-a733-musb",
++				     "allwinner,sun8i-a33-musb";
++			reg = <0x4100000 0x400>;
++			interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "mc";
++			clocks = <&ccu CLK_BUS_OTG>;
++			resets = <&ccu RST_BUS_OTG>;
++			extcon = <&usbphy 0>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		usbphy: phy@4100400 {
++			compatible = "allwinner,sun60i-a733-usb-phy",
++				     "allwinner,sun20i-d1-usb-phy";
++			reg = <0x4100400 0x100>,
++			      <0x4101800 0x100>,
++			      <0x4200800 0x100>;
++			reg-names = "phy_ctrl",
++				    "pmu0",
++				    "pmu1";
++			clocks = <&osc24M>,
++				 <&osc24M>;
++			clock-names = "usb0_phy",
++				      "usb1_phy";
++			resets = <&ccu RST_USB_PHY0>,
++				 <&ccu RST_USB_PHY1>;
++			reset-names = "usb0_reset",
++				      "usb1_reset";
++			status = "disabled";
++			#phy-cells = <1>;
++		};
++
++		ehci0: usb@4101000 {
++			compatible = "allwinner,sun60i-a733-ehci",
++				     "generic-ehci";
++			reg = <0x4101000 0x100>;
++			interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI0>,
++				 <&ccu CLK_BUS_EHCI0>,
++				 <&ccu CLK_USB_OHCI0>;
++			resets = <&ccu RST_BUS_OHCI0>,
++				 <&ccu RST_BUS_EHCI0>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci0: usb@4101400 {
++			compatible = "allwinner,sun60i-a733-ohci",
++				     "generic-ohci";
++			reg = <0x4101400 0x100>;
++			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI0>,
++				 <&ccu CLK_USB_OHCI0>;
++			resets = <&ccu RST_BUS_OHCI0>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ehci1: usb@4200000 {
++			compatible = "allwinner,sun60i-a733-ehci",
++				     "generic-ehci";
++			reg = <0x4200000 0x100>;
++			interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI1>,
++				 <&ccu CLK_BUS_EHCI1>,
++				 <&ccu CLK_USB_OHCI1>;
++			resets = <&ccu RST_BUS_OHCI1>,
++				 <&ccu RST_BUS_EHCI1>;
++			phys = <&usbphy 1>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci1: usb@4200400 {
++			compatible = "allwinner,sun60i-a733-ohci",
++				     "generic-ohci";
++			reg = <0x4200400 0x100>;
++			interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI1>,
++				 <&ccu CLK_USB_OHCI1>;
++			resets = <&ccu RST_BUS_OHCI1>;
++			phys = <&usbphy 1>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
+ 		nmi_intc: interrupt-controller@7010320 {
+ 			compatible = "allwinner,sun55i-a523-nmi";
+ 			reg = <0x07010320 0xc>;
+-- 
+2.53.0
+
