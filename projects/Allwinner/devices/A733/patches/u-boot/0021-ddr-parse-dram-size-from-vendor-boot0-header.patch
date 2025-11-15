@@ -1,0 +1,39 @@
+From c7048e54c73bde8a227e6d62448e11ee2d6922c2 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Mon, 27 Oct 2025 21:28:55 +0000
+Subject: [PATCH 21/33] ddr: parse dram size from vendor boot0 header
+
+Vendor boot0 will retrieve dram size and pass it to
+next bootloader stage via the boot0 header.
+
+Reuse this scheme to get dram size for mainline u-boot.
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/mach-sunxi/dram_sun60i_a733.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/mach-sunxi/dram_sun60i_a733.c b/arch/arm/mach-sunxi/dram_sun60i_a733.c
+index cd4079ccff4..19bd98c11ef 100644
+--- a/arch/arm/mach-sunxi/dram_sun60i_a733.c
++++ b/arch/arm/mach-sunxi/dram_sun60i_a733.c
+@@ -1,6 +1,15 @@
++#include <init.h>
++#include <spl.h>
++#include <asm/io.h>
+ #include <linux/sizes.h>
+ 
++struct sunxi_a733_dram {
++	unsigned int resv[318];
++	unsigned int size;
++};
++
+ unsigned long sunxi_dram_init(void)
+ {
+-	return SZ_2G;
++	struct sunxi_a733_dram *d = (struct sunxi_a733_dram *)(CONFIG_SPL_TEXT_BASE & 0xFFFF0000);
++	return (unsigned long)d->size * SZ_1M;
+ }
+-- 
+2.53.0
+
