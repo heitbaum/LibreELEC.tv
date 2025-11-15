@@ -1,0 +1,30 @@
+From 099c0a5c5076033346beb8f465f1a81909c03b68 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Sun, 31 Aug 2025 06:52:53 +0000
+Subject: [PATCH 19/33] config: net: enable ethernet support
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ configs/radxa-cubie-a7a_defconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/configs/radxa-cubie-a7a_defconfig b/configs/radxa-cubie-a7a_defconfig
+index 477dba50e60..c8ef53e08e1 100644
+--- a/configs/radxa-cubie-a7a_defconfig
++++ b/configs/radxa-cubie-a7a_defconfig
+@@ -15,6 +15,12 @@ CONFIG_CMD_I2C=y
+ CONFIG_NET_RANDOM_ETHADDR=y
+ CONFIG_SYS_I2C_MVTWSI=y
+ CONFIG_SUPPORT_EMMC_BOOT=y
++CONFIG_DM_MDIO=y
++CONFIG_DM_ETH_PHY=y
++CONFIG_DWC_ETH_QOS=y
++CONFIG_DWC_ETH_QOS_SUNXI=y
++CONFIG_RGMII=y
++CONFIG_RMII=y
+ CONFIG_REGULATOR_AXP=y
+ # CONFIG_SYSRESET is not set
+ CONFIG_USB_EHCI_HCD=y
+-- 
+2.53.0
+

@@ -1,0 +1,75 @@
+From 26ba0001d3a9b0a668e60af0ef521572fc0e15a8 Mon Sep 17 00:00:00 2001
+From: Yixun Lan <dlan@gentoo.org>
+Date: Thu, 21 Aug 2025 12:10:10 +0000
+Subject: [PATCH 25/33] sunxi: dts: a733: enable spi nor flash support
+
+Signed-off-by: Yixun Lan <dlan@gentoo.org>
+---
+ arch/arm/dts/sun60i-a733-radxa-a7a.dts | 12 ++++++++++++
+ arch/arm/dts/sun60i-a733.dtsi          | 23 +++++++++++++++++++++++
+ 2 files changed, 35 insertions(+)
+
+diff --git a/arch/arm/dts/sun60i-a733-radxa-a7a.dts b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+index 93aec13c6d5..604369b99ea 100644
+--- a/arch/arm/dts/sun60i-a733-radxa-a7a.dts
++++ b/arch/arm/dts/sun60i-a733-radxa-a7a.dts
+@@ -209,3 +209,15 @@
+ 		};
+ 	};
+ };
++
++&spi0  {
++	status = "okay";
++
++	flash@0 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <20000000>;
++	};
++};
+diff --git a/arch/arm/dts/sun60i-a733.dtsi b/arch/arm/dts/sun60i-a733.dtsi
+index 04c9908d0b5..b2a55e8fde9 100644
+--- a/arch/arm/dts/sun60i-a733.dtsi
++++ b/arch/arm/dts/sun60i-a733.dtsi
+@@ -178,6 +178,14 @@
+ 				drive-strength = <30>;
+ 				bias-pull-up;
+ 			};
++
++			spi0_pins: spi0-pins {
++				pins = "PC2", "PC3" ,"PC4", "PC12";
++				allwinner,pinmux = <5>;
++				function = "spi0";
++				drive-strength = <30>;
++				bias-pull-up;
++			};
+ 		};
+ 
+ 		ccu: clock-controller@2002000 {
+@@ -529,6 +537,21 @@
+ 			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
+ 		};
+ 
++		spi0: spi@2540000 {
++			compatible = "allwinner,sun8i-h3-spi";
++			reg = <0x02540000 0x1000>;
++			interrupts = <GIC_SPI 65 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_SPI0>;
++			clock-names = "ahb", "mod";
++			pinctrl-names = "default";
++			pinctrl-0 = <&spi0_pins>;
++			resets = <&ccu RST_BUS_SPI0>;
++			status = "disabled";
++			num-cs = <1>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
+ 		r_pio: pinctrl@7025000 {
+ 			compatible = "allwinner,sun60i-a733-r-pinctrl";
+ 			reg = <0x7025000 0x800>;
+-- 
+2.53.0
+
