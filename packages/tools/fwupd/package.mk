@@ -2,8 +2,8 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="fwupd"
-PKG_VERSION="2.0.17"
-PKG_SHA256="b51dd12ffb99f8fa91a873abaffc104c2cfed4b5d926f15f04c060e5bffb9fdf"
+PKG_VERSION="2.0.18"
+PKG_SHA256="c6d9e5fcbc63354344016dd398fc6b6050747b35636551df022f52ffe3957382"
 PKG_LICENSE="LGPL-2.1"
 PKG_SITE="https://fwupd.org"
 PKG_URL="https://github.com/fwupd/fwupd/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
