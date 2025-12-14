@@ -8,7 +8,7 @@ PKG_SHA256="7af4f36db512ad2f0f749a0f9886370edeb2bb5128014fc47cdf73702c7e1911"
 PKG_LICENSE="LGPL2.1+"
 PKG_SITE="http://www.freedesktop.org/wiki/Software/systemd"
 PKG_URL="https://github.com/systemd/systemd/archive/v${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="meson:host ninja:host gcc:host cryptsetup libcap kmod util-linux entropy libidn2 wait-time-sync Jinja2:host"
+PKG_DEPENDS_TARGET="meson:host ninja:host gcc:host libcap kmod util-linux entropy libidn2 wait-time-sync Jinja2:host"
 PKG_LONGDESC="A system and session manager for Linux, compatible with SysV and LSB init scripts."
 PKG_BUILD_FLAGS="+lto"
 
@@ -28,7 +28,7 @@ PKG_MESON_OPTS_TARGET="--libdir=/usr/lib \
                        -Dpam=disabled \
                        -Dpwquality=disabled \
                        -Dmicrohttpd=disabled \
-                       -Dlibcryptsetup=enabled \
+                       -Dlibcryptsetup=disabled \
                        -Dlibcurl=disabled \
                        -Dlibidn=disabled \
                        -Dlibidn2=enabled \
