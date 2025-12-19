@@ -2,12 +2,13 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="fwupd"
-PKG_VERSION="2.0.18"
-PKG_SHA256="c6d9e5fcbc63354344016dd398fc6b6050747b35636551df022f52ffe3957382"
+PKG_VERSION="2.0.19"
+PKG_SHA256="3bb7a4a1e2d00f0ab513e4c667d7bf5a3ff34a9802757849d3fedf07dd40ddbb"
 PKG_LICENSE="LGPL-2.1"
 PKG_SITE="https://fwupd.org"
 PKG_URL="https://github.com/fwupd/fwupd/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="toolchain gpgme libarchive libjcat libusb libxmlb sqlite xz"
+PKG_DEPENDS_CONFIG="xz"
 PKG_LONGDESC="A system daemon to allow session software to update firmware"
 
 PKG_MESON_OPTS_TARGET="-Dbuild=all \
@@ -22,10 +23,6 @@ PKG_MESON_OPTS_TARGET="-Dbuild=all \
                        -Dsystemd=disabled \
                        -Dtests=false \
                        -Dvendor_ids_dir=/usr/share/hwdata"
-
-pre_configure_target() {
-  export PKG_CONFIG_PATH="$(get_install_dir xz)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
-}
 
 post_makeinstall_target() {
   echo "[fwupd]"            >  ${INSTALL}/etc/fwupd/fwupd.conf
