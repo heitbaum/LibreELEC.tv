@@ -1,6 +1,6 @@
 PKG_NAME="zfs"
-PKG_VERSION="2.3.0"
-PKG_SHA256="6e8787eab55f24c6b9c317f3fe9b0da9a665eb34c31df88ff368d9a92e9356a6"
+PKG_VERSION="2.4.0"
+PKG_SHA256="7bdf13de0a71d95554c0e3e47d5e8f50786c30d4f4b63b7c593b1d11af75c9ee"
 PKG_URL="https://github.com/openzfs/zfs/releases/download/zfs-${PKG_VERSION}/zfs-${PKG_VERSION}.tar.gz"
 PKG_DESCRIPTION="ZFS filesystem support"
 PKG_IS_KERNEL_PKG="yes"
