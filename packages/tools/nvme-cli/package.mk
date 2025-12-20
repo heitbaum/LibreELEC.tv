@@ -11,9 +11,7 @@ PKG_DEPENDS_TARGET="toolchain json-c libnvme util-linux zlib"
 PKG_LONGDESC="NVMe management command line interface"
 
 PKG_MESON_OPTS_TARGET="-Ddocs=false \
-                       -Ddocs-build=false \
-                       -Dexamples=false \
-                       -Dtests=false"
+                       -Ddocs-build=false"
 
 post_makeinstall_target() {
   safe_remove ${INSTALL}/etc
