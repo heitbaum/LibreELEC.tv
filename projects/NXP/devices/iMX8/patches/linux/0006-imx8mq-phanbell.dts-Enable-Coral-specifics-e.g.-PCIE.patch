@@ -86,13 +86,13 @@ index a3b9d615a3b4..5ce4fc21443e 100644
 +	pinctrl-0 = <&pinctrl_pcie0>;
 +	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
 +	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
-+		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
-+		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
 +		 <&clk IMX8MQ_CLK_DUMMY>;
-+	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
++		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
 +	fsl,max-link-speed = <1>;
 +	ext_osc = <0>;
 +	hard-wired = <1>;
++	supports-clkreq;
 +	status = "okay";
 +};
 +
@@ -101,12 +101,12 @@ index a3b9d615a3b4..5ce4fc21443e 100644
 +	pinctrl-0 = <&pinctrl_pcie1>;
 +	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
 +	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
-+		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
 +		 <&pcie1_refclk>;
-+	clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
++		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
 +	ext_osc = <1>;
 +	hard-wired = <1>;
++	supports-clkreq;
 +	status = "okay";
 +};
 +
