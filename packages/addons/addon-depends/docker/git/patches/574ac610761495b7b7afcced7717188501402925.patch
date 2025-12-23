@@ -1,0 +1,31 @@
+From 574ac610761495b7b7afcced7717188501402925 Mon Sep 17 00:00:00 2001
+From: Toon Claes <toon@iotcl.com>
+Date: Tue, 2 Dec 2025 11:48:09 +0100
+Subject: [PATCH] meson: only detect ICONV_OMITS_BOM if possible
+
+In our Meson setup it automatically detects whether ICONV_OMITS_BOM
+should be defined. To check this, a piece of code is compiled and ran.
+
+When cross-compiling, it's not possible to run this piece of code. Guard
+this test with a can_run_host_binaries() check to ensure it can run.
+
+Signed-off-by: Toon Claes <toon@iotcl.com>
+Acked-by: Patrick Steinhardt <ps@pks.im>
+Signed-off-by: Junio C Hamano <gitster@pobox.com>
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index f1b3615659e56a..95348e69a413a9 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1064,7 +1064,7 @@ if iconv.found()
+     }
+   '''
+ 
+-  if compiler.run(iconv_omits_bom_source,
++  if meson.can_run_host_binaries() and compiler.run(iconv_omits_bom_source,
+     dependencies: iconv,
+     name: 'iconv omits BOM',
+   ).returncode() != 0
