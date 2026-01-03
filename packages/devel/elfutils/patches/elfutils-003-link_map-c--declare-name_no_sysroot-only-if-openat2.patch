@@ -13,11 +13,9 @@ https://sourceware.org/bugzilla/show_bug.cgi?id=33581
 Signed-off-by: Aaron Merey <amerey@redhat.com>
 ---
 
-diff --git a/libdwfl/link_map.c b/libdwfl/link_map.c
-index 013a415d..5f934131 100644
 --- a/libdwfl/link_map.c
 +++ b/libdwfl/link_map.c
-@@ -431,12 +431,14 @@ report_r_debug (uint_fast8_t elfclass, uint_fast8_t elfdata,
+@@ -431,12 +431,14 @@ report_r_debug (uint_fast8_t elfclass, u
  
  	  if (sysroot && !name_in_sysroot)
  	    {
@@ -35,7 +33,7 @@ index 013a415d..5f934131 100644
  	      name = sysroot_name;
  
  #ifdef HAVE_OPENAT2_RESOLVE_IN_ROOT
-@@ -451,7 +453,8 @@ report_r_debug (uint_fast8_t elfclass, uint_fast8_t elfdata,
+@@ -451,7 +453,8 @@ report_r_debug (uint_fast8_t elfclass, u
  	      if (sysrootfd < 0)
  		return -1;
  
