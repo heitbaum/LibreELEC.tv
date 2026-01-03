@@ -1,7 +1,6 @@
-diff -Naur a/Makefile.am b/Makefile.am
---- a/Makefile.am	2015-01-20 07:34:33.000000000 -0800
-+++ b/Makefile.am	2015-10-27 11:16:49.027497480 -0700
-@@ -408,23 +408,6 @@
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -408,23 +408,6 @@ $(notes_txt): $(notes_texi)
  	$(AM_V_GEN)$(MAKEINFO) -P '$(srcdir)/doc' --no-headers \
  	    $(MAKEINFOFLAGS) -o '$@' '$(notes_texi)'
  
