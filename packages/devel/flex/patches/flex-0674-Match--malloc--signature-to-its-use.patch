@@ -7,8 +7,6 @@ Subject: [PATCH] Match `malloc` signature to its use
  lib/malloc.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/lib/malloc.c b/lib/malloc.c
-index 75e8ef97c..701b9b39d 100755
 --- a/lib/malloc.c
 +++ b/lib/malloc.c
 @@ -3,7 +3,7 @@
