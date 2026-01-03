@@ -1,18 +1,16 @@
 Upstream-Status: Pending
 
-Index: autoconf-2.63/bin/autoreconf.in
-===================================================================
---- autoconf-2.63.orig/bin/autoreconf.in	2008-12-31 17:39:01.000000000 +0000
-+++ autoconf-2.63/bin/autoreconf.in	2008-12-31 17:43:38.000000000 +0000
-@@ -76,6 +76,7 @@
-   -i, --install            copy missing auxiliary files
+--- a/bin/autoreconf.in
++++ b/bin/autoreconf.in
+@@ -83,6 +83,7 @@ Operation modes:
+   -i, --install            copy missing standard auxiliary files
        --no-recursive       don't rebuild sub-packages
    -s, --symlink            with -i, install symbolic links instead of copies
 +  -x, --exclude=STEPS      steps we should not run
    -m, --make               when applicable, re-run ./configure && make
-   -W, --warnings=CATEGORY  report the warnings falling in CATEGORY [syntax]
- 
-@@ -136,6 +137,13 @@
+   -W, --warnings=CATEGORY  report the warnings falling in CATEGORY
+                            (comma-separated list accepted)
+@@ -141,6 +142,13 @@ my $run_make = 0;
  # Recurse into subpackages
  my $recursive = 1;
  
@@ -26,7 +24,7 @@ Index: autoconf-2.63/bin/autoreconf.in
  ## ---------- ##
  ## Routines.  ##
  ## ---------- ##
-@@ -153,6 +161,7 @@
+@@ -161,6 +169,7 @@ sub parse_args ()
  	  'B|prepend-include=s'	 => \@prepend_include,
  	  'i|install'            => \$install,
  	  's|symlink'            => \$symlink,
@@ -34,16 +32,16 @@ Index: autoconf-2.63/bin/autoreconf.in
  	  'm|make'               => \$run_make,
  	  'recursive!'           => \$recursive);
  
-@@ -162,6 +171,8 @@
+@@ -170,6 +179,8 @@ sub parse_args ()
    parse_WARNINGS;
-   parse_warnings '--warnings', @warning;
+   parse_warnings @warning;
  
 +  @exclude = map { split /,/ } @exclude;
 +
    # Even if the user specified a configure.ac, trim to get the
    # directory, and look for configure.ac again.  Because (i) the code
    # is simpler, and (ii) we are still able to diagnose simultaneous
-@@ -368,7 +384,10 @@
+@@ -493,8 +504,11 @@ sub autoreconf_current_directory ($)
      }
    else
      {
@@ -56,7 +54,8 @@ Index: autoconf-2.63/bin/autoreconf.in
 +      }
      }
  
-@@ -532,16 +551,19 @@
+ 
+@@ -691,9 +705,12 @@ sub autoreconf_current_directory ($)
  	{
  	  $libtoolize .= " --ltdl";
  	}
@@ -72,14 +71,7 @@ Index: autoconf-2.63/bin/autoreconf.in
      }
    else
      {
-       verb "$configure_ac: not running libtoolize: --install not given";
-     }
- 
- 
-   # --------------------- #
-   # Running intltoolize.  #
-   # --------------------- #
-@@ -748,8 +748,11 @@
+@@ -730,8 +747,11 @@ sub autoreconf_current_directory ($)
      }
    elsif ($install)
      {
@@ -93,7 +85,7 @@ Index: autoconf-2.63/bin/autoreconf.in
      }
    else
      {
-@@ -572,7 +592,10 @@
+@@ -769,7 +789,10 @@ sub autoreconf_current_directory ($)
    # latter runs the former, and (ii) autoconf is stricter than
    # autoheader.  So all in all, autoconf should give better error
    # messages.
@@ -105,7 +97,7 @@ Index: autoconf-2.63/bin/autoreconf.in
  
  
    # -------------------- #
-@@ -593,7 +616,10 @@
+@@ -790,7 +813,10 @@ sub autoreconf_current_directory ($)
      }
    else
      {
@@ -117,7 +109,7 @@ Index: autoconf-2.63/bin/autoreconf.in
      }
  
  
-@@ -610,7 +636,10 @@
+@@ -807,7 +833,10 @@ sub autoreconf_current_directory ($)
        # We should always run automake, and let it decide whether it shall
        # update the file or not.  In fact, the effect of '$force' is already
        # included in '$automake' via '--no-force'.
@@ -129,7 +121,7 @@ Index: autoconf-2.63/bin/autoreconf.in
      }
  
    # ---------------------------------------------------- #
-@@ -634,7 +663,10 @@
+@@ -867,7 +896,10 @@ sub autoreconf_current_directory ($)
  	    }
  	  else
  	    {
