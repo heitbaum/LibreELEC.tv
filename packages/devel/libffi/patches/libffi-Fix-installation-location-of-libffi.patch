@@ -32,19 +32,14 @@ Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
  Makefile.am |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Makefile.am b/Makefile.am
-index 6f669ca..b60bcc1 100644
 --- a/Makefile.am
 +++ b/Makefile.am
-@@ -93,7 +93,7 @@ FLAGS_TO_PASS = $(AM_MAKEFLAGS)
- 
- MAKEOVERRIDES=
+@@ -39,7 +39,7 @@ MAKEOVERRIDES=
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libffi.pc
  
 -toolexeclib_LTLIBRARIES = libffi.la
 +lib_LTLIBRARIES = libffi.la
  noinst_LTLIBRARIES = libffi_convenience.la
  
  libffi_la_SOURCES = src/prep_cif.c src/types.c \
--- 
-1.7.9.5
-
