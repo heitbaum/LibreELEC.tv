@@ -1,6 +1,6 @@
 --- a/configure.ac
 +++ b/configure.ac
-@@ -745,9 +745,7 @@ AM_CONDITIONAL([MACOSX], [test x$macosx
+@@ -748,9 +748,7 @@ AM_CONDITIONAL([MACOSX], [test x$macosx
  AC_CONFIG_FILES([
     Makefile
     scripts/Makefile
