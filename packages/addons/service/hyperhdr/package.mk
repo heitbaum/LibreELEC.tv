@@ -2,9 +2,9 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="hyperhdr"
-PKG_VERSION="21.0.0.0"
-PKG_SHA256="fde381b8ae701c93b57b23cfa95c56dcbbecee7e5e7b2cce5d8b5f97ed86a676"
-PKG_REV="0"
+PKG_VERSION="22.0.0.0beta1"
+PKG_SHA256="b59c3a3acb7d62c21d9171c430d606dbea0a4c98300dcf76b5d32a6d97c281a7"
+PKG_REV="1"
 PKG_LICENSE="MIT"
 PKG_SITE="https://github.com/awawa-dev/HyperHDR"
 PKG_URL="https://github.com/awawa-dev/HyperHDR/archive/v${PKG_VERSION}.tar.gz"
