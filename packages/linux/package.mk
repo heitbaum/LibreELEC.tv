@@ -40,7 +40,7 @@ case "${LINUX}" in
     PKG_VERSION="6.18.7"
     PKG_SHA256="b726a4d15cf9ae06219b56d87820776e34d89fbc137e55fb54a9b9c3015b8f1e"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-    PKG_VERSION="6.19-rc4"
+    PKG_VERSION="6.19-rc5"
     PKG_SHA256=""
     PKG_URL="https://git.kernel.org/torvalds/t/linux-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default"
