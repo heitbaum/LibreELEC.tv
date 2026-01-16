@@ -127,7 +127,8 @@ while quilt_cmd next >/dev/null 2>&1; do
     fi
   fi
 
-  QUILT_DIFF_OPTS="-p" quilt_cmd refresh -p ab --no-index --no-timestamps
+  QUILT_DIFF="git diff --no-index" QUILT_DIFF_OPTS="-p" quilt_cmd refresh -p ab --no-index --diffstat
+  #QUILT_DIFF_OPTS="-p" quilt_cmd header -e --dep3
 done
 
 # cleanup
