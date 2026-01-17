@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+. config/options ""
+
+# main code
+progname=${0}
+branchname=${1}
+
+[ $# -lt 1 ] && {
+  echo "Usage: $0 BRANCH_NAME"
+  exit 1
+}
+
+[[ "$2" == "-f" ]] && DRY_RUN="" || DRY_RUN="--dry-run"
+
+case ${branchname} in
+  kodi)
+    gh pr create --base master --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+      --label "LE 13.0"
+    ;;
+  pkg)
+    gh pr create --base master --title "Package updates" \
+      --body "$(tools/update-pr ${branchname})" --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+      --label "LE 13.0" ${DRY_RUN}
+    ;;
+  *)
+    gh pr create --base master --title "${branchname} updates" \
+      --body "$(tools/update-pr ${branchname})" --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+      --label "LE 13.0" ${DRY_RUN}
+    ;;
+esac
