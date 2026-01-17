@@ -90,6 +90,12 @@ if [ ! -f "${PACKAGE_LIST}" ]; then
   die "Package not found: ${pkgname}"
 fi
 
+if [[ $(type -t create_branch) == function ]]; then
+  # if the package is meant to be updated in a branch - do so
+  create_branch
+  echo $currentbranch
+fi
+
 #https://stackoverflow.com/questions/8063228/check-if-a-variable-exists-in-a-list-in-bash
 for pkgmk in ${PACKAGE_LIST}; do
   prevpkgver=$(grep "^PKG_VERSION=" "${pkgmk}" | sed 's/PKG_VERSION="//' | sed 's/"//')
@@ -142,3 +148,8 @@ for pkgmk in ${PACKAGE_LIST}; do
 
   [[ ! -v parentpkg && $(type -t custom_post_commit) == function ]] && custom_post_commit || true
 done
+
+if [[ $(type -t create_branch) == function ]]; then
+  push_branch
+  create_pr
+fi
