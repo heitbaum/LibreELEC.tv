@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libid3tag"
-PKG_VERSION="0.16.3"
-PKG_SHA256="0561009778513a95d91dac33cee8418d6622f710450a7cb56a74636d53b588cb"
+PKG_VERSION="66e5bfcde56bfb9819cae0ddc6e35462f49dcb85"
+PKG_SHA256="cf477a0237d3a606315110056f6ca2f8a60ae9043ef4689c6af2df696f121d50"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.underbit.com/products/mad/"
 PKG_URL="https://codeberg.org/tenacityteam/libid3tag/archive/${PKG_VERSION}.tar.gz"
