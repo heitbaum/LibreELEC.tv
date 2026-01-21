@@ -3,11 +3,11 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="samba"
-PKG_VERSION="4.23.5"
-PKG_SHA256="593a43ddd0d57902237dfa76888f7b02cb7fc7747111369cb31e126db4836b9f"
+PKG_VERSION="4.24.0rc2"
+PKG_SHA256="ae3ec245ea62f85bfc7fe0758ea9b04cff0474c2614255b4e82ce4c40ebd3565"
 PKG_LICENSE="GPLv3+"
 PKG_SITE="https://www.samba.org"
-PKG_URL="https://download.samba.org/pub/samba/stable/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_URL="https://download.samba.org/pub/samba/rc/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="autotools:host gcc:host heimdal:host attr connman e2fsprogs gnutls libaio libunwind popt Python3 readline talloc wsdd2 zlib"
 PKG_NEED_UNPACK="$(get_pkg_directory heimdal) $(get_pkg_directory e2fsprogs)"
 PKG_LONGDESC="A free SMB / CIFS fileserver and client."
