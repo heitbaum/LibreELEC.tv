@@ -1,3 +1,5 @@
+grep -- "Wdiscarded-qualifiers" build.LibreELEC-Generic.x86_64-13.0-devel/.threads/logs/*
+
 Installing Ncat
 ../shtool mkdir -f -p -m 755 /build/build.LibreELEC-Generic-legacy.x86_64-13.0-devel/install_pkg/nmap-7.98/usr/bin /build/build.LibreELEC-Generic-legacy.x86_64-13.0-devel/install_pkg/nmap-7.98/usr/share/man/man1
 /usr/bin/install -c -d /build/build.LibreELEC-Generic-legacy.x86_64-13.0-devel/install_pkg/nmap-7.98/usr/bin /build/build.LibreELEC-Generic-legacy.x86_64-13.0-devel/install_pkg/nmap-7.98/usr/share/man/man1 /build/build.LibreELEC-Generic-legacy.x86_64-13.0-devel/install_pkg/nmap-7.98/usr/share/nmap
