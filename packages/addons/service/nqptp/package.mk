@@ -2,9 +2,9 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nqptp"
-PKG_VERSION="1.2.4"
-PKG_SHA256="1df1d5edd5b713010d6495b3abca4c1cf4ad8fa6029df0abeb9e4de8e0eb707a"
-PKG_REV="0"
+PKG_VERSION="1.2.6"
+PKG_SHA256="26f65165c3545a6cee0b9846b47ce52a015fcd8ec153fe16997d36f61c88029e"
+PKG_REV="1"
 PKG_LICENSE="GPL-2.0"
 PKG_SITE="https://github.com/mikebrady/nqptp"
 PKG_URL="https://github.com/mikebrady/nqptp/archive/${PKG_VERSION}.tar.gz"
