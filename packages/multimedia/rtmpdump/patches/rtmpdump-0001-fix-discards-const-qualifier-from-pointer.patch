@@ -1,0 +1,113 @@
+From 21cca679f025d3f65fa140dfdcd818385947d0d1 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 22 Feb 2026 06:34:58 +0000
+Subject: [PATCH 1/2 rtmpdump] fix discards 'const' qualifier from pointer
+
+Since glibc-2.43 and ISO C23, the functions bsearch, memchr, strchr,
+strpbrk, strrchr, strstr, wcschr, wcspbrk, wcsrchr, wcsstr and wmemchr
+that return pointers into their input arrays now have definitions as
+macros that return a pointer to a const-qualified type when the input
+argument is a pointer to a const-qualified type.
+
+p1 pointer is used as a return of a const char * and subsequently
+as a pointer to char *. Add new pointers 'host1' and 'p' for the purpose
+of comparing the result of the const char * strchr return.
+
+Fixes:
+    hashswf.c: In function 'HTTP_get':
+    hashswf.c:125:6: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+      125 |   p1 = strchr(url + 4, ':');
+          |      ^
+    hashswf.c: In function 'RTMP_HashSWF':
+    hashswf.c:526:12: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+      526 |       file = strchr(url, '/');
+          |            ^
+    hashswf.c:646:13: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+      646 |           q = strchr(url, '?');
+          |             ^
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ librtmp/hashswf.c | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/librtmp/hashswf.c b/librtmp/hashswf.c
+index fc5f824..b92f65c 100644
+--- a/librtmp/hashswf.c
++++ b/librtmp/hashswf.c
+@@ -86,7 +86,8 @@ extern TLS_CTX RTMP_TLS_ctx;
+ HTTPResult
+ HTTP_get(struct HTTP_ctx *http, const char *url, HTTP_read_callback *cb)
+ {
+-  char *host, *path;
++  const char *host, *path, *p;
++  char *host1;
+   char *p1, *p2;
+   char hbuf[256];
+   int port = 80;
+@@ -122,27 +123,27 @@ HTTP_get(struct HTTP_ctx *http, const char *url, HTTP_read_callback *cb)
+ #endif
+     }
+ 
+-  p1 = strchr(url + 4, ':');
+-  if (!p1 || strncmp(p1, "://", 3))
++  p = strchr(url + 4, ':');
++  if (!p || strncmp(p, "://", 3))
+     return HTTPRES_BAD_REQUEST;
+ 
+-  host = p1 + 3;
++  host = p + 3;
+   path = strchr(host, '/');
+   hlen = path - host;
+   strncpy(hbuf, host, hlen);
+   hbuf[hlen] = '\0';
+-  host = hbuf;
+-  p1 = strrchr(host, ':');
++  host1 = hbuf;
++  p1 = strrchr(host1, ':');
+   if (p1)
+     {
+       *p1++ = '\0';
+       port = atoi(p1);
+     }
+ 
+-  sa.sin_addr.s_addr = inet_addr(host);
++  sa.sin_addr.s_addr = inet_addr(host1);
+   if (sa.sin_addr.s_addr == INADDR_NONE)
+     {
+-      struct hostent *hp = gethostbyname(host);
++      struct hostent *hp = gethostbyname(host1);
+       if (!hp || !hp->h_addr)
+ 	return HTTPRES_LOST_CONNECTION;
+       sa.sin_addr = *(struct in_addr *)hp->h_addr;
+@@ -154,7 +155,7 @@ HTTP_get(struct HTTP_ctx *http, const char *url, HTTP_read_callback *cb)
+   i =
+     sprintf(sb.sb_buf,
+ 	    "GET %s HTTP/1.0\r\nUser-Agent: %s\r\nHost: %s\r\nReferer: %.*s\r\n",
+-	    path, AGENT, host, (int)(path - url + 1), url);
++	    path, AGENT, host1, (int)(path - url + 1), url);
+   if (http->date[0])
+     i += sprintf(sb.sb_buf + i, "If-Modified-Since: %s\r\n", http->date);
+   i += sprintf(sb.sb_buf + i, "\r\n");
+@@ -521,7 +522,8 @@ RTMP_HashSWF(const char *url, unsigned int *size, unsigned char *hash,
+   f = fopen(path, "r+");
+   while (f)
+     {
+-      char buf[4096], *file, *p;
++      char buf[4096];
++      const char *file, *p;
+ 
+       file = strchr(url, '/');
+       if (!file)
+@@ -630,7 +632,7 @@ RTMP_HashSWF(const char *url, unsigned int *size, unsigned char *hash,
+ 	fseek(f, pos, SEEK_SET);
+       else
+ 	{
+-	  char *q;
++	  const char *q;
+ 	  if (!f)
+ 	    f = fopen(path, "w");
+ 	  if (!f)
+-- 
+2.51.0
+
