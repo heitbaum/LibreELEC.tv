@@ -1,0 +1,74 @@
+From f87a18c9556aea3e29e26fd005c91209bf382593 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 22 Feb 2026 06:39:54 +0000
+Subject: [PATCH 2/2 rtmpdump] drop const type qualifier on url that is modified in functions
+
+Since glibc-2.43 and ISO C23, the functions bsearch, memchr, strchr,
+strpbrk, strrchr, strstr, wcschr, wcspbrk, wcsrchr, wcsstr and wmemchr
+that return pointers into their input arrays now have definitions as
+macros that return a pointer to a const-qualified type when the input
+argument is a pointer to a const-qualified type.
+
+p pointer is used as a return of a const char *url which is being
+modified in the functions. Drop the const qualifier so that the url
+can be modified without warning in the functions.
+
+Fixes:
+    parseurl.c: In function 'RTMP_ParseURL':
+    parseurl.c:50:11: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+       50 |         p = strstr(url, "://");
+          |           ^
+    rtmpgw.c: In function 'parseAMF':
+    rtmpgw.c:162:9: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+      162 |       p = strchr(arg+3, ':');
+          |         ^
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ librtmp/parseurl.c | 2 +-
+ librtmp/rtmp.h     | 2 +-
+ rtmpgw.c           | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/librtmp/parseurl.c b/librtmp/parseurl.c
+index 646c70c..5ff562a 100644
+--- a/librtmp/parseurl.c
++++ b/librtmp/parseurl.c
+@@ -30,7 +30,7 @@
+ #include "rtmp_sys.h"
+ #include "log.h"
+ 
+-int RTMP_ParseURL(const char *url, int *protocol, AVal *host, unsigned int *port,
++int RTMP_ParseURL(char *url, int *protocol, AVal *host, unsigned int *port,
+ 	AVal *playpath, AVal *app)
+ {
+ 	char *p, *end, *col, *ques, *slash;
+diff --git a/librtmp/rtmp.h b/librtmp/rtmp.h
+index 6d7dd89..9a42444 100644
+--- a/librtmp/rtmp.h
++++ b/librtmp/rtmp.h
+@@ -282,7 +282,7 @@ extern "C"
+     RTMP_LNK Link;
+   } RTMP;
+ 
+-  int RTMP_ParseURL(const char *url, int *protocol, AVal *host,
++  int RTMP_ParseURL(char *url, int *protocol, AVal *host,
+ 		     unsigned int *port, AVal *playpath, AVal *app);
+ 
+   void RTMP_ParsePlaypath(AVal *in, AVal *out);
+diff --git a/rtmpgw.c b/rtmpgw.c
+index 3e47602..ddc86a1 100644
+--- a/rtmpgw.c
++++ b/rtmpgw.c
+@@ -115,7 +115,7 @@ typedef struct
+ #define STR2AVAL(av,str)	av.av_val = str; av.av_len = strlen(av.av_val)
+ 
+ int
+-parseAMF(AMFObject *obj, const char *arg, int *depth)
++parseAMF(AMFObject *obj, char *arg, int *depth)
+ {
+   AMFObjectProperty prop = {{0,0}};
+   int i;
+-- 
+2.51.0
+
