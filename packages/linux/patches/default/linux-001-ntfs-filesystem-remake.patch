@@ -1,6 +1,6 @@
-From 6cde4eae1765d4db99b33157e457b15f01ac758b Mon Sep 17 00:00:00 2001
+From a19177b39bad4da686e38a50cabeb2e946c43233 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:44 +0900
+Date: Tue, 30 Dec 2025 14:24:16 +0900
 Subject: [PATCH 01/17] Revert "fs: Remove NTFS classic"
 
 This reverts commit 7ffa8f3d30236e0ab897c30bdb01224ff1fe1c89.
@@ -113,7 +113,7 @@ Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
  create mode 100644 fs/ntfs/volume.h
 
 diff --git a/CREDITS b/CREDITS
-index ec8a2acf1947..f674a7699343 100644
+index d74c8b2b7ed3..975a8fbc185e 100644
 --- a/CREDITS
 +++ b/CREDITS
 @@ -71,11 +71,6 @@ D: dosfs, LILO, some fd features, ATM, various other hacks here and there
@@ -601,10 +601,10 @@ index 000000000000..5bb093a26485
 +Even better is to simply use the Device-Mapper for linear raid and then you do
 +not have this problem with odd numbers of sectors.
 diff --git a/MAINTAINERS b/MAINTAINERS
-index e08767323763..77f9b916566b 100644
+index 55af015174a5..271cfede744d 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -18667,6 +18667,16 @@ W:	https://github.com/davejiang/linux/wiki
+@@ -18868,6 +18868,16 @@ W:	https://github.com/davejiang/linux/wiki
  T:	git https://github.com/davejiang/linux.git
  F:	drivers/ntb/hw/intel/
  
@@ -29616,9 +29616,9 @@ index 000000000000..930a9ae8a053
 -- 
 2.51.0
 
-From ad7e094ac416804db629b3573627d70114e3b8ec Mon Sep 17 00:00:00 2001
+From fbc4d8e5e2aa36872bf8c2dcdd0a09cee10a686e Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:45 +0900
+Date: Fri, 30 Jan 2026 14:59:19 +0900
 Subject: [PATCH 02/17] fs: add generic FS_IOC_SHUTDOWN definitions
 
 Currently, several filesystems (e.g., xfs, ext4, btrfs) implement
@@ -29643,10 +29643,10 @@ Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
  1 file changed, 12 insertions(+)
 
 diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 66ca526cf786..32e24778c9e5 100644
+index 70b2b661f42c..13f71202845e 100644
 --- a/include/uapi/linux/fs.h
 +++ b/include/uapi/linux/fs.h
-@@ -656,4 +656,16 @@ struct procmap_query {
+@@ -657,4 +657,16 @@ struct procmap_query {
  	__u64 build_id_addr;		/* in */
  };
  
@@ -29666,9 +29666,9 @@ index 66ca526cf786..32e24778c9e5 100644
 -- 
 2.51.0
 
-From 1ce29a72aca158edcf3ffa2c4f5136c937d994ac Mon Sep 17 00:00:00 2001
+From 32065cb9c1d67307d1641f446fcc9ca1f7f5946c Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:46 +0900
+Date: Fri, 13 Feb 2026 10:36:38 +0900
 Subject: [PATCH 03/17] ntfs: update in-memory, on-disk structures and headers
 
 Update the NTFS filesystem driver's in-memory and on-disk structures:
@@ -35466,7 +35466,7 @@ index 49c001af16ed..5201d5da73a4 100644
  
  #endif /* _LINUX_NTFS_MFT_H */
 diff --git a/fs/ntfs/ntfs.h b/fs/ntfs/ntfs.h
-index e81376ea9152..16d4a7a2d7d6 100644
+index e81376ea9152..45064dbcc2e4 100644
 --- a/fs/ntfs/ntfs.h
 +++ b/fs/ntfs/ntfs.h
 @@ -1,9 +1,10 @@
@@ -35481,7 +35481,14 @@ index e81376ea9152..16d4a7a2d7d6 100644
   */
  
  #ifndef _LINUX_NTFS_H
-@@ -17,20 +18,147 @@
+@@ -11,26 +12,154 @@
+ 
+ #include <linux/stddef.h>
+ #include <linux/kernel.h>
++#include <linux/hex.h>
+ #include <linux/module.h>
+ #include <linux/compiler.h>
+ #include <linux/fs.h>
  #include <linux/nls.h>
  #include <linux/smp.h>
  #include <linux/pagemap.h>
@@ -35635,7 +35642,7 @@ index e81376ea9152..16d4a7a2d7d6 100644
  
  /* Global variables. */
  
-@@ -42,12 +170,13 @@ extern struct kmem_cache *ntfs_attr_ctx_cache;
+@@ -42,12 +171,13 @@ extern struct kmem_cache *ntfs_attr_ctx_cache;
  extern struct kmem_cache *ntfs_index_ctx_cache;
  
  /* The various operations structs defined throughout the driver files. */
@@ -35652,7 +35659,7 @@ index e81376ea9152..16d4a7a2d7d6 100644
  
  extern const struct  file_operations ntfs_dir_ops;
  extern const struct inode_operations ntfs_dir_inode_ops;
-@@ -57,13 +186,13 @@ extern const struct inode_operations ntfs_empty_inode_ops;
+@@ -57,13 +187,13 @@ extern const struct inode_operations ntfs_empty_inode_ops;
  
  extern const struct export_operations ntfs_export_ops;
  
@@ -35668,7 +35675,7 @@ index e81376ea9152..16d4a7a2d7d6 100644
  {
  	return sb->s_fs_info;
  }
-@@ -71,52 +200,64 @@ static inline ntfs_volume *NTFS_SB(struct super_block *sb)
+@@ -71,52 +201,64 @@ static inline ntfs_volume *NTFS_SB(struct super_block *sb)
  /* Declarations of functions and global variables. */
  
  /* From fs/ntfs/compress.c */
@@ -35765,7 +35772,7 @@ index e81376ea9152..16d4a7a2d7d6 100644
  
  static inline int ntfs_ffs(int x)
  {
-@@ -140,11 +281,14 @@ static inline int ntfs_ffs(int x)
+@@ -140,11 +282,13 @@ static inline int ntfs_ffs(int x)
  		x >>= 2;
  		r += 2;
  	}
@@ -35778,9 +35785,8 @@ index e81376ea9152..16d4a7a2d7d6 100644
  }
  
 +/* From fs/ntfs/bdev-io.c */
-+int ntfs_bdev_read(struct block_device *bdev, sector_t sector, unsigned int count,
-+		 char *data);
-+int ntfs_bdev_write(struct super_block *sb, void *buf, loff_t start, loff_t size);
++int ntfs_bdev_read(struct block_device *bdev, char *data, loff_t start, size_t size);
++int ntfs_bdev_write(struct super_block *sb, void *buf, loff_t start, size_t size);
 +
  #endif /* _LINUX_NTFS_H */
 diff --git a/fs/ntfs/object_id.h b/fs/ntfs/object_id.h
@@ -36615,9 +36621,9 @@ index 930a9ae8a053..af41427ec622 100644
 -- 
 2.51.0
 
-From d7177e678136f90231105d3e7917ee90d8f46b81 Mon Sep 17 00:00:00 2001
+From 6a9eee81a8be1c6ab1659a7f372ff4748d5cb49b Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:47 +0900
+Date: Fri, 13 Feb 2026 10:37:53 +0900
 Subject: [PATCH 04/17] ntfs: update super block operations
 
 Update the super block operations to support the new fs_context-based
@@ -36639,11 +36645,11 @@ Reviewed-by: Christoph Hellwig <hch@lst.de>
 Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/super.c | 2561 ++++++++++++++++++++---------------------------
- 1 file changed, 1064 insertions(+), 1497 deletions(-)
+ fs/ntfs/super.c | 2562 ++++++++++++++++++++---------------------------
+ 1 file changed, 1065 insertions(+), 1497 deletions(-)
 
 diff --git a/fs/ntfs/super.c b/fs/ntfs/super.c
-index 56a7d5bd33e4..3bb7ed32742d 100644
+index 56a7d5bd33e4..3f559df4856b 100644
 --- a/fs/ntfs/super.c
 +++ b/fs/ntfs/super.c
 @@ -1,357 +1,328 @@
@@ -37652,7 +37658,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
 +	if (!boot_sector)
 +		return NULL;
 +
-+	if (ntfs_bdev_read(sb->s_bdev, 0, PAGE_SIZE, boot_sector)) {
++	if (ntfs_bdev_read(sb->s_bdev, boot_sector, 0, PAGE_SIZE)) {
  		if (!silent)
 -			ntfs_error(sb, "Mount option errors=recover not used. "
 -					"Aborting without trying to recover.");
@@ -39471,7 +39477,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	if (vol->logfile_ino) {
  		iput(vol->logfile_ino);
  		vol->logfile_ino = NULL;
-@@ -2393,46 +1850,69 @@ static void ntfs_put_super(struct super_block *sb)
+@@ -2393,46 +1850,70 @@ static void ntfs_put_super(struct super_block *sb)
  	 */
  	ntfs_commit_inode(vol->mft_ino);
  	write_inode_now(vol->mft_ino, 1);
@@ -39479,6 +39485,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  
  	iput(vol->mft_ino);
  	vol->mft_ino = NULL;
++	blkdev_issue_flush(sb->s_bdev);
  
 -	/* Throw away the table of attribute definitions. */
 -	vol->attrdef_size = 0;
@@ -39572,7 +39579,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
   * get_nr_free_clusters - return the number of free clusters on a volume
   * @vol:	ntfs volume for which to obtain free cluster count
   *
-@@ -2451,16 +1931,27 @@ static void ntfs_put_super(struct super_block *sb)
+@@ -2451,16 +1932,27 @@ static void ntfs_put_super(struct super_block *sb)
   * in use. This means we return an underestimate on errors which is better than
   * an overestimate.
   */
@@ -39603,7 +39610,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * Convert the number of bits into bytes rounded up, then convert into
  	 * multiples of PAGE_SIZE, rounding up so that if we have one
-@@ -2475,18 +1966,20 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
+@@ -2475,18 +1967,20 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
  		unsigned long *kaddr;
  
  		/*
@@ -39630,7 +39637,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		/*
  		 * Subtract the number of set bits. If this
  		 * is the last page and it is partial we don't really care as
-@@ -2494,10 +1987,12 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
+@@ -2494,10 +1988,12 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
  		 * the result as all out of range bytes are set to zero by
  		 * ntfs_readpage().
  		 */
@@ -39647,7 +39654,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	}
  	ntfs_debug("Finished reading $Bitmap, last index = 0x%lx.", index - 1);
  	/*
-@@ -2506,15 +2001,46 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
+@@ -2506,15 +2002,46 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
  	 */
  	if (vol->nr_clusters & 63)
  		nr_free += 64 - (vol->nr_clusters & 63);
@@ -39696,7 +39703,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
   * __get_nr_free_mft_records - return the number of free inodes on a volume
   * @vol:	ntfs volume for which to obtain free inode count
   * @nr_free:	number of mft records in filesystem
-@@ -2531,33 +2057,43 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
+@@ -2531,33 +2058,43 @@ static s64 get_nr_free_clusters(ntfs_volume *vol)
   *
   * NOTE: Caller must hold mftbmp_lock rw_semaphore for reading or writing.
   */
@@ -39750,7 +39757,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		/*
  		 * Subtract the number of set bits. If this
  		 * is the last page and it is partial we don't really care as
-@@ -2567,19 +2103,24 @@ static unsigned long __get_nr_free_mft_records(ntfs_volume *vol,
+@@ -2567,19 +2104,24 @@ static unsigned long __get_nr_free_mft_records(ntfs_volume *vol,
  		 */
  		nr_free -= bitmap_weight(kaddr,
  					PAGE_SIZE * BITS_PER_BYTE);
@@ -39778,7 +39785,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
   * ntfs_statfs - return information about mounted NTFS volume
   * @dentry:	dentry from mounted volume
   * @sfs:	statfs structure in which to return the information
-@@ -2601,47 +2142,46 @@ static int ntfs_statfs(struct dentry *dentry, struct kstatfs *sfs)
+@@ -2601,47 +2143,46 @@ static int ntfs_statfs(struct dentry *dentry, struct kstatfs *sfs)
  {
  	struct super_block *sb = dentry->d_sb;
  	s64 size;
@@ -39847,7 +39854,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * File system id. This is extremely *nix flavour dependent and even
  	 * within Linux itself all fs do their own thing. I interpret this to
-@@ -2655,15 +2195,14 @@ static int ntfs_statfs(struct dentry *dentry, struct kstatfs *sfs)
+@@ -2655,15 +2196,14 @@ static int ntfs_statfs(struct dentry *dentry, struct kstatfs *sfs)
  	sfs->f_fsid = u64_to_fsid(vol->serial_no);
  	/* Maximum length of filenames. */
  	sfs->f_namelen	   = NTFS_MAX_NAME_LEN;
@@ -39864,7 +39871,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  
  /*
   * The complete super operations.
-@@ -2671,24 +2210,33 @@ static int ntfs_write_inode(struct inode *vi, struct writeback_control *wbc)
+@@ -2671,24 +2211,33 @@ static int ntfs_write_inode(struct inode *vi, struct writeback_control *wbc)
  static const struct super_operations ntfs_sops = {
  	.alloc_inode	= ntfs_alloc_big_inode,	  /* VFS: Allocate new inode. */
  	.free_inode	= ntfs_free_big_inode, /* VFS: Deallocate inode. */
@@ -39911,7 +39918,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
   *
   * ntfs_fill_super() is called by the VFS to mount the device described by @sb
   * with the mount otions in @data with the NTFS filesystem.
-@@ -2699,15 +2247,17 @@ static const struct super_operations ntfs_sops = {
+@@ -2699,15 +2248,17 @@ static const struct super_operations ntfs_sops = {
   * that all filesystems except the correct one will quite correctly and
   * expectedly return an error, but nobody wants to see error messages when in
   * fact this is what is supposed to happen.
@@ -39934,7 +39941,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  
  	/*
  	 * We do a pretty difficult piece of bootstrap by reading the
-@@ -2721,52 +2271,29 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2721,52 +2272,29 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	 */
  	lockdep_off();
  	ntfs_debug("Entering.");
@@ -40002,7 +40009,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * Setup the device access block size to NTFS_BLOCK_SIZE or the hard
  	 * sector size, whichever is bigger.
-@@ -2777,18 +2304,20 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2777,18 +2305,20 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  			ntfs_error(sb, "Unable to set device block size.");
  		goto err_out_now;
  	}
@@ -40027,7 +40034,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		if (!silent)
  			ntfs_error(sb, "Not an NTFS volume.");
  		goto err_out_now;
-@@ -2797,36 +2326,26 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2797,36 +2327,26 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	 * Extract the data from the boot sector and setup the ntfs volume
  	 * using it.
  	 */
@@ -40073,7 +40080,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  				blocksize, sb->s_blocksize_bits);
  	}
  	/* Initialize the cluster and mft allocators. */
-@@ -2844,6 +2363,8 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2844,6 +2364,8 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	sb->s_maxbytes = MAX_LFS_FILESIZE;
  	/* Ntfs measures time in 100ns intervals. */
  	sb->s_time_gran = 100;
@@ -40082,7 +40089,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * Now load the metadata required for the page cache and our address
  	 * space operations to function. We do this by setting up a specialised
-@@ -2858,6 +2379,7 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2858,6 +2380,7 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  			ntfs_error(sb, "Failed to load essential metadata.");
  		goto err_out_now;
  	}
@@ -40090,7 +40097,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	tmp_ino->i_ino = FILE_MFT;
  	insert_inode_hash(tmp_ino);
  	if (ntfs_read_inode_mount(tmp_ino) < 0) {
-@@ -2865,21 +2387,11 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2865,21 +2388,11 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  			ntfs_error(sb, "Failed to load essential metadata.");
  		goto iput_tmp_ino_err_out_now;
  	}
@@ -40116,7 +40123,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * Generate the global default upcase table if necessary.  Also
  	 * temporarily increment the number of upcase users to avoid race
-@@ -2889,6 +2401,16 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2889,6 +2402,16 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  		default_upcase = generate_default_upcase();
  	ntfs_nr_upcase_users++;
  	mutex_unlock(&ntfs_lock);
@@ -40133,7 +40140,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	/*
  	 * From now on, ignore @silent parameter. If we fail below this line,
  	 * it will be due to a corrupt fs or a system error, so we report it.
-@@ -2904,41 +2426,40 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2904,41 +2427,40 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  
  	/* We grab a reference, simulating an ntfs_iget(). */
  	ihold(vol->root_ino);
@@ -40192,7 +40199,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		if (vol->quota_q_ino) {
  			iput(vol->quota_q_ino);
  			vol->quota_q_ino = NULL;
-@@ -2947,7 +2468,6 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2947,7 +2469,6 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  			iput(vol->quota_ino);
  			vol->quota_ino = NULL;
  		}
@@ -40200,7 +40207,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		if (vol->extend_ino) {
  			iput(vol->extend_ino);
  			vol->extend_ino = NULL;
-@@ -2963,7 +2483,6 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2963,7 +2484,6 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	vol->lcnbmp_ino = NULL;
  	iput(vol->mftbmp_ino);
  	vol->mftbmp_ino = NULL;
@@ -40208,7 +40215,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	if (vol->logfile_ino) {
  		iput(vol->logfile_ino);
  		vol->logfile_ino = NULL;
-@@ -2972,11 +2491,10 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2972,11 +2492,10 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  		iput(vol->mftmirr_ino);
  		vol->mftmirr_ino = NULL;
  	}
@@ -40221,7 +40228,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		vol->attrdef = NULL;
  	}
  	vol->upcase_len = 0;
-@@ -2987,7 +2505,7 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2987,7 +2506,7 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	}
  	mutex_unlock(&ntfs_lock);
  	if (vol->upcase) {
@@ -40230,7 +40237,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  		vol->upcase = NULL;
  	}
  	if (vol->nls_map) {
-@@ -2996,17 +2514,18 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+@@ -2996,17 +2515,18 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
  	}
  	/* Error exit code path. */
  unl_upcase_iput_tmp_ino_err_out_now:
@@ -40252,7 +40259,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	mutex_unlock(&ntfs_lock);
  iput_tmp_ino_err_out_now:
  	iput(tmp_ino);
-@@ -3036,7 +2555,7 @@ struct kmem_cache *ntfs_big_inode_cache;
+@@ -3036,7 +2556,7 @@ struct kmem_cache *ntfs_big_inode_cache;
  /* Init once constructor for the inode slab cache. */
  static void ntfs_big_inode_init_once(void *foo)
  {
@@ -40261,7 +40268,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  
  	inode_init_once(VFS_I(ni));
  }
-@@ -3051,20 +2570,79 @@ struct kmem_cache *ntfs_index_ctx_cache;
+@@ -3051,20 +2571,79 @@ struct kmem_cache *ntfs_index_ctx_cache;
  /* Driver wide mutex. */
  DEFINE_MUTEX(ntfs_lock);
  
@@ -40350,7 +40357,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  
  /* Stable names for the slab caches. */
  static const char ntfs_index_ctx_cache_name[] = "ntfs_index_ctx_cache";
-@@ -3077,32 +2655,21 @@ static int __init init_ntfs_fs(void)
+@@ -3077,32 +2656,21 @@ static int __init init_ntfs_fs(void)
  {
  	int err = 0;
  
@@ -40390,7 +40397,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  			SLAB_HWCACHE_ALIGN, NULL /* ctor */);
  	if (!ntfs_attr_ctx_cache) {
  		pr_crit("NTFS: Failed to create %s!\n",
-@@ -3111,7 +2678,7 @@ static int __init init_ntfs_fs(void)
+@@ -3111,7 +2679,7 @@ static int __init init_ntfs_fs(void)
  	}
  
  	ntfs_name_cache = kmem_cache_create(ntfs_name_cache_name,
@@ -40399,7 +40406,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  			SLAB_HWCACHE_ALIGN, NULL);
  	if (!ntfs_name_cache) {
  		pr_crit("Failed to create %s!\n", ntfs_name_cache_name);
-@@ -3119,17 +2686,16 @@ static int __init init_ntfs_fs(void)
+@@ -3119,17 +2687,16 @@ static int __init init_ntfs_fs(void)
  	}
  
  	ntfs_inode_cache = kmem_cache_create(ntfs_inode_cache_name,
@@ -40421,7 +40428,7 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
  	if (!ntfs_big_inode_cache) {
  		pr_crit("Failed to create %s!\n", ntfs_big_inode_cache_name);
  		goto big_inode_err_out;
-@@ -3185,18 +2751,19 @@ static void __exit exit_ntfs_fs(void)
+@@ -3185,18 +2752,19 @@ static void __exit exit_ntfs_fs(void)
  	kmem_cache_destroy(ntfs_name_cache);
  	kmem_cache_destroy(ntfs_attr_ctx_cache);
  	kmem_cache_destroy(ntfs_index_ctx_cache);
@@ -40451,9 +40458,9 @@ index 56a7d5bd33e4..3bb7ed32742d 100644
 -- 
 2.51.0
 
-From 426c42bcb692e5de9310d0ab1e71b84998a7c72a Mon Sep 17 00:00:00 2001
+From a8b2516d5b740fe6651366fee45fe22a109944cc Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:48 +0900
+Date: Fri, 13 Feb 2026 10:38:45 +0900
 Subject: [PATCH 05/17] ntfs: update inode operations
 
 Add extent inode loading via ntfs_extent_inode_open() and
@@ -40481,12 +40488,12 @@ Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hyunchul Lee <hyc.lee@gmail.com>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/inode.c | 3659 ++++++++++++++++++++++++++++-------------------
+ fs/ntfs/inode.c | 3658 ++++++++++++++++++++++++++++-------------------
  fs/ntfs/namei.c | 1597 +++++++++++++++++++--
- 2 files changed, 3639 insertions(+), 1617 deletions(-)
+ 2 files changed, 3638 insertions(+), 1617 deletions(-)
 
 diff --git a/fs/ntfs/inode.c b/fs/ntfs/inode.c
-index aba1e22db4e9..e822c97f33e8 100644
+index aba1e22db4e9..7d4c33b3b7a2 100644
 --- a/fs/ntfs/inode.c
 +++ b/fs/ntfs/inode.c
 @@ -1,33 +1,26 @@
@@ -42451,7 +42458,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  	ni->ext.base_ntfs_ino = base_ni;
  	ni->nr_extents = -1;
  
-@@ -1700,17 +1708,101 @@ static int ntfs_read_locked_index_inode(struct inode *base_vi, struct inode *vi)
+@@ -1700,17 +1708,100 @@ static int ntfs_read_locked_index_inode(struct inode *base_vi, struct inode *vi)
  	if (m)
  		unmap_mft_record(base_ni);
  err_out:
@@ -42523,9 +42530,8 @@ index aba1e22db4e9..e822c97f33e8 100644
 +		if (al + rl_byte_len > al_end)
 +			rl_byte_len = al_end - al;
 +
-+		err = ntfs_bdev_read(sb->s_bdev, rl_byte_off,
-+				   round_up(rl_byte_len, SECTOR_SIZE),
-+				   al);
++		err = ntfs_bdev_read(sb->s_bdev, al, rl_byte_off,
++				   round_up(rl_byte_len, SECTOR_SIZE));
 +		if (err) {
 +			ntfs_error(sb, "Cannot read attribute list.");
 +			goto err_out;
@@ -42558,7 +42564,7 @@ index aba1e22db4e9..e822c97f33e8 100644
   * about this by splitting off the locking rules of the MFT from
   * the locking rules of other inodes. The MFT inode can never be
   * accessed from the VFS side (or even internally), only by the
-@@ -1718,7 +1810,7 @@ static int ntfs_read_locked_index_inode(struct inode *base_vi, struct inode *vi)
+@@ -1718,7 +1809,7 @@ static int ntfs_read_locked_index_inode(struct inode *base_vi, struct inode *vi)
   */
  static struct lock_class_key mft_ni_runlist_lock_key, mft_ni_mrec_lock_key;
  
@@ -42567,7 +42573,7 @@ index aba1e22db4e9..e822c97f33e8 100644
   * ntfs_read_inode_mount - special read_inode for mount time use only
   * @vi:		inode to read
   *
-@@ -1746,31 +1838,29 @@ static struct lock_class_key mft_ni_runlist_lock_key, mft_ni_mrec_lock_key;
+@@ -1746,31 +1837,29 @@ static struct lock_class_key mft_ni_runlist_lock_key, mft_ni_mrec_lock_key;
   */
  int ntfs_read_inode_mount(struct inode *vi)
  {
@@ -42607,7 +42613,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  	ni->name_len = 0;
  	/*
  	 * This sets up our little cheat allowing us to reuse the async read io
-@@ -1788,32 +1878,28 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1788,32 +1877,28 @@ int ntfs_read_inode_mount(struct inode *vi)
  				vol->mft_record_size);
  		goto err_out;
  	}
@@ -42641,15 +42647,15 @@ index aba1e22db4e9..e822c97f33e8 100644
 -		memcpy((char*)m + (i << sb->s_blocksize_bits), bh->b_data,
 -				sb->s_blocksize);
 -		brelse(bh);
-+	err = ntfs_bdev_read(sb->s_bdev, ntfs_cluster_to_bytes(vol, vol->mft_lcn) >>
-+			   SECTOR_SHIFT, i, (char *)m);
++	err = ntfs_bdev_read(sb->s_bdev, (char *)m,
++			     ntfs_cluster_to_bytes(vol, vol->mft_lcn), i);
 +	if (err) {
 +		ntfs_error(sb, "Device read failed.");
 +		goto err_out;
  	}
  
  	if (le32_to_cpu(m->bytes_allocated) != vol->mft_record_size) {
-@@ -1823,16 +1909,13 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1823,16 +1908,13 @@ int ntfs_read_inode_mount(struct inode *vi)
  	}
  
  	/* Apply the mst fixups. */
@@ -42669,7 +42675,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  		goto err_out;
  	}
  
-@@ -1840,7 +1923,7 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1840,7 +1922,7 @@ int ntfs_read_inode_mount(struct inode *vi)
  	vi->i_generation = ni->seq_no = le16_to_cpu(m->sequence_number);
  
  	/* Provides read_folio() for map_mft_record(). */
@@ -42678,7 +42684,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  
  	ctx = ntfs_attr_get_search_ctx(ni, m);
  	if (!ctx) {
-@@ -1852,39 +1935,34 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1852,39 +1934,34 @@ int ntfs_read_inode_mount(struct inode *vi)
  	err = ntfs_attr_lookup(AT_ATTRIBUTE_LIST, NULL, 0, 0, 0, NULL, 0, ctx);
  	if (err) {
  		if (unlikely(err != -ENOENT)) {
@@ -42730,7 +42736,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  		}
  		/* Now allocate memory for the attribute list. */
  		ni->attr_list_size = (u32)ntfs_attr_size(a);
-@@ -1892,89 +1970,75 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1892,89 +1969,75 @@ int ntfs_read_inode_mount(struct inode *vi)
  			ntfs_error(sb, "Attr_list_size is zero");
  			goto put_err_out;
  		}
@@ -42858,7 +42864,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  				continue;
  			/* We want an unnamed attribute. */
  			if (al_entry->name_length)
-@@ -1985,12 +2049,8 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -1985,12 +2048,8 @@ int ntfs_read_inode_mount(struct inode *vi)
  			/* First entry has to be in the base mft record. */
  			if (MREF_LE(al_entry->mft_reference) != vi->i_ino) {
  				/* MFT references do not match, logic fails. */
@@ -42873,7 +42879,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  				goto put_err_out;
  			} else {
  				/* Sequence numbers must match. */
-@@ -2010,26 +2070,22 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2010,26 +2069,22 @@ int ntfs_read_inode_mount(struct inode *vi)
  	next_vcn = last_vcn = highest_vcn = 0;
  	while (!(err = ntfs_attr_lookup(AT_DATA, NULL, 0, 0, next_vcn, NULL, 0,
  			ctx))) {
@@ -42905,7 +42911,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  			goto put_err_out;
  		}
  		/*
-@@ -2038,35 +2094,31 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2038,35 +2093,31 @@ int ntfs_read_inode_mount(struct inode *vi)
  		 * as we have exclusive access to the inode at this time and we
  		 * are a mount in progress task, too.
  		 */
@@ -42954,7 +42960,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  			/*
  			 * Verify the number of mft records does not exceed
  			 * 2^32 - 1.
-@@ -2095,18 +2147,12 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2095,18 +2146,12 @@ int ntfs_read_inode_mount(struct inode *vi)
  			 * ntfs_read_inode() on extents of $MFT/$DATA. But lets
  			 * hope this never happens...
  			 */
@@ -42977,7 +42983,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  				return -1;
  			}
  			/*
-@@ -2124,7 +2170,7 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2124,7 +2169,7 @@ int ntfs_read_inode_mount(struct inode *vi)
  		}
  
  		/* Get the lowest vcn for the next extent. */
@@ -42986,7 +42992,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  		next_vcn = highest_vcn + 1;
  
  		/* Only one extent or error, which we catch below. */
-@@ -2132,27 +2178,21 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2132,27 +2177,21 @@ int ntfs_read_inode_mount(struct inode *vi)
  			break;
  
  		/* Avoid endless loops due to corruption. */
@@ -43019,7 +43025,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  		ntfs_debug("highest_vcn = 0x%llx, last_vcn - 1 = 0x%llx",
  				(unsigned long long)highest_vcn,
  				(unsigned long long)last_vcn - 1);
-@@ -2160,7 +2200,7 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2160,7 +2199,7 @@ int ntfs_read_inode_mount(struct inode *vi)
  	}
  	ntfs_attr_put_search_ctx(ctx);
  	ntfs_debug("Done.");
@@ -43028,7 +43034,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  
  	/*
  	 * Split the locking rules of the MFT inode from the
-@@ -2172,69 +2212,78 @@ int ntfs_read_inode_mount(struct inode *vi)
+@@ -2172,69 +2211,78 @@ int ntfs_read_inode_mount(struct inode *vi)
  	return 0;
  
  em_put_err_out:
@@ -43142,7 +43148,7 @@ index aba1e22db4e9..e822c97f33e8 100644
   * ntfs_evict_big_inode - clean up the ntfs specific part of an inode
   * @vi:		vfs inode pending annihilation
   *
-@@ -2246,35 +2295,45 @@ void ntfs_clear_extent_inode(ntfs_inode *ni)
+@@ -2246,35 +2294,45 @@ void ntfs_clear_extent_inode(ntfs_inode *ni)
   */
  void ntfs_evict_big_inode(struct inode *vi)
  {
@@ -43201,7 +43207,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  	__ntfs_clear_inode(ni);
  
  	if (NInoAttr(ni)) {
-@@ -2285,13 +2344,16 @@ void ntfs_evict_big_inode(struct inode *vi)
+@@ -2285,13 +2343,16 @@ void ntfs_evict_big_inode(struct inode *vi)
  			ni->ext.base_ntfs_ino = NULL;
  		}
  	}
@@ -43222,7 +43228,7 @@ index aba1e22db4e9..e822c97f33e8 100644
   * ntfs_show_options - show mount options in /proc/mounts
   * @sf:		seq_file in which to write our mount options
   * @root:	root of the mounted tree whose mount options to display
-@@ -2303,640 +2365,363 @@ void ntfs_evict_big_inode(struct inode *vi)
+@@ -2303,640 +2364,363 @@ void ntfs_evict_big_inode(struct inode *vi)
   */
  int ntfs_show_options(struct seq_file *sf, struct dentry *root)
  {
@@ -44181,7 +44187,7 @@ index aba1e22db4e9..e822c97f33e8 100644
   * __ntfs_write_inode - write out a dirty inode
   * @vi:		inode to write out
   * @sync:	if true, write out synchronously
-@@ -2947,130 +2732,132 @@ int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
+@@ -2947,130 +2731,132 @@ int ntfs_setattr(struct mnt_idmap *idmap, struct dentry *dentry,
   * is done using write_mft_record().
   *
   * If @sync is false, just schedule the write to happen but do not wait for i/o
@@ -44390,7 +44396,7 @@ index aba1e22db4e9..e822c97f33e8 100644
  				if (unlikely(ret)) {
  					if (!err || err == -ENOMEM)
  						err = ret;
-@@ -3079,24 +2866,956 @@ int __ntfs_write_inode(struct inode *vi, int sync)
+@@ -3079,24 +2865,956 @@ int __ntfs_write_inode(struct inode *vi, int sync)
  		}
  	}
  	mutex_unlock(&ni->extent_lock);
@@ -47092,9 +47098,9 @@ index d7498ddc4a72..a21eeaec57b4 100644
 -- 
 2.51.0
 
-From 8edfd452fb64d61c471b85e5ebee6b54531e63f9 Mon Sep 17 00:00:00 2001
+From 942287587f4031a486485491e41338829d2c435a Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:49 +0900
+Date: Fri, 13 Feb 2026 10:39:43 +0900
 Subject: [PATCH 06/17] ntfs: update mft operations
 
 Refactors MFT record handling to use folio APIs with consistency
@@ -47105,12 +47111,12 @@ Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hyunchul Lee <hyc.lee@gmail.com>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/mft.c | 2497 +++++++++++++++++++++++++------------------------
+ fs/ntfs/mft.c | 2499 +++++++++++++++++++++++++------------------------
  fs/ntfs/mst.c |   65 +-
- 2 files changed, 1290 insertions(+), 1272 deletions(-)
+ 2 files changed, 1292 insertions(+), 1272 deletions(-)
 
 diff --git a/fs/ntfs/mft.c b/fs/ntfs/mft.c
-index 6fd1dc4b08c8..79fbe90e2bb4 100644
+index 6fd1dc4b08c8..56012477d3f0 100644
 --- a/fs/ntfs/mft.c
 +++ b/fs/ntfs/mft.c
 @@ -1,57 +1,119 @@
@@ -48920,7 +48926,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		ret = mp_size;
  		if (!ret)
  			ret = -EIO;
-@@ -1426,76 +1294,67 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1426,76 +1294,68 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
  	ret = ntfs_attr_record_resize(ctx->mrec, a, mp_size +
  			le16_to_cpu(a->data.non_resident.mapping_pairs_offset));
  	if (unlikely(ret)) {
@@ -48941,7 +48947,8 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
 +		ret = ntfs_mft_attr_extend(mftbmp_ni);
 +		if (!ret)
 +			goto extended_ok;
-+		status.mp_extended = 1;
++		if (ret != -EAGAIN)
++			status.mp_extended = 1;
  		goto undo_alloc;
  	}
  	status.mp_rebuilt = 1;
@@ -48973,6 +48980,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		 */
 -		flush_dcache_mft_record_page(ctx->ntfs_ino);
  		mark_mft_record_dirty(ctx->ntfs_ino);
++extended_ok:
  		ntfs_attr_reinit_search_ctx(ctx);
  		ret = ntfs_attr_lookup(mftbmp_ni->type, mftbmp_ni->name,
  				mftbmp_ni->name_len, CASE_SENSITIVE, 0, NULL,
@@ -48987,7 +48995,6 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		a = ctx->attr;
  	}
 +
-+extended_ok:
  	write_lock_irqsave(&mftbmp_ni->size_lock, flags);
  	mftbmp_ni->allocated_size += vol->cluster_size;
  	a->data.non_resident.allocated_size =
@@ -49015,7 +49022,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		write_lock_irqsave(&mftbmp_ni->size_lock, flags);
  		mftbmp_ni->allocated_size += vol->cluster_size;
  		write_unlock_irqrestore(&mftbmp_ni->size_lock, flags);
-@@ -1510,7 +1369,7 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1510,7 +1370,7 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
  		return ret;
  	}
  	a = ctx->attr;
@@ -49024,7 +49031,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  undo_alloc:
  	if (status.added_cluster) {
  		/* Truncate the last run in the runlist by one cluster. */
-@@ -1521,31 +1380,33 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1521,31 +1381,33 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
  		/* Remove the last run from the runlist. */
  		rl->lcn = rl[1].lcn;
  		rl->length = 0;
@@ -49066,7 +49073,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	}
  	if (ctx)
  		ntfs_attr_put_search_ctx(ctx);
-@@ -1555,7 +1416,7 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1555,7 +1417,7 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
  	return ret;
  }
  
@@ -49075,7 +49082,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * ntfs_mft_bitmap_extend_initialized_nolock - extend mftbmp initialized data
   * @vol:	volume on which to extend the mft bitmap attribute
   *
-@@ -1569,15 +1430,15 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1569,15 +1431,15 @@ static int ntfs_mft_bitmap_extend_allocation_nolock(ntfs_volume *vol)
   *
   * Locking: Caller must hold vol->mftbmp_lock for writing.
   */
@@ -49096,7 +49103,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	int ret;
  
  	ntfs_debug("Extending mft bitmap initiailized (and data) size.");
-@@ -1599,8 +1460,8 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
+@@ -1599,8 +1461,8 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
  	ret = ntfs_attr_lookup(mftbmp_ni->type, mftbmp_ni->name,
  			mftbmp_ni->name_len, CASE_SENSITIVE, 0, NULL, 0, ctx);
  	if (unlikely(ret)) {
@@ -49107,7 +49114,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		if (ret == -ENOENT)
  			ret = -EIO;
  		goto put_err_out;
-@@ -1616,23 +1477,22 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
+@@ -1616,23 +1478,22 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
  	 */
  	mftbmp_ni->initialized_size += 8;
  	a->data.non_resident.initialized_size =
@@ -49135,7 +49142,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		return 0;
  	}
  	ntfs_error(vol->sb, "Failed to write to mft bitmap.");
-@@ -1651,8 +1511,8 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
+@@ -1651,8 +1512,8 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
  	}
  	if (ntfs_attr_lookup(mftbmp_ni->type, mftbmp_ni->name,
  			mftbmp_ni->name_len, CASE_SENSITIVE, 0, NULL, 0, ctx)) {
@@ -49146,7 +49153,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		NVolSetErrors(vol);
  put_err_out:
  		ntfs_attr_put_search_ctx(ctx);
-@@ -1664,30 +1524,27 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
+@@ -1664,30 +1525,27 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
  	write_lock_irqsave(&mftbmp_ni->size_lock, flags);
  	mftbmp_ni->initialized_size = old_initialized_size;
  	a->data.non_resident.initialized_size =
@@ -49183,7 +49190,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * ntfs_mft_data_extend_allocation_nolock - extend mft data attribute
   * @vol:	volume on which to extend the mft data attribute
   *
-@@ -1706,20 +1563,21 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
+@@ -1706,20 +1564,21 @@ static int ntfs_mft_bitmap_extend_initialized_nolock(ntfs_volume *vol)
   *	    - This function calls functions which take vol->lcnbmp_lock for
   *	      writing and release it before returning.
   */
@@ -49214,7 +49221,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  
  	ntfs_debug("Extending mft data allocation.");
  	mft_ni = NTFS_I(vol->mft_ino);
-@@ -1733,11 +1591,11 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1733,11 +1592,11 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  	ll = mft_ni->allocated_size;
  	read_unlock_irqrestore(&mft_ni->size_lock, flags);
  	rl = ntfs_attr_find_vcn_nolock(mft_ni,
@@ -49229,7 +49236,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		if (!IS_ERR(rl))
  			ret = -EIO;
  		else
-@@ -1745,9 +1603,9 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1745,9 +1604,9 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  		return ret;
  	}
  	lcn = rl->lcn + rl->length;
@@ -49241,7 +49248,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	if (!min_nr)
  		min_nr = 1;
  	/* Want to allocate 16 mft records worth of clusters. */
-@@ -1758,14 +1616,13 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1758,14 +1617,13 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  	read_lock_irqsave(&mft_ni->size_lock, flags);
  	ll = mft_ni->allocated_size;
  	read_unlock_irqrestore(&mft_ni->size_lock, flags);
@@ -49260,7 +49267,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  			up_write(&mft_ni->runlist.lock);
  			return -ENOSPC;
  		}
-@@ -1773,16 +1630,24 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1773,16 +1631,24 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  	ntfs_debug("Trying mft data allocation with %s cluster count %lli.",
  			nr > min_nr ? "default" : "minimal", (long long)nr);
  	old_last_vcn = rl[1].vcn;
@@ -49290,7 +49297,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  			return PTR_ERR(rl2);
  		}
  		/*
-@@ -1791,32 +1656,36 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1791,32 +1657,36 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  		 * before failing.
  		 */
  		nr = min_nr;
@@ -49335,7 +49342,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		goto undo_alloc;
  	}
  	ctx = ntfs_attr_get_search_ctx(mft_ni, mrec);
-@@ -1828,72 +1697,60 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1828,72 +1698,61 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  	ret = ntfs_attr_lookup(mft_ni->type, mft_ni->name, mft_ni->name_len,
  			CASE_SENSITIVE, rl[1].vcn, NULL, 0, ctx);
  	if (unlikely(ret)) {
@@ -49403,7 +49410,8 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
 +		ret = ntfs_mft_attr_extend(mft_ni);
 +		if (!ret)
 +			goto extended_ok;
-+		mp_extended = true;
++		if (ret != -EAGAIN)
++			mp_extended = true;
  		goto undo_alloc;
  	}
  	mp_rebuilt = true;
@@ -49429,12 +49437,13 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	 * @rl is the last (non-terminator) runlist element of mft data
  	 * attribute.
  	 */
-@@ -1902,40 +1759,39 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1902,40 +1761,39 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  		 * We are not in the first attribute extent, switch to it, but
  		 * first ensure the changes will make it to disk later.
  		 */
 -		flush_dcache_mft_record_page(ctx->ntfs_ino);
  		mark_mft_record_dirty(ctx->ntfs_ino);
++extended_ok:
  		ntfs_attr_reinit_search_ctx(ctx);
  		ret = ntfs_attr_lookup(mft_ni->type, mft_ni->name,
  				mft_ni->name_len, CASE_SENSITIVE, 0, NULL, 0,
@@ -49449,7 +49458,6 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		a = ctx->attr;
  	}
 +
-+extended_ok:
  	write_lock_irqsave(&mft_ni->size_lock, flags);
 -	mft_ni->allocated_size += nr << vol->cluster_size_bits;
 +	mft_ni->allocated_size += NTFS_CLU_TO_B(vol, nr);
@@ -49479,7 +49487,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		write_unlock_irqrestore(&mft_ni->size_lock, flags);
  		ntfs_attr_put_search_ctx(ctx);
  		unmap_mft_record(mft_ni);
-@@ -1948,17 +1804,20 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1948,17 +1806,20 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  		return ret;
  	}
  	ctx->attr->data.non_resident.highest_vcn =
@@ -49505,7 +49513,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		NVolSetErrors(vol);
  	}
  	if (ctx) {
-@@ -1968,32 +1827,27 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -1968,32 +1829,27 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
  				a->data.non_resident.mapping_pairs_offset),
  				old_alen - le16_to_cpu(
  					a->data.non_resident.mapping_pairs_offset),
@@ -49543,7 +49551,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * ntfs_mft_record_layout - layout an mft record into a memory buffer
   * @vol:	volume to which the mft record will belong
   * @mft_no:	mft reference specifying the mft record number
-@@ -2006,24 +1860,24 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
+@@ -2006,24 +1862,24 @@ static int ntfs_mft_data_extend_allocation_nolock(ntfs_volume *vol)
   *
   * Return 0 on success and -errno on error.
   */
@@ -49575,7 +49583,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		/*
  		 * Set the NTFS 3.1+ specific fields while we know that the
  		 * volume version is 3.1+.
-@@ -2037,16 +1891,11 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
+@@ -2037,16 +1893,11 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
  				NTFS_BLOCK_SIZE + 1);
  	else {
  		m->usa_count = cpu_to_le16(1);
@@ -49595,7 +49603,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	m->lsn = 0;
  	m->sequence_number = cpu_to_le16(1);
  	m->link_count = 0;
-@@ -2067,14 +1916,14 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
+@@ -2067,14 +1918,14 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
  	m->base_mft_record = 0;
  	m->next_attr_instance = 0;
  	/* Add the termination attribute. */
@@ -49612,7 +49620,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * ntfs_mft_record_format - format an mft record on an ntfs volume
   * @vol:	volume on which to format the mft record
   * @mft_no:	mft record number to format
-@@ -2085,12 +1934,12 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
+@@ -2085,12 +1936,12 @@ static int ntfs_mft_record_layout(const ntfs_volume *vol, const s64 mft_no,
   *
   * Return 0 on success and -errno on error.
   */
@@ -49628,7 +49636,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	pgoff_t index, end_index;
  	unsigned int ofs;
  	int err;
-@@ -2100,59 +1949,62 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
+@@ -2100,59 +1951,62 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
  	 * The index into the page cache and the offset within the page cache
  	 * page of the wanted mft record.
  	 */
@@ -49718,7 +49726,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   *
   * Allocate an mft record in $MFT/$DATA of an open ntfs volume @vol.
   *
-@@ -2180,8 +2032,8 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
+@@ -2180,8 +2034,8 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
   * optimize this we start scanning at the place specified by @base_ni or if
   * @base_ni is NULL we start where we last stopped and we perform wrap around
   * when we reach the end.  Note, we do not try to allocate mft records below
@@ -49729,7 +49737,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * for the $DATA attribute of $MFT.  This is required to avoid the possibility
   * of creating a runlist with a circular dependency which once written to disk
   * can never be read in again.  Windows will only use records 16 to 24 for
-@@ -2191,7 +2043,7 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
+@@ -2191,7 +2045,7 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
   * doing this at some later time, it does not matter much for now.
   *
   * When scanning the mft bitmap, we only search up to the last allocated mft
@@ -49738,7 +49746,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   * allocated mft records, then we extend the $MFT/$DATA attribute in order to
   * create free mft records.  We extend the allocated size of $MFT/$DATA by 16
   * records at a time or one cluster, if cluster size is above 16kiB.  If there
-@@ -2200,24 +2052,24 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
+@@ -2200,24 +2054,24 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
   *
   * No matter how many mft records we allocate, we initialize only the first
   * allocated mft record, incrementing mft data size and initialized size
@@ -49769,7 +49777,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
   *	  locked mft record.
   *
   * On error, the volume will be left in a consistent state and no record will
-@@ -2237,42 +2089,46 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
+@@ -2237,42 +2091,46 @@ static int ntfs_mft_record_format(const ntfs_volume *vol, const s64 mft_no)
   * easier because otherwise there might be circular invocations of functions
   * when reading the bitmap.
   */
@@ -49840,7 +49848,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	bit = ntfs_mft_bitmap_find_and_alloc_free_rec_nolock(vol, base_ni);
  	if (bit >= 0) {
  		ntfs_debug("Found and allocated free record (#1), bit 0x%llx.",
-@@ -2280,9 +2136,19 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2280,9 +2138,19 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		goto have_alloc_rec;
  	}
  	if (bit != -ENOSPC) {
@@ -49862,7 +49870,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	/*
  	 * No free mft records left.  If the mft bitmap already covers more
  	 * than the currently used mft records, the next records are all free,
-@@ -2297,10 +2163,11 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2297,10 +2165,11 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	read_lock_irqsave(&mftbmp_ni->size_lock, flags);
  	old_data_initialized = mftbmp_ni->initialized_size;
  	read_unlock_irqrestore(&mftbmp_ni->size_lock, flags);
@@ -49877,7 +49885,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		if (unlikely(bit >= (1ll << 32)))
  			goto max_err_out;
  		ntfs_debug("Found free record (#2), bit 0x%llx.",
-@@ -2317,28 +2184,28 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2317,28 +2186,28 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		goto max_err_out;
  	read_lock_irqsave(&mftbmp_ni->size_lock, flags);
  	old_data_size = mftbmp_ni->allocated_size;
@@ -49918,7 +49926,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		read_unlock_irqrestore(&mftbmp_ni->size_lock, flags);
  #endif /* DEBUG */
  	}
-@@ -2349,17 +2216,16 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2349,17 +2218,16 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	 */
  	err = ntfs_mft_bitmap_extend_initialized_nolock(vol);
  	if (unlikely(err)) {
@@ -49942,7 +49950,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	read_unlock_irqrestore(&mftbmp_ni->size_lock, flags);
  #endif /* DEBUG */
  	ntfs_debug("Found free record (#3), bit 0x%llx.", (long long)bit);
-@@ -2369,7 +2235,8 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2369,7 +2237,8 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	err = ntfs_bitmap_set_bit(vol->mftbmp_ino, bit);
  	if (unlikely(err)) {
  		ntfs_error(vol->sb, "Failed to allocate bit in mft bitmap.");
@@ -49952,7 +49960,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		goto err_out;
  	}
  	ntfs_debug("Set bit 0x%llx in mft bitmap.", (long long)bit);
-@@ -2397,34 +2264,35 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2397,34 +2266,35 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	 * actually traversed more than once when a freshly formatted volume is
  	 * first written to so it optimizes away nicely in the common case.
  	 */
@@ -50011,7 +50019,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	 * needed by ntfs_mft_record_format().  We will update the attribute
  	 * record itself in one fell swoop later on.
  	 */
-@@ -2433,7 +2301,7 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2433,7 +2303,7 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	old_data_size = vol->mft_ino->i_size;
  	while (ll > mft_ni->initialized_size) {
  		s64 new_initialized_size, mft_no;
@@ -50020,7 +50028,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		new_initialized_size = mft_ni->initialized_size +
  				vol->mft_record_size;
  		mft_no = mft_ni->initialized_size >> vol->mft_record_size_bits;
-@@ -2469,8 +2337,7 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2469,8 +2339,7 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	err = ntfs_attr_lookup(mft_ni->type, mft_ni->name, mft_ni->name_len,
  			CASE_SENSITIVE, 0, NULL, 0, ctx);
  	if (unlikely(err)) {
@@ -50030,7 +50038,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		ntfs_attr_put_search_ctx(ctx);
  		unmap_mft_record(mft_ni);
  		goto undo_data_init;
-@@ -2478,24 +2345,20 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2478,24 +2347,20 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	a = ctx->attr;
  	read_lock_irqsave(&mft_ni->size_lock, flags);
  	a->data.non_resident.initialized_size =
@@ -50062,7 +50070,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  	read_unlock_irqrestore(&mft_ni->size_lock, flags);
  mft_rec_already_initialized:
  	/*
-@@ -2507,41 +2370,39 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2507,41 +2372,39 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	 * that it is allocated in the mft bitmap means that no-one will try to
  	 * allocate it either.
  	 */
@@ -50125,7 +50133,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		}
  		/*
  		 * We need to (re-)format the mft record, preserving the
-@@ -2551,29 +2412,30 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2551,29 +2414,30 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		 * wrong with the previous mft record.
  		 */
  		seq_no = m->sequence_number;
@@ -50166,7 +50174,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  
  		/*
  		 * Setup the base mft record in the extent mft record.  This
-@@ -2587,22 +2449,24 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2587,22 +2451,24 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		 * attach it to the base inode @base_ni and map, pin, and lock
  		 * its, i.e. the allocated, mft record.
  		 */
@@ -50199,7 +50207,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		/*
  		 * Make sure the allocated mft record is written out to disk.
  		 * No need to set the inode dirty because the caller is going
-@@ -2610,96 +2474,20 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2610,96 +2476,20 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		 * record (e.g. at a minimum a new attribute will be added to
  		 * the mft record.
  		 */
@@ -50301,7 +50309,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  		/*
  		 * Make sure the allocated mft record is written out to disk.
  		 * NOTE: We do not set the ntfs inode dirty because this would
-@@ -2710,23 +2498,40 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2710,23 +2500,40 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  		 * a minimum some new attributes will be added to the mft
  		 * record.
  		 */
@@ -50349,7 +50357,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  undo_data_init:
  	write_lock_irqsave(&mft_ni->size_lock, flags);
  	mft_ni->initialized_size = old_data_initialized;
-@@ -2734,114 +2539,83 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
+@@ -2734,114 +2541,83 @@ ntfs_inode *ntfs_mft_record_alloc(ntfs_volume *vol, const int mode,
  	write_unlock_irqrestore(&mft_ni->size_lock, flags);
  	goto undo_mftbmp_alloc_nolock;
  undo_mftbmp_alloc:
@@ -50514,7 +50522,7 @@ index 6fd1dc4b08c8..79fbe90e2bb4 100644
  
  	/*
  	 * Set the ntfs inode dirty and write it out.  We do not need to worry
-@@ -2849,59 +2623,298 @@ int ntfs_extent_mft_record_free(ntfs_inode *ni, MFT_RECORD *m)
+@@ -2849,59 +2625,298 @@ int ntfs_extent_mft_record_free(ntfs_inode *ni, MFT_RECORD *m)
  	 * record to be freed is guaranteed to do it already.
  	 */
  	NInoSetDirty(ni);
@@ -51048,9 +51056,9 @@ index 16b3c884abfc..7f9faad924ad 100644
 -- 
 2.51.0
 
-From 392130bc29306aa0761153060e1ae32339b6a79a Mon Sep 17 00:00:00 2001
+From 4eebb8901caaec36c694a2be0da6ff6c775cf12e Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:50 +0900
+Date: Fri, 13 Feb 2026 10:40:41 +0900
 Subject: [PATCH 07/17] ntfs: update directory operations
 
 Update the directory and index operations to support full read-write
@@ -51060,15 +51068,15 @@ Acked-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/dir.c   | 1647 +++++++++++++-------------------
+ fs/ntfs/dir.c   | 1650 +++++++++++++-------------------
  fs/ntfs/index.c | 2403 ++++++++++++++++++++++++++++++++++++++++-------
- 2 files changed, 2710 insertions(+), 1340 deletions(-)
+ 2 files changed, 2713 insertions(+), 1340 deletions(-)
 
 diff --git a/fs/ntfs/dir.c b/fs/ntfs/dir.c
-index 629723a8d712..c421a6f21ce7 100644
+index 629723a8d712..ae7aa0adc836 100644
 --- a/fs/ntfs/dir.c
 +++ b/fs/ntfs/dir.c
-@@ -1,29 +1,27 @@
+@@ -1,29 +1,29 @@
  // SPDX-License-Identifier: GPL-2.0-or-later
  /*
 - * dir.c - NTFS kernel directory operations. Part of the Linux-NTFS project.
@@ -51091,6 +51099,8 @@ index 629723a8d712..c421a6f21ce7 100644
  #include "ntfs.h"
 +#include "index.h"
 +#include "reparse.h"
++
++#include <linux/filelock.h>
  
  /*
   * The little endian Unicode string $I30 as a global constant.
@@ -51104,7 +51114,7 @@ index 629723a8d712..c421a6f21ce7 100644
   * ntfs_lookup_inode_by_name - find an inode in a directory given its name
   * @dir_ni:	ntfs inode of the directory in which to search for the name
   * @uname:	Unicode name for which to search in the directory
-@@ -61,30 +59,29 @@ ntfschar I30[5] = { cpu_to_le16('$'), cpu_to_le16('I'),
+@@ -61,30 +61,29 @@ ntfschar I30[5] = { cpu_to_le16('$'), cpu_to_le16('I'),
   *	       locked whilst being accessed otherwise we may find a corrupt
   *	       page due to it being under ->writepage at the moment which
   *	       applies the mst protection fixups before writing out and then
@@ -51149,7 +51159,7 @@ index 629723a8d712..c421a6f21ce7 100644
  	/* Get hold of the mft record for the directory. */
  	m = map_mft_record(dir_ni);
  	if (IS_ERR(m)) {
-@@ -102,30 +99,30 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -102,30 +101,30 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  			0, ctx);
  	if (unlikely(err)) {
  		if (err == -ENOENT) {
@@ -51191,7 +51201,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			goto dir_err_out;
  		/*
  		 * The last entry cannot contain a name. It can however contain
-@@ -133,6 +130,13 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -133,6 +132,13 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 */
  		if (ie->flags & INDEX_ENTRY_END)
  			break;
@@ -51205,7 +51215,7 @@ index 629723a8d712..c421a6f21ce7 100644
  		/*
  		 * We perform a case sensitive comparison and if that matches
  		 * we are done and return the mft reference of the inode (i.e.
-@@ -141,7 +145,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -141,7 +147,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * returning.
  		 */
  		if (ntfs_are_names_equal(uname, uname_len,
@@ -51214,7 +51224,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length,
  				CASE_SENSITIVE, vol->upcase, vol->upcase_len)) {
  found_it:
-@@ -157,7 +161,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -157,7 +163,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  			 */
  			if (ie->key.file_name.file_name_type == FILE_NAME_DOS) {
  				if (!name) {
@@ -51223,7 +51233,7 @@ index 629723a8d712..c421a6f21ce7 100644
  							GFP_NOFS);
  					if (!name) {
  						err = -ENOMEM;
-@@ -188,30 +192,26 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -188,30 +194,26 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * only cache the mft reference and the file name type (we set
  		 * the name length to zero for simplicity).
  		 */
@@ -51265,7 +51275,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			name = kmalloc(name_size, GFP_NOFS);
  			if (!name) {
  				err = -ENOMEM;
-@@ -222,7 +222,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -222,7 +224,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  			if (type != FILE_NAME_DOS) {
  				name->len = len;
  				memcpy(name->name, ie->key.file_name.file_name,
@@ -51274,7 +51284,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			} else
  				name->len = 0;
  			*res = name;
-@@ -232,7 +232,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -232,7 +234,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * know which way in the B+tree we have to go.
  		 */
  		rc = ntfs_collate_names(uname, uname_len,
@@ -51283,7 +51293,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length, 1,
  				IGNORE_CASE, vol->upcase, vol->upcase_len);
  		/*
-@@ -251,7 +251,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -251,7 +253,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * collation.
  		 */
  		rc = ntfs_collate_names(uname, uname_len,
@@ -51292,7 +51302,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length, 1,
  				CASE_SENSITIVE, vol->upcase, vol->upcase_len);
  		if (rc == -1)
-@@ -281,109 +281,117 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -281,109 +283,117 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		err = -ENOENT;
  		goto err_out;
  	} /* Child node present, descend into it. */
@@ -51468,7 +51478,7 @@ index 629723a8d712..c421a6f21ce7 100644
  					dir_ni->mft_no);
  			goto unm_err_out;
  		}
-@@ -393,6 +401,13 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -393,6 +403,13 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 */
  		if (ie->flags & INDEX_ENTRY_END)
  			break;
@@ -51482,7 +51492,7 @@ index 629723a8d712..c421a6f21ce7 100644
  		/*
  		 * We perform a case sensitive comparison and if that matches
  		 * we are done and return the mft reference of the inode (i.e.
-@@ -401,7 +416,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -401,7 +418,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * returning.
  		 */
  		if (ntfs_are_names_equal(uname, uname_len,
@@ -51491,7 +51501,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length,
  				CASE_SENSITIVE, vol->upcase, vol->upcase_len)) {
  found_it2:
-@@ -417,7 +432,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -417,7 +434,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  			 */
  			if (ie->key.file_name.file_name_type == FILE_NAME_DOS) {
  				if (!name) {
@@ -51500,7 +51510,7 @@ index 629723a8d712..c421a6f21ce7 100644
  							GFP_NOFS);
  					if (!name) {
  						err = -ENOMEM;
-@@ -434,8 +449,8 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -434,8 +451,8 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  				*res = NULL;
  			}
  			mref = le64_to_cpu(ie->data.dir.indexed_file);
@@ -51511,7 +51521,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			return mref;
  		}
  		/*
-@@ -448,32 +463,27 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -448,32 +465,27 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * only cache the mft reference and the file name type (we set
  		 * the name length to zero for simplicity).
  		 */
@@ -51556,7 +51566,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			name = kmalloc(name_size, GFP_NOFS);
  			if (!name) {
  				err = -ENOMEM;
-@@ -484,7 +494,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -484,7 +496,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  			if (type != FILE_NAME_DOS) {
  				name->len = len;
  				memcpy(name->name, ie->key.file_name.file_name,
@@ -51565,7 +51575,7 @@ index 629723a8d712..c421a6f21ce7 100644
  			} else
  				name->len = 0;
  			*res = name;
-@@ -494,7 +504,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -494,7 +506,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * know which way in the B+tree we have to go.
  		 */
  		rc = ntfs_collate_names(uname, uname_len,
@@ -51574,7 +51584,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length, 1,
  				IGNORE_CASE, vol->upcase, vol->upcase_len);
  		/*
-@@ -513,7 +523,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -513,7 +525,7 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		 * collation.
  		 */
  		rc = ntfs_collate_names(uname, uname_len,
@@ -51583,7 +51593,7 @@ index 629723a8d712..c421a6f21ce7 100644
  				ie->key.file_name.file_name_length, 1,
  				CASE_SENSITIVE, vol->upcase, vol->upcase_len);
  		if (rc == -1)
-@@ -533,29 +543,29 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -533,29 +545,29 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  	 */
  	if (ie->flags & INDEX_ENTRY_NODE) {
  		if ((ia->index.flags & NODE_MASK) == LEAF_NODE) {
@@ -51627,7 +51637,7 @@ index 629723a8d712..c421a6f21ce7 100644
  		goto unm_err_out;
  	}
  	/*
-@@ -564,15 +574,14 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -564,15 +576,14 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  	 * associated with it.
  	 */
  	if (name) {
@@ -51646,7 +51656,7 @@ index 629723a8d712..c421a6f21ce7 100644
  err_out:
  	if (!err)
  		err = -EIO;
-@@ -580,859 +589,497 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
+@@ -580,859 +591,497 @@ MFT_REF ntfs_lookup_inode_by_name(ntfs_inode *dir_ni, const ntfschar *uname,
  		ntfs_attr_put_search_ctx(ctx);
  	if (m)
  		unmap_mft_record(dir_ni);
@@ -52045,17 +52055,7 @@ index 629723a8d712..c421a6f21ce7 100644
 -				-PTR_ERR(page));
 -		err = PTR_ERR(page);
 -		goto err_out;
-+	name = kmalloc(NTFS_MAX_NAME_LEN * NLS_MAX_CHARSET_SIZE + 1, GFP_NOFS);
-+	if (unlikely(!name))
-+		return -ENOMEM;
-+
-+	mutex_lock_nested(&ndir->mrec_lock, NTFS_INODE_MUTEX_PARENT);
-+	ictx = ntfs_index_ctx_get(ndir, I30, 4);
-+	if (!ictx) {
-+		kfree(name);
-+		mutex_unlock(&ndir->mrec_lock);
-+		return -ENOMEM;
- 	}
+-	}
 -	lock_page(page);
 -	kaddr = (u8*)page_address(page);
 -fast_descend_into_child_node:
@@ -52103,7 +52103,17 @@ index 629723a8d712..c421a6f21ce7 100644
 -				"driver.", (unsigned long long)vcn,
 -				dir_ni->mft_no);
 -		goto unm_err_out;
--	}
++	name = kmalloc(NTFS_MAX_NAME_LEN * NLS_MAX_CHARSET_SIZE + 1, GFP_NOFS);
++	if (unlikely(!name))
++		return -ENOMEM;
++
++	mutex_lock_nested(&ndir->mrec_lock, NTFS_INODE_MUTEX_PARENT);
++	ictx = ntfs_index_ctx_get(ndir, I30, 4);
++	if (!ictx) {
++		kfree(name);
++		mutex_unlock(&ndir->mrec_lock);
++		return -ENOMEM;
+ 	}
 -	index_end = (u8*)&ia->index + le32_to_cpu(ia->index.index_length);
 -	if (index_end > (u8*)ia + dir_ni->itype.index.block_size) {
 -		ntfs_error(sb, "Size of index buffer (VCN 0x%llx) of directory "
@@ -52944,7 +52954,7 @@ index 629723a8d712..c421a6f21ce7 100644
   * ntfs_dir_open - called when an inode is about to be opened
   * @vi:		inode to be opened
   * @filp:	file structure describing the inode
-@@ -1457,13 +1104,21 @@ static int ntfs_dir_open(struct inode *vi, struct file *filp)
+@@ -1457,13 +1106,21 @@ static int ntfs_dir_open(struct inode *vi, struct file *filp)
  	return 0;
  }
  
@@ -52971,7 +52981,7 @@ index 629723a8d712..c421a6f21ce7 100644
   * @datasync:	if non-zero only flush user data and not metadata
   *
   * Data integrity sync of a directory to disk.  Used for fsync, fdatasync, and
-@@ -1479,27 +1134,58 @@ static int ntfs_dir_open(struct inode *vi, struct file *filp)
+@@ -1479,27 +1136,58 @@ static int ntfs_dir_open(struct inode *vi, struct file *filp)
   * anyway.
   *
   * Locking: Caller must hold i_mutex on the inode.
@@ -53037,7 +53047,7 @@ index 629723a8d712..c421a6f21ce7 100644
  	/* If the bitmap attribute inode is in memory sync it, too. */
  	na.mft_no = vi->i_ino;
  	na.type = AT_BITMAP;
-@@ -1507,34 +1193,41 @@ static int ntfs_dir_fsync(struct file *filp, loff_t start, loff_t end,
+@@ -1507,34 +1195,42 @@ static int ntfs_dir_fsync(struct file *filp, loff_t start, loff_t end,
  	na.name_len = 4;
  	bmp_vi = ilookup5(vi->i_sb, vi->i_ino, ntfs_test_inode, &na);
  	if (bmp_vi) {
@@ -53089,6 +53099,7 @@ index 629723a8d712..c421a6f21ce7 100644
 +#ifdef CONFIG_COMPAT
 +	.compat_ioctl	= ntfs_compat_ioctl,
 +#endif
++	.setlease	= generic_setlease,
  };
 diff --git a/fs/ntfs/index.c b/fs/ntfs/index.c
 index d46c2c03a032..42251bdb6f5a 100644
@@ -55578,9 +55589,9 @@ index d46c2c03a032..42251bdb6f5a 100644
 -- 
 2.51.0
 
-From f056721229b705586c3eea35b2753ead04c905dc Mon Sep 17 00:00:00 2001
+From d451f52eda7bc4e29cd6ea7a1cdcb770897960c7 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:51 +0900
+Date: Fri, 13 Feb 2026 10:41:19 +0900
 Subject: [PATCH 08/17] ntfs: update file operations
 
 Rewrite the file operations to utilize the iomap infrastructure,
@@ -55605,14 +55616,14 @@ Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Hyunchul Lee <hyc.lee@gmail.com>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/file.c | 2877 +++++++++++++++++-------------------------------
- 1 file changed, 1019 insertions(+), 1858 deletions(-)
+ fs/ntfs/file.c | 2880 +++++++++++++++++-------------------------------
+ 1 file changed, 1022 insertions(+), 1858 deletions(-)
 
 diff --git a/fs/ntfs/file.c b/fs/ntfs/file.c
-index 297c0b9db621..f6a0a62981d3 100644
+index 297c0b9db621..7f595c875f88 100644
 --- a/fs/ntfs/file.c
 +++ b/fs/ntfs/file.c
-@@ -1,34 +1,29 @@
+@@ -1,34 +1,31 @@
  // SPDX-License-Identifier: GPL-2.0-or-later
  /*
 - * file.c - NTFS kernel file operations.  Part of the Linux-NTFS project.
@@ -55655,13 +55666,15 @@ index 297c0b9db621..f6a0a62981d3 100644
 +#include "ea.h"
 +#include "iomap.h"
 +#include "bitmap.h"
++
++#include <linux/filelock.h>
  
 -/**
 +/*
   * ntfs_file_open - called when an inode is about to be opened
   * @vi:		inode to be opened
   * @filp:	file structure describing the inode
-@@ -48,1948 +43,1114 @@
+@@ -48,1948 +45,1115 @@
   */
  static int ntfs_file_open(struct inode *vi, struct file *filp)
  {
@@ -57020,8 +57033,10 @@ index 297c0b9db621..f6a0a62981d3 100644
 -				NVolSetErrors(vol);
 -			}
 -			up_write(&vol->lcnbmp_lock);
--		}
--	}
++				spin_unlock(&attr_vi->i_lock);
++			iput(attr_vi);
+ 		}
+ 	}
 -	/*
 -	 * Resize the attribute record to its old size and rebuild the mapping
 -	 * pairs array.  Note, we only can do this if the runlist has been
@@ -57049,10 +57064,8 @@ index 297c0b9db621..f6a0a62981d3 100644
 -			}
 -			flush_dcache_mft_record_page(ctx->ntfs_ino);
 -			mark_mft_record_dirty(ctx->ntfs_ino);
-+				spin_unlock(&attr_vi->i_lock);
-+			iput(attr_vi);
- 		}
- 	}
+-		}
+-	}
 -	/* Release the mft record and the attribute. */
 -	if (status.mft_attr_mapped) {
 -		ntfs_attr_put_search_ctx(ctx);
@@ -57205,7 +57218,12 @@ index 297c0b9db621..f6a0a62981d3 100644
 -	if (end <= initialized_size) {
 -		ntfs_debug("Done.");
 -		return 0;
--	}
++	if (NInoCompressed(ni) || NInoEncrypted(ni)) {
++		ntfs_warning(vi->i_sb,
++			"Changes in inode size are not supported yet for %s files, ignoring.",
++			NInoCompressed(ni) ? "compressed" : "encrypted");
++		return -EOPNOTSUPP;
+ 	}
 -	/*
 -	 * Update initialized_size/i_size as appropriate, both in the inode and
 -	 * the mft record.
@@ -57221,12 +57239,7 @@ index 297c0b9db621..f6a0a62981d3 100644
 -		m = NULL;
 -		ctx = NULL;
 -		goto err_out;
-+	if (NInoCompressed(ni) || NInoEncrypted(ni)) {
-+		ntfs_warning(vi->i_sb,
-+			"Changes in inode size are not supported yet for %s files, ignoring.",
-+			NInoCompressed(ni) ? "compressed" : "encrypted");
-+		return -EOPNOTSUPP;
- 	}
+-	}
 -	BUG_ON(!NInoNonResident(ni));
 -	ctx = ntfs_attr_get_search_ctx(base_ni, m);
 -	if (unlikely(!ctx)) {
@@ -58085,7 +58098,7 @@ index 297c0b9db621..f6a0a62981d3 100644
 +	if (NInoCompressed(NTFS_I(inode)))
 +		return -EOPNOTSUPP;
 +
-+	if (desc->vm_flags & VM_WRITE) {
++	if (vma_desc_test_flags(desc, VMA_WRITE_BIT)) {
 +		struct inode *inode = file_inode(file);
 +		loff_t from, to;
 +		int err;
@@ -58587,6 +58600,7 @@ index 297c0b9db621..f6a0a62981d3 100644
 +	.compat_ioctl	= ntfs_compat_ioctl,
 +#endif
 +	.fallocate	= ntfs_fallocate,
++	.setlease	= generic_setlease,
  };
  
  const struct inode_operations ntfs_file_inode_ops = {
@@ -58618,9 +58632,9 @@ index 297c0b9db621..f6a0a62981d3 100644
 -- 
 2.51.0
 
-From 266d7120949556245a7742a6f431f554827b7344 Mon Sep 17 00:00:00 2001
+From 168a063a4f6ddd59c601c7e518ff94e6ab592457 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:52 +0900
+Date: Fri, 13 Feb 2026 10:42:29 +0900
 Subject: [PATCH 09/17] ntfs: update iomap and address space operations
 
 Update the address space operations to use the iomap framework,
@@ -61329,9 +61343,9 @@ index 000000000000..621645fbbf2e
 -- 
 2.51.0
 
-From 7f7bec8958753aac1d8e321e1e32cc8d25b5aea5 Mon Sep 17 00:00:00 2001
+From d30dee053ec07693805dcb627c4476fed55f6762 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:53 +0900
+Date: Fri, 13 Feb 2026 10:43:34 +0900
 Subject: [PATCH 10/17] ntfs: update attrib operations
 
 Overhaul the attribute operations to support write access, including
@@ -69327,9 +69341,9 @@ index 761aaa0195d6..e443451f4351 100644
 -- 
 2.51.0
 
-From d30c3d1fd7b8a98f79ecb65af908dda5f69abe10 Mon Sep 17 00:00:00 2001
+From 6c0ad9608dc38d75328182a15fd64f3cb01eb5a0 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:54 +0900
+Date: Fri, 13 Feb 2026 10:44:35 +0900
 Subject: [PATCH 11/17] ntfs: update runlist handling and cluster allocator
 
 Updates runlist handling and cluster allocation to support
@@ -69343,9 +69357,9 @@ Signed-off-by: Hyunchul Lee <hyc.lee@gmail.com>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
  fs/ntfs/bitmap.c   |  196 +++++--
- fs/ntfs/lcnalloc.c |  753 ++++++++++++------------
- fs/ntfs/runlist.c  | 1353 +++++++++++++++++++++++++-------------------
- 3 files changed, 1315 insertions(+), 987 deletions(-)
+ fs/ntfs/lcnalloc.c |  753 +++++++++++++------------
+ fs/ntfs/runlist.c  | 1343 +++++++++++++++++++++++++-------------------
+ 3 files changed, 1310 insertions(+), 982 deletions(-)
 
 diff --git a/fs/ntfs/bitmap.c b/fs/ntfs/bitmap.c
 index 0675b2400873..ed7770853fa8 100644
@@ -70828,7 +70842,7 @@ index eda9972e6159..6f4df07e3726 100644
 -
 -#endif /* NTFS_RW */
 diff --git a/fs/ntfs/runlist.c b/fs/ntfs/runlist.c
-index 0d448e9881f7..fd6595067a25 100644
+index 0d448e9881f7..c844845f627c 100644
 --- a/fs/ntfs/runlist.c
 +++ b/fs/ntfs/runlist.c
 @@ -1,43 +1,57 @@
@@ -71590,41 +71604,29 @@ index 0d448e9881f7..fd6595067a25 100644
  			b = b2 + ((*buf >> 4) & 0xf);
  			if (buf + b > attr_end)
  				goto io_error;
-@@ -855,30 +845,39 @@ runlist_element *ntfs_mapping_pairs_decompress(const ntfs_volume *vol,
- 			lcn += deltaxcn;
- #ifdef DEBUG
- 			/*
--			 * On NTFS 1.2-, apparently can have lcn == -1 to
-+			 * On NTFS 1.2-, apparently can have lcn == LCN_HOLE to
- 			 * indicate a hole. But we haven't verified ourselves
- 			 * whether it is really the lcn or the deltaxcn that is
--			 * -1. So if either is found give us a message so we
-+			 * LCN_HOLE. So if either is found give us a message so we
+@@ -862,23 +852,32 @@ runlist_element *ntfs_mapping_pairs_decompress(const ntfs_volume *vol,
  			 * can investigate it further!
  			 */
  			if (vol->major_ver < 3) {
 -				if (unlikely(deltaxcn == (LCN)-1))
--					ntfs_error(vol->sb, "lcn delta == -1");
++				if (unlikely(deltaxcn == -1))
+ 					ntfs_error(vol->sb, "lcn delta == -1");
 -				if (unlikely(lcn == (LCN)-1))
--					ntfs_error(vol->sb, "lcn == -1");
-+				if (unlikely(deltaxcn == LCN_HOLE))
-+					ntfs_error(vol->sb, "lcn delta == LCN_HOLE");
-+				if (unlikely(lcn == LCN_HOLE))
-+					ntfs_error(vol->sb, "lcn == LCN_HOLE");
++				if (unlikely(lcn == -1))
+ 					ntfs_error(vol->sb, "lcn == -1");
  			}
  #endif
--			/* Check lcn is not below -1. */
+ 			/* Check lcn is not below -1. */
 -			if (unlikely(lcn < (LCN)-1)) {
 -				ntfs_error(vol->sb, "Invalid LCN < -1 in "
 -						"mapping pairs array.");
-+			/* Check lcn is not below LCN_HOLE. */
-+			if (unlikely(lcn < LCN_HOLE)) {
-+				ntfs_error(vol->sb, "Invalid s64 < -2 in mapping pairs array.");
++			if (unlikely(lcn < -1)) {
++				ntfs_error(vol->sb, "Invalid s64 < -1 in mapping pairs array.");
  				goto err_out;
  			}
 +
 +			/* chkdsk accepts zero-sized runs only for holes */
-+			if ((lcn != LCN_HOLE) && !rl[rlpos].length) {
++			if ((lcn != -1) && !rl[rlpos].length) {
 +				ntfs_error(vol->sb,
 +					   "Invalid zero-sized data run(lcn : %lld).\n",
 +					   lcn);
@@ -72887,9 +72889,9 @@ index 0d448e9881f7..fd6595067a25 100644
 -- 
 2.51.0
 
-From 6c93766c7db005a097ebac9b3bcbde2c92e01d55 Mon Sep 17 00:00:00 2001
+From 901f7137426d4c39867dbe2ac86c45e43fc7b249 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:55 +0900
+Date: Fri, 13 Feb 2026 10:45:36 +0900
 Subject: [PATCH 12/17] ntfs: add reparse and ea operations
 
 Implement support for Extended Attributes and Reparse Points, enabling
@@ -72899,18 +72901,18 @@ Linux (WSL) metadata.
 Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/ea.c      | 947 ++++++++++++++++++++++++++++++++++++++++++++++
+ fs/ntfs/ea.c      | 942 ++++++++++++++++++++++++++++++++++++++++++++++
  fs/ntfs/reparse.c | 573 ++++++++++++++++++++++++++++
- 2 files changed, 1520 insertions(+)
+ 2 files changed, 1515 insertions(+)
  create mode 100644 fs/ntfs/ea.c
  create mode 100644 fs/ntfs/reparse.c
 
 diff --git a/fs/ntfs/ea.c b/fs/ntfs/ea.c
 new file mode 100644
-index 000000000000..8620305aceec
+index 000000000000..82ad9b61ec64
 --- /dev/null
 +++ b/fs/ntfs/ea.c
-@@ -0,0 +1,947 @@
+@@ -0,0 +1,942 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Pocessing of EA's
@@ -73702,8 +73704,7 @@ index 000000000000..8620305aceec
 +	int err;
 +	void *buf;
 +
-+	/* Allocate PATH_MAX bytes. */
-+	buf = __getname();
++	buf = kmalloc(PATH_MAX, GFP_KERNEL);
 +	if (!buf)
 +		return ERR_PTR(-ENOMEM);
 +
@@ -73731,7 +73732,7 @@ index 000000000000..8620305aceec
 +	if (!IS_ERR(acl))
 +		set_cached_acl(inode, type, acl);
 +
-+	__putname(buf);
++	kfree(buf);
 +
 +	return acl;
 +}
@@ -73780,13 +73781,9 @@ index 000000000000..8620305aceec
 +		value = NULL;
 +		flags = XATTR_REPLACE;
 +	} else {
-+		size = posix_acl_xattr_size(acl->a_count);
-+		value = kmalloc(size, GFP_NOFS);
++		value = posix_acl_to_xattr(&init_user_ns, acl, &size, GFP_NOFS);
 +		if (!value)
 +			return -ENOMEM;
-+		err = posix_acl_to_xattr(&init_user_ns, acl, value, size);
-+		if (err < 0)
-+			goto out;
 +		flags = 0;
 +	}
 +
@@ -74440,9 +74437,9 @@ index 000000000000..4cddd918defc
 -- 
 2.51.0
 
-From 5c5d0f90c658ff4eba0c76e35aeb3567d63e3319 Mon Sep 17 00:00:00 2001
+From a97bca4a7727c6cdc5a502884ebc21848e29236d Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:56 +0900
+Date: Fri, 13 Feb 2026 10:49:27 +0900
 Subject: [PATCH 13/17] ntfs: update misc operations
 
 Updates various miscellaneous operations including collation,
@@ -74452,7 +74449,7 @@ object id system file handling.
 Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
- fs/ntfs/bdev-io.c   | 109 +++++++++++
+ fs/ntfs/bdev-io.c   | 117 ++++++++++++
  fs/ntfs/collate.c   | 152 ++++++++++------
  fs/ntfs/debug.c     |  48 +++--
  fs/ntfs/logfile.c   | 431 ++++++++++++++++++--------------------------
@@ -74463,7 +74460,7 @@ Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
  fs/ntfs/upcase.c    |  11 +-
  fs/ntfs/usnjrnl.c   |  70 -------
  fs/ntfs/usnjrnl.h   | 191 --------------------
- 11 files changed, 767 insertions(+), 705 deletions(-)
+ 11 files changed, 775 insertions(+), 705 deletions(-)
  create mode 100644 fs/ntfs/bdev-io.c
  create mode 100644 fs/ntfs/object_id.c
  delete mode 100644 fs/ntfs/usnjrnl.c
@@ -74471,10 +74468,10 @@ Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 
 diff --git a/fs/ntfs/bdev-io.c b/fs/ntfs/bdev-io.c
 new file mode 100644
-index 000000000000..234061d2740c
+index 000000000000..67e65c88d681
 --- /dev/null
 +++ b/fs/ntfs/bdev-io.c
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,117 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * NTFS block device I/O.
@@ -74489,54 +74486,62 @@ index 000000000000..234061d2740c
 +/*
 + * ntfs_bdev_read - Read data directly from block device using bio
 + * @bdev:	block device to read from
-+ * @sector:	starting sector number
-+ * @count:	number of bytes to read
 + * @data:	destination buffer
++ * @start:	starting byte offset on the block device
++ * @size:	number of bytes to read
 + *
-+ * Reads @count bytes starting from @sector directly from the block device
-+ * using one or more BIOs. This function bypasses the page cache completely
-+ * and performs synchronous I/O with REQ_META | REQ_SYNC flags set.
++ * Reads @size bytes starting from byte offset @start directly from the block
++ * device using one or more BIOs. This function bypasses the page cache
++ * completely and performs synchronous I/O with REQ_META | REQ_SYNC flags set.
++ *
++ * The @start offset must be sector-aligned (512 bytes). If it is not aligned,
++ * the function will return -EINVAL.
 + *
 + * If the destination buffer @data is not a vmalloc address, it falls back
 + * to the more efficient bdev_rw_virt() helper.
++ *
++ * Return: 0 on success, negative error code on failure.
 + */
-+int ntfs_bdev_read(struct block_device *bdev, sector_t sector, unsigned int count,
-+		 char *data)
++int ntfs_bdev_read(struct block_device *bdev, char *data, loff_t start, size_t size)
 +{
 +	unsigned int done = 0, added;
 +	int error;
 +	struct bio *bio;
 +	enum req_op op;
++	sector_t sector = start >> SECTOR_SHIFT;
++
++	if (start & (SECTOR_SIZE - 1))
++		return -EINVAL;
 +
 +	op = REQ_OP_READ | REQ_META | REQ_SYNC;
 +	if (!is_vmalloc_addr(data))
-+		return bdev_rw_virt(bdev, sector, data, count, op);
++		return bdev_rw_virt(bdev, sector, data, size, op);
 +
 +	bio = bio_alloc(bdev,
-+			bio_max_segs(DIV_ROUND_UP(count, PAGE_SIZE)),
++			bio_max_segs(DIV_ROUND_UP(size, PAGE_SIZE)),
 +			op, GFP_KERNEL);
 +	bio->bi_iter.bi_sector = sector;
 +
 +	do {
-+		added = bio_add_vmalloc_chunk(bio, data + done, count - done);
++		added = bio_add_vmalloc_chunk(bio, data + done, size - done);
 +		if (!added) {
 +			struct bio	*prev = bio;
 +
 +			bio = bio_alloc(prev->bi_bdev,
-+					bio_max_segs(DIV_ROUND_UP(count - done, PAGE_SIZE)),
++					bio_max_segs(DIV_ROUND_UP(size - done, PAGE_SIZE)),
 +					prev->bi_opf, GFP_KERNEL);
 +			bio->bi_iter.bi_sector = bio_end_sector(prev);
 +			bio_chain(prev, bio);
 +			submit_bio(prev);
 +		}
 +		done += added;
-+	} while (done < count);
++	} while (done < size);
 +
 +	error = submit_bio_wait(bio);
 +	bio_put(bio);
 +
 +	if (op == REQ_OP_READ)
-+		invalidate_kernel_vmap_range(data, count);
++		invalidate_kernel_vmap_range(data, size);
 +	return error;
 +}
 +
@@ -74551,7 +74556,7 @@ index 000000000000..234061d2740c
 + * at byte offset @start. The write is performed entirely through the page
 + * cache of the block device's address space.
 + */
-+int ntfs_bdev_write(struct super_block *sb, void *buf, loff_t start, loff_t size)
++int ntfs_bdev_write(struct super_block *sb, void *buf, loff_t start, size_t size)
 +{
 +	pgoff_t idx, idx_end;
 +	loff_t offset, end = start + size;
@@ -76829,9 +76834,9 @@ index 85f531b59395..000000000000
 -- 
 2.51.0
 
-From 8f9e574743590198f8f879707543bb0fc2e6cb68 Mon Sep 17 00:00:00 2001
+From 4248e444a715ca4e27ca3b675a1cb6e40704ae42 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:57 +0900
+Date: Fri, 13 Feb 2026 10:54:02 +0900
 Subject: [PATCH 14/17] ntfs3: remove legacy ntfs driver support
 
 Reverts the following commits that introduced legacy ntfs
@@ -76849,12 +76854,12 @@ Acked-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
 ---
  fs/ntfs3/Kconfig   |  9 -------
- fs/ntfs3/dir.c     |  9 -------
- fs/ntfs3/file.c    | 10 --------
+ fs/ntfs3/dir.c     | 10 --------
+ fs/ntfs3/file.c    | 11 ---------
  fs/ntfs3/inode.c   | 16 ++++---------
  fs/ntfs3/ntfs_fs.h | 11 ---------
  fs/ntfs3/super.c   | 59 +---------------------------------------------
- 6 files changed, 5 insertions(+), 109 deletions(-)
+ 6 files changed, 5 insertions(+), 111 deletions(-)
 
 diff --git a/fs/ntfs3/Kconfig b/fs/ntfs3/Kconfig
 index 7bc31d69f680..cdfdf51e55d7 100644
@@ -76874,12 +76879,12 @@ index 7bc31d69f680..cdfdf51e55d7 100644
 -	  This config option is here only for backward compatibility. NTFS
 -	  filesystem is now handled by the NTFS3 driver.
 diff --git a/fs/ntfs3/dir.c b/fs/ntfs3/dir.c
-index b98e95d6b4d9..fc39e7330365 100644
+index 4652a56ad105..d99ab086ef6f 100644
 --- a/fs/ntfs3/dir.c
 +++ b/fs/ntfs3/dir.c
-@@ -631,13 +631,4 @@ const struct file_operations ntfs_dir_operations = {
- 	.compat_ioctl   = ntfs_compat_ioctl,
+@@ -676,14 +676,4 @@ const struct file_operations ntfs_dir_operations = {
  #endif
+ 	.setlease	= generic_setlease,
  };
 -
 -#if IS_ENABLED(CONFIG_NTFS_FS)
@@ -76888,16 +76893,17 @@ index b98e95d6b4d9..fc39e7330365 100644
 -	.read		= generic_read_dir,
 -	.iterate_shared	= ntfs_readdir,
 -	.open		= ntfs_file_open,
+-	.setlease	= generic_setlease,
 -};
 -#endif
  // clang-format on
 diff --git a/fs/ntfs3/file.c b/fs/ntfs3/file.c
-index 2e7b2e566ebe..0faa856fc470 100644
+index 7eecf1e01f74..bb8f5ed4b89f 100644
 --- a/fs/ntfs3/file.c
 +++ b/fs/ntfs3/file.c
-@@ -1478,14 +1478,4 @@ const struct file_operations ntfs_file_operations = {
- 	.fallocate	= ntfs_fallocate,
+@@ -1569,15 +1569,4 @@ const struct file_operations ntfs_file_operations = {
  	.release	= ntfs_file_release,
+ 	.setlease	= generic_setlease,
  };
 -
 -#if IS_ENABLED(CONFIG_NTFS_FS)
@@ -76907,14 +76913,15 @@ index 2e7b2e566ebe..0faa856fc470 100644
 -	.splice_read	= ntfs_file_splice_read,
 -	.open		= ntfs_file_open,
 -	.release	= ntfs_file_release,
+-	.setlease	= generic_setlease,
 -};
 -#endif
  // clang-format on
 diff --git a/fs/ntfs3/inode.c b/fs/ntfs3/inode.c
-index 0a9ac5efeb67..826840c257d3 100644
+index 6e65066ebcc1..d2009053c93a 100644
 --- a/fs/ntfs3/inode.c
 +++ b/fs/ntfs3/inode.c
-@@ -444,9 +444,7 @@ static struct inode *ntfs_read_mft(struct inode *inode,
+@@ -443,9 +443,7 @@ static struct inode *ntfs_read_mft(struct inode *inode,
  		 * Usually a hard links to directories are disabled.
  		 */
  		inode->i_op = &ntfs_dir_inode_operations;
@@ -76925,7 +76932,7 @@ index 0a9ac5efeb67..826840c257d3 100644
  		ni->i_valid = 0;
  	} else if (S_ISLNK(mode)) {
  		ni->std_fa &= ~FILE_ATTRIBUTE_DIRECTORY;
-@@ -456,9 +454,7 @@ static struct inode *ntfs_read_mft(struct inode *inode,
+@@ -455,9 +453,7 @@ static struct inode *ntfs_read_mft(struct inode *inode,
  	} else if (S_ISREG(mode)) {
  		ni->std_fa &= ~FILE_ATTRIBUTE_DIRECTORY;
  		inode->i_op = &ntfs_file_inode_operations;
@@ -76936,7 +76943,7 @@ index 0a9ac5efeb67..826840c257d3 100644
  		inode->i_mapping->a_ops = is_compressed(ni) ? &ntfs_aops_cmpr :
  							      &ntfs_aops;
  		if (ino != MFT_REC_MFT)
-@@ -1590,9 +1586,7 @@ int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
+@@ -1646,9 +1642,7 @@ int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
  
  	if (S_ISDIR(mode)) {
  		inode->i_op = &ntfs_dir_inode_operations;
@@ -76947,7 +76954,7 @@ index 0a9ac5efeb67..826840c257d3 100644
  	} else if (S_ISLNK(mode)) {
  		inode->i_op = &ntfs_link_inode_operations;
  		inode->i_fop = NULL;
-@@ -1601,9 +1595,7 @@ int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
+@@ -1657,9 +1651,7 @@ int ntfs_create_inode(struct mnt_idmap *idmap, struct inode *dir,
  		inode_nohighmem(inode);
  	} else if (S_ISREG(mode)) {
  		inode->i_op = &ntfs_file_inode_operations;
@@ -76959,10 +76966,10 @@ index 0a9ac5efeb67..826840c257d3 100644
  							      &ntfs_aops;
  		init_rwsem(&ni->file.run_lock);
 diff --git a/fs/ntfs3/ntfs_fs.h b/fs/ntfs3/ntfs_fs.h
-index a4559c9f64e6..326644d23110 100644
+index daf5a1f47275..56e608de4f70 100644
 --- a/fs/ntfs3/ntfs_fs.h
 +++ b/fs/ntfs3/ntfs_fs.h
-@@ -501,7 +501,6 @@ struct inode *dir_search_u(struct inode *dir, const struct cpu_str *uni,
+@@ -530,7 +530,6 @@ struct inode *dir_search_u(struct inode *dir, const struct cpu_str *uni,
  			   struct ntfs_fnd *fnd);
  bool dir_is_empty(struct inode *dir);
  extern const struct file_operations ntfs_dir_operations;
@@ -76970,7 +76977,7 @@ index a4559c9f64e6..326644d23110 100644
  
  /* Globals from file.c */
  int ntfs_getattr(struct mnt_idmap *idmap, const struct path *path,
-@@ -516,7 +515,6 @@ long ntfs_compat_ioctl(struct file *filp, u32 cmd, unsigned long arg);
+@@ -546,7 +545,6 @@ long ntfs_compat_ioctl(struct file *filp, u32 cmd, unsigned long arg);
  extern const struct inode_operations ntfs_special_inode_operations;
  extern const struct inode_operations ntfs_file_inode_operations;
  extern const struct file_operations ntfs_file_operations;
@@ -76978,7 +76985,7 @@ index a4559c9f64e6..326644d23110 100644
  
  /* Globals from frecord.c */
  void ni_remove_mi(struct ntfs_inode *ni, struct mft_inode *mi);
-@@ -1160,13 +1158,4 @@ static inline void le64_sub_cpu(__le64 *var, u64 val)
+@@ -1250,13 +1248,4 @@ static inline void le64_sub_cpu(__le64 *var, u64 val)
  	*var = cpu_to_le64(le64_to_cpu(*var) - val);
  }
  
@@ -76993,10 +77000,10 @@ index a4559c9f64e6..326644d23110 100644
 -
  #endif /* _LINUX_NTFS3_NTFS_FS_H */
 diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-index 8b0cf0ed4f72..4e0448af3e7e 100644
+index 174a7cb202a0..cf5c2c00f505 100644
 --- a/fs/ntfs3/super.c
 +++ b/fs/ntfs3/super.c
-@@ -415,12 +415,6 @@ static int ntfs_fs_reconfigure(struct fs_context *fc)
+@@ -434,12 +434,6 @@ static int ntfs_fs_reconfigure(struct fs_context *fc)
  	struct ntfs_mount_options *new_opts = fc->fs_private;
  	int ro_rw;
  
@@ -77009,7 +77016,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  	ro_rw = sb_rdonly(sb) && !(fc->sb_flags & SB_RDONLY);
  	if (ro_rw && (sbi->flags & NTFS_FLAGS_NEED_REPLAY)) {
  		errorf(fc,
-@@ -447,7 +441,6 @@ static int ntfs_fs_reconfigure(struct fs_context *fc)
+@@ -466,7 +460,6 @@ static int ntfs_fs_reconfigure(struct fs_context *fc)
  		return -EINVAL;
  	}
  
@@ -77017,7 +77024,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  	sync_filesystem(sb);
  	swap(sbi->options, fc->fs_private);
  
-@@ -1670,8 +1663,6 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
+@@ -1699,8 +1692,6 @@ static int ntfs_fill_super(struct super_block *sb, struct fs_context *fc)
  
  	ntfs_create_procdir(sb);
  
@@ -77026,7 +77033,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  	return 0;
  
  put_inode_out:
-@@ -1796,7 +1787,7 @@ static const struct fs_context_operations ntfs_context_ops = {
+@@ -1823,7 +1814,7 @@ static const struct fs_context_operations ntfs_context_ops = {
   * This will called when mount/remount. We will first initialize
   * options so that if remount we can use just that.
   */
@@ -77035,7 +77042,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  {
  	struct ntfs_mount_options *opts;
  	struct ntfs_sb_info *sbi;
-@@ -1850,11 +1841,6 @@ static int __ntfs_init_fs_context(struct fs_context *fc)
+@@ -1877,11 +1868,6 @@ static int __ntfs_init_fs_context(struct fs_context *fc)
  	return -ENOMEM;
  }
  
@@ -77047,7 +77054,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  static void ntfs3_kill_sb(struct super_block *sb)
  {
  	struct ntfs_sb_info *sbi = sb->s_fs_info;
-@@ -1876,47 +1862,6 @@ static struct file_system_type ntfs_fs_type = {
+@@ -1903,47 +1889,6 @@ static struct file_system_type ntfs_fs_type = {
  	.fs_flags		= FS_REQUIRES_DEV | FS_ALLOW_IDMAP,
  };
  
@@ -77095,7 +77102,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  // clang-format on
  
  static int __init init_ntfs_fs(void)
-@@ -1945,7 +1890,6 @@ static int __init init_ntfs_fs(void)
+@@ -1972,7 +1917,6 @@ static int __init init_ntfs_fs(void)
  		goto out1;
  	}
  
@@ -77103,7 +77110,7 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
  	err = register_filesystem(&ntfs_fs_type);
  	if (err)
  		goto out;
-@@ -1965,7 +1909,6 @@ static void __exit exit_ntfs_fs(void)
+@@ -1992,7 +1936,6 @@ static void __exit exit_ntfs_fs(void)
  	rcu_barrier();
  	kmem_cache_destroy(ntfs_inode_cachep);
  	unregister_filesystem(&ntfs_fs_type);
@@ -77114,9 +77121,9 @@ index 8b0cf0ed4f72..4e0448af3e7e 100644
 -- 
 2.51.0
 
-From a0f5f83e9619eeff6c1e9cbfc71e7f2e2110dab3 Mon Sep 17 00:00:00 2001
+From a667e344a9558a12d2ea961700636d3bf2a6d5ac Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:58 +0900
+Date: Mon, 2 Feb 2026 16:00:57 +0900
 Subject: [PATCH 15/17] ntfs: add Kconfig and Makefile
 
 Introduce Kconfig and Makefile for remade ntfs.
@@ -77150,7 +77157,7 @@ index 0bfdaecaa877..43cb06de297f 100644
  
  endmenu
 diff --git a/fs/Makefile b/fs/Makefile
-index a04274a3c854..6893496697c4 100644
+index cf4a745e9679..ae1b07f9c6a0 100644
 --- a/fs/Makefile
 +++ b/fs/Makefile
 @@ -90,6 +90,7 @@ obj-$(CONFIG_NLS)		+= nls/
@@ -77245,9 +77252,9 @@ index cdfdf51e55d7..876dbc613ae6 100644
 -- 
 2.51.0
 
-From 11f1330e5de7a2c32963cd9d8fca93bb75d856e3 Mon Sep 17 00:00:00 2001
+From 5a6b69f1151a37863b94ac630c4318b32fd8a044 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:18:59 +0900
+Date: Wed, 4 Feb 2026 14:10:17 +0900
 Subject: [PATCH 16/17] Documentation: filesystems: update NTFS driver
  documentation
 
@@ -77880,9 +77887,9 @@ index 5bb093a26485..94f368fb3b06 100644
 -- 
 2.51.0
 
-From e42364bd31ed957ea549c8533e609a41b27c8b24 Mon Sep 17 00:00:00 2001
+From 2fa4fa535c011c0236732bf911ba19570289aef6 Mon Sep 17 00:00:00 2001
 From: Namjae Jeon <linkinjeon@kernel.org>
-Date: Fri, 6 Feb 2026 16:19:00 +0900
+Date: Fri, 9 Jan 2026 16:24:46 +0900
 Subject: [PATCH 17/17] MAINTAINERS: update ntfs filesystem entry
 
 Add myself and Hyunchul Lee as ntfs maintainer.
@@ -77901,7 +77908,7 @@ Signed-off-by: Namjae Jeon <linkinjeon@kernel.org>
  2 files changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/CREDITS b/CREDITS
-index f674a7699343..97388e4be61b 100644
+index 975a8fbc185e..65305ac376ef 100644
 --- a/CREDITS
 +++ b/CREDITS
 @@ -80,8 +80,8 @@ S: B-2610 Wilrijk-Antwerpen
@@ -77916,10 +77923,10 @@ index f674a7699343..97388e4be61b 100644
  S: Christ's College
  S: Cambridge CB2 3BU
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 77f9b916566b..30c13b48a68c 100644
+index 271cfede744d..49353174b1bc 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -18668,12 +18668,11 @@ T:	git https://github.com/davejiang/linux.git
+@@ -18869,12 +18869,11 @@ T:	git https://github.com/davejiang/linux.git
  F:	drivers/ntb/hw/intel/
  
  NTFS FILESYSTEM
