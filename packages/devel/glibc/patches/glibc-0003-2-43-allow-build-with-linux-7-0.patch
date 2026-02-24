@@ -1,0 +1,11 @@
+--- a/sysdeps/unix/sysv/linux/sys/mount.h	2026-02-24 05:16:54.440295126 +0000
+--- b/sysdeps/unix/sysv/linux/sys/mount.h	2026-02-24 05:16:54.440295126 +0000
+@@ -264,7 +264,7 @@
+ #define FSOPEN_CLOEXEC          0x00000001
+ 
+ /* open_tree flags.  */
+-#define OPEN_TREE_CLONE    1         /* Clone the target tree and attach the clone */
++#define OPEN_TREE_CLONE    (1 << 0)         /* Clone the target tree and attach the clone */
+ #ifndef O_CLOEXEC
+ # include <bits/cloexec.h>
+ # define O_CLOEXEC __O_CLOEXEC
