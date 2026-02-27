@@ -35,6 +35,8 @@ case "${LINUX}" in
     PKG_URL="https://github.com/chewitt/linux/archive/${PKG_VERSION}.tar.gz"
     PKG_SOURCE_NAME="linux-${LINUX}-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default rockchip"
+    PKG_VERSION="b00fd51b281dbf569e2109e0b34c18003709cdd7" # 7.0-rc1
+    PKG_SHA256=""
     ;;
   *)
     PKG_VERSION="6.19"
