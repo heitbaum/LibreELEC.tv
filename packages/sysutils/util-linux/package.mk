@@ -27,6 +27,7 @@ UTILLINUX_CONFIG_DEFAULT="--disable-gtk-doc \
                           --disable-makeinstall-chown \
                           --disable-makeinstall-setuid \
                           --with-gnu-ld \
+                          --with-ntfs-mounttype=ntfs \
                           --without-selinux \
                           --without-audit \
                           --without-udev \
