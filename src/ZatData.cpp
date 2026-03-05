@@ -26,7 +26,6 @@ void ZatData::SetStreamProperties(
 {
   properties.emplace_back(PVR_STREAM_PROPERTY_STREAMURL, url);
   properties.emplace_back(PVR_STREAM_PROPERTY_INPUTSTREAM, "inputstream.adaptive");
-  properties.emplace_back("inputstream.adaptive.manifest_type", "mpd");
   properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, "application/xml+dash");
   properties.emplace_back("inputstream.adaptive.manifest_update_parameter", "full");
 }
@@ -422,8 +421,7 @@ std::string ZatData::GetStreamUrl(Document& doc, std::vector<kodi::addon::PVRStr
     kodi::Log(ADDON_LOG_DEBUG, "Selected url for maxrate: %d", watchUrl["maxrate"].GetInt());
     url = Utils::JsonStringOrEmpty(watchUrl, "url");
     std::string licenseUrl = Utils::JsonStringOrEmpty(watchUrl, "license_url");
-    properties.emplace_back("inputstream.adaptive.license_key", licenseUrl + "||A{SSM}|");
-    properties.emplace_back("inputstream.adaptive.license_type", "com.widevine.alpha");
+    properties.emplace_back("inputstream.adaptive.drm_legacy", "com.widevine.alpha|" + licenseUrl + "||A{SSM}|");
     break;
   }
   kodi::Log(ADDON_LOG_DEBUG, "Got url: %s", url.c_str());
