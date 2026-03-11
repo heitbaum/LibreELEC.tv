@@ -1,3 +1,6 @@
+v21.0.5
+- Fix playing recordings on linux systems
+
 v21.0.4
 - Skip 20 minutes additional stream when playing EPG tag
 v21.0.3
