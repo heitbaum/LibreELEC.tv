@@ -1,4 +1,5 @@
 v22.2.1
+- Fix playing recordings on linux systems
 - Fix deprecation warning
 
 v22.2.0
@@ -10,6 +11,13 @@ v22.1.0
 v22.0.0
 - Initial release for Piers (PVR Add-on API v8.4.0)
 
+v21.0.5
+- Fix playing recordings on linux systems
+
+v21.0.4
+- Skip 20 minutes additional stream when playing EPG tag
+v21.0.3
+- Improve and fix loading EPG data
 v21.0.2
 - Add smart tv option
 v21.0.1

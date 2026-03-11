@@ -73,6 +73,7 @@
               <option label="30114">14</option> <!-- Salt.ch -->
               <option label="30115">15</option> <!-- swb TV -->
               <option label="30116">16</option> <!-- 1&1 TV -->
+              <option label="30117">17</option> <!-- Galaxus TV -->
             </options>
           </constraints>
           <control type="list" format="integer" />
@@ -86,6 +87,11 @@
           <control type="edit" format="string" />
         </setting>
         <setting id="skipStart" type="boolean" label="30012">
+          <level>0</level>
+          <default>true</default>
+          <control type="toggle" />
+        </setting>
+        <setting id="skipEnd" type="boolean" label="30013">
           <level>0</level>
           <default>true</default>
           <control type="toggle" />

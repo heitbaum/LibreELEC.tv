@@ -325,6 +325,9 @@ void Session::SetProviderUrl() {
     case 16:
       m_providerUrl = "https://www.1und1.tv";
       break;
+    case 17:
+      m_providerUrl = "https://tv.galaxus.ch";
+      break;
     default:
       m_providerUrl = "https://zattoo.com";
     }

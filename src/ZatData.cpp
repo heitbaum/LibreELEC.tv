@@ -27,7 +27,6 @@ void ZatData::SetStreamProperties(
   properties.emplace_back(PVR_STREAM_PROPERTY_STREAMURL, url);
   properties.emplace_back(PVR_STREAM_PROPERTY_INPUTSTREAM, "inputstream.adaptive");
   properties.emplace_back(PVR_STREAM_PROPERTY_MIMETYPE, "application/xml+dash");
-  properties.emplace_back("inputstream.adaptive.manifest_update_parameter", "full");
 }
 
 bool ZatData::ReadDataJson()
@@ -421,7 +420,7 @@ std::string ZatData::GetStreamUrl(Document& doc, std::vector<kodi::addon::PVRStr
     kodi::Log(ADDON_LOG_DEBUG, "Selected url for maxrate: %d", watchUrl["maxrate"].GetInt());
     url = Utils::JsonStringOrEmpty(watchUrl, "url");
     std::string licenseUrl = Utils::JsonStringOrEmpty(watchUrl, "license_url");
-    properties.emplace_back("inputstream.adaptive.drm_legacy", "com.widevine.alpha|" + licenseUrl + "||A{SSM}|");
+    properties.emplace_back("inputstream.adaptive.drm", "{\"com.widevine.alpha\":{\"license\":{\"server_url\":\"" + licenseUrl + "\"}}}");
     break;
   }
   kodi::Log(ADDON_LOG_DEBUG, "Got url: %s", url.c_str());
@@ -1037,7 +1036,7 @@ PVR_ERROR ZatData::GetRecordingStreamProperties(const kodi::addon::PVRRecording&
   
   Document doc;
   
-  bool useWidevine = GetDrmLevel() > -1;
+  bool useWidevine = GetDrmLevel() > -1 && GetDrmLevel() < 3;
   
   std::ostringstream dataStream;
   dataStream << GetBasicStreamParameters(useWidevine);
@@ -1215,6 +1214,14 @@ PVR_ERROR ZatData::GetEPGTagEdl(const kodi::addon::PVREPGTag& tag, std::vector<k
     entry.SetType(PVR_EDL_TYPE_COMBREAK);
     edl.emplace_back(entry);
   }
+  if (m_settings->GetSkipEndOfProgramme()) {
+      kodi::addon::PVREDLEntry entry;
+      unsigned long duration = (tag.GetEndTime() - tag.GetStartTime() + 25 * 60) * 1000;
+      entry.SetStart(duration - 20 * 60 * 1000);
+      entry.SetEnd(duration + 2000);
+      entry.SetType(PVR_EDL_TYPE_COMBREAK);
+      edl.emplace_back(entry);
+    }
   return PVR_ERROR_NO_ERROR;
 }
 
