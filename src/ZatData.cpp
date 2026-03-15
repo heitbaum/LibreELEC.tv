@@ -421,7 +421,8 @@ std::string ZatData::GetStreamUrl(Document& doc, std::vector<kodi::addon::PVRStr
     kodi::Log(ADDON_LOG_DEBUG, "Selected url for maxrate: %d", watchUrl["maxrate"].GetInt());
     url = Utils::JsonStringOrEmpty(watchUrl, "url");
     std::string licenseUrl = Utils::JsonStringOrEmpty(watchUrl, "license_url");
-    properties.emplace_back("inputstream.adaptive.drm", "{\"com.widevine.alpha\":{\"license\":{\"server_url\":\"" + licenseUrl + "\"}}}");
+    properties.emplace_back("inputstream.adaptive.license_key", licenseUrl + "||A{SSM}|");
+    properties.emplace_back("inputstream.adaptive.license_type", "com.widevine.alpha");
     break;
   }
   kodi::Log(ADDON_LOG_DEBUG, "Got url: %s", url.c_str());
