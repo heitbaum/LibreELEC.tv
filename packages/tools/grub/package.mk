@@ -11,7 +11,7 @@ PKG_URL="https://ftp.gnu.org/gnu/grub/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="toolchain:host"
 PKG_DEPENDS_TARGET="toolchain flex freetype:host gettext:host grub:host"
 PKG_LONGDESC="GRUB is a Multiboot boot loader."
-PKG_TOOLCHAIN="configure"
+PKG_TOOLCHAIN="autotools"
 PKG_BUILD_FLAGS="-cfg-libs -cfg-libs:host"
 
 pre_configure_host() {
