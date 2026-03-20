@@ -3,8 +3,8 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="openssl"
-PKG_VERSION="3.6.4"
-PKG_SHA256="9bffaa1ad1e07b354c21bd3324ec02fa15579f45a7d0494b3e74bc449b7333ef"
+PKG_VERSION="4.0.2"
+PKG_SHA256="736b467530f916737b7031310ccb21d8218c6229e61e8e160cd1d3458cd543a8"
 PKG_LICENSE="Apache-2.0"
 PKG_SITE="https://openssl-library.org"
 PKG_URL="https://github.com/openssl/openssl/releases/download/${PKG_NAME}-${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
@@ -22,12 +22,10 @@ PKG_CONFIGURE_OPTS_SHARED="--libdir=lib \
                            no-rfc3779 \
                            no-sctp \
                            no-ssl-trace \
-                           no-ssl3 \
                            no-unit-test \
                            no-weak-ssl-ciphers \
                            no-zlib \
-                           no-zlib-dynamic \
-                           no-static-engine"
+                           no-zlib-dynamic"
 
 PKG_CONFIGURE_OPTS_HOST="--prefix=${TOOLCHAIN} \
                          --openssldir=${TOOLCHAIN}/etc/ssl"
