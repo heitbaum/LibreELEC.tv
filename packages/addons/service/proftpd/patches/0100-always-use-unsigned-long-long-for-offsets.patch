@@ -4,10 +4,10 @@ Date: Wed, 07 Dec 2016 12:30:17 +0100
 Subject: [PATCH] always use unsigned long long for offsets
 
 diff --git a/include/conf.h b/include/conf.h
-index e83d5b2..40e8841 100644
+index 7db0ce8..2ae5d96 100644
 --- a/include/conf.h
 +++ b/include/conf.h
-@@ -45,13 +45,9 @@
+@@ -44,13 +44,9 @@
   */
  #include "options.h"
  
