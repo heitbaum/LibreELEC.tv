@@ -20,7 +20,6 @@ PKG_ADDON_TYPE="xbmc.python.script"
 PKG_DEPENDS_TARGET="toolchain \
                     7-zip \
                     autossh \
-                    bottom \
                     diffutils \
                     dool \
                     dtach \
@@ -71,8 +70,6 @@ addon() {
     # autossh
     cp -P $(get_install_dir autossh)/usr/bin/autossh ${ADDON_BUILD}/${PKG_ADDON_ID}/bin
 
-    # bottom
-    cp -P $(get_install_dir bottom)/btm ${ADDON_BUILD}/${PKG_ADDON_ID}/bin 2>/dev/null || :
 
     # diffutils
     cp -P $(get_install_dir diffutils)/usr/bin/{cmp,diff,diff3,sdiff} ${ADDON_BUILD}/${PKG_ADDON_ID}/bin
