@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="heimdal"
-PKG_VERSION="f4faaeaba371fff3f8d1bc14389f5e6d70ca8e17"
-PKG_SHA256="2576c5e2d793db53c86e108fd117b278437bb02d6c6db2bec4d1b86958f1980a"
+PKG_VERSION="abd35b246a7ab3b304c3ca918e52240154b87008"
+PKG_SHA256="9a17b393c27d1ef1387787e535250995decffb22339b8269427a670a6afb820d"
 PKG_LICENSE="BSD-3-Clause"
 PKG_SITE="http://www.h5l.org/"
 PKG_URL="https://github.com/heimdal/heimdal/archive/${PKG_VERSION}.tar.gz"
@@ -13,19 +13,12 @@ PKG_LONGDESC="Kerberos 5, PKIX, CMS, GSS-API, SPNEGO, NTLM, Digest-MD5 and, SASL
 PKG_TOOLCHAIN="autotools"
 PKG_BUILD_FLAGS="-parallel"
 
-pre_configure_host() {
-  # configure probe for crypt() uses implicit declaration; without this the probe
-  # fails and crypt is excluded from the link, causing an undefined reference at build time
-  export CFLAGS+=" -Wno-error=implicit-function-declaration"
-}
-
 PKG_CONFIGURE_OPTS_HOST="ac_cv_prog_COMPILE_ET=no \
                          --enable-static --disable-shared \
                          --without-openldap \
                          --without-capng \
                          --without-sqlite3 \
                          --without-libintl \
-                         --without-openssl \
                          --without-berkeley-db \
                          --without-readline \
                          --without-libedit \
@@ -35,7 +28,9 @@ PKG_CONFIGURE_OPTS_HOST="ac_cv_prog_COMPILE_ET=no \
                          --disable-heimdal-documentation"
 
 makeinstall_host() {
-  mkdir -p ${TOOLCHAIN}/bin
-    cp -PR lib/asn1/asn1_compile ${TOOLCHAIN}/bin/heimdal_asn1_compile
-    cp -PR lib/com_err/compile_et ${TOOLCHAIN}/bin/heimdal_compile_et
+  mkdir -p ${TOOLCHAIN}/{bin,lib}
+#    cp -PL lib/roken/.libs/libroken.so.19 ${TOOLCHAIN}/lib
+#    cp -PR lib/asn1/.libs/asn1_compile ${TOOLCHAIN}/bin/heimdal_asn1_compile
+#    cp -PR lib/com_err/.libs/compile_et ${TOOLCHAIN}/bin/heimdal_compile_et
+#    patchelf --add-rpath '${ORIGIN}/../lib' ${TOOLCHAIN}/bin/{heimdal_asn1_compile,heimdal_compile_et}
 }
