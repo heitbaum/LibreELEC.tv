@@ -1,0 +1,82 @@
+From 473521e3428cb6052757e97a3395539a0f5b4274 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 30 Mar 2026 09:02:12 +0000
+Subject: [PATCH] appl/test: fix rk_dns_lookup symbol collision in
+ kinit_auditdns
+
+auditdns.c defines its own rk_dns_lookup to intercept DNS lookups for
+auditing purposes, causing a multiple definition error at link time when
+libroken also provides the same symbol. Newer GNU ld treats this as a
+hard error rather than a warning.
+
+Use -Wl,--wrap,rk_dns_lookup and rename the local interceptor to
+__wrap_rk_dns_lookup so the override works correctly against both
+static and shared builds of libroken.
+
+Fixes: multiple definition of `rk_dns_lookup'
+---
+ appl/test/Makefile.am |  2 ++
+ appl/test/auditdns.c  |  4 +++-
+ configure.ac          | 13 +++++++++++++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/appl/test/Makefile.am b/appl/test/Makefile.am
+index 2252b7da4..bac97f256 100644
+--- a/appl/test/Makefile.am
++++ b/appl/test/Makefile.am
+@@ -45,6 +45,8 @@ kinit_auditdns_SOURCES = ../../kuser/kinit.c auditdns.c
+ 
+ kinit_auditdns_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/../../lib/krb5
+ 
++kinit_auditdns_LDFLAGS = $(WRAP_LDFLAGS)
++
+ # sync with kinit_LDADD in kuser/Makefile.am
+ if !NO_AFS
+ afs_lib = $(LIB_kafs)
+diff --git a/appl/test/auditdns.c b/appl/test/auditdns.c
+index 3a79af45e..dc6c1b215 100644
+--- a/appl/test/auditdns.c
++++ b/appl/test/auditdns.c
+@@ -40,12 +40,14 @@
+ #include "resolve.h"
+ #include "roken.h"
+ 
++struct rk_dns_reply *__wrap_rk_dns_lookup(const char *domain, const char *type_name);
++
+ #if (__STDC_VERSION__ - 0) < 199901L
+ # define restrict /* empty */
+ #endif
+ 
+ struct rk_dns_reply *
+-rk_dns_lookup(const char *domain, const char *type_name)
++__wrap_rk_dns_lookup(const char *domain, const char *type_name)
+ {
+ 
+     fprintf(stderr, "DNS leak: %s %s (%s)\n", __func__, domain, type_name);
+diff --git a/configure.ac b/configure.ac
+index be9f02e91..77f095e76 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -33,6 +33,19 @@ AC_CANONICAL_HOST
+ CANONICAL_HOST=$host
+ AC_SUBST(CANONICAL_HOST)
+ 
++dnl
++dnl this is needed to not wrap calls when building on OS X Builds
++dnl
++case $host_os in
++  darwin*)
++    WRAP_LDFLAGS=""
++    ;;
++  *)
++    WRAP_LDFLAGS="-Wl,--wrap=rk_dns_lookup"
++    ;;
++esac
++AC_SUBST([WRAP_LDFLAGS])
++
+ rk_SYS_LARGEFILE
+ 
+ rk_AIX
+-- 
+2.53.0
+
