@@ -12,7 +12,6 @@ PKG_URL="https://alpha.gnu.org/gnu/libtool/${PKG_NAME}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="ccache:host autoconf:host automake:host intltool:host"
 PKG_DEPENDS_TARGET="toolchain"
 PKG_LONGDESC="A generic library support script."
-PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_HOST="--enable-static \
                          --disable-shared"
