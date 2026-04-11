@@ -1,0 +1,1717 @@
+From e6f9ae8f18efb0d5f66f7be95f6d784f32109503 Mon Sep 17 00:00:00 2001
+From: Ileana Dumitrescu <ileanadumitrescu95@gmail.com>
+Date: Fri, 2 Jan 2026 20:09:41 +0200
+Subject: [PATCH 11/14] libtool: Update copyright year
+
+---
+ AUTHORS                       | 2 +-
+ ChangeLog.old                 | 2 +-
+ HACKING                       | 2 +-
+ Makefile.am                   | 2 +-
+ NEWS                          | 2 +-
+ README.md                     | 2 +-
+ TODO                          | 2 +-
+ bootstrap.conf                | 2 +-
+ build-aux/edit-readme-alpha   | 2 +-
+ build-aux/ltmain.in           | 2 +-
+ build-aux/no-bogus-m4-defines | 2 +-
+ cfg.mk                        | 2 +-
+ configure.ac                  | 2 +-
+ doc/libtool.texi              | 8 ++++----
+ libltdl/README                | 2 +-
+ libltdl/configure.ac          | 2 +-
+ libltdl/libltdl/lt__alloc.h   | 2 +-
+ libltdl/libltdl/lt__argz_.h   | 2 +-
+ libltdl/libltdl/lt__dirent.h  | 2 +-
+ libltdl/libltdl/lt__glibc.h   | 2 +-
+ libltdl/libltdl/lt__private.h | 2 +-
+ libltdl/libltdl/lt__strl.h    | 2 +-
+ libltdl/libltdl/lt_dlloader.h | 2 +-
+ libltdl/libltdl/lt_error.h    | 2 +-
+ libltdl/libltdl/lt_system.h   | 2 +-
+ libltdl/libltdl/slist.h       | 2 +-
+ libltdl/loaders/dld_link.c    | 2 +-
+ libltdl/loaders/dlopen.c      | 2 +-
+ libltdl/loaders/dyld.c        | 2 +-
+ libltdl/loaders/load_add_on.c | 2 +-
+ libltdl/loaders/loadlibrary.c | 2 +-
+ libltdl/loaders/preopen.c     | 2 +-
+ libltdl/loaders/shl_load.c    | 2 +-
+ libltdl/lt__alloc.c           | 2 +-
+ libltdl/lt__argz.c            | 2 +-
+ libltdl/lt__dirent.c          | 2 +-
+ libltdl/lt__strl.c            | 2 +-
+ libltdl/lt_dlloader.c         | 2 +-
+ libltdl/lt_error.c            | 2 +-
+ libltdl/ltdl.c                | 2 +-
+ libltdl/ltdl.h                | 2 +-
+ libltdl/ltdl.mk               | 2 +-
+ libltdl/slist.c               | 2 +-
+ libtool-next-version.in       | 2 +-
+ libtoolize.in                 | 2 +-
+ m4/autobuild.m4               | 2 +-
+ m4/libtool.m4                 | 6 +++---
+ m4/ltargz.m4                  | 2 +-
+ m4/ltdl.m4                    | 2 +-
+ m4/ltoptions.m4               | 2 +-
+ m4/ltsugar.m4                 | 2 +-
+ m4/ltversion.in               | 2 +-
+ m4/lt~obsolete.m4             | 2 +-
+ m4/m4.m4                      | 2 +-
+ tests/am-subdir.at            | 2 +-
+ tests/archive-in-archive.at   | 2 +-
+ tests/bindir.at               | 2 +-
+ tests/bug_42313.at            | 2 +-
+ tests/bug_62343.at            | 2 +-
+ tests/bug_71489.at            | 2 +-
+ tests/cdemo.at                | 2 +-
+ tests/cmdline_wrap.at         | 2 +-
+ tests/configure-funcs.at      | 2 +-
+ tests/configure-iface.at      | 2 +-
+ tests/convenience.at          | 2 +-
+ tests/ctor.at                 | 2 +-
+ tests/cwrapper.at             | 2 +-
+ tests/darwin.at               | 2 +-
+ tests/demo.at                 | 2 +-
+ tests/depdemo.at              | 2 +-
+ tests/deplib-in-subdir.at     | 2 +-
+ tests/deplibs-ident.at        | 2 +-
+ tests/deplibs-mingw.at        | 2 +-
+ tests/destdir.at              | 2 +-
+ tests/dlloader-api.at         | 2 +-
+ tests/dumpbin-symbols.at      | 2 +-
+ tests/duplicate_conv.at       | 2 +-
+ tests/duplicate_deps.at       | 2 +-
+ tests/duplicate_members.at    | 2 +-
+ tests/early-libtool.at        | 2 +-
+ tests/exceptions.at           | 2 +-
+ tests/execute-mode.at         | 2 +-
+ tests/exeext.at               | 2 +-
+ tests/export-def.at           | 2 +-
+ tests/export.at               | 2 +-
+ tests/f77demo.at              | 2 +-
+ tests/fail.at                 | 2 +-
+ tests/fcdemo.at               | 2 +-
+ tests/flags.at                | 2 +-
+ tests/help.at                 | 2 +-
+ tests/indirect_deps.at        | 2 +-
+ tests/infer-tag.at            | 2 +-
+ tests/inherited_flags.at      | 2 +-
+ tests/install.at              | 2 +-
+ tests/lalib-syntax.at         | 2 +-
+ tests/libtool.at              | 2 +-
+ tests/libtoolize.at           | 2 +-
+ tests/link-order.at           | 2 +-
+ tests/link-order2.at          | 2 +-
+ tests/loadlibrary.at          | 2 +-
+ tests/localization.at         | 2 +-
+ tests/lt_dladvise.at          | 2 +-
+ tests/lt_dlexit.at            | 2 +-
+ tests/lt_dlopen.at            | 2 +-
+ tests/lt_dlopen_a.at          | 2 +-
+ tests/lt_dlopenext.at         | 2 +-
+ tests/ltdl-api.at             | 2 +-
+ tests/ltdl-libdir.at          | 2 +-
+ tests/mdemo.at                | 2 +-
+ tests/need_lib_prefix.at      | 2 +-
+ tests/no-executables.at       | 2 +-
+ tests/nocase.at               | 2 +-
+ tests/nonrecursive.at         | 2 +-
+ tests/old-m4-iface.at         | 2 +-
+ tests/pic_flag.at             | 2 +-
+ tests/recursive.at            | 2 +-
+ tests/resident.at             | 2 +-
+ tests/runpath-in-lalib.at     | 2 +-
+ tests/search-path.at          | 2 +-
+ tests/shlibpath.at            | 2 +-
+ tests/slimcc.at               | 2 +-
+ tests/slist.at                | 2 +-
+ tests/standalone.at           | 2 +-
+ tests/static.at               | 2 +-
+ tests/stresstest.at           | 2 +-
+ tests/subproject.at           | 2 +-
+ tests/sysroot.at              | 2 +-
+ tests/tagdemo.at              | 2 +-
+ tests/template.at             | 2 +-
+ tests/testsuite.at            | 2 +-
+ tests/versioning.at           | 2 +-
+ tests/versioning_script.at    | 2 +-
+ tests/with-pic.at             | 2 +-
+ 133 files changed, 138 insertions(+), 138 deletions(-)
+
+diff --git a/AUTHORS b/AUTHORS
+index 55bf8c77..6b55b2ee 100644
+--- a/AUTHORS
++++ b/AUTHORS
+@@ -29,7 +29,7 @@
+ 
+     Ileana Dumitrescu	ileanadumitrescu95@gmail.com
+ -- 
+-  Copyright (C) 1996, 1998-2019, 2021-2025 Free Software Foundation,
++  Copyright (C) 1996, 1998-2019, 2021-2026 Free Software Foundation,
+   Inc.
+ 
+   This file is part of GNU Libtool.
+diff --git a/Makefile.am b/Makefile.am
+index 21fb56d5..02d80926 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,6 +1,6 @@
+ ## Makefile.am -- Process this file with automake to produce Makefile.in
+ ##
+-##   Copyright (C) 2003-2019, 2021-2025 Free Software Foundation, Inc.
++##   Copyright (C) 2003-2019, 2021-2026 Free Software Foundation, Inc.
+ ##   Written by Gary V. Vaughan, 2003
+ ##
+ ##   This file is part of GNU Libtool.
+diff --git a/NEWS b/NEWS
+index 780b6079..12390745 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1533,7 +1533,7 @@ New in 0.1:
+ * Support for: *-*-freebsd*, *-*-netbsd*, *-*-sunos4*, *-*-ultrix4*
+ -- 
+ 
+-Copyright (C) 1996, 1998-2019, 2021-2025 Free Software Foundation, Inc.
++Copyright (C) 1996, 1998-2019, 2021-2026 Free Software Foundation, Inc.
+ 
+ This file is part of GNU Libtool.
+ 
+diff --git a/TODO b/TODO
+index 41a58619..69677112 100644
+--- a/TODO
++++ b/TODO
+@@ -325,7 +325,7 @@ GNU Libtool
+   it easier to add new platforms.
+ 
+ -- 
+-  Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++  Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+   Foundation, Inc.
+   Written by Gary V. Vaughan, 2004
+ 
+diff --git a/bootstrap.conf b/bootstrap.conf
+index a050d52c..66b3f16c 100644
+--- a/bootstrap.conf
++++ b/bootstrap.conf
+@@ -1,6 +1,6 @@
+ # bootstrap.conf (GNU Libtool) version 2014-11-18
+ #
+-# Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++# Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ # Written by Gary V. Vaughan, 2010
+ 
+ # This is free software; see the source for copying conditions.  There is NO
+diff --git a/build-aux/edit-readme-alpha b/build-aux/edit-readme-alpha
+index 5ca70fe4..809e1043 100755
+--- a/build-aux/edit-readme-alpha
++++ b/build-aux/edit-readme-alpha
+@@ -1,7 +1,7 @@
+ #! /bin/sh
+ 
+ #   edit-readme-alpha - edit README file for alpha releases
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2010
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/build-aux/ltmain.in b/build-aux/ltmain.in
+index bb72916a..27e18c57 100644
+--- a/build-aux/ltmain.in
++++ b/build-aux/ltmain.in
+@@ -4,7 +4,7 @@
+ # Provide generalized library-building support services.
+ # Written by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
+ 
+-# Copyright (C) 1996-2019, 2021-2025 Free Software Foundation, Inc.
++# Copyright (C) 1996-2019, 2021-2026 Free Software Foundation, Inc.
+ # This is free software; see the source for copying conditions.  There is NO
+ # warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 
+diff --git a/build-aux/no-bogus-m4-defines b/build-aux/no-bogus-m4-defines
+index 85448720..422ea9db 100755
+--- a/build-aux/no-bogus-m4-defines
++++ b/build-aux/no-bogus-m4-defines
+@@ -7,7 +7,7 @@
+ #   current package 'aclocal.m4'.  Currently used by 'make dist'
+ #   and by ./bootstrap (bootstrap.conf).
+ #
+-#   Copyright (C) 2015-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2015-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/cfg.mk b/cfg.mk
+index ecabe303..03dd656a 100644
+--- a/cfg.mk
++++ b/cfg.mk
+@@ -1,6 +1,6 @@
+ # cfg.mk -- Configuration for maintainer-makefile
+ #
+-#   Copyright (c) 2011-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (c) 2011-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2011
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/configure.ac b/configure.ac
+index 8926cfe8..de0e6414 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1,6 +1,6 @@
+ # Process this file with autoconf to create configure. -*- autoconf -*-
+ 
+-#   Copyright (C) 2001, 2004-2005, 2008, 2010-2019, 2021-2025 Free
++#   Copyright (C) 2001, 2004-2005, 2008, 2010-2019, 2021-2026 Free
+ #   Software Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2001
+ #
+diff --git a/libltdl/README b/libltdl/README
+index 0d287ad9..59fd6faf 100644
+--- a/libltdl/README
++++ b/libltdl/README
+@@ -9,7 +9,7 @@ It supports the following dlopen interfaces:
+ * dyld (darwin/Mac OS X)
+ * libtool's dlpreopen
+ --
+-   Copyright (C) 1999, 2003, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 1999, 2003, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Thomas Tanner, 1999
+ 
+diff --git a/libltdl/configure.ac b/libltdl/configure.ac
+index 40f27f82..9fbbf8ba 100644
+--- a/libltdl/configure.ac
++++ b/libltdl/configure.ac
+@@ -1,6 +1,6 @@
+ # Process this file with autoconf to create configure. -*- autoconf -*-
+ #
+-#    Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2025 Free
++#    Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2026 Free
+ #    Software Foundation, Inc.
+ #    Written by Gary V. Vaughan, 2004
+ #
+diff --git a/libltdl/libltdl/lt__alloc.h b/libltdl/libltdl/lt__alloc.h
+index ad25e30e..00d0e55c 100644
+--- a/libltdl/libltdl/lt__alloc.h
++++ b/libltdl/libltdl/lt__alloc.h
+@@ -1,6 +1,6 @@
+ /* lt__alloc.h -- internal memory management interface
+ 
+-   Copyright (C) 2004, 2011-2019, 2021-2025 Free Software Foundation,
++   Copyright (C) 2004, 2011-2019, 2021-2026 Free Software Foundation,
+    Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/lt__argz_.h b/libltdl/libltdl/lt__argz_.h
+index a6f08732..32bd31be 100644
+--- a/libltdl/libltdl/lt__argz_.h
++++ b/libltdl/libltdl/lt__argz_.h
+@@ -1,6 +1,6 @@
+ /* lt__argz.h -- internal argz interface for non-glibc systems
+ 
+-   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/lt__dirent.h b/libltdl/libltdl/lt__dirent.h
+index 6e9c0ab9..01ca0f69 100644
+--- a/libltdl/libltdl/lt__dirent.h
++++ b/libltdl/libltdl/lt__dirent.h
+@@ -1,6 +1,6 @@
+ /* lt__dirent.h -- internal directory entry scanning interface
+ 
+-   Copyright (C) 2001, 2004, 2006, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2001, 2004, 2006, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Bob Friesenhahn, 2001
+ 
+diff --git a/libltdl/libltdl/lt__glibc.h b/libltdl/libltdl/lt__glibc.h
+index 1ca3b546..f7cdfa3a 100644
+--- a/libltdl/libltdl/lt__glibc.h
++++ b/libltdl/libltdl/lt__glibc.h
+@@ -1,6 +1,6 @@
+ /* lt__glibc.h -- support for non glibc environments
+ 
+-   Copyright (C) 2004, 2006-2007, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2006-2007, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/lt__private.h b/libltdl/libltdl/lt__private.h
+index b778228f..31d4bbe5 100644
+--- a/libltdl/libltdl/lt__private.h
++++ b/libltdl/libltdl/lt__private.h
+@@ -1,6 +1,6 @@
+ /* lt__private.h -- internal apis for libltdl
+ 
+-   Copyright (C) 2004-2008, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004-2008, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/lt__strl.h b/libltdl/libltdl/lt__strl.h
+index a72bd1cd..943cd6c8 100644
+--- a/libltdl/libltdl/lt__strl.h
++++ b/libltdl/libltdl/lt__strl.h
+@@ -1,6 +1,6 @@
+ /* lt__strl.h -- size-bounded string copying and concatenation
+ 
+-   Copyright (C) 2004, 2006, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2006, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Bob Friesenhahn, 2004
+ 
+diff --git a/libltdl/libltdl/lt_dlloader.h b/libltdl/libltdl/lt_dlloader.h
+index 6316fb07..ad3fce0b 100644
+--- a/libltdl/libltdl/lt_dlloader.h
++++ b/libltdl/libltdl/lt_dlloader.h
+@@ -1,6 +1,6 @@
+ /* lt_dlloader.h -- dynamic library loader interface
+ 
+-   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/lt_error.h b/libltdl/libltdl/lt_error.h
+index 4ec0078f..a43ad7d9 100644
+--- a/libltdl/libltdl/lt_error.h
++++ b/libltdl/libltdl/lt_error.h
+@@ -1,6 +1,6 @@
+ /* lt_error.h -- error propagation interface
+ 
+-   Copyright (C) 1999-2001, 2004, 2007, 2011-2019, 2021-2025 Free
++   Copyright (C) 1999-2001, 2004, 2007, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1999
+ 
+diff --git a/libltdl/libltdl/lt_system.h b/libltdl/libltdl/lt_system.h
+index 2f2c7b77..b0b985f6 100644
+--- a/libltdl/libltdl/lt_system.h
++++ b/libltdl/libltdl/lt_system.h
+@@ -1,6 +1,6 @@
+ /* lt_system.h -- system portability abstraction layer
+ 
+-   Copyright (C) 2004, 2007, 2010-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2007, 2010-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/libltdl/slist.h b/libltdl/libltdl/slist.h
+index 681d2f95..98bdbd6c 100644
+--- a/libltdl/libltdl/slist.h
++++ b/libltdl/libltdl/slist.h
+@@ -1,6 +1,6 @@
+ /* slist.h -- generalised singly linked lists
+ 
+-   Copyright (C) 2000, 2004, 2009, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2000, 2004, 2009, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2000
+ 
+diff --git a/libltdl/loaders/dld_link.c b/libltdl/loaders/dld_link.c
+index 86af50ef..3258a61a 100644
+--- a/libltdl/loaders/dld_link.c
++++ b/libltdl/loaders/dld_link.c
+@@ -1,6 +1,6 @@
+ /* loader-dld_link.c -- dynamic linking with dld
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/loaders/dlopen.c b/libltdl/loaders/dlopen.c
+index 13681bb5..30c1c918 100644
+--- a/libltdl/loaders/dlopen.c
++++ b/libltdl/loaders/dlopen.c
+@@ -1,6 +1,6 @@
+ /* loader-dlopen.c --  dynamic linking with dlopen/dlsym
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/loaders/dyld.c b/libltdl/loaders/dyld.c
+index bccba66f..4e0162e5 100644
+--- a/libltdl/loaders/dyld.c
++++ b/libltdl/loaders/dyld.c
+@@ -1,6 +1,6 @@
+ /* loader-dyld.c -- dynamic linking on darwin and OS X
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Peter O'Gorman, 1998
+ 
+diff --git a/libltdl/loaders/load_add_on.c b/libltdl/loaders/load_add_on.c
+index 56f60146..af4d0415 100644
+--- a/libltdl/loaders/load_add_on.c
++++ b/libltdl/loaders/load_add_on.c
+@@ -1,6 +1,6 @@
+ /* loader-load_add_on.c --  dynamic linking for BeOS
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/loaders/loadlibrary.c b/libltdl/loaders/loadlibrary.c
+index d62dce5b..b100f9e4 100644
+--- a/libltdl/loaders/loadlibrary.c
++++ b/libltdl/loaders/loadlibrary.c
+@@ -1,6 +1,6 @@
+ /* loader-loadlibrary.c --  dynamic linking for Win32
+ 
+-   Copyright (C) 1998-2000, 2004-2008, 2010-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004-2008, 2010-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/loaders/preopen.c b/libltdl/loaders/preopen.c
+index b0bb5f64..ca58e091 100644
+--- a/libltdl/loaders/preopen.c
++++ b/libltdl/loaders/preopen.c
+@@ -1,6 +1,6 @@
+ /* loader-preopen.c -- emulate dynamic linking using preloaded_symbols
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/loaders/shl_load.c b/libltdl/loaders/shl_load.c
+index 945b8477..8685eff8 100644
+--- a/libltdl/loaders/shl_load.c
++++ b/libltdl/loaders/shl_load.c
+@@ -1,6 +1,6 @@
+ /* loader-shl_load.c --  dynamic linking with shl_load (HP-UX)
+ 
+-   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004, 2006-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/lt__alloc.c b/libltdl/lt__alloc.c
+index b908b142..ec134d07 100644
+--- a/libltdl/lt__alloc.c
++++ b/libltdl/lt__alloc.c
+@@ -1,6 +1,6 @@
+ /* lt__alloc.c -- internal memory management interface
+ 
+-   Copyright (C) 2004, 2006-2007, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2006-2007, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/lt__argz.c b/libltdl/lt__argz.c
+index 911dfd3a..e3bbd354 100644
+--- a/libltdl/lt__argz.c
++++ b/libltdl/lt__argz.c
+@@ -1,6 +1,6 @@
+ /* lt__argz.c -- argz implementation for non-glibc systems
+ 
+-   Copyright (C) 2004, 2006-2008, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2006-2008, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/lt__dirent.c b/libltdl/lt__dirent.c
+index 8d6bc046..fb4910fd 100644
+--- a/libltdl/lt__dirent.c
++++ b/libltdl/lt__dirent.c
+@@ -1,6 +1,6 @@
+ /* lt__dirent.c -- internal directory entry scanning interface
+ 
+-   Copyright (C) 2001, 2004, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2001, 2004, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Bob Friesenhahn, 2001
+ 
+diff --git a/libltdl/lt__strl.c b/libltdl/lt__strl.c
+index d2c5bb6d..d45d5644 100644
+--- a/libltdl/lt__strl.c
++++ b/libltdl/lt__strl.c
+@@ -1,6 +1,6 @@
+ /* lt__strl.c -- size-bounded string copying and concatenation
+ 
+-   Copyright (C) 2004, 2011-2019, 2021-2025 Free Software Foundation,
++   Copyright (C) 2004, 2011-2019, 2021-2026 Free Software Foundation,
+    Inc.
+    Written by Bob Friesenhahn, 2004
+ 
+diff --git a/libltdl/lt_dlloader.c b/libltdl/lt_dlloader.c
+index 5661d159..89714d58 100644
+--- a/libltdl/lt_dlloader.c
++++ b/libltdl/lt_dlloader.c
+@@ -1,6 +1,6 @@
+ /* lt_dlloader.c -- dynamic library loader interface
+ 
+-   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2025 Free Software
++   Copyright (C) 2004, 2007-2008, 2011-2019, 2021-2026 Free Software
+    Foundation, Inc.
+    Written by Gary V. Vaughan, 2004
+ 
+diff --git a/libltdl/lt_error.c b/libltdl/lt_error.c
+index 934687f3..ad5bdd73 100644
+--- a/libltdl/lt_error.c
++++ b/libltdl/lt_error.c
+@@ -1,6 +1,6 @@
+ /* lt_error.c -- error propagation interface
+ 
+-   Copyright (C) 1999-2001, 2004-2005, 2007, 2011-2019, 2021-2025 Free
++   Copyright (C) 1999-2001, 2004-2005, 2007, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1999
+ 
+diff --git a/libltdl/ltdl.c b/libltdl/ltdl.c
+index 85bd6013..c92e2594 100644
+--- a/libltdl/ltdl.c
++++ b/libltdl/ltdl.c
+@@ -1,6 +1,6 @@
+ /* ltdl.c -- system independent dlopen wrapper
+ 
+-   Copyright (C) 1998-2000, 2004-2008, 2011-2019, 2021-2025 Free
++   Copyright (C) 1998-2000, 2004-2008, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/ltdl.h b/libltdl/ltdl.h
+index 3617e79c..297c6b1f 100644
+--- a/libltdl/ltdl.h
++++ b/libltdl/ltdl.h
+@@ -1,6 +1,6 @@
+ /* ltdl.h -- generic dlopen functions
+ 
+-   Copyright (C) 1998-2000, 2004-2005, 2007-2008, 2011-2019, 2021-2025
++   Copyright (C) 1998-2000, 2004-2005, 2007-2008, 2011-2019, 2021-2026
+    Free Software Foundation, Inc.
+    Written by Thomas Tanner, 1998
+ 
+diff --git a/libltdl/ltdl.mk b/libltdl/ltdl.mk
+index 0cb427d8..85293a00 100644
+--- a/libltdl/ltdl.mk
++++ b/libltdl/ltdl.mk
+@@ -1,6 +1,6 @@
+ ## ltdl.mk -- includable Makefile snippet
+ ##
+-##   Copyright (C) 2003-2005, 2007, 2011-2019, 2021-2025 Free Software
++##   Copyright (C) 2003-2005, 2007, 2011-2019, 2021-2026 Free Software
+ ##   Foundation, Inc.
+ ##   Written by Gary V. Vaughan, 2003
+ ##
+diff --git a/libltdl/slist.c b/libltdl/slist.c
+index 59814e43..c5b69eb5 100644
+--- a/libltdl/slist.c
++++ b/libltdl/slist.c
+@@ -1,6 +1,6 @@
+ /* slist.c -- generalised singly linked lists
+ 
+-   Copyright (C) 2000, 2004, 2007-2009, 2011-2019, 2021-2025 Free
++   Copyright (C) 2000, 2004, 2007-2009, 2011-2019, 2021-2026 Free
+    Software Foundation, Inc.
+    Written by Gary V. Vaughan, 2000
+ 
+diff --git a/libtool-next-version.in b/libtool-next-version.in
+index 36b02fb9..6b7136d6 100644
+--- a/libtool-next-version.in
++++ b/libtool-next-version.in
+@@ -1,6 +1,6 @@
+ #! /bin/sh
+ #
+-# Copyright (C) 2019-2025 Free Software Foundation, Inc.
++# Copyright (C) 2019-2026 Free Software Foundation, Inc.
+ #
+ # This program is free software: you can redistribute it and/or modify
+ # it under the terms of the GNU General Public License as published by
+diff --git a/libtoolize.in b/libtoolize.in
+index fe8abe74..422fa921 100644
+--- a/libtoolize.in
++++ b/libtoolize.in
+@@ -3,7 +3,7 @@
+ # Prepare a package to use libtool.
+ # Written by Gary V. Vaughan <gary@gnu.org>, 2003
+ 
+-# Copyright (C) 2003-2019, 2021-2025 Free Software Foundation, Inc.
++# Copyright (C) 2003-2019, 2021-2026 Free Software Foundation, Inc.
+ # This is free software; see the source for copying conditions.  There is NO
+ # warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 
+diff --git a/m4/autobuild.m4 b/m4/autobuild.m4
+index 74cb3e85..6dfe4406 100644
+--- a/m4/autobuild.m4
++++ b/m4/autobuild.m4
+@@ -1,5 +1,5 @@
+ # autobuild.m4 serial 7
+-dnl Copyright (C) 2004, 2006-2019, 2021-2025 Free Software Foundation,
++dnl Copyright (C) 2004, 2006-2019, 2021-2026 Free Software Foundation,
+ dnl Inc.
+ dnl This file is free software; the Free Software Foundation
+ dnl gives unlimited permission to copy and/or distribute it,
+diff --git a/m4/libtool.m4 b/m4/libtool.m4
+index 7f92e5e4..9e88db3f 100644
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -1,6 +1,6 @@
+ # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
+ #
+-#   Copyright (C) 1996-2001, 2003-2019, 2021-2025 Free Software
++#   Copyright (C) 1996-2001, 2003-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gordon Matzigkeit, 1996
+ #
+@@ -9,7 +9,7 @@
+ # modifications, as long as this notice is preserved.
+ 
+ m4_define([_LT_COPYING], [dnl
+-# Copyright (C) 2025 Free Software Foundation, Inc.
++# Copyright (C) 2025-2026 Free Software Foundation, Inc.
+ # This is free software; see the source for copying conditions.  There is NO
+ # warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ 
+@@ -732,7 +732,7 @@ m4_ifset([AC_PACKAGE_NAME], [AC_PACKAGE_NAME ])config.lt[]dnl
+ m4_ifset([AC_PACKAGE_VERSION], [ AC_PACKAGE_VERSION])
+ configured by $[0], generated by m4_PACKAGE_STRING.
+ 
+-Copyright (C) 2025 Free Software Foundation, Inc.
++Copyright (C) 2025-2026 Free Software Foundation, Inc.
+ This config.lt script is free software; the Free Software Foundation
+ gives unlimited permission to copy, distribute and modify it."
+ 
+diff --git a/m4/ltargz.m4 b/m4/ltargz.m4
+index c6952cf8..cb3b6fbd 100644
+--- a/m4/ltargz.m4
++++ b/m4/ltargz.m4
+@@ -1,6 +1,6 @@
+ # Portability macros for glibc argz.                    -*- Autoconf -*-
+ #
+-#   Copyright (C) 2004-2007, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2004-2007, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan <gary@gnu.org>
+ #
+diff --git a/m4/ltdl.m4 b/m4/ltdl.m4
+index fc3ce618..ddbbb263 100644
+--- a/m4/ltdl.m4
++++ b/m4/ltdl.m4
+@@ -1,6 +1,6 @@
+ # ltdl.m4 - Configure ltdl for the target system. -*-Autoconf-*-
+ #
+-#   Copyright (C) 1999-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 1999-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Thomas Tanner, 1999
+ #
+diff --git a/m4/ltoptions.m4 b/m4/ltoptions.m4
+index 9e93e6f0..994d4487 100644
+--- a/m4/ltoptions.m4
++++ b/m4/ltoptions.m4
+@@ -1,6 +1,6 @@
+ # Helper functions for option handling.                    -*- Autoconf -*-
+ #
+-#   Copyright (C) 2004-2005, 2007-2009, 2011-2019, 2021-2025 Free
++#   Copyright (C) 2004-2005, 2007-2009, 2011-2019, 2021-2026 Free
+ #   Software Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2004
+ #
+diff --git a/m4/ltsugar.m4 b/m4/ltsugar.m4
+index 5698955b..a15a5072 100644
+--- a/m4/ltsugar.m4
++++ b/m4/ltsugar.m4
+@@ -1,6 +1,6 @@
+ # ltsugar.m4 -- libtool m4 base layer.                         -*-Autoconf-*-
+ #
+-# Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++# Copyright (C) 2004-2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+ # Foundation, Inc.
+ # Written by Gary V. Vaughan, 2004
+ #
+diff --git a/m4/ltversion.in b/m4/ltversion.in
+index 352dd632..8743d20f 100644
+--- a/m4/ltversion.in
++++ b/m4/ltversion.in
+@@ -1,6 +1,6 @@
+ # ltversion.m4 -- version numbers			-*- Autoconf -*-
+ #
+-#   Copyright (C) 2004, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2004, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   Written by Scott James Remnant, 2004
+ #
+diff --git a/m4/lt~obsolete.m4 b/m4/lt~obsolete.m4
+index c1d7729b..cadcdbe4 100644
+--- a/m4/lt~obsolete.m4
++++ b/m4/lt~obsolete.m4
+@@ -1,6 +1,6 @@
+ # lt~obsolete.m4 -- aclocal satisfying obsolete definitions.    -*-Autoconf-*-
+ #
+-#   Copyright (C) 2004-2005, 2007, 2009, 2011-2019, 2021-2025 Free
++#   Copyright (C) 2004-2005, 2007, 2009, 2011-2019, 2021-2026 Free
+ #   Software Foundation, Inc.
+ #   Written by Scott James Remnant, 2004.
+ #
+diff --git a/m4/m4.m4 b/m4/m4.m4
+index 3e9e7a2c..05308105 100644
+--- a/m4/m4.m4
++++ b/m4/m4.m4
+@@ -1,6 +1,6 @@
+ # m4.m4 serial 12
+ 
+-# Copyright (C) 2000, 2006-2019, 2021-2025 Free Software Foundation,
++# Copyright (C) 2000, 2006-2019, 2021-2026 Free Software Foundation,
+ # Inc.
+ 
+ # Copying and distribution of this file, with or without modification,
+diff --git a/tests/am-subdir.at b/tests/am-subdir.at
+index bea3aead..0df1c560 100644
+--- a/tests/am-subdir.at
++++ b/tests/am-subdir.at
+@@ -1,6 +1,6 @@
+ # am-subdir.at -- libtool subdir-objects support              -*- Autotest -*-
+ 
+-#   Copyright (C) 2004, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2004, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2004
+ #
+diff --git a/tests/archive-in-archive.at b/tests/archive-in-archive.at
+index d3c55fa0..d081f57d 100644
+--- a/tests/archive-in-archive.at
++++ b/tests/archive-in-archive.at
+@@ -1,6 +1,6 @@
+ # dmacks.at --  test for dmacks bug  -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2008, 2010-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2010-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Peter O'Gorman, 2007
+ #
+diff --git a/tests/bindir.at b/tests/bindir.at
+index 0e455c19..6d179fdf 100644
+--- a/tests/bindir.at
++++ b/tests/bindir.at
+@@ -1,6 +1,6 @@
+ # bindir.at -  Test the -bindir option
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Dave Korn, 2009
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/bug_42313.at b/tests/bug_42313.at
+index 53bb0e90..11db24f6 100644
+--- a/tests/bug_42313.at
++++ b/tests/bug_42313.at
+@@ -1,6 +1,6 @@
+ # bug_42313.at -- bug 42313   -*- Autotest -*-
+ 
+-#   Copyright (C) 2024-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2024-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/bug_62343.at b/tests/bug_62343.at
+index e4d72450..098fe24e 100644
+--- a/tests/bug_62343.at
++++ b/tests/bug_62343.at
+@@ -1,6 +1,6 @@
+ # bug_62343.at -- bug 62343   -*- Autotest -*-
+ 
+-#   Copyright (C) 2024-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2024-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/bug_71489.at b/tests/bug_71489.at
+index 4e94666e..8a368f70 100644
+--- a/tests/bug_71489.at
++++ b/tests/bug_71489.at
+@@ -1,6 +1,6 @@
+ # bug_71489.at test local version of installed program is used
+ 
+-#   Copyright (C) 2024-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2024-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/cdemo.at b/tests/cdemo.at
+index e4a786a0..0fda4d70 100644
+--- a/tests/cdemo.at
++++ b/tests/cdemo.at
+@@ -1,6 +1,6 @@
+ # cdemo.at -- Using Automake to build a program and library -*- Autotest -*-
+ #
+-#   Copyright (C) 2003-2004, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003-2004, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2003
+ #
+diff --git a/tests/cmdline_wrap.at b/tests/cmdline_wrap.at
+index 39ef07d2..bfc5ce64 100644
+--- a/tests/cmdline_wrap.at
++++ b/tests/cmdline_wrap.at
+@@ -1,6 +1,6 @@
+ # cmdline_wrap.at -- run tests with low max_cmd_len           -*- Autotest -*-
+ 
+-#   Copyright (C) 2007, 2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007, 2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2007
+ #
+diff --git a/tests/configure-funcs.at b/tests/configure-funcs.at
+index 5fb60030..0823da82 100644
+--- a/tests/configure-funcs.at
++++ b/tests/configure-funcs.at
+@@ -1,6 +1,6 @@
+ # configure-functions.at -- shared shell functions. -*- Autotest -*-
+ #
+-#   Copyright (C) 2015-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2015-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/configure-iface.at b/tests/configure-iface.at
+index c3433135..47e56f03 100644
+--- a/tests/configure-iface.at
++++ b/tests/configure-iface.at
+@@ -1,6 +1,6 @@
+ # configure-iface.at -- test ltdl configure interface         -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2007
+ #
+diff --git a/tests/convenience.at b/tests/convenience.at
+index 104b55a6..83cf6d6a 100644
+--- a/tests/convenience.at
++++ b/tests/convenience.at
+@@ -1,6 +1,6 @@
+ # convenience.at -- testing C convenience archives            -*- Autotest -*-
+ 
+-#   Copyright (C) 2005, 2007-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2005, 2007-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   Written by Ralf Wildenhues, 2005
+ #
+diff --git a/tests/ctor.at b/tests/ctor.at
+index bd4d3ed5..854e0cbb 100644
+--- a/tests/ctor.at
++++ b/tests/ctor.at
+@@ -1,6 +1,6 @@
+ # ctor.at -- Test constructors via C++                        -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Noah Misch, 2007
+ #
+diff --git a/tests/cwrapper.at b/tests/cwrapper.at
+index 173e97f9..57f652cc 100644
+--- a/tests/cwrapper.at
++++ b/tests/cwrapper.at
+@@ -1,6 +1,6 @@
+ # cwrapper.at -- test cwrapper compliance with standards -*- Autotest -*-
+ 
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Charles Wilson, 2009
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/darwin.at b/tests/darwin.at
+index 9441871f..a9e860bf 100644
+--- a/tests/darwin.at
++++ b/tests/darwin.at
+@@ -1,6 +1,6 @@
+ # darwin.at - tests specific to Mac OS X
+ #
+-#   Copyright (C) 2008-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2008-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Peter O'Gorman, 2008
+ #
+diff --git a/tests/demo.at b/tests/demo.at
+index 1b4a2e89..09e3a11f 100644
+--- a/tests/demo.at
++++ b/tests/demo.at
+@@ -1,6 +1,6 @@
+ # demo.at -- Linking and loading. -*- Autotest -*-
+ #
+-#   Copyright (C) 2003-2004, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003-2004, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2003
+ #
+diff --git a/tests/depdemo.at b/tests/depdemo.at
+index c01942ee..5f1c6665 100644
+--- a/tests/depdemo.at
++++ b/tests/depdemo.at
+@@ -1,6 +1,6 @@
+ # depdemo.at -- Library interdependencies		 -*- Autotest -*-
+ #
+-#   Copyright (C) 2003-2004, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003-2004, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2003
+ #
+diff --git a/tests/deplib-in-subdir.at b/tests/deplib-in-subdir.at
+index ee8d28af..8ac643d2 100644
+--- a/tests/deplib-in-subdir.at
++++ b/tests/deplib-in-subdir.at
+@@ -1,6 +1,6 @@
+ # deplib-in-subdir.at --                         -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/deplibs-ident.at b/tests/deplibs-ident.at
+index 4ca1261c..ced0b23c 100644
+--- a/tests/deplibs-ident.at
++++ b/tests/deplibs-ident.at
+@@ -1,6 +1,6 @@
+ # deplibs-ident.at -- detecting identical deplibs              -*- Autotest -*-
+ 
+-#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2005
+ #
+diff --git a/tests/deplibs-mingw.at b/tests/deplibs-mingw.at
+index fd6d81e7..38896db1 100644
+--- a/tests/deplibs-mingw.at
++++ b/tests/deplibs-mingw.at
+@@ -1,6 +1,6 @@
+ # deplibs-mingw.at --                         -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/destdir.at b/tests/destdir.at
+index 3cdec9c8..00455a9c 100644
+--- a/tests/destdir.at
++++ b/tests/destdir.at
+@@ -1,6 +1,6 @@
+ # destdir.at -- test various DESTDIR issues                   -*- Autotest -*-
+ 
+-#   Copyright (C) 2006-2007, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006-2007, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ #
+diff --git a/tests/dlloader-api.at b/tests/dlloader-api.at
+index e0c57ccf..ab8f0992 100644
+--- a/tests/dlloader-api.at
++++ b/tests/dlloader-api.at
+@@ -1,6 +1,6 @@
+ # dlloader.at -- test dlloader functionality                -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   This file is part of GNU Libtool.
+ #
+ # GNU Libtool is free software; you can redistribute it and/or
+diff --git a/tests/dumpbin-symbols.at b/tests/dumpbin-symbols.at
+index 274fb439..cb78aa85 100644
+--- a/tests/dumpbin-symbols.at
++++ b/tests/dumpbin-symbols.at
+@@ -1,6 +1,6 @@
+ # dumpbin-symbols.at -- libtool "dumpbin -symbols" support    -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/duplicate_conv.at b/tests/duplicate_conv.at
+index 8a45c21b..dd025647 100644
+--- a/tests/duplicate_conv.at
++++ b/tests/duplicate_conv.at
+@@ -1,6 +1,6 @@
+ # duplicate_conv.at -- duplicate convenience archive names   -*- Autotest -*-
+ 
+-#   Copyright (C) 2006, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ #
+diff --git a/tests/duplicate_deps.at b/tests/duplicate_deps.at
+index b31cf023..f24661bd 100644
+--- a/tests/duplicate_deps.at
++++ b/tests/duplicate_deps.at
+@@ -1,6 +1,6 @@
+ # duplicate_deps.at -- preserve duplicate convenience deps    -*- Autotest -*-
+ 
+-#   Copyright (C) 2006-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ $
+diff --git a/tests/duplicate_members.at b/tests/duplicate_members.at
+index b9e4d1a0..bc32bc29 100755
+--- a/tests/duplicate_members.at
++++ b/tests/duplicate_members.at
+@@ -1,6 +1,6 @@
+ # duplicate_members.at -- duplicate members in archive tests  -*- Autotest -*-
+ 
+-#   Copyright (C) 2005, 2007-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2007-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Alexandre Oliva & Peter O'Gorman, 2005
+ #
+diff --git a/tests/early-libtool.at b/tests/early-libtool.at
+index cb928412..d6505b37 100644
+--- a/tests/early-libtool.at
++++ b/tests/early-libtool.at
+@@ -1,6 +1,6 @@
+ # early-libtool.at -- early libtool script generation         -*- Autotest -*-
+ 
+-#   Copyright (C) 2005-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/exceptions.at b/tests/exceptions.at
+index 35b9fe96..e1fcc84d 100644
+--- a/tests/exceptions.at
++++ b/tests/exceptions.at
+@@ -1,6 +1,6 @@
+ # exception.at -- test C++ exception handling with libtool  -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/execute-mode.at b/tests/execute-mode.at
+index 6d40e980..fb4009b2 100644
+--- a/tests/execute-mode.at
++++ b/tests/execute-mode.at
+@@ -1,6 +1,6 @@
+ # execute-mode.at -- libtool --mode=execute             -*- Autotest -*-
+ #
+-#   Copyright (C) 2008-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2008-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2008
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/exeext.at b/tests/exeext.at
+index fa0338be..47d4e494 100644
+--- a/tests/exeext.at
++++ b/tests/exeext.at
+@@ -1,6 +1,6 @@
+ # exeext.at -- ensure that exeext handling works  -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Peter Rosin
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/export-def.at b/tests/export-def.at
+index 9cd080cf..382a47d4 100755
+--- a/tests/export-def.at
++++ b/tests/export-def.at
+@@ -1,6 +1,6 @@
+ # export-def.at -- test module-definition files              -*- Autotest -*-
+ 
+-#   Copyright (C) 2013-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2013-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Peter Rosin, 2013
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/export.at b/tests/export.at
+index cae6653a..398c5a1f 100644
+--- a/tests/export.at
++++ b/tests/export.at
+@@ -1,6 +1,6 @@
+ # export.at -- test symbol exports                           -*- Autotest -*-
+ 
+-#   Copyright (C) 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2007
+ #
+diff --git a/tests/f77demo.at b/tests/f77demo.at
+index 982ac5c0..44dd2db7 100644
+--- a/tests/f77demo.at
++++ b/tests/f77demo.at
+@@ -1,6 +1,6 @@
+ # f77demo.at -- Fortran 77 language support.		-*- Autotest -*-
+ #
+-#   Copyright (C) 2003, 2005-2006, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003, 2005-2006, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Eric Lindahl, 2002
+ #   Written by Gary V. Vaughan, 2003
+diff --git a/tests/fail.at b/tests/fail.at
+index 1895dcaa..e1f2b3ec 100644
+--- a/tests/fail.at
++++ b/tests/fail.at
+@@ -1,6 +1,6 @@
+ # fail.at -- test that libtool really fail when it should     -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2005
+ #
+diff --git a/tests/fcdemo.at b/tests/fcdemo.at
+index 18bafa4a..0bcbe687 100644
+--- a/tests/fcdemo.at
++++ b/tests/fcdemo.at
+@@ -1,6 +1,6 @@
+ # fcdemo.at -- Fortran 90/95 language support.		-*- Autotest -*-
+ #
+-#   Copyright (C) 2003, 2005-2006, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003, 2005-2006, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Eric Lindahl, 2002
+ #   Written by Gary V. Vaughan, 2003
+diff --git a/tests/flags.at b/tests/flags.at
+index 9fdadd02..d4f1aaf6 100644
+--- a/tests/flags.at
++++ b/tests/flags.at
+@@ -1,6 +1,6 @@
+ # flags.at -- libtool passing of flags             -*- Autotest -*-
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/help.at b/tests/help.at
+index 33349e9d..8ea1c539 100644
+--- a/tests/help.at
++++ b/tests/help.at
+@@ -1,6 +1,6 @@
+ # help.at -- standard command line options          -*- Autotest -*-
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/indirect_deps.at b/tests/indirect_deps.at
+index ce70b280..67efa5f9 100644
+--- a/tests/indirect_deps.at
++++ b/tests/indirect_deps.at
+@@ -1,6 +1,6 @@
+ # indirect_deps.at -- support for link_all_deplibs=no   -*- Autotest -*-
+ 
+-#   Copyright (C) 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2007.
+ #
+diff --git a/tests/infer-tag.at b/tests/infer-tag.at
+index 5299f01c..8c68eba9 100644
+--- a/tests/infer-tag.at
++++ b/tests/infer-tag.at
+@@ -1,6 +1,6 @@
+ # infer-tag.at -- libtool without --tag             -*- Autotest -*-
+ #
+-#   Copyright (C) 2008, 2010-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2008, 2010-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/inherited_flags.at b/tests/inherited_flags.at
+index 5a54f6d3..1c7a3ba4 100644
+--- a/tests/inherited_flags.at
++++ b/tests/inherited_flags.at
+@@ -1,6 +1,6 @@
+ # inherited_flags.at -- test inherited_linker_flags          -*- Autotest -*-
+ #
+-#   Copyright (C) 2005-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Peter O'Garman, 2005
+ #
+diff --git a/tests/install.at b/tests/install.at
+index cd1ef89c..98866fe1 100644
+--- a/tests/install.at
++++ b/tests/install.at
+@@ -1,6 +1,6 @@
+ # install.at -- install mode tests             -*- Autotest -*-
+ #
+-#   Copyright (C) 2008-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2008-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2008
+ #
+diff --git a/tests/lalib-syntax.at b/tests/lalib-syntax.at
+index f9db085e..589ee49e 100644
+--- a/tests/lalib-syntax.at
++++ b/tests/lalib-syntax.at
+@@ -1,6 +1,6 @@
+ # lalib-syntax.at -- parsing .la files robustly  -*- Autotest -*-
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/libtool.at b/tests/libtool.at
+index a7560500..06781706 100755
+--- a/tests/libtool.at
++++ b/tests/libtool.at
+@@ -1,6 +1,6 @@
+ # libtool.at -- basic libtool operation tests -*- Autotest -*-
+ #
+-#   Copyright (C) 2003-2005, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003-2005, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2003
+ #
+diff --git a/tests/libtoolize.at b/tests/libtoolize.at
+index 4e9d4281..0851c64c 100644
+--- a/tests/libtoolize.at
++++ b/tests/libtoolize.at
+@@ -1,6 +1,6 @@
+ # libtoolize.at -- test libtoolize operation                  -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/link-order.at b/tests/link-order.at
+index 325103b6..6cf3df26 100644
+--- a/tests/link-order.at
++++ b/tests/link-order.at
+@@ -1,6 +1,6 @@
+ # link-order.at -- ensure that library linking order matches  -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Alexandre Oliva & Ralf Wildenhues, 2005
+ #
+diff --git a/tests/link-order2.at b/tests/link-order2.at
+index 24eda87e..2b20a204 100644
+--- a/tests/link-order2.at
++++ b/tests/link-order2.at
+@@ -1,6 +1,6 @@
+ # link-order2.at -- test link order of deplibs                -*- Autotest -*-
+ #
+-#   Copyright (C) 2006-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ #
+diff --git a/tests/loadlibrary.at b/tests/loadlibrary.at
+index a97af1e4..eb453450 100644
+--- a/tests/loadlibrary.at
++++ b/tests/loadlibrary.at
+@@ -1,6 +1,6 @@
+ # loadlibrary.at -- test loadlibrary functionality          -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   This file is part of GNU Libtool.
+ #
+ # GNU Libtool is free software; you can redistribute it and/or
+diff --git a/tests/localization.at b/tests/localization.at
+index 475a8f59..c1ef19a3 100644
+--- a/tests/localization.at
++++ b/tests/localization.at
+@@ -1,6 +1,6 @@
+ # localization.at -- libtool and locales                -*- Autotest -*-
+ #
+-#   Copyright (C) 2008-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2008-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/lt_dladvise.at b/tests/lt_dladvise.at
+index 37b628be..3854ed94 100644
+--- a/tests/lt_dladvise.at
++++ b/tests/lt_dladvise.at
+@@ -1,6 +1,6 @@
+ # lt_dladvise.at -- test libltdl functionality                -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2007
+ #
+diff --git a/tests/lt_dlexit.at b/tests/lt_dlexit.at
+index 51f26f23..0f4f50e1 100644
+--- a/tests/lt_dlexit.at
++++ b/tests/lt_dlexit.at
+@@ -1,6 +1,6 @@
+ # lt_dlexit.at -- test libltdl functionality                  -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2008, 2010-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2010-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Dave Brolley & Ralf Wildenhues, 2007
+ #
+diff --git a/tests/lt_dlopen.at b/tests/lt_dlopen.at
+index dd055833..34ab4614 100644
+--- a/tests/lt_dlopen.at
++++ b/tests/lt_dlopen.at
+@@ -1,6 +1,6 @@
+ # lt_dlopen.at -- test libltdl functionality                -*- Autotest -*-
+ #
+-#   Copyright (C) 2009, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2009, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/lt_dlopen_a.at b/tests/lt_dlopen_a.at
+index 38098275..1b45447a 100644
+--- a/tests/lt_dlopen_a.at
++++ b/tests/lt_dlopen_a.at
+@@ -1,6 +1,6 @@
+ # lt_dlopen_a.at -- test libltdl functionality                -*- Autotest -*-
+ #
+-#   Copyright (C) 2009, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2009, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/lt_dlopenext.at b/tests/lt_dlopenext.at
+index ae9d3f17..d190c504 100644
+--- a/tests/lt_dlopenext.at
++++ b/tests/lt_dlopenext.at
+@@ -1,6 +1,6 @@
+ # lt_dlopenext.at -- test libltdl functionality             -*- Autotest -*-
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #   This file is part of GNU Libtool.
+ #
+ # GNU Libtool is free software; you can redistribute it and/or
+diff --git a/tests/ltdl-api.at b/tests/ltdl-api.at
+index e43ed61f..be8b687d 100644
+--- a/tests/ltdl-api.at
++++ b/tests/ltdl-api.at
+@@ -1,6 +1,6 @@
+ # ltdl-api.at -- test libltdl API                -*- Autotest -*-
+ #
+-#   Copyright (C) 2008, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2008, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   Written by Ralf Wildenhues, 2008.
+ #
+diff --git a/tests/ltdl-libdir.at b/tests/ltdl-libdir.at
+index 870e4856..593e58fd 100644
+--- a/tests/ltdl-libdir.at
++++ b/tests/ltdl-libdir.at
+@@ -1,6 +1,6 @@
+ # ltdl-libdir.at -- test libltdl functionality             -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   This file is part of GNU Libtool.
+ #
+ # GNU Libtool is free software; you can redistribute it and/or
+diff --git a/tests/mdemo.at b/tests/mdemo.at
+index a6b03372..01bf6c0e 100644
+--- a/tests/mdemo.at
++++ b/tests/mdemo.at
+@@ -1,6 +1,6 @@
+ # demo.at -- Dynamic ltdl runtime loading -*- Autotest -*-
+ #
+-#   Copyright (C) 1998, 2002-2004, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 1998, 2002-2004, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Thomas Tanner, 1998
+ #   Written by Greg Eisenhauer, 2002
+diff --git a/tests/need_lib_prefix.at b/tests/need_lib_prefix.at
+index f3b897fa..bfade022 100644
+--- a/tests/need_lib_prefix.at
++++ b/tests/need_lib_prefix.at
+@@ -1,6 +1,6 @@
+ # need-lib-prefix.at -- test libltdl functionality            -*- Autotest -*-
+ #
+-#   Copyright (C) 2007-2008, 2010-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2010-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2007
+ #
+diff --git a/tests/no-executables.at b/tests/no-executables.at
+index d374982e..d7c6c3d3 100644
+--- a/tests/no-executables.at
++++ b/tests/no-executables.at
+@@ -1,6 +1,6 @@
+ # no-executables.at -- Libtool usage in GCC        -*- Autotest -*-
+ 
+-#   Copyright (C) 2008, 2010-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2008, 2010-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/nocase.at b/tests/nocase.at
+index 6345b6f6..078e8f4a 100644
+--- a/tests/nocase.at
++++ b/tests/nocase.at
+@@ -1,6 +1,6 @@
+ # nocase.at --  test for nocase lib search  -*- Autotest -*-
+ #
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Peter Rosin, 2007
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/nonrecursive.at b/tests/nonrecursive.at
+index d0c5ad55..1f5ba3ed 100644
+--- a/tests/nonrecursive.at
++++ b/tests/nonrecursive.at
+@@ -1,6 +1,6 @@
+ # nonrecursive.at -- test nonrecursive Automake Libltdl       -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/old-m4-iface.at b/tests/old-m4-iface.at
+index ee0b14a0..25c5fb4b 100644
+--- a/tests/old-m4-iface.at
++++ b/tests/old-m4-iface.at
+@@ -1,6 +1,6 @@
+ # old-m4-iface.at -- exercise old m4 interface to libtool     -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008-2009, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/pic_flag.at b/tests/pic_flag.at
+index 9f6766fb..d9488541 100644
+--- a/tests/pic_flag.at
++++ b/tests/pic_flag.at
+@@ -1,6 +1,6 @@
+ # pic_flag.at -- override the pic_flag at configure time   -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/recursive.at b/tests/recursive.at
+index 56c531ee..428fe00e 100644
+--- a/tests/recursive.at
++++ b/tests/recursive.at
+@@ -1,6 +1,6 @@
+ # recursive.at -- test recursive Automake libltdl build       -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/resident.at b/tests/resident.at
+index 2d02de4f..8538f967 100644
+--- a/tests/resident.at
++++ b/tests/resident.at
+@@ -1,6 +1,6 @@
+ # resident.at -- test resident modules              -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/runpath-in-lalib.at b/tests/runpath-in-lalib.at
+index 1eebc40e..f2ad0d83 100644
+--- a/tests/runpath-in-lalib.at
++++ b/tests/runpath-in-lalib.at
+@@ -1,6 +1,6 @@
+ # runpath-in-lalib.at --                         -*- Autotest -*-
+ 
+-#   Copyright (C) 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2007
+ #
+diff --git a/tests/search-path.at b/tests/search-path.at
+index 2738fc38..cca65974 100644
+--- a/tests/search-path.at
++++ b/tests/search-path.at
+@@ -1,6 +1,6 @@
+ # search-path.at -- test sys_lib_search_path_spec             -*- Autotest -*-
+ #
+-#   Copyright (C) 2006, 2008, 2010-2019, 2021-2025 Free Software
++#   Copyright (C) 2006, 2008, 2010-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/shlibpath.at b/tests/shlibpath.at
+index 6984cb61..b9c4f409 100644
+--- a/tests/shlibpath.at
++++ b/tests/shlibpath.at
+@@ -1,6 +1,6 @@
+ # shlibpath.at -- Test shlibpath settings                     -*- Autotest -*-
+ #
+-#   Copyright (C) 2006, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ #
+diff --git a/tests/slimcc.at b/tests/slimcc.at
+index 968c19bd..15bf18ad 100644
+--- a/tests/slimcc.at
++++ b/tests/slimcc.at
+@@ -1,6 +1,6 @@
+ # slimcc.at - Link order check for the slimcc compiler   -*- Autotest -*-
+ #
+-#   Copyright (C) 2025 Free Software Foundation, Inc.
++#   Copyright (C) 2025-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/slist.at b/tests/slist.at
+index f05222aa..dba759d2 100644
+--- a/tests/slist.at
++++ b/tests/slist.at
+@@ -1,6 +1,6 @@
+ # slist.at -- test slist.c                   -*- Autotest -*-
+ #
+-#   Copyright (C) 2009, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2009, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/standalone.at b/tests/standalone.at
+index 6c3550e3..8bc95ba7 100644
+--- a/tests/standalone.at
++++ b/tests/standalone.at
+@@ -1,6 +1,6 @@
+ # standalone.at -- test standalone libltdl builds             -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2006
+ #
+diff --git a/tests/static.at b/tests/static.at
+index 86f0f679..0b19f233 100644
+--- a/tests/static.at
++++ b/tests/static.at
+@@ -1,6 +1,6 @@
+ # static.at -- test flags for static/dynamic linking          -*- Autotest -*-
+ #
+-#   Copyright (C) 2006-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2006-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2006
+ #
+diff --git a/tests/stresstest.at b/tests/stresstest.at
+index e99de503..1718aa6b 100644
+--- a/tests/stresstest.at
++++ b/tests/stresstest.at
+@@ -1,6 +1,6 @@
+ # stresstest.at -- Libtool stress test                       -*- Autotest -*-
+ #
+-#   Copyright (C) 2005-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Ralf Wildenhues, 2005
+ #
+diff --git a/tests/subproject.at b/tests/subproject.at
+index 73b4c417..390a8fc1 100644
+--- a/tests/subproject.at
++++ b/tests/subproject.at
+@@ -1,6 +1,6 @@
+ # subproject.at -- test subproject Libltdl builds             -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2005
+ #
+diff --git a/tests/sysroot.at b/tests/sysroot.at
+index b6a6afce..6e54405c 100644
+--- a/tests/sysroot.at
++++ b/tests/sysroot.at
+@@ -1,6 +1,6 @@
+ # static.at -- test flags for sysrooting          -*- Autotest -*-
+ #
+-#   Copyright (C) 2009, 2011-2019, 2021-2025 Free Software Foundation,
++#   Copyright (C) 2009, 2011-2019, 2021-2026 Free Software Foundation,
+ #   Inc.
+ #   Written by Paolo Bonzini, 2009
+ #
+diff --git a/tests/tagdemo.at b/tests/tagdemo.at
+index 2e57ff58..80c4a142 100644
+--- a/tests/tagdemo.at
++++ b/tests/tagdemo.at
+@@ -1,6 +1,6 @@
+ # tagdemo.at -- C++ Language support.			 -*- Autotest -*-
+ #
+-#   Copyright (C) 2003-2005, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2003-2005, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2003
+ #
+diff --git a/tests/template.at b/tests/template.at
+index 4ca171a3..3af6b267 100644
+--- a/tests/template.at
++++ b/tests/template.at
+@@ -1,6 +1,6 @@
+ # template.at -- test C++ templates with libtool              -*- Autotest -*-
+ #
+-#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2025 Free Software
++#   Copyright (C) 2005, 2007-2008, 2011-2019, 2021-2026 Free Software
+ #   Foundation, Inc.
+ #   Written by Markus Christen, 2005
+ #
+diff --git a/tests/testsuite.at b/tests/testsuite.at
+index 0d8c64e3..66069ed0 100644
+--- a/tests/testsuite.at
++++ b/tests/testsuite.at
+@@ -1,6 +1,6 @@
+ # Process with autom4te to create an -*- Autotest -*- test suite.
+ #
+-#   Copyright (C) 2004-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2004-2019, 2021-2026 Free Software Foundation, Inc.
+ #   Written by Gary V. Vaughan, 2004
+ #
+ #   This file is part of GNU Libtool.
+diff --git a/tests/versioning.at b/tests/versioning.at
+index 0725cef2..83cd0dc3 100644
+--- a/tests/versioning.at
++++ b/tests/versioning.at
+@@ -1,6 +1,6 @@
+ # versioning.at -- test libtool versioning           -*- Autotest -*-
+ #
+-#   Copyright (C) 2009-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2009-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/versioning_script.at b/tests/versioning_script.at
+index d0c1c907..f1107fbb 100644
+--- a/tests/versioning_script.at
++++ b/tests/versioning_script.at
+@@ -1,6 +1,6 @@
+ # versioning_script.at -- test the libtool versioning script: libtool-next-version         -*- Autotest -*-
+ #
+-#   Copyright (C) 2025 Free Software Foundation, Inc.
++#   Copyright (C) 2025-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+diff --git a/tests/with-pic.at b/tests/with-pic.at
+index 462630b0..b08c6150 100644
+--- a/tests/with-pic.at
++++ b/tests/with-pic.at
+@@ -1,6 +1,6 @@
+ # with-pic.at -- test the --enable-pic flag -*- Autotest -*-
+ 
+-#   Copyright (C) 2010-2019, 2021-2025 Free Software Foundation, Inc.
++#   Copyright (C) 2010-2019, 2021-2026 Free Software Foundation, Inc.
+ #
+ #   This file is part of GNU Libtool.
+ #
+-- 
+2.53.0
+

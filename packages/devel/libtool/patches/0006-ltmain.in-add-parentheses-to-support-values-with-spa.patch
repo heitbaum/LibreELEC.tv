@@ -1,0 +1,33 @@
+From 9808ff18602f974649246b4b406ff0d9a93dc193 Mon Sep 17 00:00:00 2001
+From: "Richard J. Mathar" <mathar@mpia-hd.mpg.de>
+Date: Thu, 13 Nov 2025 10:09:40 +0100
+Subject: [PATCH 06/14] ltmain.in: add parentheses to support values with
+ spaces
+
+The variable may contain a value with spaces that cause errors due
+to the standard splitting of command line arguments by linux shells.
+See https://github.com/autotools-mirror/libtool/pull/4/files.
+
+Reported: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=79826
+
+* build-aux/ltmain.in: Add missing quotes around darwin_orig_dir.
+---
+ build-aux/ltmain.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build-aux/ltmain.in b/build-aux/ltmain.in
+index 0f2c81f8..bb72916a 100644
+--- a/build-aux/ltmain.in
++++ b/build-aux/ltmain.in
+@@ -3505,7 +3505,7 @@ func_extract_archives ()
+ 	    $RM -rf unfat-$$
+ 	    cd "$darwin_orig_dir"
+ 	  else
+-	    cd $darwin_orig_dir
++	    cd "$darwin_orig_dir"
+ 	    func_extract_an_archive "$my_xdir" "$my_xabs"
+ 	  fi # $darwin_arches
+ 	} # !$opt_dry_run
+-- 
+2.53.0
+
