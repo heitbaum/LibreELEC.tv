@@ -1,0 +1,36 @@
+From c18d2d9514ab62d82be3d660f08ea3a7a19ec7cf Mon Sep 17 00:00:00 2001
+From: Frederic Berat <fberat@redhat.com>
+Date: Tue, 30 Sep 2025 17:04:00 +0300
+Subject: [PATCH 03/14] libtool.m4: Fix syntax error in LT_PROG_OBJC and
+ LT_PROG_OBJCXX
+
+Reported: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=79468
+---
+ m4/libtool.m4 | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/m4/libtool.m4 b/m4/libtool.m4
+index b758ae5a..2f5d0e3c 100644
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -8671,7 +8671,7 @@ AC_DEFUN([LT_PROG_OBJC],
+   if test Xgnustep-config = X"$GNUSTEP_CONFIG"; then
+     test set = "${OBJCFLAGS+set}" || OBJCFLAGS="`gnustep-config --objc-flags`"
+   fi
+-  AC_SUBST(OBJCFLAGS)])[]dnl
++  AC_SUBST(OBJCFLAGS)[]dnl
+ ])
+ 
+ # LT_PROG_OBJCXX
+@@ -8682,7 +8682,7 @@ AC_DEFUN([LT_PROG_OBJCXX],
+   if test Xgnustep-config = X"$GNUSTEP_CONFIG"; then
+     test set = "${OBJCXXFLAGS+set}" || OBJCXXFLAGS="`gnustep-config --objc-flags`"
+   fi
+-  AC_SUBST(OBJCXXFLAGS)])[]dnl
++  AC_SUBST(OBJCXXFLAGS)[]dnl
+ ])
+ 
+ # LT_PROG_GCJ
+-- 
+2.53.0
+
