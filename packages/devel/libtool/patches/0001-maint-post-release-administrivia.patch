@@ -1,0 +1,43 @@
+From c4abf359f849187fa7f505a0a34f15f2bd66db24 Mon Sep 17 00:00:00 2001
+From: Ileana Dumitrescu <ileanadumitrescu95@gmail.com>
+Date: Thu, 18 Sep 2025 17:16:22 +0300
+Subject: [PATCH 01/14] maint: post-release administrivia
+
+* NEWS: Add header line for next release.
+* .prev-version: Record previous version.
+* cfg.mk (old_NEWS_hash): Auto-update.
+---
+ .prev-version | 2 +-
+ NEWS          | 3 +++
+ cfg.mk        | 2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/NEWS b/NEWS
+index ed703123..780b6079 100644
+--- a/NEWS
++++ b/NEWS
+@@ -1,5 +1,8 @@
+ NEWS - list of user-visible changes between releases of GNU Libtool
+ 
++* Noteworthy changes in release ?.? (????-??-??) [?]
++
++
+ * Noteworthy changes in release 2.6.0 (2025-09-18) [alpha]
+ 
+ ** New features:
+diff --git a/cfg.mk b/cfg.mk
+index dbffbaf6..ecabe303 100644
+--- a/cfg.mk
++++ b/cfg.mk
+@@ -29,7 +29,7 @@ update-release-year:
+ 		m4/libtool.m4
+ 
+ # Set format of NEWS.
+-old_NEWS_hash := d51e62d3a4268be1a7b418b089c528d0
++old_NEWS_hash := 6b55a9c35959c8c4918110ff839bff7d
+ 
+ manual_title = Portable Dynamic Shared Object Management
+ 
+-- 
+2.53.0
+

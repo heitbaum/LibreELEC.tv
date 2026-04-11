@@ -1,0 +1,129 @@
+From f8078854f738effd827f1d2460968e1354f4a5a8 Mon Sep 17 00:00:00 2001
+From: Ileana Dumitrescu <ileanadumitrescu95@gmail.com>
+Date: Fri, 26 Sep 2025 21:42:18 +0300
+Subject: [PATCH 02/14] libtool.m4: Fix Objective C++ check
+
+The check for Objective C++ was combined with the check for
+Objective C, which caused Objective C++ tests to fail if language
+support was enabled for OBJC but not OBJCXX. Additionally, a syntax
+error with macros LT_PROG_OBJC and LT_PROG_OBJCXX was observed on
+Fedora, exhibiting differing behaviour than observed on other
+GNU/Linux operating systems.
+
+Reported: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=79468
+
+* m4/libtool.m4: Add separate check for Objective C++.
+* tests/flags.at, tests/infer-tag.at: Update to check cached variable
+  for Objective C++, objcxx_compiles.
+---
+ m4/libtool.m4      | 42 ++++++++++++++++++++++++++++++++++++++----
+ tests/flags.at     |  4 +++-
+ tests/infer-tag.at |  2 +-
+ 3 files changed, 42 insertions(+), 6 deletions(-)
+
+diff --git a/m4/libtool.m4 b/m4/libtool.m4
+index 5ccb3a81..b758ae5a 100644
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -534,7 +534,38 @@ m4_defun([_LT_OBJECTIVE_C], [
+   )
+   objc_compiles=$lt_cv_objc_compiles
+   _LT_DECL([], [objc_compiles], [1],
+-    [Check for compiling Objective C and C++ code])
++    [Check for compiling Objective C code])
++])
++
++# _LT_OBJECTIVE_CXX
++# ------------------------------
++m4_defun([_LT_OBJECTIVE_CXX], [
++  AC_CACHE_CHECK([for Objective C++ compilation],
++    [lt_cv_objcxx_compiles],
++    [ save_CFLAGS=$CFLAGS
++      CFLAGS=$OBJCXXFLAGS
++      AC_COMPILE_IFELSE(
++        [AC_LANG_PROGRAM([#import <Foundation/Foundation.h>
++@interface Addition : NSObject
++- (int)this:(int)a that:(int)b;
++@end
++
++@implementation Addition
++- (int)this:(int)a that:(int)b
++{
++  return a + b;
++}
++@end
++],[])],
++        lt_cv_objcxx_compiles=yes,
++        lt_cv_objcxx_compiles=no
++      )
++      CFLAGS=$save_CFLAGS
++    ]
++  )
++  objcxx_compiles=$lt_cv_objcxx_compiles
++  _LT_DECL([], [objcxx_compiles], [1],
++    [Check for compiling Objective C++ code])
+ ])
+ 
+ m4_defun([_LT_ML64], [
+@@ -8529,7 +8560,10 @@ _LT_COMPILER_BOILERPLATE
+ _LT_LINKER_BOILERPLATE
+ 
+ # Check for compilation issues with OBJCXX flags
+-_LT_OBJECTIVE_C
++_LT_OBJECTIVE_CXX
++if test "yes" = "$lt_cv_gnustep_exists"; then
++  OBJCXXFLAGS="$OBJCXXFLAGS `gnustep-config --objc-flags`"
++fi
+ 
+ # Allow CC to be a program name with arguments.
+ lt_save_CC=$CC
+@@ -8637,7 +8671,7 @@ AC_DEFUN([LT_PROG_OBJC],
+   if test Xgnustep-config = X"$GNUSTEP_CONFIG"; then
+     test set = "${OBJCFLAGS+set}" || OBJCFLAGS="`gnustep-config --objc-flags`"
+   fi
+-  AC_SUBST(OBJCFLAGS)])])[]dnl
++  AC_SUBST(OBJCFLAGS)])[]dnl
+ ])
+ 
+ # LT_PROG_OBJCXX
+@@ -8648,7 +8682,7 @@ AC_DEFUN([LT_PROG_OBJCXX],
+   if test Xgnustep-config = X"$GNUSTEP_CONFIG"; then
+     test set = "${OBJCXXFLAGS+set}" || OBJCXXFLAGS="`gnustep-config --objc-flags`"
+   fi
+-  AC_SUBST(OBJCXXFLAGS)])])[]dnl
++  AC_SUBST(OBJCXXFLAGS)])[]dnl
+ ])
+ 
+ # LT_PROG_GCJ
+diff --git a/tests/flags.at b/tests/flags.at
+index 7aa435c7..9fdadd02 100644
+--- a/tests/flags.at
++++ b/tests/flags.at
+@@ -128,8 +128,10 @@ fi
+ 
+ eval "`$LIBTOOL --tag=lt_tag --config | $EGREP '^(wl|archive_cmds)='`"
+ 
+-if test OBJC = lt_tag || test OBJCXX = lt_tag; then
++if test OBJC = lt_tag; then
+   AT_CHECK([$LIBTOOL --config | $EGREP '^objc_compiles="no"' && (exit 77)], 1)
++elif test OBJCXX = lt_tag; then
++  AT_CHECK([$LIBTOOL --config | $EGREP '^objcxx_compiles="no"' && (exit 77)], 1)
+ fi
+ 
+ AT_CHECK([$LIBTOOL --tag=lt_tag --mode=compile $compile -c $source],
+diff --git a/tests/infer-tag.at b/tests/infer-tag.at
+index cb16a126..5299f01c 100644
+--- a/tests/infer-tag.at
++++ b/tests/infer-tag.at
+@@ -88,7 +88,7 @@ AT_SETUP([OBJCXX inferred tag])
+ LT_AT_TAG([OBJCXX])
+ AT_KEYWORDS([libtool])
+ 
+-AT_CHECK([$LIBTOOL --config | $EGREP '^objc_compiles="no"' && (exit 77)], 1)
++AT_CHECK([$LIBTOOL --config | $EGREP '^objcxx_compiles="no"' && (exit 77)], 1)
+ 
+ AT_DATA([a.mm],
+ [[
+-- 
+2.53.0
+

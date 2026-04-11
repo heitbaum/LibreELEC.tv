@@ -1,0 +1,46 @@
+From 6c5f27371df824469072be31411951ae92244bd7 Mon Sep 17 00:00:00 2001
+From: KO Myung-Hun <komh78@gmail.com>
+Date: Sun, 9 Feb 2025 23:23:30 +0900
+Subject: [PATCH 05/14] libtool: Remove old_archive_from_new_cmds on OS/2
+
+old_archive_from_new_cmds is not used at all. In addition, if this is
+defined static libs are not generated.
+
+This is a regression of commit e60044.
+
+* m4/libtool.m4: Remove old_archive_from_new_cmds on OS/2.
+---
+ m4/libtool.m4 | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/m4/libtool.m4 b/m4/libtool.m4
+index 2f5d0e3c..6c3029f8 100644
+--- a/m4/libtool.m4
++++ b/m4/libtool.m4
+@@ -5434,7 +5434,6 @@ _LT_EOF
+ 	cat $export_symbols | $prefix_cmds >> $output_objdir/$libname.def~
+ 	$CC -Zdll -Zcrtdll -o $output_objdir/$soname $libobjs $deplibs $compiler_flags $output_objdir/$libname.def~
+ 	emximp -o $lib $output_objdir/$libname.def'
+-      _LT_TAGVAR(old_archive_from_new_cmds, $1)='emximp -o $output_objdir/${libname}_dll.a $output_objdir/$libname.def'
+       _LT_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
+       _LT_TAGVAR(file_list_spec, $1)='@'
+       ;;
+@@ -6156,7 +6155,6 @@ _LT_EOF
+ 	cat $export_symbols | $prefix_cmds >> $output_objdir/$libname.def~
+ 	$CC -Zdll -Zcrtdll -o $output_objdir/$soname $libobjs $deplibs $compiler_flags $output_objdir/$libname.def~
+ 	emximp -o $lib $output_objdir/$libname.def'
+-      _LT_TAGVAR(old_archive_from_new_cmds, $1)='emximp -o $output_objdir/${libname}_dll.a $output_objdir/$libname.def'
+       _LT_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
+       _LT_TAGVAR(file_list_spec, $1)='@'
+       ;;
+@@ -7035,7 +7033,6 @@ if test yes != "$_lt_caught_CXX_error"; then
+ 	  cat $export_symbols | $prefix_cmds >> $output_objdir/$libname.def~
+ 	  $CC -Zdll -Zcrtdll -o $output_objdir/$soname $libobjs $deplibs $compiler_flags $output_objdir/$libname.def~
+ 	  emximp -o $lib $output_objdir/$libname.def'
+-	_LT_TAGVAR(old_archive_from_new_cmds, $1)='emximp -o $output_objdir/${libname}_dll.a $output_objdir/$libname.def'
+ 	_LT_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
+ 	_LT_TAGVAR(file_list_spec, $1)='@'
+ 	;;
+-- 
+2.53.0
+
