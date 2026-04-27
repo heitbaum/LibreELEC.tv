@@ -1223,6 +1223,13 @@ PVR_ERROR ZatData::GetEPGTagEdl(const kodi::addon::PVREPGTag& tag, std::vector<k
       entry.SetType(PVR_EDL_TYPE_COMBREAK);
       edl.emplace_back(entry);
     }
+  if (m_settings->GetSkipCommercials() && m_channelsByUid.count(tag.GetUniqueChannelId())) {
+    Document doc;
+    ZatChannel& channel = m_channelsByUid[tag.GetUniqueChannelId()];
+    if (FetchStreamJsonForEDL("replay", channel.cid, tag.GetUniqueBroadcastId(), doc)) {
+      AddCommercialBreaks(doc, edl);
+    }
+  }
   return PVR_ERROR_NO_ERROR;
 }
 
@@ -1235,7 +1242,55 @@ PVR_ERROR ZatData::GetRecordingEdl(const kodi::addon::PVRRecording& recording, s
     entry.SetType(PVR_EDL_TYPE_COMBREAK);
     edl.emplace_back(entry);
   }
+  if (m_settings->GetSkipCommercials()) {
+    Document doc;
+    if (FetchStreamJsonForEDL("recording", recording.GetRecordingId(), 0, doc)) {
+      AddCommercialBreaks(doc, edl);
+    }
+  }
   return PVR_ERROR_NO_ERROR;
+}
+
+bool ZatData::FetchStreamJsonForEDL(const std::string& type, const std::string& cid, int programId, Document& doc)
+{
+  if (!m_session->IsConnected()) {
+    return false;
+  }
+  std::ostringstream dataStream;
+  dataStream << GetBasicStreamParameters(false);
+  dataStream << "&with_schedule=True";
+  int statusCode;
+  std::string jsonString = m_httpClient->HttpPost(m_session->GetProviderUrl() + "/zapi/v3/watch/" + type + "/" + cid + "/" + std::to_string(programId), dataStream.str(), statusCode);
+  doc.Parse(jsonString.c_str());
+  if (doc.GetParseError()) {
+    kodi::Log(ADDON_LOG_ERROR, "Could not get JSON data for replay: %s/%i.", cid.c_str(), programId);
+    return false;
+  }
+  return true;
+}
+
+void ZatData::AddCommercialBreaks(const Document& doc, std::vector<kodi::addon::PVREDLEntry>& edl)
+{
+  if (!doc.HasMember("stream") || !doc["stream"].HasMember("schedule") || !doc["stream"]["schedule"].IsArray()) {
+    return;
+  }
+  const Value& schedule = doc["stream"]["schedule"];
+  for (Value::ConstValueIterator sched_itr = schedule.Begin(); sched_itr != schedule.End(); ++sched_itr) {
+    const Value& schedule_item = (*sched_itr);
+    if (schedule_item.HasMember("ad_breaks") && schedule_item["ad_breaks"].IsArray()) {
+      const Value& ad_breaks = schedule_item["ad_breaks"];
+      for (Value::ConstValueIterator ad_itr = ad_breaks.Begin(); ad_itr != ad_breaks.End(); ++ad_itr) {
+        const Value& ad_break = (*ad_itr);
+        if (ad_break.HasMember("start") && ad_break.HasMember("end")) {
+          kodi::addon::PVREDLEntry entry;
+          entry.SetStart(ad_break["start"].GetInt() + 5000);
+          entry.SetEnd(ad_break["end"].GetInt() - 5000);
+          entry.SetType(PVR_EDL_TYPE_COMBREAK);
+          edl.emplace_back(entry);
+        }
+      }
+    }
+  }
 }
 
 void ZatData::UpdateConnectionState(const std::string& connectionString, PVR_CONNECTION_STATE newState, const std::string& message) {

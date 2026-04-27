@@ -25,6 +25,7 @@ public:
   bool GetZatEnableDolby() const { return m_zatEnableDolby; }
   bool GetSkipStartOfProgramme() const { return m_skipStartOfProgramme; }
   bool GetSkipEndOfProgramme() const { return m_skipEndOfProgramme; }
+  bool GetSkipCommercials() const { return m_skipCommercials; }
   int DrmLevel() const { return m_drmLevel; }
   const std::string GetParentalPin() const { return m_parentalPin; }
   int GetProvider() const { return m_provider; }
@@ -37,6 +38,7 @@ private:
   bool m_zatEnableDolby = true;
   bool m_skipStartOfProgramme = true;
   bool m_skipEndOfProgramme = true;
+  bool m_skipCommercials = false;
   int m_drmLevel = 0;
   std::string m_parentalPin;
   int m_provider = 0;

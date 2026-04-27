@@ -63,7 +63,15 @@ bool CSettings::Load()
               "Couldn't get 'skipEnd' setting, falling back to 'true' as default");
     m_skipEndOfProgramme = true;
   }
-  
+
+  if (!kodi::addon::CheckSettingBoolean("skipCommercials", m_skipCommercials))
+  {
+    /* If setting is unknown fallback to defaults */
+    kodi::Log(ADDON_LOG_ERROR,
+              "Couldn't get 'skipCommercials' setting, falling back to 'false' as default");
+    m_skipCommercials = false;
+  }
+
   if (!kodi::addon::CheckSettingString("parentalPin", m_parentalPin))
   {
     /* If setting is unknown fallback to defaults */
@@ -154,7 +162,17 @@ ADDON_STATUS CSettings::SetSetting(const std::string& settingName,
       m_skipEndOfProgramme = settingValue.GetBoolean();
       return ADDON_STATUS_OK;
     }
-  }  else if (settingName == "parentalPin")
+  }
+  else if (settingName == "skipCommercials")
+  {
+    kodi::Log(ADDON_LOG_DEBUG, "Changed Setting 'skipCommercials' from %u to %u", m_skipCommercials, settingValue.GetBoolean());
+    if (m_skipCommercials != settingValue.GetBoolean())
+    {
+      m_skipCommercials = settingValue.GetBoolean();
+      return ADDON_STATUS_OK;
+    }
+  }
+  else if (settingName == "parentalPin")
   {
     std::string tmp_sParentalPin;
     kodi::Log(ADDON_LOG_DEBUG, "Changed Setting 'parentalPin'");
