@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+. config/options ""
+export GH_TOKEN
+
+# main code
+progname=${0}
+branchname=${1}
+
+[ $# -lt 1 ] && {
+  echo "Usage: $0 BRANCH_NAME"
+  exit 1
+}
+
+[[ "$2" == "-f" ]] && DRY_RUN="" || DRY_RUN="--dry-run"
+
+OS_VERSION=$(git show ${branchname}:distributions/LibreELEC/version | grep 'OS_VERSION=' | tr -d ' "' | cut -d'=' -f2)
+MASTER_VERSION=$(git show origin/master:distributions/LibreELEC/version | grep 'OS_VERSION=' | tr -d ' "' | cut -d'=' -f2)
+
+if [ "$OS_VERSION" = "$MASTER_VERSION" ]; then
+  GIT_BASE="master"
+else
+  GIT_BASE="libreelec-${OS_VERSION}"
+fi
+
+COMMIT_COUNT=$(git rev-list --count "origin/${GIT_BASE}..${branchname}")
+
+case ${branchname} in
+  cert)
+    gh pr create --base "${GIT_BASE:-master}" \
+      --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE \
+      --label "LE ${OS_VERSION}"
+    ;;
+  cert122)
+    gh pr create --base libreelec-12.2 --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE \
+      --label "LE 12.2"
+    ;;
+  kodi)
+    gh pr create --base "${GIT_BASE:-master}" \
+      --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+      --label "LE ${OS_VERSION}"
+    ;;
+  pkg)
+    gh pr create --base "${GIT_BASE:-master}" --title "Package updates" \
+      --body "$(tools/update-pr ${branchname})" --head heitbaum:${branchname} \
+      -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+      --label "LE ${OS_VERSION}" ${DRY_RUN}
+    ;;
+  *)
+    if [ "$COMMIT_COUNT" -eq 1 ]; then
+      PR_TITLE=$(git log -1 --format="%s")
+      PR_BODY=$(git log -1 --format="%b")
+      gh pr create --base "${GIT_BASE}" --title "${PR_TITLE}" \
+        --body "${PR_BODY}" --head heitbaum:${branchname} \
+        -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+        --label "LE ${OS_VERSION}" ${DRY_RUN}
+    else
+      gh pr create --base "${GIT_BASE}" --title "${branchname} updates" \
+        --body "$(tools/update-pr ${branchname})" --head heitbaum:${branchname} \
+        -R LibreELEC/LibreELEC.tv --label PACKAGE --label UPDATE \
+        --label "LE ${OS_VERSION}" ${DRY_RUN}
+    fi
+    ;;
+esac
