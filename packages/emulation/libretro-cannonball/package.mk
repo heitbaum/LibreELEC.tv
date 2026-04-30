@@ -7,13 +7,16 @@ PKG_SHA256="9f2f4f6b6be5ffece6fdfe644f9beff2fa030acdd00e29d8dbd3842b5edd8586"
 PKG_LICENSE="LicenseRef-MAME"
 PKG_SITE="https://github.com/libretro/cannonball"
 PKG_URL="https://github.com/libretro/cannonball/archive/${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain"
+PKG_DEPENDS_TARGET="toolchain boost"
 PKG_LONGDESC="Cannonball: An Enhanced OutRun Engine"
 PKG_TOOLCHAIN="make"
 
 PKG_LIBNAME="cannonball_libretro.so"
 PKG_LIBPATH="${PKG_LIBNAME}"
 PKG_LIBVAR="CANNONBALL_LIB"
+
+PKG_MAKE_OPTS_TARGET="SYSTEM_BOOST=1 \
+                      BOOST_INCLUDEDIR=${SYSROOT_PREFIX}/usr/include"
 
 makeinstall_target() {
   mkdir -p ${SYSROOT_PREFIX}/usr/lib/cmake/${PKG_NAME}
