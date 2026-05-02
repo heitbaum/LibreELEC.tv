@@ -2,12 +2,12 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libretro-uae4arm"
-PKG_VERSION="276979efa4f862d1f84afeff5a2e794de4744024"
-PKG_SHA256="97a793a6624055cb99c83ca0202b0acd9403bab8c9e16f3dff85d0fdccb944ff"
+PKG_VERSION="dafd48fad7510ebc2f90ebdee8331bbdcf65fd49"
+PKG_SHA256="0ae82a0e126e2bc5fb9571b2267a300ec9b6c61ac93564c9ab351293080e893e"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="GPL-2.0-only"
-PKG_SITE="https://github.com/Chips-fr/uae4arm-rpi"
-PKG_URL="https://github.com/Chips-fr/uae4arm-rpi/archive/${PKG_VERSION}.tar.gz"
+PKG_SITE="https://github.com/libretro/uae4arm-libretro"
+PKG_URL="https://github.com/libretro/uae4arm-libretro/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain flac mpg123 zlib"
 PKG_LONGDESC="Port of uae4arm for libretro (rpi/android)"
 PKG_TOOLCHAIN="make"
