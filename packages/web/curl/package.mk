@@ -63,16 +63,7 @@ configure_host() {
         ${PKG_BUILD}/CMakeLists.txt
 }
 
-if [ "${DEBUG}" = "yes" ]; then
-  PKG_CMAKE_OPTS_DEBUG="-DENABLE_DEBUG=ON \
-                        -DENABLE_CURLDEBUG=OFF"
-aaaaa
-else
-  PKG_CMAKE_OPTS_DEBUG="-DENABLE_DEBUG=OFF \
-                        -DENABLE_CURLDEBUG=OFF"
-fi
-
-PKG_CMAKE_OPTS_TARGET="${PKG_CMAKE_OPTS_DEBUG} \
+PKG_CMAKE_OPTS_TARGET="-DENABLE_DEBUG=OFF \
                        -DCURL_LTO=ON \
                        -DCURL_WERROR=ON \
                        -DENABLE_ARES=OFF \
