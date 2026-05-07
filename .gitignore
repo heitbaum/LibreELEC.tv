@@ -43,3 +43,6 @@ tools/mkpkg/*.git
 
 # ignore old linux configs
 projects/**/*.old
+
+# ignore Claude Code local settings
+.claude/
