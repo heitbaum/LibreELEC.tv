@@ -23,7 +23,6 @@ make_target() {
        SHARED=no \
        CRYPTO="OPENSSL" \
        OPT="" \
-       XCFLAGS="${CFLAGS}" \
        XCFLAGS="${CFLAGS} -Wno-unused-but-set-variable -Wno-unused-const-variable" \
        XLDFLAGS="${LDFLAGS}" \
        XLIBS="-lm"
