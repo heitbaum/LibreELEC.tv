@@ -1,0 +1,128 @@
+#!/bin/bash
+# toolchain-scan - inventory every package that hardcodes PKG_TOOLCHAIN and
+# judge whether the hardcode is redundant, load-bearing, or (for autotools)
+# whether it could be a plain `configure`.
+#
+# Replicates the auto-detector in scripts/build:108 exactly: at the ROOT of the
+# unpacked source it picks, in strict priority,
+#     meson.build > CMakeLists.txt > configure > Makefile
+# `auto` NEVER yields autotools / cmake-make / ninja / manual / python* - those
+# are always load-bearing hardcodes (autotools forces autoreconf; cmake-make and
+# ninja pick a non-default backend; the rest aren't file-detectable).
+#
+# Uses the build system properly: sources `config/options <pkg>` per package so
+# PKG_VERSION / PKG_TOOLCHAIN / PKG_SOURCE_NAME / SOURCES are fully expanded,
+# then lists the real downloaded archive under $SOURCES.
+#
+# verdict column:
+#   redundant     auto-detect would pick the same toolchain - drop the hardcode
+#   needed        auto-detect can't produce it / would pick something else - keep
+#   INVESTIGATE   autotools that ships ./configure and patches no build files -
+#                 no obvious reason it isn't a plain `configure`
+#   n/a           special toolchain (manual/python*) - out of scope
+#   ?             no source archive present - can't judge
+#
+# Run from the LibreELEC.tv root with the build env set, e.g.:
+#   PROJECT=Generic ARCH=x86_64 tools/toolchain-scan > toolchain.csv
+
+# NB: no `set -u` - config/options is not unset-clean and would abort under it.
+
+echo "package,pkg_version,pkg_toolchain,auto_detect,verdict,note"
+
+for mk in $(git grep -lE '^[[:space:]]*PKG_TOOLCHAIN=' -- 'packages/**/package.mk' | sort); do
+  pkg="$(basename "$(dirname "$mk")")"
+  pdir="$(dirname "$mk")/patches"
+  (
+    # expand via the build system (subshell: config/options re-inits PKG_ vars)
+    . config/options "$pkg" >/dev/null 2>&1
+
+    # config/options installs a die-on-error trap and may leave errexit on;
+    # drop both so a failed tar/grep below can't abort us before we emit a row
+    set +e
+    trap - ERR EXIT
+
+    tc="${PKG_TOOLCHAIN}"
+
+    # does packages/<pkg>/patches/ touch the autotools build files?
+    patches_build=no
+    if [ -d "${pdir}" ] \
+       && grep -rqE '(configure\.(ac|in)|Makefile\.am|acinclude\.m4|aclocal\.m4)' "${pdir}" 2>/dev/null; then
+      patches_build=yes
+    fi
+
+    # locate the real archive
+    tb="${SOURCES:-sources}/${PKG_NAME}/${PKG_SOURCE_NAME}"
+    if [ ! -f "${tb}" ]; then
+      tb="$(ls "${SOURCES:-sources}/${PKG_NAME}"/*.tar* 2>/dev/null \
+            | grep -vE '\.(sha256|url)$' | sort -V | tail -1)"
+    fi
+
+    # list the archive; strip any leading ./ so root-level regexes match
+    l=""
+    [ -n "${tb:-}" ] && [ -f "${tb}" ] \
+      && l="$(tar -tf "${tb}" 2>/dev/null | sed 's#^\./##' || true)"
+
+    # ROOT-level build files - what scripts/build:108 actually checks
+    # (leading top-dir component optional: matches <topdir>/FILE and bare FILE)
+    r_meson=$(printf '%s\n' "${l}" | grep -qE '^([^/]+/)?meson\.build$'           && echo yes || echo -)
+    r_cmake=$(printf '%s\n' "${l}" | grep -qE '^([^/]+/)?CMakeLists\.txt$'        && echo yes || echo -)
+    r_cfg=$(printf '%s\n'   "${l}" | grep -qE '^([^/]+/)?configure$'              && echo yes || echo -)
+    r_make=$(printf '%s\n'  "${l}" | grep -qE '^([^/]+/)?(GNUmakefile|Makefile)$' && echo yes || echo -)
+    # anywhere (to note subdir build files the root detector can't see, eg llvm)
+    a_cmake=$(printf '%s\n' "${l}" | grep -qE '(^|/)CMakeLists\.txt$'             && echo yes || echo -)
+    a_meson=$(printf '%s\n' "${l}" | grep -qE '(^|/)meson\.build$'                && echo yes || echo -)
+
+    # replicate the auto-detector priority
+    if   [ -z "${l}" ];         then auto="?"
+    elif [ "${r_meson}" = yes ]; then auto=meson
+    elif [ "${r_cmake}" = yes ]; then auto=cmake
+    elif [ "${r_cfg}"   = yes ]; then auto=configure
+    elif [ "${r_make}"  = yes ]; then auto=make
+    else auto=none
+    fi
+
+    case "${tc}" in
+      autotools)
+        if   [ "${auto}" = "?" ];        then v="?";           note="no archive - can't judge"
+        elif [ "${r_cfg}" != yes ];      then v="needed";      note="ships no ./configure - must autoreconf"
+        elif [ "${patches_build}" = yes ]; then v="needed";    note="patches build files - must autoreconf"
+        else                                  v="INVESTIGATE"; note="ships ./configure + patches no build files - why not configure?"
+        fi
+        ;;
+      cmake-make)
+        v="needed"; note="cmake-make variant - not auto-detectable (early/bootstrap: no ninja)"
+        ;;
+      ninja)
+        v="needed"; note="ninja variant - not auto-detectable"
+        ;;
+      make)
+        if   [ "${auto}" = "?" ];   then v="?";      note="no archive - can't judge"
+        elif [ "${auto}" = make ];  then v="redundant"; note="auto picks make"
+        else                             v="needed";    note="no root Makefile (auto=${auto})"
+        fi
+        ;;
+      meson|cmake|configure)
+        if   [ "${auto}" = "?" ];        then v="?";         note="no archive - can't judge"
+        elif [ "${auto}" = "${tc}" ];    then v="redundant"; note="auto picks ${tc}"
+        elif [ "${auto}" = none ]; then
+          if { [ "${tc}" = cmake ] && [ "${a_cmake}" = yes ]; } \
+             || { [ "${tc}" = meson ] && [ "${a_meson}" = yes ]; }; then
+            v="needed"; note="${tc} script in subdir not root - auto can't detect"
+          else
+            v="needed"; note="no root build file - auto would fail"
+          fi
+        else
+          v="needed"; note="overrides auto=${auto}"
+        fi
+        ;;
+      manual|python|python-flit)
+        v="n/a"; note="special toolchain - out of scope"
+        ;;
+      *)
+        v="?"; note="unhandled toolchain"
+        ;;
+    esac
+
+    echo "${pkg},${PKG_VERSION:-},${tc},${auto},${v},${note}"
+  )
+done
