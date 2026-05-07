@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
+
 PKG_NAME="zfs"
 PKG_VERSION="2.4.0"
 PKG_SHA256="7bdf13de0a71d95554c0e3e47d5e8f50786c30d4f4b63b7c593b1d11af75c9ee"
