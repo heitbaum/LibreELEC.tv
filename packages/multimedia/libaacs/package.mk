@@ -13,7 +13,7 @@ PKG_LONGDESC="Open implementation of the AACS (Advanced Access Content System) s
 PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_TARGET="
-                          
+
                            --disable-optimizations \
                            --with-libgcrypt-prefix=${SYSROOT_PREFIX}/usr \
                            --with-libgpg-error-prefix=${SYSROOT_PREFIX}/usr \
