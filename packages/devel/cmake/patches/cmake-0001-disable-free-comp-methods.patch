@@ -1,17 +1,18 @@
 From 70c39c72b06564d13675447779fc1595311e227a Mon Sep 17 00:00:00 2001
-From: JÃ©rÃ´me Benoit <jerome.benoit@piment-noir.org>
+From: Jérôme Benoit <jerome.benoit@piment-noir.org>
 Date: Mon, 24 Oct 2016 19:39:41 +0200
 Subject: [PATCH] disable free comp methods
 
-diff --git a/Utilities/cmcurl/lib/vtls/openssl.c.orig b/Utilities/cmcurl/lib/vtls/openssl.c.orig
---- a/Utilities/cmcurl/lib/vtls/openssl.c.orig
-+++ b/Utilities/cmcurl/lib/vtls/openssl.c.orig
+---
+diff --git a/Utilities/cmcurl/lib/vtls/openssl.c b/Utilities/cmcurl/lib/vtls/openssl.c
+--- a/Utilities/cmcurl/lib/vtls/openssl.c
++++ b/Utilities/cmcurl/lib/vtls/openssl.c
 @@ -164,6 +164,11 @@
  #define HAVE_SSL_COMP_FREE_COMPRESSION_METHODS 1
  #endif
- 
+
 +#if !defined(OPENSSL_NO_COMP) || \
-+  OPENSSL_VERSION_NUMBER >= 0x10100000L /* 1.1.0+ has no free compression methods */ 
++  OPENSSL_VERSION_NUMBER >= 0x10100000L /* 1.1.0+ has no free compression methods */
 +#undef HAVE_SSL_COMP_FREE_COMPRESSION_METHODS /* undef */
 +#endif
 +
