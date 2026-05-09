@@ -1974,8 +1974,9 @@ similarity index 77%
 rename from cmake/FindUSB1.cmake
 rename to cmake/FindLibUSB.cmake
 index b90e297..766fc82 100644
+diff --git a/cmake/FindUSB1.cmake b/cmake/FindUSB1.cmake
 --- a/cmake/FindUSB1.cmake
-+++ b/cmake/FindLibUSB.cmake
++++ b/cmake/FindUSB1.cmake
 @@ -1,4 +1,4 @@
 -# - Try to find the freetype library
 +# - Try to find the libusb library

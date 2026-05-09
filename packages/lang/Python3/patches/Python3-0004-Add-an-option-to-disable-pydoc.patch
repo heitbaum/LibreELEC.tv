@@ -19,6 +19,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  configure.ac    | 6 ++++++
  2 files changed, 14 insertions(+), 1 deletion(-)
 
+diff --git a/Makefile.pre.in b/Makefile.pre.in
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
 @@ -2513,7 +2513,9 @@ bininstall: commoninstall altbininstall
@@ -60,6 +61,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  	@if [ -s Modules/python.exp -a \
  		"`echo $(MACHDEP) | sed 's/^\(...\).*/\1/'`" = "aix" ]; then \
  		echo; echo "Installing support files for building shared extension modules on AIX:"; \
+diff --git a/configure.ac b/configure.ac
 --- a/configure.ac
 +++ b/configure.ac
 @@ -4788,6 +4788,12 @@ AS_VAR_IF([posix_threads], [stub], [

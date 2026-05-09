@@ -1,9 +1,15 @@
+From d755498b07b44705a321a229e3a42aba9ac5ed50 Mon Sep 17 00:00:00 2001
+From: Stefan Saraev <stefan@saraev.ca>
+Date: Thu, 19 Dec 2013 11:57:56 +0200
+Subject: [PATCH] move etc systemd system to storage .config system.d
+
 commit 43aba5ffffc6d35ed97db035c5818c76652b06de
 Author: Matthias Reichl <hias@horus.com>
 Date:   Mon Sep 28 23:55:13 2020 +0200
 
     move /etc/systemd/system to /storage/.config/system.d
 
+---
 diff --git a/meson.build b/meson.build
 index dbbddb68e2..4592cd1094 100644
 --- a/meson.build

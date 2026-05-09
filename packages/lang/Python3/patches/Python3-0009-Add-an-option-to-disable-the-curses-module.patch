@@ -14,6 +14,7 @@ Signed-off-by: Adam Duskett <aduskett@gmail.com>
  configure.ac    | 7 +++++++
  2 files changed, 11 insertions(+), 1 deletion(-)
 
+diff --git a/Makefile.pre.in b/Makefile.pre.in
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
 @@ -2555,7 +2555,6 @@ LIBSUBDIRS=	asyncio \
@@ -35,6 +36,7 @@ Signed-off-by: Adam Duskett <aduskett@gmail.com>
  COMPILEALL_OPTS=-j0
  
  ifeq (@PYDOC@,yes)
+diff --git a/configure.ac b/configure.ac
 --- a/configure.ac
 +++ b/configure.ac
 @@ -4801,6 +4801,13 @@ AC_ARG_ENABLE(sqlite3,

@@ -10,6 +10,7 @@ From: Khem Raj <raj.khem@gmail.com>
 Date: Fri, 15 Jan 2016 06:31:09 +0000
 Subject: [PATCH 09/13] warn for uses of system directories when cross linking
 
+diff --git a/ld/ldfile.c b/ld/ldfile.c
 --- a/ld/ldfile.c
 +++ b/ld/ldfile.c
 @@ -312,6 +312,17 @@ ldfile_add_library_path (const char *nam
