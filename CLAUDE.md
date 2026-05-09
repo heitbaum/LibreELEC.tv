@@ -33,6 +33,7 @@ packagename-####-subject.patch
 ### Exceptions
 
 - `packages/mediacenter/kodi` — excluded from all treewide rename rules
+- `packages/linux/` — excluded entirely; do not modify any patches under this tree
 - `packages/linux/patches/rockchip/` and `packages/linux/patches/rockchip-old/` — left with their original `rockchip-NNNN-` naming
 
 ### Verification
