@@ -1,11 +1,12 @@
-commit 45918e237cd32bb3d9a5fde83f81f83b52584771
-Author: Stefan Saraev <stefan@saraev.ca>
-Date:   Tue Oct 1 12:09:07 2013 +0300
+From 0c5caa599f59822091e2969b38a3eb0ad5f60ed9 Mon Sep 17 00:00:00 2001
+From: Stefan Saraev <stefan@saraev.ca>
+Date: Tue, 1 Oct 2013 12:09:07 +0300
+Subject: [PATCH] fix dns with broken routers
 
-    fix dns with broken routers
-    
-    ref: https://fedoraproject.org/wiki/Networking/NameResolution/ADDRCONFIG
+ref: https://fedoraproject.org/wiki/Networking/NameResolution/ADDRCONFIG
 
+---
+diff --git a/nss/getaddrinfo.c b/nss/getaddrinfo.c
 --- a/nss/getaddrinfo.c
 +++ b/nss/getaddrinfo.c
 @@ -730,6 +730,38 @@ gaih_inet (const char *name, const struc
@@ -93,6 +94,7 @@ Date:   Tue Oct 1 12:09:07 2013 +0300
  		{
  		  if ((result = gethosts (fct, AF_INET, name, req, tmpbuf,
  					  res, &status, &no_data)) != 0)
+diff --git a/sysdeps/unix/sysv/linux/check_pf.c b/sysdeps/unix/sysv/linux/check_pf.c
 --- a/sysdeps/unix/sysv/linux/check_pf.c
 +++ b/sysdeps/unix/sysv/linux/check_pf.c
 @@ -224,7 +224,8 @@ make_request (int fd, pid_t pid)

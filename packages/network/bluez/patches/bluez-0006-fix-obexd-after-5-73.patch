@@ -1,3 +1,8 @@
+From 4bc9f3e35b959b641577e1dd182f52e28bc7c87b Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 09 Mar 2024 08:05:30 +0000
+Subject: [PATCH] fix obexd after 5 73
+
 diff --git a/Makefile.obexd b/Makefile.obexd
 index b7e9f2d33..9a9e9a0a0 100644
 --- a/Makefile.obexd
