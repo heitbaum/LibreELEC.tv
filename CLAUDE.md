@@ -2,18 +2,18 @@
 
 ## Patch file naming convention
 
-All patch files under `packages/` (except `packages/mediacenter/kodi`) must follow:
+All patch files under `packages/` (except `packages/mediacenter/kodi` and `packages/linux/`) must follow:
 
 ```
-packagename-####-subject.patch
+####-subject.patch
 ```
 
 ### Rules
 
-- **Package name**: must match the directory name immediately before `patches/`
 - **Number**: exactly 4 digits, zero-padded (`0001`–`9999`); `0000` is not valid
 - **Subject**: `git format-patch` style — hyphens as word separators, no underscores, max 53 characters
-- **Separator**: hyphen between every component
+- **Separator**: hyphen between number and subject
+- **No package name prefix** — the package name is implied by the directory
 
 ### Numbering
 
@@ -27,7 +27,7 @@ packagename-####-subject.patch
 - Use hyphens, not underscores: `fix-build-with-gcc-14` not `fix_build_with_gcc_14`
 - Maximum 53 characters (matches `git format-patch` default)
 - Derive from the git `Subject:` header where it is more descriptive than a hand-written label
-- Do not repeat the package name in the subject: `pkg-0001-fix-build.patch` not `pkg-0001-pkg-fix-build.patch`
+- Do not include the package name in the subject: `0001-fix-build.patch` not `0001-pkg-fix-build.patch`
 - Do not include upstream tracker/mailing-list noise (`SV-12345-`, `[FFmpeg-devel]`, etc.)
 
 ### Exceptions
