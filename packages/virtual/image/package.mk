@@ -12,7 +12,11 @@ PKG_LONGDESC="Root package used to build and create complete image"
 [ "${NANO_EDITOR}" = "yes" ] && PKG_DEPENDS_TARGET+=" nano"
 
 # Graphic support
-[ ! "${DISPLAYSERVER}" = "no" ] && PKG_DEPENDS_TARGET+=" ${DISPLAYSERVER}"
+if [ "${DISPLAYSERVER}" = "no" ]; then
+   PKG_DEPENDS_TARGET+=" gbm"
+else
+   PKG_DEPENDS_TARGET+=" ${DISPLAYSERVER}"
+fi
 
 # Multimedia support
 [ ! "${MEDIACENTER}" = "no" ] && PKG_DEPENDS_TARGET+=" mediacenter"
