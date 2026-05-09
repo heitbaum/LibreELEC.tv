@@ -1,6 +1,11 @@
-diff -Naur a/loginutils/passwd.c b/loginutils/passwd.c
---- a/loginutils/passwd.c	2017-07-06 08:14:57.000000000 -0700
-+++ b/loginutils/passwd.c	2017-09-11 17:06:07.572805135 -0700
+From 712ce0b82e49bd55b55b3e5a5db6bc642390d7a1 Mon Sep 17 00:00:00 2001
+From: Lukas Rusak <lorusak@gmail.com>
+Date: Mon, 11 Sep 2017 20:19:21 -0700
+Subject: [PATCH] update shadow or passwd not both
+
+diff --git a/loginutils/passwd.c b/loginutils/passwd.c
+--- a/loginutils/passwd.c
++++ b/loginutils/passwd.c
 @@ -220,7 +220,7 @@
  	if (rc > 0)
  		/* password in /etc/shadow was updated */

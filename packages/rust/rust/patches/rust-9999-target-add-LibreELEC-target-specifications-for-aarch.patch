@@ -56,6 +56,7 @@ Metadata:
   - host_tools: false (LibreELEC is a read-only appliance OS)
   - std: true
 
+---
 diff between rust-1.95.0 and the libreelec target, these should be checked on rust updates
 check with:
     diff ./compiler/rustc_target/src/spec/targets/aarch64_unknown_linux_gnu.rs ./compiler/rustc_target/src/spec/targets/aarch64_libreelec_linux_gnu.rs -Nu
