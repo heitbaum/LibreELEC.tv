@@ -18,6 +18,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  configure.ac    | 6 ++++++
  2 files changed, 14 insertions(+), 1 deletion(-)
 
+diff --git a/Makefile.pre.in b/Makefile.pre.in
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
 @@ -2511,7 +2511,9 @@ bininstall: commoninstall altbininstall
@@ -59,6 +60,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  ifeq (@PYDOC@,yes)
  	$(INSTALL_SCRIPT) $(SCRIPT_PYDOC) $(DESTDIR)$(BINDIR)/pydoc$(VERSION)
  endif
+diff --git a/configure.ac b/configure.ac
 --- a/configure.ac
 +++ b/configure.ac
 @@ -8188,6 +8188,12 @@ PY_STDLIB_MOD([xxlimited_35], [test "$TE

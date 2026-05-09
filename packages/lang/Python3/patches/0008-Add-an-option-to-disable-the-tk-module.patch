@@ -18,6 +18,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  configure.ac    | 7 +++++++
  2 files changed, 12 insertions(+), 3 deletions(-)
 
+diff --git a/Makefile.pre.in b/Makefile.pre.in
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
 @@ -2571,7 +2571,6 @@ LIBSUBDIRS=	asyncio \
@@ -56,6 +57,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  COMPILEALL_OPTS=-j0
  
  ifeq (@PYDOC@,yes)
+diff --git a/configure.ac b/configure.ac
 --- a/configure.ac
 +++ b/configure.ac
 @@ -4807,6 +4807,13 @@ AC_ARG_ENABLE(pydoc,

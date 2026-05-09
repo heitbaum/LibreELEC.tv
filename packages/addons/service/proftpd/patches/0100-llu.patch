@@ -1,0 +1,23 @@
+From 47eb715e7638e4a346a27c4153f0d09d3f3c5dcb Mon Sep 17 00:00:00 2001
+From: cvh <namerp@googlemail.com>
+Date: Wed, 07 Dec 2016 12:30:17 +0100
+Subject: [PATCH] llu
+
+diff --git a/include/conf.h b/include/conf.h
+--- a/include/conf.h
++++ b/include/conf.h
+@@ -360,13 +360,9 @@
+ 
+ #endif
+ 
+-#if defined(HAVE_LLU) && SIZEOF_OFF_T == 8
++/* correctly show file size larger than 2GB */
+ # define PR_LU		"llu"
+ # define pr_off_t	unsigned long long
+-#else
+-# define PR_LU		"lu"
+-# define pr_off_t	unsigned long
+-#endif
+ 
+ /********************************************************************
+  * This is NOT the user configurable section.  Look in options.h

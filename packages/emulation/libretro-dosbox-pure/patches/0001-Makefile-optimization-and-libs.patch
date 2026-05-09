@@ -1,0 +1,33 @@
+From 7c847c106d95d3515a075e8c63c36d789096d911 Mon Sep 17 00:00:00 2001
+From: Garrett Brown <themagnificentmrb@gmail.com>
+Date: Mon, 10 Apr 2023 16:12:06 +0200
+Subject: [PATCH] Makefile optimization and libs
+
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -201,9 +201,9 @@
+   ifeq ($(platform),vita)
+     CFLAGS   := -DNDEBUG -O3 -fno-ident -fno-partial-inlining
+   else
+-    CFLAGS   := -DNDEBUG -O2 -fno-ident
++    CFLAGS   := -DNDEBUG -O3 -fno-ident
+   endif
+-  LDFLAGS  += -O2
++  LDFLAGS  += -O3 -fno-ident
+ endif
+ 
+ CFLAGS  += $(CPUFLAGS) -std=gnu++11 -fomit-frame-pointer -fexceptions -Wno-address-of-packed-member -Wno-format -Wno-switch -Wno-psabi
+@@ -245,9 +245,9 @@
+ else
+ 	$(info Linking $@ ...)
+ 	$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+-ifneq ($(BUILD),DEBUG)
+-	$(STRIPCMD) $@
+-endif
++#ifneq ($(BUILD),DEBUG)
++#	$(STRIPCMD) $@
++#endif
+ endif
+ 
+ define COMPILE
