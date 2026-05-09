@@ -206,7 +206,7 @@ diff --git a/nss/config/nss-config.in b/nss/config/nss-config.in
 +        libdirs="$libdirs -lsoftokn${major_version}"
 +      fi
 +      echo $libdirs
-+fi
++fi      
 +
 diff --git a/nss/config/nss.pc.in b/nss/config/nss.pc.in
 --- a/nss/config/nss.pc.in
@@ -229,20 +229,21 @@ diff --git a/nss/Makefile b/nss/Makefile
 +++ b/nss/Makefile
 @@ -48,7 +48,6 @@
  #######################################################################
-
+ 
  nss_build_all:
 -	$(MAKE) build_nspr
  	$(MAKE) all
  	$(MAKE) latest
-
+ 
 diff --git a/nss/manifest.mn b/nss/manifest.mn
 --- a/nss/manifest.mn
 +++ b/nss/manifest.mn
 @@ -10,7 +10,7 @@
-
+ 
  RELEASE = nss
-
+ 
 -DIRS = coreconf lib cmd cpputil gtests
 +DIRS = coreconf lib cmd config
-
+ 
  HAVE_ALL_TARGET := 1
+ 
