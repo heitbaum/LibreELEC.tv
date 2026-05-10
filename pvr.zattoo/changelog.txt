@@ -1,3 +1,6 @@
+v22.2.2
+- Merge changes from v21
+
 v22.2.1
 - Fix playing recordings on linux systems
 - Fix deprecation warning
@@ -10,6 +13,12 @@ v22.1.0
 
 v22.0.0
 - Initial release for Piers (PVR Add-on API v8.4.0)
+
+v21.0.7
+- Add an option to skip commercial breaks
+
+v21.0.6
+- Revert inputstream.adaptive parameter change required only for Kodi 22
 
 v21.0.5
 - Fix playing recordings on linux systems

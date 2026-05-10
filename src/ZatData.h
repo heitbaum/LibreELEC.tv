@@ -119,4 +119,6 @@ private:
   void SetStreamProperties(std::vector<kodi::addon::PVRStreamProperty>& properties, const std::string& url);
   std::string GetStreamUrlForProgram(const std::string& cid, int programId, std::vector<kodi::addon::PVRStreamProperty>& properties);
   bool TryToReinitIf403(int statusCode);
+  bool FetchStreamJsonForEDL(const std::string& type, const std::string& cid, int programId, rapidjson::Document& doc);
+  void AddCommercialBreaks(const rapidjson::Document& doc, std::vector<kodi::addon::PVREDLEntry>& edl);
 };

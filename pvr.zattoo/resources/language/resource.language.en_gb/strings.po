@@ -48,6 +48,18 @@ msgctxt "#30005"
 msgid "Use Smart TV subscription"
 msgstr ""
 
+#. Boolean setting to skip commercial breaks
+#: pvr.zattoo/resources/settings.xml
+msgctxt "#30006"
+msgid "Skip commercial breaks"
+msgstr ""
+
+#. Help text to setting #30006
+#: pvr.zattoo/resources/settings.xml
+msgctxt "#30007"
+msgid "Add commercial breaks to the EDL."
+msgstr ""
+
 #. Text setting to set used parental pin
 #: pvr.zattoo/resources/settings.xml
 msgctxt "#30009"
