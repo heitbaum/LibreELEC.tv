@@ -374,6 +374,11 @@ post_makeinstall_target() {
     echo "__GL_YIELD=USLEEP" >> ${INSTALL}/usr/lib/kodi/kodi.conf
   fi
 
+  # nvidia-ng: prevent high GPU power consumption during video decode
+  if listcontains "${GRAPHIC_DRIVERS}" "nvidia-ng"; then
+    echo "CUDA_DISABLE_PERF_BOOST=1" >> ${INSTALL}/usr/lib/kodi/kodi.conf
+  fi
+
   mkdir -p ${INSTALL}/usr/sbin
   cp ${PKG_DIR}/scripts/service-addon-wrapper ${INSTALL}/usr/sbin
 
