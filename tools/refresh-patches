@@ -131,7 +131,62 @@ while quilt_cmd next >/dev/null 2>&1; do
     fi
   fi
 
+  PATCH="$(quilt_cmd top)"
+  PATCH_FILE="$(readlink "patches/${PATCH}")"
+
+  ORIG_TMP=$(mktemp)
+  cp "${PATCH_FILE}" "${ORIG_TMP}"
+
   QUILT_DIFF_OPTS="-p" quilt_cmd refresh -p ab --no-index --no-timestamps
+
+  python3 - "${ORIG_TMP}" "${PATCH_FILE}" <<'PYEOF'
+import sys, re
+
+orig_file, refreshed_file = sys.argv[1], sys.argv[2]
+
+with open(orig_file, 'r') as f:
+    orig = f.read()
+with open(refreshed_file, 'r') as f:
+    refreshed = f.read()
+
+# From orig: extract preamble (everything before first diff --git)
+preamble_match = re.search(r'^diff --git ', orig, re.MULTILINE)
+preamble = orig[:preamble_match.start()] if preamble_match else ''
+
+# From orig: extract per-file git headers (diff --git + index lines, up to but not including ---)
+orig_headers = {}
+for m in re.finditer(r'^(diff --git .+\n(?:(?!--- ).*\n)*?)(?=--- )', orig, re.MULTILINE):
+    path_match = re.search(r'diff --git a/.+ b/(.+)', m.group(1))
+    if path_match:
+        orig_headers[path_match.group(1)] = m.group(1).rstrip('\n')
+
+# From refreshed: extract only the --- +++ @@ hunk sections
+# Split on ^--- a/ to get each file's diff body
+result = preamble
+file_sections = re.split(r'^(?=--- )', refreshed, flags=re.MULTILINE)
+for section in file_sections:
+    if not section.startswith('--- '):
+        continue
+    path_match = re.search(r'^--- a/(.+)', section, re.MULTILINE)
+    if path_match:
+        filepath = path_match.group(1)
+        if filepath in orig_headers:
+            result += orig_headers[filepath] + '\n'
+    result += section
+
+# Preserve original trailing signature (-- \ngit version)
+trailer_match = re.search(r'^-- $', orig, re.MULTILINE)
+if trailer_match:
+    result = result.rstrip('\n') + '\n' + orig[trailer_match.start():]
+elif orig.endswith('\n'):
+    if not result.endswith('\n'):
+        result += '\n'
+
+with open(refreshed_file, 'w') as f:
+    f.write(result)
+
+PYEOF
+  rm -f "${ORIG_TMP}"
 done
 
 # cleanup
