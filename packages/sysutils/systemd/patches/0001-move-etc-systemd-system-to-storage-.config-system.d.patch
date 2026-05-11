@@ -1,9 +1,9 @@
-commit 43aba5ffffc6d35ed97db035c5818c76652b06de
-Author: Matthias Reichl <hias@horus.com>
-Date:   Mon Sep 28 23:55:13 2020 +0200
+From 43aba5ffffc6d35ed97db035c5818c76652b06de Mon Sep 17 00:00:00 2001
+From: Matthias Reichl <hias@horus.com>
+Date: Mon, 28 Sep 2020 23:55:13 +0200
+Subject: [PATCH] move /etc/systemd/system to /storage/.config/system.d
 
-    move /etc/systemd/system to /storage/.config/system.d
-
+---
 diff --git a/meson.build b/meson.build
 index dbbddb68e2..4592cd1094 100644
 --- a/meson.build

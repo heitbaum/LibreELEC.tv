@@ -16,6 +16,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  configure.ac    | 6 ++++++
  2 files changed, 8 insertions(+)
 
+diff --git a/Makefile.pre.in b/Makefile.pre.in
 --- a/Makefile.pre.in
 +++ b/Makefile.pre.in
 @@ -2812,6 +2812,7 @@ libinstall:	all $(srcdir)/Modules/xxmodu
@@ -34,6 +35,7 @@ Signed-off-by: Adam Duskett <adam.duskett@amarulasolutions.com>
  
  # bpo-21536: Misc/python-config.sh is generated in the build directory
  # from $(srcdir)Misc/python-config.sh.in.
+diff --git a/configure.ac b/configure.ac
 --- a/configure.ac
 +++ b/configure.ac
 @@ -1533,6 +1533,12 @@ fi
