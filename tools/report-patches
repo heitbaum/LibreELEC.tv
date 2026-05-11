@@ -1,0 +1,114 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+# report-patches - Report patches that did not apply cleanly from build logs
+# Run from LibreELEC root: tools/report-patches [logdir]
+
+EXCLUDE_PKGS="kodi|linux"
+
+# ---------------------------------------------------------------
+# Resolve log directory
+# ---------------------------------------------------------------
+if [ -n "${1}" ]; then
+  LOGS_DIR="${1}"
+else
+  BUILD=$(. ./config/options 2>/dev/null; echo "${BUILD}")
+  if [ -z "${BUILD}" ]; then
+    echo "Error: Could not determine build directory from ./config/options"
+    echo "Usage: tools/find_patch_warnings.sh [logdir]"
+    exit 1
+  fi
+  LOGS_DIR="${BUILD}/.threads/logs"
+fi
+
+if [ ! -d "${LOGS_DIR}" ]; then
+  echo "Error: Log directory not found: ${LOGS_DIR}"
+  echo "Usage: tools/find_patch_warnings.sh [logdir]"
+  exit 1
+fi
+
+echo "Scanning logs in: ${LOGS_DIR}"
+echo "=========================================="
+
+REPORT=$(mktemp)
+CLEANED=$(mktemp)
+
+for log in "${LOGS_DIR}"/*.log; do
+  [ -f "${log}" ] || continue
+
+  filename=$(basename "${log}")
+  lognum="${filename%.log}"
+
+  # Strip ANSI colour codes and carriage returns into clean working copy
+  sed -E 's/\x1b\[[0-9;]*m//g; s/\r//' "${log}" > "${CLEANED}"
+
+  # Extract package name
+  pkg=$(grep -m1 -E "^\s*(UNPACK|BUILD)\s+" "${CLEANED}" 2>/dev/null \
+        | sed -E 's/^\s*(UNPACK|BUILD)\s+([a-zA-Z0-9_+-]+).*/\2/')
+  pkg="${pkg:-unknown}"
+  pkglabel="${pkg} (${lognum})"
+
+  # Find unclean patch applies: offset or fuzz warnings
+  patch_warnings=$(grep -nE "succeeded at [0-9]+ (with fuzz|.*offset)" "${CLEANED}" 2>/dev/null)
+
+  [ -z "${patch_warnings}" ] && continue
+
+  {
+    echo ""
+    echo "##########################################################"
+    echo "## Log: ${filename}  Package: ${pkglabel}"
+    echo "##########################################################"
+    echo ""
+
+    current_patch=""
+    while IFS= read -r wline; do
+      lineno=$(echo "${wline}" | cut -d: -f1)
+
+      # Look back up to 20 lines for the APPLY PATCH line preceding this hunk
+      patch_line=$(awk "NR>=$((lineno-20)) && NR<${lineno} && /APPLY PATCH/" "${CLEANED}" 2>/dev/null | tail -1)
+
+      if [ -n "${patch_line}" ] && [ "${patch_line}" != "${current_patch}" ]; then
+        current_patch="${patch_line}"
+        # Extract just the patch path
+        patch_path=$(echo "${patch_line}" | sed -E 's/.*APPLY PATCH[^)]*\)\s+//')
+        echo "  PATCH  ${patch_path}"
+      fi
+
+      # Print the hunk warning (strip lineno: prefix)
+      echo "         $(echo "${wline}" | cut -d: -f2-)"
+    done <<< "${patch_warnings}"
+  } >> "${REPORT}"
+done
+
+rm -f "${CLEANED}"
+
+# ---------------------------------------------------------------
+# Output
+# ---------------------------------------------------------------
+if [ ! -s "${REPORT}" ]; then
+  echo ""
+  echo "No unclean patch applies found."
+else
+  cat "${REPORT}"
+  echo ""
+  echo "=========================================="
+  total_pkgs=$(grep -c "^## Log:" "${REPORT}" 2>/dev/null || echo 0)
+  total_warns=$(grep -c "succeeded at" "${REPORT}" 2>/dev/null || echo 0)
+  echo "SUMMARY: ${total_pkgs} package(s) with unclean patch applies — ${total_warns} hunk(s) with offset or fuzz"
+
+  echo ""
+  echo "=========================================="
+  echo "PACKAGES NEEDING ATTENTION"
+  echo "=========================================="
+  grep "^## Log:" "${REPORT}" \
+    | sed -E 's/.*Package: ([a-zA-Z0-9_+-]+) .*/\1/' \
+    | grep -vE "^(${EXCLUDE_PKGS})$" \
+    | sort -u \
+    | while read -r pkg; do
+        echo -n "${pkg} "
+      done
+  echo
+fi
+
+rm -f "${REPORT}"
