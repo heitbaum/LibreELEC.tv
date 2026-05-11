@@ -33,7 +33,7 @@ index 2f5d0e3c..6c3029f8 100644
        _LT_TAGVAR(enable_shared_with_static_runtimes, $1)=yes
        _LT_TAGVAR(file_list_spec, $1)='@'
        ;;
-@@ -7035,7 +7033,6 @@ if test yes != "$_lt_caught_CXX_error"; then
+@@ -7035,7 +7033,6 @@ if test yes != "$_lt_caught_CXX_error";
  	  cat $export_symbols | $prefix_cmds >> $output_objdir/$libname.def~
  	  $CC -Zdll -Zcrtdll -o $output_objdir/$soname $libobjs $deplibs $compiler_flags $output_objdir/$libname.def~
  	  emximp -o $lib $output_objdir/$libname.def'
