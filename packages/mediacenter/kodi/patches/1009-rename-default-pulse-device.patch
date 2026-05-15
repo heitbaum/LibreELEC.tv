@@ -8,6 +8,7 @@ Subject: [PATCH] [PATCH] change pulseaudio default device name to Bluetooth
  xbmc/cores/AudioEngine/Sinks/AESinkPULSE.cpp | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/xbmc/cores/AudioEngine/Sinks/AESinkPULSE.cpp b/xbmc/cores/AudioEngine/Sinks/AESinkPULSE.cpp
 --- a/xbmc/cores/AudioEngine/Sinks/AESinkPULSE.cpp
 +++ b/xbmc/cores/AudioEngine/Sinks/AESinkPULSE.cpp
 @@ -510,7 +510,7 @@ static void SinkInfoRequestCallback(pa_c
@@ -28,3 +29,5 @@ Subject: [PATCH] [PATCH] change pulseaudio default device name to Bluetooth
    }
    if (i && i->name)
    {
+-- 
+2.47.1

@@ -10,6 +10,7 @@ credits to vpeter4 for the patch
  xbmc/addons/Addon.cpp | 26 ++++++++++++++++++++++++++
  1 file changed, 26 insertions(+)
 
+diff --git a/xbmc/addons/Addon.cpp b/xbmc/addons/Addon.cpp
 --- a/xbmc/addons/Addon.cpp
 +++ b/xbmc/addons/Addon.cpp
 @@ -29,6 +29,10 @@
@@ -52,3 +53,5 @@ credits to vpeter4 for the patch
    addon->OnPostInstall(update, modal);
  }
  
+-- 
+2.47.1

@@ -21,6 +21,7 @@ so, when shutdown/reboot is requested:
  .../powermanagement/LogindUPowerSyscall.cpp     |  2 --
  4 files changed, 20 insertions(+), 8 deletions(-)
 
+diff --git a/xbmc/application/Application.cpp b/xbmc/application/Application.cpp
 --- a/xbmc/application/Application.cpp
 +++ b/xbmc/application/Application.cpp
 @@ -1775,7 +1775,7 @@ bool CApplication::Stop(int exitCode)
@@ -68,6 +69,7 @@ so, when shutdown/reboot is requested:
    }
  #endif
  
+diff --git a/xbmc/application/Application.h b/xbmc/application/Application.h
 --- a/xbmc/application/Application.h
 +++ b/xbmc/application/Application.h
 @@ -112,6 +112,7 @@ public:
@@ -86,6 +88,7 @@ so, when shutdown/reboot is requested:
    std::shared_ptr<CFileItem> m_itemCurrentFile; //!< Currently playing file
    CEvent m_playerEvent;
  };
+diff --git a/xbmc/application/ApplicationMessageHandling.cpp b/xbmc/application/ApplicationMessageHandling.cpp
 --- a/xbmc/application/ApplicationMessageHandling.cpp
 +++ b/xbmc/application/ApplicationMessageHandling.cpp
 @@ -117,12 +117,12 @@ void CApplicationMessageHandling::OnAppl
@@ -118,6 +121,7 @@ so, when shutdown/reboot is requested:
        m_app.Stop(EXITCODE_RESTARTAPP);
  #endif
        break;
+diff --git a/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp b/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp
 --- a/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp
 +++ b/xbmc/platform/linux/powermanagement/LogindUPowerSyscall.cpp
 @@ -79,8 +79,6 @@ CLogindUPowerSyscall::~CLogindUPowerSysc
@@ -129,3 +133,5 @@ so, when shutdown/reboot is requested:
    return LogindSetPowerState("PowerOff");
  }
  
+-- 
+2.47.1

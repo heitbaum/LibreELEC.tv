@@ -1,3 +1,14 @@
+From 18b8ba44a4169f2d6dfe3239721d7bcfcce4e280 Mon Sep 17 00:00:00 2001
+From: Stephan Raue <stephan@openelec.tv>
+Date: Wed, 29 Jul 2015 11:41:09 +0200
+Subject: [PATCH] add more standard mappings for devinput devices
+
+LibreELEC specific patch - should be submitted upstream.
+---
+ system/Lircmap.xml | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/system/Lircmap.xml b/system/Lircmap.xml
 --- a/system/Lircmap.xml
 +++ b/system/Lircmap.xml
 @@ -548,50 +548,85 @@
@@ -87,3 +98,5 @@
  		<star>KEY_NUMERIC_STAR</star>
  		<hash>KEY_NUMERIC_POUND</hash>
  		<red>KEY_RED</red>
+-- 
+2.47.1

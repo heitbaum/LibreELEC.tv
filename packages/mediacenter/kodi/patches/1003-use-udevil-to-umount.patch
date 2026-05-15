@@ -8,6 +8,7 @@ Subject: [PATCH] use udevil to mount
  xbmc/platform/posix/PosixMountProvider.cpp   | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/xbmc/platform/linux/storage/UDevProvider.cpp b/xbmc/platform/linux/storage/UDevProvider.cpp
 --- a/xbmc/platform/linux/storage/UDevProvider.cpp
 +++ b/xbmc/platform/linux/storage/UDevProvider.cpp
 @@ -205,7 +205,7 @@ bool CUDevProvider::Eject(const std::str
@@ -19,6 +20,7 @@ Subject: [PATCH] use udevil to mount
    int status = system(cmd.c_str());
  
    if (status == 0)
+diff --git a/xbmc/platform/posix/PosixMountProvider.cpp b/xbmc/platform/posix/PosixMountProvider.cpp
 --- a/xbmc/platform/posix/PosixMountProvider.cpp
 +++ b/xbmc/platform/posix/PosixMountProvider.cpp
 @@ -124,7 +124,7 @@ bool CPosixMountProvider::Eject(const st
@@ -30,3 +32,5 @@ Subject: [PATCH] use udevil to mount
    int status = system(cmd.c_str());
  
    if (status == 0)
+-- 
+2.47.1

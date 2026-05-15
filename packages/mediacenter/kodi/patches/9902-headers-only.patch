@@ -1,3 +1,16 @@
+From 7cf21f41e09a3ebfa5270c9a427ba75bd715983b Mon Sep 17 00:00:00 2001
+From: Jernej Skrabec <jernej.skrabec@gmail.com>
+Date: Sun, 24 Apr 2022 21:04:04 +0200
+Subject: [PATCH] Add host target for addon headers
+
+Backported from upstream kodi.
+---
+ CMakeLists.txt                         | 3 +++
+ cmake/scripts/linux/ExtraTargets.cmake | 4 +++-
+ cmake/scripts/linux/Install.cmake      | 2 ++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -97,6 +97,7 @@ include(CMakeDependentOption)
@@ -24,6 +37,7 @@
  
  # link wrapper
  if(FFMPEG_LINK_EXECUTABLE)
+diff --git a/cmake/scripts/linux/ExtraTargets.cmake b/cmake/scripts/linux/ExtraTargets.cmake
 --- a/cmake/scripts/linux/ExtraTargets.cmake
 +++ b/cmake/scripts/linux/ExtraTargets.cmake
 @@ -42,5 +42,7 @@ if("wayland" IN_LIST CORE_PLATFORM_NAME_
@@ -35,6 +49,7 @@
 +    add_dependencies(lib${APP_NAME_LC} generate-wayland-extra-protocols)
 +  endif()
  endif()
+diff --git a/cmake/scripts/linux/Install.cmake b/cmake/scripts/linux/Install.cmake
 --- a/cmake/scripts/linux/Install.cmake
 +++ b/cmake/scripts/linux/Install.cmake
 @@ -45,6 +45,7 @@ configure_file(${CMAKE_SOURCE_DIR}/tools
@@ -53,3 +68,5 @@
  
  # Install kodi-addon-dev headers
  include(${CMAKE_SOURCE_DIR}/xbmc/addons/AddonBindings.cmake)
+-- 
+2.47.1

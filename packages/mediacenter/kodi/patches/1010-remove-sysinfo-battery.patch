@@ -1,3 +1,14 @@
+From 6767df7177f4de3a1bc65c5fc4520734ca4aa822 Mon Sep 17 00:00:00 2001
+From: chewitt <github@chrishewitt.net>
+Date: Sat, 30 Sep 2017 12:58:29 +0100
+Subject: [PATCH] remove sysinfo battery level
+
+LibreELEC specific patch - will not be submitted upstream.
+---
+ xbmc/windows/GUIWindowSystemInfo.cpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/xbmc/windows/GUIWindowSystemInfo.cpp b/xbmc/windows/GUIWindowSystemInfo.cpp
 --- a/xbmc/windows/GUIWindowSystemInfo.cpp
 +++ b/xbmc/windows/GUIWindowSystemInfo.cpp
 @@ -124,7 +124,6 @@ void CGUIWindowSystemInfo::FrameMove()
@@ -8,3 +19,5 @@
    }
  
    else if (m_section == CONTROL_BT_STORAGE)
+-- 
+2.47.1
