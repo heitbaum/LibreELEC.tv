@@ -1,3 +1,15 @@
+From 779a1f09a45a963c2e43ae32114390fa7516a150 Mon Sep 17 00:00:00 2001
+From: Stefan Saraev <stefan@saraev.ca>
+Date: Fri, 10 Jan 2014 20:04:39 +0200
+Subject: [PATCH] completely disable online check
+
+LibreELEC specific patch - will not be submitted upstream.
+---
+ xbmc/GUIInfoManager.cpp              | 3 +--
+ xbmc/utils/SystemInfo.cpp            | 5 +----
+ xbmc/windows/GUIWindowSystemInfo.cpp | 1 -
+ 3 files changed, 2 insertions(+), 7 deletions(-)
+
 --- a/xbmc/GUIInfoManager.cpp
 +++ b/xbmc/GUIInfoManager.cpp
 @@ -1942,7 +1942,7 @@ constexpr std::array<InfoMap, 10> weathe

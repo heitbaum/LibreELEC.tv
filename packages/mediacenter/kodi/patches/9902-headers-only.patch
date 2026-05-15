@@ -1,3 +1,15 @@
+From 7cf21f41e09a3ebfa5270c9a427ba75bd715983b Mon Sep 17 00:00:00 2001
+From: Jernej Skrabec <jernej.skrabec@gmail.com>
+Date: Sun, 24 Apr 2022 21:04:04 +0200
+Subject: [PATCH] Add host target for addon headers
+
+Backported from upstream kodi.
+---
+ CMakeLists.txt                         | 3 +++
+ cmake/scripts/linux/ExtraTargets.cmake | 4 +++-
+ cmake/scripts/linux/Install.cmake      | 2 ++
+ 3 files changed, 8 insertions(+), 1 deletion(-)
+
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -97,6 +97,7 @@ include(CMakeDependentOption)
