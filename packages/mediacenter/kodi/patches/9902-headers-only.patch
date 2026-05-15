@@ -10,6 +10,7 @@ Backported from upstream kodi.
  cmake/scripts/linux/Install.cmake      | 2 ++
  3 files changed, 8 insertions(+), 1 deletion(-)
 
+diff --git a/CMakeLists.txt b/CMakeLists.txt
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -97,6 +97,7 @@ include(CMakeDependentOption)
@@ -36,6 +37,7 @@ Backported from upstream kodi.
  
  # link wrapper
  if(FFMPEG_LINK_EXECUTABLE)
+diff --git a/cmake/scripts/linux/ExtraTargets.cmake b/cmake/scripts/linux/ExtraTargets.cmake
 --- a/cmake/scripts/linux/ExtraTargets.cmake
 +++ b/cmake/scripts/linux/ExtraTargets.cmake
 @@ -42,5 +42,7 @@ if("wayland" IN_LIST CORE_PLATFORM_NAME_
@@ -47,6 +49,7 @@ Backported from upstream kodi.
 +    add_dependencies(lib${APP_NAME_LC} generate-wayland-extra-protocols)
 +  endif()
  endif()
+diff --git a/cmake/scripts/linux/Install.cmake b/cmake/scripts/linux/Install.cmake
 --- a/cmake/scripts/linux/Install.cmake
 +++ b/cmake/scripts/linux/Install.cmake
 @@ -45,6 +45,7 @@ configure_file(${CMAKE_SOURCE_DIR}/tools
@@ -65,3 +68,5 @@ Backported from upstream kodi.
  
  # Install kodi-addon-dev headers
  include(${CMAKE_SOURCE_DIR}/xbmc/addons/AddonBindings.cmake)
+-- 
+2.47.1

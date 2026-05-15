@@ -8,6 +8,7 @@ LibreELEC specific patch - will not be submitted upstream.
  userdata/RssFeeds.xml | 1 +
  1 file changed, 1 insertion(+)
 
+diff --git a/userdata/RssFeeds.xml b/userdata/RssFeeds.xml
 --- a/userdata/RssFeeds.xml
 +++ b/userdata/RssFeeds.xml
 @@ -3,6 +3,7 @@
@@ -18,3 +19,5 @@ LibreELEC specific patch - will not be submitted upstream.
      <feed updateinterval="1440">https://kodi.tv/feed</feed>
    </set>
  </rssfeeds>
+-- 
+2.47.1

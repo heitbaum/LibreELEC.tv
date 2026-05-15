@@ -12,6 +12,7 @@ Signed-off-by: Christian Hewitt <christianshewitt@gmail.com>
  addons/skin.estuary/xml/Settings.xml | 13 +++++++------
  1 file changed, 7 insertions(+), 6 deletions(-)
 
+diff --git a/addons/skin.estuary/xml/Settings.xml b/addons/skin.estuary/xml/Settings.xml
 --- a/addons/skin.estuary/xml/Settings.xml
 +++ b/addons/skin.estuary/xml/Settings.xml
 @@ -56,9 +56,16 @@
@@ -44,3 +45,5 @@ Signed-off-by: Christian Hewitt <christianshewitt@gmail.com>
  				</content>
  			</control>
  		</control>
+-- 
+2.47.1
