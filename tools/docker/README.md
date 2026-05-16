@@ -29,7 +29,7 @@ Change to your LibreELEC.tv development directory that you checked out with <br>
  cd LibreELEC.tv
  ```
 
-Then use the following command to build LibreELEC images inside a new container based on the docker image tagged with `libreelec`. (The `pwd` uses the current directory - which must have the LibeELEC `Makefile` in it.)
+Then use the following command to build LibreELEC images inside a new container based on the docker image tagged with `libreelec`. (The `pwd` uses the current directory - which must have the LibreELEC `Makefile` in it.)
 
 ```
 docker run --rm --log-driver none -v `pwd`:/build -w /build -it libreelec make image
