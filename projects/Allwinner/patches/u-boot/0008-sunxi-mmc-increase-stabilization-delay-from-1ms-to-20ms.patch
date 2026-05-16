@@ -1,5 +1,7 @@
+From a043f3220653538fbf3ecbae16d9d3f1957d267a Mon Sep 17 00:00:00 2001
 From: Da Xue <da@libre.computer>
 Date: Thu, 21 Jul 2022 18:08:21 -0400
+Subject: [PATCH] sunxi-mmc: increase stabilization delay from 1ms to 20ms
 
 Some users experienced problems booting u-boot from SPL hanging here:
 
@@ -47,3 +49,5 @@ index 1bb7b6d0e9..f7942b69ce 100644
  
  	if (IS_ENABLED(CONFIG_SUN50I_GEN_H6) || IS_ENABLED(CONFIG_SUNXI_GEN_NCAT2)) {
  		/* Reset card */
+-- 
+2.47.1
