@@ -1,6 +1,15 @@
+From 68eae1414ebd6e14d62a7b933f15e00907f57eb4 Mon Sep 17 00:00:00 2001
+From: by-gnome <by-gnome@yandex.ru>
+Date: Thu, 12 Nov 2020 17:47:43 +0300
+Subject: [PATCH] imx6qdl-wandboard-revc1.dtsi: add bluetooth
+
 Add MMC power sequence for usdhc2.
 Add bluetooth node to uart3.
+---
+ arch/arm/boot/dts/nxp/imx/imx6qdl-wandboard-revc1.dtsi | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
+diff --git a/arch/arm/boot/dts/nxp/imx/imx6qdl-wandboard-revc1.dtsi b/arch/arm/boot/dts/nxp/imx/imx6qdl-wandboard-revc1.dtsi
 --- a/arch/arm/boot/dts/nxp/imx/imx6qdl-wandboard-revc1.dtsi
 +++ b/arch/arm/boot/dts/nxp/imx/imx6qdl-wandboard-revc1.dtsi
 @@ -6,6 +6,15 @@
@@ -35,3 +44,5 @@ Add bluetooth node to uart3.
 +	mmc-pwrseq = <&pwrseq_usdhc2>;
  	status = "okay";
  };
+-- 
+2.47.1
