@@ -160,16 +160,14 @@ for m in re.finditer(r'^(diff --git .+\n(?:(?!--- ).*\n)*?)(?=--- )', orig, re.M
     if path_match:
         orig_headers[path_match.group(1)] = m.group(1).rstrip('\n')
 
-# From refreshed: only the --- +++ @@ hunk sections
+# From refreshed: extract only the --- +++ @@ hunk sections
+# Split on ^--- a/ to get each file's diff body
 result = preamble
 file_sections = re.split(r'^(?=--- )', refreshed, flags=re.MULTILINE)
 for section in file_sections:
     if not section.startswith('--- '):
         continue
-    # For new files, --- is /dev/null; use +++ b/path instead
     path_match = re.search(r'^--- a/(.+)', section, re.MULTILINE)
-    if not path_match:
-        path_match = re.search(r'^\+\+\+ b/(.+)', section, re.MULTILINE)
     if path_match:
         filepath = path_match.group(1)
         if filepath in orig_headers:
