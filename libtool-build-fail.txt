@@ -1,0 +1,844 @@
+[1;36mUNPACK[0m      libtool
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0001-maint-post-release-administrivia.patch
+patching file NEWS
+patching file cfg.mk
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0001-prevent-libtool-to-linking-against-host-libs-on-make.patch
+patching file build-aux/ltmain.sh
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0002-libtool.m4-Fix-Objective-C-check.patch
+patching file m4/libtool.m4
+patching file tests/flags.at
+patching file tests/infer-tag.at
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0003-libtool.m4-Fix-syntax-error-in-LT_PROG_OBJC-and-LT_P.patch
+patching file m4/libtool.m4
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0005-libtool-Remove-old_archive_from_new_cmds-on-OS-2.patch
+patching file m4/libtool.m4
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0006-ltmain.in-add-parentheses-to-support-values-with-spa.patch
+patching file build-aux/ltmain.in
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0007-libtool-Limit-a-length-of-DLL-name-to-8.3-correctly.patch
+patching file m4/libtool.m4
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0008-libtool.m4-Add-support-for-slimcc.patch
+patching file m4/libtool.m4
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0009-Add-testing-for-slimcc-compiler.patch
+patching file Makefile.am
+patching file tests/slimcc.at
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0011-libtool-Update-copyright-year.patch
+patching file AUTHORS
+patching file Makefile.am
+patching file NEWS
+patching file TODO
+patching file bootstrap.conf
+patching file build-aux/edit-readme-alpha
+patching file build-aux/ltmain.in
+patching file build-aux/no-bogus-m4-defines
+patching file cfg.mk
+patching file configure.ac
+patching file libltdl/README
+patching file libltdl/configure.ac
+patching file libltdl/libltdl/lt__alloc.h
+patching file libltdl/libltdl/lt__argz_.h
+patching file libltdl/libltdl/lt__dirent.h
+patching file libltdl/libltdl/lt__glibc.h
+patching file libltdl/libltdl/lt__private.h
+patching file libltdl/libltdl/lt__strl.h
+patching file libltdl/libltdl/lt_dlloader.h
+patching file libltdl/libltdl/lt_error.h
+patching file libltdl/libltdl/lt_system.h
+patching file libltdl/libltdl/slist.h
+patching file libltdl/loaders/dld_link.c
+patching file libltdl/loaders/dlopen.c
+patching file libltdl/loaders/dyld.c
+patching file libltdl/loaders/load_add_on.c
+patching file libltdl/loaders/loadlibrary.c
+patching file libltdl/loaders/preopen.c
+patching file libltdl/loaders/shl_load.c
+patching file libltdl/lt__alloc.c
+patching file libltdl/lt__argz.c
+patching file libltdl/lt__dirent.c
+patching file libltdl/lt__strl.c
+patching file libltdl/lt_dlloader.c
+patching file libltdl/lt_error.c
+patching file libltdl/ltdl.c
+patching file libltdl/ltdl.h
+patching file libltdl/ltdl.mk
+patching file libltdl/slist.c
+patching file libtool-next-version.in
+patching file libtoolize.in
+patching file m4/autobuild.m4
+patching file m4/libtool.m4
+patching file m4/ltargz.m4
+patching file m4/ltdl.m4
+patching file m4/ltoptions.m4
+patching file m4/ltsugar.m4
+patching file m4/ltversion.in
+patching file m4/lt~obsolete.m4
+patching file m4/m4.m4
+patching file tests/am-subdir.at
+patching file tests/archive-in-archive.at
+patching file tests/bindir.at
+patching file tests/bug_42313.at
+patching file tests/bug_62343.at
+patching file tests/bug_71489.at
+patching file tests/cdemo.at
+patching file tests/cmdline_wrap.at
+patching file tests/configure-funcs.at
+patching file tests/configure-iface.at
+patching file tests/convenience.at
+patching file tests/ctor.at
+patching file tests/cwrapper.at
+patching file tests/darwin.at
+patching file tests/demo.at
+patching file tests/depdemo.at
+patching file tests/deplib-in-subdir.at
+patching file tests/deplibs-ident.at
+patching file tests/deplibs-mingw.at
+patching file tests/destdir.at
+patching file tests/dlloader-api.at
+patching file tests/dumpbin-symbols.at
+patching file tests/duplicate_conv.at
+patching file tests/duplicate_deps.at
+patching file tests/duplicate_members.at
+patching file tests/early-libtool.at
+patching file tests/exceptions.at
+patching file tests/execute-mode.at
+patching file tests/exeext.at
+patching file tests/export-def.at
+patching file tests/export.at
+patching file tests/f77demo.at
+patching file tests/fail.at
+patching file tests/fcdemo.at
+patching file tests/flags.at
+patching file tests/help.at
+patching file tests/indirect_deps.at
+patching file tests/infer-tag.at
+patching file tests/inherited_flags.at
+patching file tests/install.at
+patching file tests/lalib-syntax.at
+patching file tests/libtool.at
+patching file tests/libtoolize.at
+patching file tests/link-order.at
+patching file tests/link-order2.at
+patching file tests/loadlibrary.at
+patching file tests/localization.at
+patching file tests/lt_dladvise.at
+patching file tests/lt_dlexit.at
+patching file tests/lt_dlopen.at
+patching file tests/lt_dlopen_a.at
+patching file tests/lt_dlopenext.at
+patching file tests/ltdl-api.at
+patching file tests/ltdl-libdir.at
+patching file tests/mdemo.at
+patching file tests/need_lib_prefix.at
+patching file tests/no-executables.at
+patching file tests/nocase.at
+patching file tests/nonrecursive.at
+patching file tests/old-m4-iface.at
+patching file tests/pic_flag.at
+patching file tests/recursive.at
+patching file tests/resident.at
+patching file tests/runpath-in-lalib.at
+patching file tests/search-path.at
+patching file tests/shlibpath.at
+patching file tests/slimcc.at
+patching file tests/slist.at
+patching file tests/standalone.at
+patching file tests/static.at
+patching file tests/stresstest.at
+patching file tests/subproject.at
+patching file tests/sysroot.at
+patching file tests/tagdemo.at
+patching file tests/template.at
+patching file tests/testsuite.at
+patching file tests/versioning.at
+patching file tests/versioning_script.at
+patching file tests/with-pic.at
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0012-Update-NEWS.patch
+patching file NEWS
+    [1;32mAPPLY PATCH [1;37m(common)[0m[0m      packages/devel/libtool/patches/0013-ltmain.in-Fix-file-path-conversions-for-MSYS2-and-MS.patch
+patching file NEWS
+patching file build-aux/ltmain.in
+    [1;33mFIXCONFIG[0m      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/
+[1;33mBUILD[0m      libtool [1;37m(host)[0m
+    [1;35mTOOLCHAIN[0m      autotools
+    [1;35mAUTORECONF[0m      libtool
+autoreconf: export WARNINGS=
+autoreconf: Entering directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0'
+autoreconf: configure.ac: not running autopoint: --install not given
+autoreconf: running: /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/aclocal -I /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal -I /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal --force -I m4
+autoreconf: configure.ac: tracing
+autoreconf: configure.ac: not running libtoolize: --install not given
+autoreconf: configure.ac: not using Intltool
+autoreconf: configure.ac: not using Gtkdoc
+autoreconf: configure.ac: no need to run autopoint (confirmed)
+autoreconf: running: /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/autoconf --include=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal --force
+autoreconf: running: /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/autoheader --include=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/x86_64-libreelec-linux-gnu/sysroot/usr/share/aclocal --force
+autoreconf: running: /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/automake --force-missing
+autoreconf: configure.ac: not running make: --make not given
+autoreconf: Leaving directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0'
+Executing (host): /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/configure --host=x86_64-linux-gnu --build=x86_64-linux-gnu --prefix=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain --bindir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin --sbindir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/sbin --sysconfdir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/etc --libexecdir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/lib --localstatedir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/var --disable-static --enable-shared --enable-static --disable-shared
+## ------------------------- ##
+## Configuring libtool 2.6.0 ##
+## ------------------------- ##
+
+checking for GNU M4 that supports accurate traces... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/m4
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/m4 accepts --gnu... yes
+checking how m4 supports trace files... --debugfile
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether sleep supports fractional seconds... yes
+checking filesystem timestamp resolution... 0.01
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking xargs -n works... yes
+checking whether UID '1000' is supported by ustar format... yes
+checking whether GID '1000' is supported by ustar format... yes
+checking how to create a ustar tar archive... gnutar
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+configure: autobuild project... GNU Libtool
+configure: autobuild revision... 2.6.0
+configure: autobuild hostname... 749fa8af36e7
+configure: autobuild mode... default
+configure: autobuild timestamp... 20260517T105535Z
+checking for x86_64-linux-gnu-gcc... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc accepts -g... yes
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc option to enable C23 features... none needed
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc understands -c and -o together... yes
+checking whether the compiler is clang... no
+checking for compiler option needed when checking for declarations... none
+checking whether make supports the include directive... yes (GNU style)
+checking dependency style of /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc... gcc3
+checking how to run the C preprocessor... cpp
+checking for egrep -e... /usr/bin/grep -E
+checking for Minix Amsterdam compiler... no
+checking for x86_64-linux-gnu-ar... ar
+checking how to run the C preprocessor... cpp
+checking how to print strings... printf
+checking for a sed that does not truncate output... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc... ld
+checking if the linker (ld) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... nm
+checking the name lister (nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for ld option to reload object files... -r
+checking for file... file
+checking for x86_64-linux-gnu-objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-linux-gnu-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-linux-gnu-ar... (cached) ar
+checking for archiver @FILE support... @
+checking for x86_64-linux-gnu-strip... strip
+checking command to parse nm output from /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for x86_64-linux-gnu-mt... no
+checking for mt... no
+checking if : is a manifest tool... no
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking which variant of shared library versioning to provide... (default) aix
+checking for objdir... .libs
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -fno-rtti -fno-exceptions... no
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc option to produce PIC... -fPIC -DPIC
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc PIC flag -fPIC -DPIC works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc static flag -static works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -c -o file.o... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -c -o file.o... (cached) yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc linker (ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking for shl_load... no
+checking for shl_load in -ldld... no
+checking for dlopen... yes
+checking whether a program can dlopen itself... yes
+checking whether a statically linked program can dlopen itself... no
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... no
+checking whether to build static libraries... yes
+checking what extension is used for runtime loadable modules... .so
+checking what variable specifies run-time module search path... LD_LIBRARY_PATH
+checking for the default library search path... /lib /usr/lib /usr/local/lib /usr/local/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu 
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc options to detect undeclared functions... none needed
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc options to ignore future-version functions... none needed
+checking for library containing dlopen... none required
+checking for dlerror... yes
+checking for shl_load... (cached) no
+checking for shl_load in -ldld... (cached) no
+checking for dld_link in -ldld... no
+checking for _ prefix in compiled symbols... no
+checking whether deplibs are loaded by dlopen... yes
+checking for argz.h... yes
+checking for error_t... yes
+checking for argz_add... yes
+checking for argz_append... yes
+checking for argz_count... yes
+checking for argz_create_sep... yes
+checking for argz_insert... yes
+checking for argz_next... yes
+checking for argz_stringify... yes
+checking if argz actually works... yes
+checking whether libtool supports -dlopen/-dlpreopen... yes
+checking for unistd.h... (cached) yes
+checking for dl.h... no
+checking for sys/dl.h... no
+checking for dld.h... no
+checking for mach-o/dyld.h... no
+checking for dirent.h... yes
+checking for closedir... yes
+checking for opendir... yes
+checking for readdir... yes
+checking for strlcat... yes
+checking for strlcpy... yes
+checking whether the compiler supports GNU C++... yes
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ accepts -g... yes
+checking dependency style of /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++... gcc3
+checking how to run the C++ preprocessor... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ -E
+checking for ld used by /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++... ld -m elf_x86_64
+checking if the linker (ld -m elf_x86_64) is GNU ld... yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ linker (ld -m elf_x86_64) supports shared libraries... yes
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ option to produce PIC... -fPIC -DPIC
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ PIC flag -fPIC -DPIC works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ static flag -static works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ supports -c -o file.o... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ supports -c -o file.o... (cached) yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ linker (ld -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-gcc... no
+checking for gcc... gcc
+checking for x86_64-linux-gnu-gnustep-config... no
+checking for gnustep-config... no
+checking for Objective C compilation... no
+checking if gcc supports -fno-rtti -fno-exceptions... (cached) no
+checking for gcc option to produce PIC... -fPIC
+checking if gcc PIC flag -fPIC works... no
+checking if gcc static flag -static works... no
+checking if gcc supports -c -o file.o... no
+checking if gcc supports -c -o file.o... (cached) no
+checking whether the gcc linker (ld -m elf_x86_64) supports shared libraries... yes
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-g++... no
+checking for g++... g++
+checking for x86_64-linux-gnu-gnustep-config... no
+checking for gnustep-config... no
+checking for Objective C++ compilation... no
+checking if g++ supports -fno-rtti -fno-exceptions... (cached) no
+checking for g++ option to produce PIC... -fPIC
+checking if g++ PIC flag -fPIC works... no
+checking if g++ static flag -static works... no
+checking if g++ supports -c -o file.o... no
+checking if g++ supports -c -o file.o... (cached) no
+checking whether the g++ linker (ld -m elf_x86_64) supports shared libraries... yes
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-ml64... no
+checking for ml64... no
+checking for x86_64-linux-gnu-g77... no
+checking for x86_64-linux-gnu-xlf... no
+checking for x86_64-linux-gnu-f77... no
+checking for x86_64-linux-gnu-frt... no
+checking for x86_64-linux-gnu-pgf77... no
+checking for x86_64-linux-gnu-cf77... no
+checking for x86_64-linux-gnu-fort77... no
+checking for x86_64-linux-gnu-fl32... no
+checking for x86_64-linux-gnu-af77... no
+checking for x86_64-linux-gnu-xlf90... no
+checking for x86_64-linux-gnu-f90... no
+checking for x86_64-linux-gnu-pgf90... no
+checking for x86_64-linux-gnu-pghpf... no
+checking for x86_64-linux-gnu-epcf90... no
+checking for x86_64-linux-gnu-gfortran... no
+checking for x86_64-linux-gnu-g95... no
+checking for x86_64-linux-gnu-xlf95... no
+checking for x86_64-linux-gnu-f95... no
+checking for x86_64-linux-gnu-fort... no
+checking for x86_64-linux-gnu-ifort... no
+checking for x86_64-linux-gnu-ifc... no
+checking for x86_64-linux-gnu-efc... no
+checking for x86_64-linux-gnu-pgfortran... no
+checking for x86_64-linux-gnu-pgf95... no
+checking for x86_64-linux-gnu-lf95... no
+checking for x86_64-linux-gnu-ftn... no
+checking for x86_64-linux-gnu-nagfor... no
+checking for g77... no
+checking for xlf... no
+checking for f77... no
+checking for frt... no
+checking for pgf77... no
+checking for cf77... no
+checking for fort77... no
+checking for fl32... no
+checking for af77... no
+checking for xlf90... no
+checking for f90... no
+checking for pgf90... no
+checking for pghpf... no
+checking for epcf90... no
+checking for gfortran... no
+checking for g95... no
+checking for xlf95... no
+checking for f95... no
+checking for fort... no
+checking for ifort... no
+checking for ifc... no
+checking for efc... no
+checking for pgfortran... no
+checking for pgf95... no
+checking for lf95... no
+checking for ftn... no
+checking for nagfor... no
+checking whether the compiler supports GNU Fortran 77... no
+checking whether  accepts -g... no
+checking for x86_64-linux-gnu-gfortran... no
+checking for x86_64-linux-gnu-g95... no
+checking for x86_64-linux-gnu-xlf95... no
+checking for x86_64-linux-gnu-f95... no
+checking for x86_64-linux-gnu-fort... no
+checking for x86_64-linux-gnu-ifort... no
+checking for x86_64-linux-gnu-ifc... no
+checking for x86_64-linux-gnu-efc... no
+checking for x86_64-linux-gnu-pgfortran... no
+checking for x86_64-linux-gnu-pgf95... no
+checking for x86_64-linux-gnu-lf95... no
+checking for x86_64-linux-gnu-ftn... no
+checking for x86_64-linux-gnu-nagfor... no
+checking for x86_64-linux-gnu-xlf90... no
+checking for x86_64-linux-gnu-f90... no
+checking for x86_64-linux-gnu-pgf90... no
+checking for x86_64-linux-gnu-pghpf... no
+checking for x86_64-linux-gnu-epcf90... no
+checking for x86_64-linux-gnu-g77... no
+checking for x86_64-linux-gnu-xlf... no
+checking for x86_64-linux-gnu-f77... no
+checking for x86_64-linux-gnu-frt... no
+checking for x86_64-linux-gnu-pgf77... no
+checking for x86_64-linux-gnu-cf77... no
+checking for x86_64-linux-gnu-fort77... no
+checking for x86_64-linux-gnu-fl32... no
+checking for x86_64-linux-gnu-af77... no
+checking for gfortran... no
+checking for g95... no
+checking for xlf95... no
+checking for f95... no
+checking for fort... no
+checking for ifort... no
+checking for ifc... no
+checking for efc... no
+checking for pgfortran... no
+checking for pgf95... no
+checking for lf95... no
+checking for ftn... no
+checking for nagfor... no
+checking for xlf90... no
+checking for f90... no
+checking for pgf90... no
+checking for pghpf... no
+checking for epcf90... no
+checking for g77... no
+checking for xlf... no
+checking for f77... no
+checking for frt... no
+checking for pgf77... no
+checking for cf77... no
+checking for fort77... no
+checking for fl32... no
+checking for af77... no
+checking whether the compiler supports GNU Fortran... no
+checking whether  accepts -g... no
+checking for x86_64-linux-gnu-gccgo... no
+checking for gccgo... no
+checking for x86_64-linux-gnu-gcj... no
+checking for gcj... no
+checking for x86_64-linux-gnu-windres... no
+checking for windres... no
+checking for C compiler option to allow warnings... -Wno-error
+checking for C++ compiler option to allow warnings... -Wno-error
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating gnulib-tests/Makefile
+config.status: creating config.h
+config.status: linking /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/GNUmakefile to GNUmakefile
+config.status: executing tests/atconfig commands
+config.status: executing depfiles commands
+config.status: executing libtool commands
+Executing (host): make 
+make[1]: Entering directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/m4/ltversion.m4
+CDPATH="${ZSH_VERSION+.}:" && cd /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0 && /bin/dash '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/missing' aclocal-1.18 -I m4
+CDPATH="${ZSH_VERSION+.}:" && cd /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0 && /bin/dash '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/missing' autoconf
+ cd /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0 && /bin/dash /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/missing automake-1.18 --gnu
+/bin/dash ./config.status --recheck
+running CONFIG_SHELL=/bin/dash /bin/dash /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/configure --host=x86_64-linux-gnu --build=x86_64-linux-gnu --prefix=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain --bindir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin --sbindir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/sbin --sysconfdir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/etc --libexecdir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/lib --localstatedir=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/var --disable-static --enable-shared --enable-static --disable-shared build_alias=x86_64-linux-gnu host_alias=x86_64-linux-gnu CC=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc CFLAGS=-O2 -Wall -pipe -I/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/include -Wno-format-security LDFLAGS=-Wl,-rpath,/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/lib -L/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/lib CPPFLAGS= CPP=cpp CXX=/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ CXXFLAGS=-O2 -Wall -pipe -I/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/include -Wno-format-security --no-create --no-recursion
+## ------------------------- ##
+## Configuring libtool 2.6.0 ##
+## ------------------------- ##
+
+checking for GNU M4 that supports accurate traces... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/m4
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/m4 accepts --gnu... yes
+checking how m4 supports trace files... --debugfile
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether sleep supports fractional seconds... yes
+checking filesystem timestamp resolution... 0.01
+checking whether build environment is sane... yes
+checking for a race-free mkdir -p... /usr/bin/mkdir -p
+checking for gawk... gawk
+checking whether make sets $(MAKE)... yes
+checking whether make supports nested variables... yes
+checking xargs -n works... yes
+checking whether UID '1000' is supported by ustar format... yes
+checking whether GID '1000' is supported by ustar format... yes
+checking how to create a ustar tar archive... gnutar
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+configure: autobuild project... GNU Libtool
+configure: autobuild revision... 2.6.0
+configure: autobuild hostname... 749fa8af36e7
+configure: autobuild mode... default
+configure: autobuild timestamp... 20260517T105540Z
+checking for x86_64-linux-gnu-gcc... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables... 
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether the compiler supports GNU C... yes
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc accepts -g... yes
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc option to enable C23 features... none needed
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc understands -c and -o together... yes
+checking whether the compiler is clang... no
+checking for compiler option needed when checking for declarations... none
+checking whether make supports the include directive... yes (GNU style)
+checking dependency style of /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc... gcc3
+checking how to run the C preprocessor... cpp
+checking for egrep -e... /usr/bin/grep -E
+checking for Minix Amsterdam compiler... no
+checking for x86_64-linux-gnu-ar... ar
+checking how to run the C preprocessor... cpp
+checking how to print strings... printf
+checking for a sed that does not truncate output... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/sed
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for egrep... /usr/bin/grep -E
+checking for fgrep... /usr/bin/grep -F
+checking for ld used by /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc... ld -m elf_x86_64
+checking if the linker (ld -m elf_x86_64) is GNU ld... yes
+checking for BSD- or MS-compatible name lister (nm)... nm
+checking the name lister (nm) interface... BSD nm
+checking whether ln -s works... yes
+checking the maximum length of command line arguments... 1572864
+checking how to convert x86_64-pc-linux-gnu file names to x86_64-pc-linux-gnu format... func_convert_file_noop
+checking how to convert x86_64-pc-linux-gnu file names to toolchain format... func_convert_file_noop
+checking for ld -m elf_x86_64 option to reload object files... -r
+checking for file... file
+checking for x86_64-linux-gnu-objdump... objdump
+checking how to recognize dependent libraries... pass_all
+checking for x86_64-linux-gnu-dlltool... no
+checking for dlltool... no
+checking how to associate runtime and link libraries... printf %s\n
+checking for x86_64-linux-gnu-ar... (cached) ar
+checking for archiver @FILE support... @
+checking for x86_64-linux-gnu-strip... strip
+checking command to parse nm output from /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc object... ok
+checking for sysroot... no
+checking for a working dd... /usr/bin/dd
+checking how to truncate binary pipes... /usr/bin/dd bs=4096 count=1
+checking for x86_64-linux-gnu-mt... no
+checking for mt... no
+checking if : is a manifest tool... no
+checking for stdio.h... yes
+checking for stdlib.h... yes
+checking for string.h... yes
+checking for inttypes.h... yes
+checking for stdint.h... yes
+checking for strings.h... yes
+checking for sys/stat.h... yes
+checking for sys/types.h... yes
+checking for unistd.h... yes
+checking for dlfcn.h... yes
+checking which variant of shared library versioning to provide... (default) aix
+checking for objdir... .libs
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -fno-rtti -fno-exceptions... no
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc option to produce PIC... -fPIC -DPIC
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc PIC flag -fPIC -DPIC works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc static flag -static works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -c -o file.o... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc supports -c -o file.o... (cached) yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc linker (ld -m elf_x86_64 -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking for shl_load... no
+checking for shl_load in -ldld... no
+checking for dlopen... yes
+checking whether a program can dlopen itself... yes
+checking whether a statically linked program can dlopen itself... no
+checking whether stripping libraries is possible... yes
+checking if libtool supports shared libraries... yes
+checking whether to build shared libraries... no
+checking whether to build static libraries... yes
+checking what extension is used for runtime loadable modules... .so
+checking what variable specifies run-time module search path... LD_LIBRARY_PATH
+checking for the default library search path... /lib /usr/lib /usr/local/lib /usr/local/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu 
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc options to detect undeclared functions... none needed
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-gcc options to ignore future-version functions... none needed
+checking for library containing dlopen... none required
+checking for dlerror... yes
+checking for shl_load... (cached) no
+checking for shl_load in -ldld... (cached) no
+checking for dld_link in -ldld... no
+checking for _ prefix in compiled symbols... no
+checking whether deplibs are loaded by dlopen... yes
+checking for argz.h... yes
+checking for error_t... yes
+checking for argz_add... yes
+checking for argz_append... yes
+checking for argz_count... yes
+checking for argz_create_sep... yes
+checking for argz_insert... yes
+checking for argz_next... yes
+checking for argz_stringify... yes
+checking if argz actually works... yes
+checking whether libtool supports -dlopen/-dlpreopen... yes
+checking for unistd.h... (cached) yes
+checking for dl.h... no
+checking for sys/dl.h... no
+checking for dld.h... no
+checking for mach-o/dyld.h... no
+checking for dirent.h... yes
+checking for closedir... yes
+checking for opendir... yes
+checking for readdir... yes
+checking for strlcat... yes
+checking for strlcpy... yes
+checking whether the compiler supports GNU C++... yes
+checking whether /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ accepts -g... yes
+checking dependency style of /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++... gcc3
+checking how to run the C++ preprocessor... /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ -E
+checking for ld used by /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++... ld -m elf_x86_64 -m elf_x86_64
+checking if the linker (ld -m elf_x86_64 -m elf_x86_64) is GNU ld... yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ linker (ld -m elf_x86_64 -m elf_x86_64) supports shared libraries... yes
+checking for /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ option to produce PIC... -fPIC -DPIC
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ PIC flag -fPIC -DPIC works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ static flag -static works... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ supports -c -o file.o... yes
+checking if /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ supports -c -o file.o... (cached) yes
+checking whether the /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/toolchain/bin/host-g++ linker (ld -m elf_x86_64 -m elf_x86_64) supports shared libraries... yes
+checking dynamic linker characteristics... (cached) GNU/Linux ld.so
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-gcc... no
+checking for gcc... gcc
+checking for x86_64-linux-gnu-gnustep-config... no
+checking for gnustep-config... no
+checking for Objective C compilation... no
+checking if gcc supports -fno-rtti -fno-exceptions... (cached) no
+checking for gcc option to produce PIC... -fPIC
+checking if gcc PIC flag -fPIC works... no
+checking if gcc static flag -static works... no
+checking if gcc supports -c -o file.o... no
+checking if gcc supports -c -o file.o... (cached) no
+checking whether the gcc linker (ld -m elf_x86_64 -m elf_x86_64) supports shared libraries... yes
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-g++... no
+checking for g++... g++
+checking for x86_64-linux-gnu-gnustep-config... no
+checking for gnustep-config... no
+checking for Objective C++ compilation... no
+checking if g++ supports -fno-rtti -fno-exceptions... (cached) no
+checking for g++ option to produce PIC... -fPIC
+checking if g++ PIC flag -fPIC works... no
+checking if g++ static flag -static works... no
+checking if g++ supports -c -o file.o... no
+checking if g++ supports -c -o file.o... (cached) no
+checking whether the g++ linker (ld -m elf_x86_64 -m elf_x86_64) supports shared libraries... yes
+checking how to hardcode library paths into programs... immediate
+checking for x86_64-linux-gnu-ml64... no
+checking for ml64... no
+checking for x86_64-linux-gnu-g77... no
+checking for x86_64-linux-gnu-xlf... no
+checking for x86_64-linux-gnu-f77... no
+checking for x86_64-linux-gnu-frt... no
+checking for x86_64-linux-gnu-pgf77... no
+checking for x86_64-linux-gnu-cf77... no
+checking for x86_64-linux-gnu-fort77... no
+checking for x86_64-linux-gnu-fl32... no
+checking for x86_64-linux-gnu-af77... no
+checking for x86_64-linux-gnu-xlf90... no
+checking for x86_64-linux-gnu-f90... no
+checking for x86_64-linux-gnu-pgf90... no
+checking for x86_64-linux-gnu-pghpf... no
+checking for x86_64-linux-gnu-epcf90... no
+checking for x86_64-linux-gnu-gfortran... no
+checking for x86_64-linux-gnu-g95... no
+checking for x86_64-linux-gnu-xlf95... no
+checking for x86_64-linux-gnu-f95... no
+checking for x86_64-linux-gnu-fort... no
+checking for x86_64-linux-gnu-ifort... no
+checking for x86_64-linux-gnu-ifc... no
+checking for x86_64-linux-gnu-efc... no
+checking for x86_64-linux-gnu-pgfortran... no
+checking for x86_64-linux-gnu-pgf95... no
+checking for x86_64-linux-gnu-lf95... no
+checking for x86_64-linux-gnu-ftn... no
+checking for x86_64-linux-gnu-nagfor... no
+checking for g77... no
+checking for xlf... no
+checking for f77... no
+checking for frt... no
+checking for pgf77... no
+checking for cf77... no
+checking for fort77... no
+checking for fl32... no
+checking for af77... no
+checking for xlf90... no
+checking for f90... no
+checking for pgf90... no
+checking for pghpf... no
+checking for epcf90... no
+checking for gfortran... no
+checking for g95... no
+checking for xlf95... no
+checking for f95... no
+checking for fort... no
+checking for ifort... no
+checking for ifc... no
+checking for efc... no
+checking for pgfortran... no
+checking for pgf95... no
+checking for lf95... no
+checking for ftn... no
+checking for nagfor... no
+checking whether the compiler supports GNU Fortran 77... no
+checking whether  accepts -g... no
+checking for x86_64-linux-gnu-gfortran... no
+checking for x86_64-linux-gnu-g95... no
+checking for x86_64-linux-gnu-xlf95... no
+checking for x86_64-linux-gnu-f95... no
+checking for x86_64-linux-gnu-fort... no
+checking for x86_64-linux-gnu-ifort... no
+checking for x86_64-linux-gnu-ifc... no
+checking for x86_64-linux-gnu-efc... no
+checking for x86_64-linux-gnu-pgfortran... no
+checking for x86_64-linux-gnu-pgf95... no
+checking for x86_64-linux-gnu-lf95... no
+checking for x86_64-linux-gnu-ftn... no
+checking for x86_64-linux-gnu-nagfor... no
+checking for x86_64-linux-gnu-xlf90... no
+checking for x86_64-linux-gnu-f90... no
+checking for x86_64-linux-gnu-pgf90... no
+checking for x86_64-linux-gnu-pghpf... no
+checking for x86_64-linux-gnu-epcf90... no
+checking for x86_64-linux-gnu-g77... no
+checking for x86_64-linux-gnu-xlf... no
+checking for x86_64-linux-gnu-f77... no
+checking for x86_64-linux-gnu-frt... no
+checking for x86_64-linux-gnu-pgf77... no
+checking for x86_64-linux-gnu-cf77... no
+checking for x86_64-linux-gnu-fort77... no
+checking for x86_64-linux-gnu-fl32... no
+checking for x86_64-linux-gnu-af77... no
+checking for gfortran... no
+checking for g95... no
+checking for xlf95... no
+checking for f95... no
+checking for fort... no
+checking for ifort... no
+checking for ifc... no
+checking for efc... no
+checking for pgfortran... no
+checking for pgf95... no
+checking for lf95... no
+checking for ftn... no
+checking for nagfor... no
+checking for xlf90... no
+checking for f90... no
+checking for pgf90... no
+checking for pghpf... no
+checking for epcf90... no
+checking for g77... no
+checking for xlf... no
+checking for f77... no
+checking for frt... no
+checking for pgf77... no
+checking for cf77... no
+checking for fort77... no
+checking for fl32... no
+checking for af77... no
+checking whether the compiler supports GNU Fortran... no
+checking whether  accepts -g... no
+checking for x86_64-linux-gnu-gccgo... no
+checking for gccgo... no
+checking for x86_64-linux-gnu-gcj... no
+checking for gcj... no
+checking for x86_64-linux-gnu-windres... no
+checking for windres... no
+checking for C compiler option to allow warnings... -Wno-error
+checking for C++ compiler option to allow warnings... -Wno-error
+checking that generated files are newer than configure... done
+configure: creating ./config.status
+ /bin/dash ./config.status
+config.status: creating Makefile
+config.status: creating gnulib-tests/Makefile
+config.status: creating config.h
+config.status: config.h is unchanged
+config.status: linking /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/GNUmakefile to GNUmakefile
+config.status: executing tests/atconfig commands
+config.status: executing depfiles commands
+config.status: executing libtool commands
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/config-h.in
+  GEN      libtoolize
+  GEN      libtool-next-version
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/ltmain.sh
+  GEN      libtool
+  GEN      stamp-h1
+config.status: executing libtool commands
+config.status: creating config.h
+config.status: config.h is unchanged
+make  all-recursive
+make[2]: Entering directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+Making all in .
+make[3]: Entering directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/doc/libtool.1
+make[4]: Entering directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/build-aux/missing: 85: help2man: not found
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/libltdl/aclocal.m4
+WARNING: 'help2man' is missing on your system.
+         You should only need it if you modified a dependency of a man page.
+         You may want to install the GNU Help2man package:
+         <https://www.gnu.org/software/help2man/>
+  GEN      /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/libltdl/Makefile.am
+make[3]: *** [Makefile:2463: /var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/doc/libtool.1] Error 127
+make[3]: *** Waiting for unfinished jobs....
+make[4]: Leaving directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+make[3]: Leaving directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+make[2]: *** [Makefile:1670: all-recursive] Error 1
+make[2]: Leaving directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+make[1]: *** [Makefile:1052: all] Error 2
+make[1]: Leaving directory '/var/media/DATA/home-rudi/LibreELEC.tv/build.LibreELEC-Generic.x86_64-13.0-devel/build/libtool-2.6.0/.x86_64-linux-gnu'
+[1;31mFAILURE: scripts/build libtool:host during make_host (default)[0m
+*********** FAILED COMMAND ***********
+make ${PKG_MAKE_OPTS_HOST}
+**************************************
+[1;31mFAILURE: scripts/build libtool:host has failed![0m
