@@ -10,6 +10,7 @@ PKG_URL="https://github.com/moby/moby/archive/docker-v${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain go:host nftables systemd"
 PKG_LONGDESC="Moby is an open-source project created by Docker to enable and accelerate software containerization."
 PKG_TOOLCHAIN="manual"
+PKG_NO_REFRESH_PATCHES="tools/moby/gen-patches.sh"
 
 # Git commit of the matching release https://github.com/moby/moby
 export PKG_GIT_COMMIT="ff8d90ae98c160c3c8751412edbf95ec557217c5"
