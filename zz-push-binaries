@@ -26,19 +26,16 @@ case "$OS_VERSION" in
     ADDON_BRANCH="master"
     GIT_BASE="master"
     LE_LABEL="LE 13.0"
-    SKIP_PICTUREIT=1
     ;;
   12.2)
     ADDON_BRANCH="Omega"
     GIT_BASE="libreelec-12.2"
     LE_LABEL="LE 12.2"
-    SKIP_PICTUREIT=0
     ;;
   12.0)
     ADDON_BRANCH="Omega"
     GIT_BASE="libreelec-12.0"
     LE_LABEL="LE 12.0"
-    SKIP_PICTUREIT=0
     ;;
   *)
     echo "ERROR: Unknown OS_VERSION '$OS_VERSION' - add a case for it"
@@ -66,12 +63,5 @@ else
   echo "$UPDATED_LINES" >> ${TMPMSG}
 fi
 
-# Always restore fluidsynth
-git co -- packages/mediacenter/kodi-binary-addons/audiodecoder.fluidsynth/package.mk
-
 git commit -F ${TMPMSG} .
 
-# Post-commit restores
-git co -- packages/mediacenter/kodi-binary-addons/audiodecoder.fluidsynth/package.mk
-[ "$SKIP_PICTUREIT" -eq 0 ] && \
-  git co -- packages/mediacenter/kodi-binary-addons/visualization.pictureit/package.mk
