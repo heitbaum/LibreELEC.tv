@@ -3,39 +3,18 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Copyright (C) 2020-present Team LibreELEC (https://libreelec.tv)
 
-# Bail if working tree has uncommitted modifications
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "ERROR: Working tree has modified files. Commit or stash them first."
-  git status --short
-  exit 1
-fi
-
-TMPDIR=$(mktemp -d)
-trap 'rm -rf "$TMPDIR"' EXIT
-
-TMPOUT="$TMPDIR/output"
-TMPMSG="$TMPDIR/commit-msg"
-
-# Derive version and branch settings from the repo itself
+# Derive the kodi addon branch from the repo's OS_VERSION
 OS_VERSION=$(grep 'OS_VERSION=' distributions/LibreELEC/version | tr -d ' "' | cut -d'=' -f2)
-MAJOR=$(echo "$OS_VERSION" | cut -d'.' -f1)
-MINOR=$(echo "$OS_VERSION" | cut -d'.' -f2)
 
 case "$OS_VERSION" in
   13.0)
     ADDON_BRANCH="master"
-    GIT_BASE="master"
-    LE_LABEL="LE 13.0"
     ;;
   12.2)
     ADDON_BRANCH="Omega"
-    GIT_BASE="libreelec-12.2"
-    LE_LABEL="LE 12.2"
     ;;
   12.0)
     ADDON_BRANCH="Omega"
-    GIT_BASE="libreelec-12.0"
-    LE_LABEL="LE 12.0"
     ;;
   *)
     echo "ERROR: Unknown OS_VERSION '$OS_VERSION' - add a case for it"
@@ -43,25 +22,7 @@ case "$OS_VERSION" in
     ;;
 esac
 
-echo "Running for OS_VERSION=$OS_VERSION  addon_branch=$ADDON_BRANCH  base=$GIT_BASE  label=$LE_LABEL"
+echo "Running for OS_VERSION=$OS_VERSION  addon_branch=$ADDON_BRANCH"
 
 PROJECT=Generic ARCH=x86_64 DEVICE=Generic-legacy \
-  tools/mkpkg/update_binary-addons -x "$ADDON_BRANCH" | tee ${TMPOUT}
-
-# Build commit message
-UPDATED_LINES=$(grep "^UPDATED " ${TMPOUT} | sed 's/^UPDATED /- /' | sed 's/ from /: update /')
-UPDATED_COUNT=$(echo "$UPDATED_LINES" | grep -c "^- " || true)
-
-if [ "$UPDATED_COUNT" -eq 0 ]; then
-  echo "Nothing updated, skipping commit."
-  exit 0
-elif [ "$UPDATED_COUNT" -eq 1 ]; then
-  echo "$UPDATED_LINES" | sed 's/^- //' > ${TMPMSG}
-else
-  echo "kodi-binary-addons: update to latest versions" > ${TMPMSG}
-  echo >> ${TMPMSG}
-  echo "$UPDATED_LINES" >> ${TMPMSG}
-fi
-
-git commit -F ${TMPMSG} .
-
+  tools/mkpkg/update_binary-addons --commit -x "$ADDON_BRANCH"
