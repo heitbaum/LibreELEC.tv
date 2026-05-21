@@ -66,6 +66,87 @@ function get_sha() {
   rm "$t"
 }
 
+# Unpack the newly downloaded source and verify that all patches apply cleanly.
+# Reports FAIL (non-zero patch exit) and WARN (fuzz or offset) to stderr.
+# Does not abort the update — informs the user of patches needing attention.
+function check_patches() {
+  local logfile check_rc
+  logfile=$(mktemp)
+
+  (
+    . config/options "${pkgname}" 2>/dev/null
+
+    [ -z "${PKG_URL}" ] && exit 0
+    [ -z "${PKG_SOURCE_NAME}" ] && exit 0
+    [ -n "${PKG_NO_REFRESH_PATCHES}" ] && exit 0
+
+    local check_parent check_dir patch_arch failures warnings
+    check_parent="${BUILD}/.patch-check"
+    check_dir="${check_parent}/${PKG_NAME}-${PKG_VERSION}"
+    rm -rf "${check_dir}"
+    mkdir -p "${check_parent}"
+
+    ${SCRIPTS}/extract "${PKG_NAME}" "${check_parent}" >/dev/null 2>&1 || exit 1
+    [ ! -d "${check_dir}" ] && exit 0
+
+    if [ "${TARGET_ARCH}" = "x86_64" ]; then
+      patch_arch="x86"
+    else
+      patch_arch="${TARGET_PATCH_ARCH:-${TARGET_ARCH}}"
+    fi
+
+    failures=0
+    warnings=0
+
+    for i in \
+        "${PKG_DIR}/patches/"*.patch \
+        "${PKG_DIR}/patches/${patch_arch}/"*.patch \
+        "${PKG_DIR}/patches/${PKG_VERSION}/"*.patch \
+        "${PKG_DIR}/patches/${PKG_VERSION}/${patch_arch}/"*.patch; do
+      [ -f "${i}" ] || continue
+      local pname out prc
+      pname="${i#${ROOT}/}"
+      if grep -qE '^GIT binary patch$|^rename from|^rename to' "${i}"; then
+        out=$(git apply --directory="${check_dir}" -p1 --whitespace=nowarn --unsafe-paths < "${i}" 2>&1)
+      else
+        out=$(patch -d "${check_dir}" -p1 --batch --no-backup-if-mismatch < "${i}" 2>&1)
+      fi
+      prc=$?
+      if [ ${prc} -ne 0 ]; then
+        printf "  FAIL  %s\n" "${pname}"
+        printf "%s\n" "${out}" | sed 's/^/        /'
+        failures=$((failures + 1))
+      elif printf "%s\n" "${out}" | grep -qE "succeeded at [0-9]+ (with fuzz|.*offset)"; then
+        printf "  WARN  %s\n" "${pname}"
+        printf "%s\n" "${out}" | grep -E "succeeded at" | sed 's/^/        /'
+        warnings=$((warnings + 1))
+      fi
+    done
+
+    rm -rf "${check_dir}"
+
+    [ ${failures} -gt 0 ] && exit 2
+    [ ${warnings} -gt 0 ] && exit 3
+    exit 0
+  ) >"${logfile}" 2>&1
+  check_rc=$?
+
+  case ${check_rc} in
+    0) ;;
+    1) printf "patch-check: extract failed for %s\n" "${pkgname}" >&2 ;;
+    2)
+      printf "patch-check: %s has FAILED patches:\n" "${pkgname}" >&2
+      cat "${logfile}" >&2
+      ;;
+    3)
+      printf "patch-check: %s patches have fuzz/offset (run: tools/refresh-patches %s):\n" "${pkgname}" "${pkgname}" >&2
+      cat "${logfile}" >&2
+      ;;
+  esac
+
+  rm -f "${logfile}"
+}
+
 # Load package-specific update helpers, if present.
 [ -f tools/update-functions/${pkgname} ] && . tools/update-functions/${pkgname}
 
@@ -128,6 +209,7 @@ for pkgmk in ${PACKAGE_LIST}; do
       die "Package version not found: ${pkgname}"
     }
   fi
+  check_patches
   fullhash=${pkgver}
   # Shorten commit-like versions for commit message.
   [ ${#pkgver} -eq 40 ] && pkgver="githash ${pkgver:0:7}"
