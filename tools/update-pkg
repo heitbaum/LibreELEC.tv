@@ -78,7 +78,11 @@ function check_patches() {
 
     [ -z "${PKG_URL}" ] && exit 0
     [ -z "${PKG_SOURCE_NAME}" ] && exit 0
-    [ -n "${PKG_NO_REFRESH_PATCHES}" ] && exit 0
+
+    if [ -n "${PKG_NO_REFRESH_PATCHES}" ]; then
+      printf "  NOTE  patches must be regenerated: run %s\n" "${PKG_NO_REFRESH_PATCHES}"
+      exit 3
+    fi
 
     local check_parent check_dir patch_arch failures warnings
     check_parent="${BUILD}/.patch-check"
@@ -125,8 +129,32 @@ function check_patches() {
 
     rm -rf "${check_dir}"
 
+    # Detect arch-specific patch directories not covered by this check (x86_64 only)
+    local untested_dirs="" dname dir
+    for dir in "${PKG_DIR}/patches/"*/; do
+      [ -d "${dir}" ] || continue
+      dname="${dir%/}"
+      dname="${dname##*/}"
+      [ "${dname}" = "${patch_arch}" ] && continue
+      [ "${dname}" = "${PKG_VERSION}" ] && continue
+      ls "${dir}"*.patch >/dev/null 2>&1 || continue
+      untested_dirs="${untested_dirs:+${untested_dirs}, }patches/${dname}"
+    done
+    if [ -d "${PKG_DIR}/patches/${PKG_VERSION}" ]; then
+      for dir in "${PKG_DIR}/patches/${PKG_VERSION}/"*/; do
+        [ -d "${dir}" ] || continue
+        dname="${dir%/}"
+        dname="${dname##*/}"
+        [ "${dname}" = "${patch_arch}" ] && continue
+        ls "${dir}"*.patch >/dev/null 2>&1 || continue
+        untested_dirs="${untested_dirs:+${untested_dirs}, }patches/${PKG_VERSION}/${dname}"
+      done
+    fi
+    [ -n "${untested_dirs}" ] && printf "  NOTE  untested arch-specific patches (verify manually): %s\n" "${untested_dirs}"
+
     [ ${failures} -gt 0 ] && exit 2
     [ ${warnings} -gt 0 ] && exit 3
+    [ -n "${untested_dirs}" ] && exit 3
     exit 0
   ) >"${logfile}" 2>&1
   check_rc=$?
@@ -139,7 +167,7 @@ function check_patches() {
       cat "${logfile}" >&2
       ;;
     3)
-      printf "patch-check: %s patches have fuzz/offset (run: tools/refresh-patches %s):\n" "${pkgname}" "${pkgname}" >&2
+      printf "patch-check: %s needs attention:\n" "${pkgname}" >&2
       cat "${logfile}" >&2
       ;;
   esac
