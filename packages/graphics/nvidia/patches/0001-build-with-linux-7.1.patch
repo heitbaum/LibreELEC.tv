@@ -1,0 +1,26 @@
+From b71d39fae53d78b9e9f416c4cd27952ca554ce55 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Thu, 21 May 2026 11:47:14 +0000
+Subject: [PATCH] build with linux 7.1
+
+---
+ kernel/common/inc/nv-linux.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/kernel/common/inc/nv-linux.h b/kernel/common/inc/nv-linux.h
+index 2b66530..d89ce05 100644
+--- a/kernel/common/inc/nv-linux.h
++++ b/kernel/common/inc/nv-linux.h
+@@ -1744,7 +1744,9 @@ typedef enum
+ #include <linux/reset.h>
+ #include <linux/dma-buf.h>
+ #include <linux/gpio.h>
++#ifdef CONFIG_OF_GPIO
+ #include <linux/of_gpio.h>
++#endif
+ #include <linux/of_device.h>
+ #include <linux/of_platform.h>
+ 
+-- 
+2.53.0
+
