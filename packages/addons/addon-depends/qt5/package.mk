@@ -4,7 +4,7 @@
 PKG_NAME="qt5"
 PKG_VERSION="5.15.18"
 PKG_SHA256="cea1fbabf02455f3f0e8eaa839f5d6f45cdb56b62c8a83af5c1d00ac05f912ea"
-PKG_LICENSE="GPL"
+PKG_LICENSE="LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only"
 PKG_SITE="https://qt-project.org"
 PKG_URL="https://download.qt.io/archive/qt/${PKG_VERSION%.*}/${PKG_VERSION}/single/qt-everywhere-opensource-src-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_TARGET="freetype libjpeg-turbo libpng openssl sqlite zlib"
