@@ -4,7 +4,7 @@
 PKG_NAME="libde265"
 PKG_VERSION="1.0.19"
 PKG_SHA256="bb19a0b485d2643e0eeb7e91f3ab32d1ad617e7c487dbedc91214ca3dbd8d7eb"
-PKG_LICENSE="LGPLv3"
+PKG_LICENSE="LGPL-3.0-or-later"
 PKG_SITE="http://www.libde265.org"
 PKG_URL="https://github.com/strukturag/libde265/releases/download/v${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain"
