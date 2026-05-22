@@ -5,7 +5,7 @@
 PKG_NAME="libcec"
 PKG_VERSION="c7c4c82dc171c49decfbfe5d2959706d3e2ea47c"
 PKG_SHA256="1ea208bd6218d70102fead867c6c7ef92d5d9f6f78e5010bc0ce41312d24ccfd"
-PKG_LICENSE="GPL"
+PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="http://libcec.pulse-eight.com/"
 PKG_URL="https://github.com/Pulse-Eight/libcec/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain systemd p8-platform swig:host"
