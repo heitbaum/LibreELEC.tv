@@ -5,7 +5,7 @@
 PKG_NAME="samba"
 PKG_VERSION="4.24.2"
 PKG_SHA256="ac24583f271a82ac324f7c6fad7327f65b591ad3492e1dccfee988e2c1c81dd1"
-PKG_LICENSE="GPLv3+"
+PKG_LICENSE="GPL-3.0-or-later"
 PKG_SITE="https://www.samba.org"
 PKG_URL="https://download.samba.org/pub/samba/stable/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="autotools:host gcc:host heimdal:host attr connman e2fsprogs gnutls libaio libunwind popt Python3 readline talloc wsdd2 zlib"
