@@ -1,4 +1,4 @@
-﻿(c) Copyright 1989-1992, Bitstream Inc., Cambridge, MA. 
+(c) Copyright 1989-1992, Bitstream Inc., Cambridge, MA. 
 
 You are hereby granted permission under all Bitstream propriety rights 
 to use, copy, modify, sublicense, sell, and redistribute the 4 Bitstream 
