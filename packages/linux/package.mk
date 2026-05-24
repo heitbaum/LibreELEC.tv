@@ -41,7 +41,7 @@ case "${LINUX}" in
     PKG_SHA256="1945afb22c9f4f7c78d971210f3bbb7deb09f5d8c41a38bfac772de25f6dcb22"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
     PKG_PATCH_DIRS="default"
-    PKG_VERSION="7.1-rc4"
+    PKG_VERSION="7.1-rc5"
     PKG_SHA256=""
     PKG_URL="https://git.kernel.org/torvalds/t/linux-${PKG_VERSION}.tar.gz"
     case ${DEVICE} in
