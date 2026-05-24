@@ -137,6 +137,13 @@ LICENCE_CONFIRMED = {
     # is the license for the generated output, not the template file (which is MIT
     # as part of the glad source code).  pyproject.toml: MIT :: OSI Approved.
     "glad": "MIT AND Apache-2.0",
+    # lib/ and programs/ prose: "both the BSD-style license (LICENSE) and the GPLv2
+    # (COPYING). You may select, at your option, one of the above-listed licenses."
+    # COPYING = bare GPL-2.0 deed (no 'or later' in operative terms); 87/89 lib/*.c|h
+    # and all 25 programs/*.c|h carry this dual-licence prose → GPL-2.0-only.
+    # contrib/linux-kernel/ carries SPDX GPL-2.0+ (kernel-submission requirement only,
+    # not part of the installed library or CLI) — that is what the SPDX scan finds.
+    "zstd": "GPL-2.0-only OR BSD-3-Clause",
 }
 
 # ── package.mk parsing ────────────────────────────────────────────────────────
