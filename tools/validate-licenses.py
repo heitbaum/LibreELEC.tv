@@ -928,31 +928,42 @@ def main():
         w.writeheader()
         w.writerows(rows)
 
-    def ct(prefix):
-        return sum(1 for r in rows if r["status"].startswith(prefix))
+    pct_counts = {}
+    incorrect  = 0
+    no_src     = 0
+    no_tb      = 0
+    errors     = 0
+    other      = 0
 
-    correct100 = ct("correct - 100%")
-    correctlt  = sum(1 for r in rows
-                     if re.match(r"correct - \d+%", r["status"])
-                     and not r["status"].startswith("correct - 100%"))
-    believe    = ct("believe correct")
-    incorrect  = ct("incorrect")
-    no_src     = ct("no-source")
-    no_tb      = ct("missing-tarball")
-    errors     = ct("tarball-error")
-    other      = (len(rows) - correct100 - correctlt - believe
-                  - incorrect - no_src - no_tb - errors)
+    for r in rows:
+        s = r["status"]
+        m = re.search(r'(\d+)%', s)
+        if m:
+            pct = int(m.group(1))
+            pct_counts[pct] = pct_counts.get(pct, 0) + 1
+        elif s.startswith("incorrect"):
+            incorrect += 1
+        elif s.startswith("no-source"):
+            no_src += 1
+        elif s == "missing-tarball":
+            no_tb += 1
+        elif s.startswith("tarball-error"):
+            errors += 1
+        else:
+            other += 1
 
     print(f"\n{'='*60}", file=sys.stderr)
-    print(f"Total rows:              {len(rows)}", file=sys.stderr)
-    print(f"correct - 100%:          {correct100}", file=sys.stderr)
-    print(f"correct - <100%:         {correctlt}", file=sys.stderr)
-    print(f"believe correct:         {believe}", file=sys.stderr)
-    print(f"incorrect:               {incorrect}", file=sys.stderr)
-    print(f"no-source:               {no_src}", file=sys.stderr)
-    print(f"missing-tarball:         {no_tb}", file=sys.stderr)
-    print(f"tarball-error:           {errors}", file=sys.stderr)
-    print(f"other:                   {other}", file=sys.stderr)
+    print(f"Total rows:  {len(rows)}", file=sys.stderr)
+    print(file=sys.stderr)
+    for pct in sorted(pct_counts.keys(), reverse=True):
+        print(f"  {pct:3d}%  {pct_counts[pct]:4d}", file=sys.stderr)
+    print(file=sys.stderr)
+    print(f"  incorrect        {incorrect:4d}", file=sys.stderr)
+    print(f"  no-source        {no_src:4d}", file=sys.stderr)
+    print(f"  missing-tarball  {no_tb:4d}", file=sys.stderr)
+    print(f"  tarball-error    {errors:4d}", file=sys.stderr)
+    if other:
+        print(f"  other            {other:4d}", file=sys.stderr)
     print(f"\nCSV written to: {out}", file=sys.stderr)
 
     bad = [r for r in rows if r["status"].startswith("incorrect")]
