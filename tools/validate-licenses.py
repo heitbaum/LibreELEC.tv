@@ -40,9 +40,8 @@ LICDIR  = REPO / "licenses"
 # Packages whose source tarball lives under a *different* package name in sources/.
 # The declared PKG_LICENSE is validated against that other package's source.
 SOURCE_FROM = {
-    # mesa-reusable is a pre-built binary extracted from mesa source;
-    # its declared licence is verified via mesa's source tree.
-    "mesa-reusable": "mesa",
+    # Add entries here for packages whose source tarball lives under a different
+    # package name in sources/.  Currently unused; kept for future use.
 }
 
 # Packages where SPDX-License-Identifier headers inside source files are
@@ -144,6 +143,14 @@ LICENCE_CONFIRMED = {
     # contrib/linux-kernel/ carries SPDX GPL-2.0+ (kernel-submission requirement only,
     # not part of the installed library or CLI) — that is what the SPDX scan finds.
     "zstd": "GPL-2.0-only OR BSD-3-Clause",
+    # PKG_VERSION=$(get_pkg_version moby) — dynamically resolved at build time to match
+    # moby's version; cannot be determined statically.  All cli source files carry
+    # consistent Apache-2.0 SPDX headers; LICENSE file is Apache-2.0.
+    "cli": "Apache-2.0",
+    # PKG_VERSION="${OS_VERSION}-${MESA_VERSION}" — contains shell variables, not a
+    # literal version.  mesa-reusable is a pre-built binary release built from the
+    # mesa source tree, which is MIT; its declared licence inherits that grant.
+    "mesa-reusable": "MIT",
 }
 
 # ── package.mk parsing ────────────────────────────────────────────────────────
@@ -194,7 +201,7 @@ def find_tarball(pkg_name, pkg_version, pkg_source_name=None, _source_from=SOURC
         return (p, True) if p.exists() else (None, False)
 
     # Standard pattern: pkgname-pkgver.ext
-    if pkg_version and not pkg_version.startswith("$("):
+    if pkg_version and "$" not in pkg_version:
         for ext in TARBALL_EXTS:
             p = pkg_dir / f"{pkg_name}-{pkg_version}{ext}"
             if p.exists():
