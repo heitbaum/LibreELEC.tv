@@ -73,6 +73,7 @@ function check_patches() {
   local logfile check_rc
   logfile=$(mktemp)
 
+  check_rc=0
   (
     . config/options "${pkgname}" 2>/dev/null
 
@@ -156,8 +157,7 @@ function check_patches() {
     [ ${warnings} -gt 0 ] && exit 3
     [ -n "${untested_dirs}" ] && exit 3
     exit 0
-  ) >"${logfile}" 2>&1
-  check_rc=$?
+  ) >"${logfile}" 2>&1 || check_rc=$?
 
   case ${check_rc} in
     0) ;;
