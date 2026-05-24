@@ -163,9 +163,23 @@ TARBALL_EXTS = [
     ".tar.lz", ".tar.lzma", ".tar.zst", ".zip",
 ]
 
-def find_tarball(pkg_name, pkg_version, _source_from=SOURCE_FROM):
+# Source-file extensions that are NOT tarballs and cannot be scanned for licence
+# headers.  Detected via the PKG_URL basename so no explicit per-package list is
+# needed.
+NON_TARBALL_EXTS = frozenset([
+    ".bin",   # binary self-extracting installer
+    ".run",   # self-extracting installer (NVIDIA, etc.)
+    ".c",     # single-file C source (nmon)
+    ".exe",   # Windows executable / self-extractor
+    ".sh",    # shell self-extractor
+    ".img",   # disk/firmware image
+])
+
+def find_tarball(pkg_name, pkg_version, pkg_source_name=None, _source_from=SOURCE_FROM):
     """Return (Path, version_matched) to the source tarball, or (None, False).
-    version_matched is True when the tarball filename contains PKG_VERSION.
+    Uses PKG_SOURCE_NAME as the exact filename when it is a literal (no shell
+    expansion).  Otherwise looks for sources/<pkg_name>/<pkg_name>-<pkg_ver>.<ext>.
+    No fallback to unversioned or version-mismatched tarballs.
     Redirects to another package's source directory when SOURCE_FROM applies."""
     if pkg_name in _source_from:
         pkg_dir = SOURCES / _source_from[pkg_name]
@@ -174,7 +188,12 @@ def find_tarball(pkg_name, pkg_version, _source_from=SOURCE_FROM):
     if not pkg_dir.is_dir():
         return None, False
 
-    # Exact name + version first
+    # Explicit source filename (literal PKG_SOURCE_NAME, no shell expansion)
+    if pkg_source_name and "$" not in pkg_source_name:
+        p = pkg_dir / pkg_source_name
+        return (p, True) if p.exists() else (None, False)
+
+    # Standard pattern: pkgname-pkgver.ext
     if pkg_version and not pkg_version.startswith("$("):
         for ext in TARBALL_EXTS:
             p = pkg_dir / f"{pkg_name}-{pkg_version}{ext}"
@@ -183,15 +202,8 @@ def find_tarball(pkg_name, pkg_version, _source_from=SOURCE_FROM):
         # Version-prefixed (e.g. commit hash appended to name)
         for f in sorted(pkg_dir.iterdir()):
             if (f.name.startswith(f"{pkg_name}-{pkg_version}")
-                    and f.suffix not in {".sha256", ".url", ".sig", ".asc"}
                     and not f.name.endswith((".sha256", ".url", ".sig", ".asc"))):
                 return f, True
-
-    # Any tarball present (fallback / dynamic version)
-    for f in sorted(pkg_dir.iterdir()):
-        if (any(f.name.endswith(ext) for ext in TARBALL_EXTS)
-                and not f.name.endswith((".sha256", ".url", ".sig", ".asc"))):
-            return f, False
 
     return None, False
 
@@ -784,7 +796,7 @@ def classify(pkg_name, pkg_license, license_texts, spdx_headers):
 # ── No-source detection ───────────────────────────────────────────────────────
 
 def detect_no_source(vals, mk_text):
-    """Return a reason string if the package has no downloadable source, else None."""
+    """Return a reason string if the package has no scannable source, else None."""
     pkg_url = vals.get("PKG_URL", "").strip()
     if not pkg_url:
         if re.search(r"unpack\(\)|PKG_DEPENDS_UNPACK", mk_text):
@@ -794,6 +806,9 @@ def detect_no_source(vals, mk_text):
         return "meta-package (no PKG_URL)"
     if pkg_url.startswith("$(") or pkg_url.startswith("${"):
         return None
+    url_ext = Path(pkg_url.split("/")[-1]).suffix.lower()
+    if url_ext in NON_TARBALL_EXTS:
+        return f"non-tarball source ({url_ext})"
     return None
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -848,7 +863,8 @@ def main():
                              evidence="", pkg_path=rel_path))
             continue
 
-        tb, ver_matched = find_tarball(pkg_name, pkg_ver)
+        pkg_src_name = vals.get("PKG_SOURCE_NAME", "")
+        tb, ver_matched = find_tarball(pkg_name, pkg_ver, pkg_source_name=pkg_src_name)
         if tb is None:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
                              status="missing-tarball",
@@ -903,7 +919,7 @@ def main():
     print(f"correct - <100%:         {correctlt}", file=sys.stderr)
     print(f"believe correct:         {believe}", file=sys.stderr)
     print(f"incorrect:               {incorrect}", file=sys.stderr)
-    print(f"no-source (meta/virtual):{no_src}", file=sys.stderr)
+    print(f"no-source:               {no_src}", file=sys.stderr)
     print(f"missing-tarball:         {no_tb}", file=sys.stderr)
     print(f"tarball-error:           {errors}", file=sys.stderr)
     print(f"other:                   {other}", file=sys.stderr)
