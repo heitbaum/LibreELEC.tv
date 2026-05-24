@@ -654,20 +654,22 @@ def match_licref_in_tarball(licref_id, license_texts):
 # ── Main classification logic ─────────────────────────────────────────────────
 
 def classify(pkg_name, pkg_license, license_texts, spdx_headers):
-    """Returns (status_string, evidence_string)."""
+    """Returns (status, reason, evidence).
+    status   — classification + confidence (e.g. 'correct - 100%', 'incorrect')
+    reason   — short explanation shown in -v column 3
+    evidence — tarball-derived detail shown in -vv column 4
+    """
     declared = parse_spdx_components(pkg_license)
 
     # ── LICENCE_CONFIRMED short-circuit ──────────────────────────────────
-    # For packages where automated evidence (SPDX headers + COPYING text) is
-    # both unreliable, the correct licence was established by reading the
-    # version-grant text in source files directly.
     if pkg_name in LICENCE_CONFIRMED:
         confirmed = LICENCE_CONFIRMED[pkg_name]
         if normalise_id(normalise_spdx_expr(pkg_license)) == normalise_id(normalise_spdx_expr(confirmed)):
             return ("correct - 100%",
-                    f"manually confirmed from source grant text: {confirmed} "
-                    f"(see LICENCE_CONFIRMED table)")
-        return (f"incorrect - declared '{pkg_license}', confirmed '{confirmed}'",
+                    f"manually confirmed: {confirmed}",
+                    "see LICENCE_CONFIRMED table")
+        return ("incorrect",
+                f"declared '{pkg_license}', confirmed '{confirmed}'",
                 "see LICENCE_CONFIRMED table")
 
     if pkg_name in SKIP_SPDX_HEADERS:
@@ -686,27 +688,28 @@ def classify(pkg_name, pkg_license, license_texts, spdx_headers):
             if d_components == h_components:
                 pct = h_conf
                 label = "correct - 100%" if pct >= 99 else f"correct - {pct}%"
-                return label, f"SPDX headers match exactly: {h_expr} | {h_note}"
+                return label, f"SPDX: {h_expr}", h_note
 
             if d_components.issubset(h_components):
                 diff = h_components - d_components
-                return (f"believe correct - {h_conf - 5}% - "
+                return (f"correct - {h_conf - 5}%",
                         f"declared is subset of SPDX headers (extra: {diff})",
                         f"declared={pkg_license}; headers={h_expr}")
 
             if h_components.issubset(d_components):
                 missing = d_components - h_components
-                return (f"believe correct - {h_conf - 10}% - "
-                        f"SPDX headers only confirmed {h_components}; "
-                        f"declared also has {missing} (may be in unscanned files)",
+                return (f"correct - {h_conf - 10}%",
+                        f"SPDX headers only confirmed {h_components}; declared also has {missing}",
                         h_note)
 
-            return (f"incorrect - SPDX headers say '{h_expr}', declared '{pkg_license}'",
+            return ("incorrect",
+                    f"SPDX headers say '{h_expr}', declared '{pkg_license}'",
                     h_note)
 
     if not license_texts:
-        return ("believe correct - 40% - no license files or SPDX headers found in tarball",
-                "tarball scanned; nothing recognisable found")
+        return ("correct - 40%",
+                "no license files or SPDX headers found in tarball",
+                "")
 
     all_found = []
     for fname, text in sorted(license_texts.items()):
@@ -714,7 +717,8 @@ def classify(pkg_name, pkg_license, license_texts, spdx_headers):
             all_found.append((spdx_id, conf, note, fname))
 
     if not all_found:
-        return (f"believe correct - 45% - license files present but text unrecognised",
+        return (f"correct - 45%",
+                "license files present but text unrecognised",
                 f"files checked: {list(license_texts.keys())}")
 
     found_ids = {normalise_id(x[0]): x for x in all_found}
@@ -789,8 +793,7 @@ def classify(pkg_name, pkg_license, license_texts, spdx_headers):
 
     if mismatches:
         details = "; ".join(f"{r[0]}: {r[3]}" for r in mismatches)
-        return (f"incorrect - {details}",
-                f"files: {list(license_texts.keys())[:5]}")
+        return ("incorrect", details, f"files: {list(license_texts.keys())[:5]}")
 
     evidence = "; ".join(f"{r[0]}: {r[3]}" for r in component_results)
     evidence = evidence[:300]
@@ -799,22 +802,21 @@ def classify(pkg_name, pkg_license, license_texts, spdx_headers):
         missing = ", ".join(r[0] for r in not_founds)
         min_c   = min((r[2] for r in matches), default=50)
         adj     = max(45, min_c - 20)
-        return (f"believe correct - {adj}% - no text match for: {missing}", evidence)
+        return (f"correct - {adj}%", f"no text match for: {missing}", evidence)
 
     if unverified:
         uvids = ", ".join(r[0] for r in unverified)
         min_c = min(r[2] for r in component_results)
-        return (f"believe correct - {min_c}% - LicenseRef unverified in tarball: {uvids}",
-                evidence)
+        return (f"correct - {min_c}%", f"LicenseRef unverified in tarball: {uvids}", evidence)
 
     min_c = min(r[2] for r in component_results)
+    first = evidence.split("; ")[0]
     if min_c >= 99:
-        return "correct - 100%", evidence
+        return "correct - 100%", first, evidence
     elif min_c >= 90:
-        return f"correct - {min_c}%", evidence
+        return f"correct - {min_c}%", first, evidence
     else:
-        return (f"believe correct - {min_c}% - text analysis only, no SPDX headers",
-                evidence)
+        return (f"correct - {min_c}%", "text analysis only, no SPDX headers", evidence)
 
 # ── No-source detection ───────────────────────────────────────────────────────
 
@@ -852,8 +854,9 @@ def main():
     )
     parser.add_argument(
         "-v", "--verbose",
-        action="store_true",
-        help="Print full results table to stderr after the summary",
+        action="count",
+        default=0,
+        help="Print full results table (-v: label/name/status; -vv: adds evidence)",
     )
     args = parser.parse_args()
 
@@ -893,14 +896,13 @@ def main():
                     normalise_spdx_expr(confirmed)):
                 rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
                                  status="correct - 100%",
-                                 evidence=(f"manually confirmed from source grant "
-                                           f"text: {confirmed} (see LICENCE_CONFIRMED "
-                                           f"table)"),
+                                 reason=f"manually confirmed: {confirmed}",
+                                 evidence="see LICENCE_CONFIRMED table",
                                  pkg_path=rel_path))
             else:
                 rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
-                                 status=(f"incorrect - declared '{pkg_lic}', "
-                                         f"confirmed '{confirmed}'"),
+                                 status="incorrect",
+                                 reason=f"declared '{pkg_lic}', confirmed '{confirmed}'",
                                  evidence="see LICENCE_CONFIRMED table",
                                  pkg_path=rel_path))
             continue
@@ -910,7 +912,7 @@ def main():
         no_src = detect_no_source(vals, mk_text)
         if no_src:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
-                             status=f"no-source - {no_src}",
+                             status="no-source", reason=no_src,
                              evidence="", pkg_path=rel_path))
             continue
 
@@ -919,8 +921,8 @@ def main():
         if tb is None:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
                              status="missing-tarball",
-                             evidence=f"not found in {SOURCES / pkg_name}/",
-                             pkg_path=rel_path))
+                             reason=f"not found in {SOURCES / pkg_name}/",
+                             evidence="", pkg_path=rel_path))
             continue
 
         tb_note = tb.name if ver_matched else f"FALLBACK:{tb.name}"
@@ -928,14 +930,14 @@ def main():
         lic_texts, spdx_hdrs, err = read_tarball(tb)
         if err:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
-                             status=f"tarball-error - {err}",
+                             status="tarball-error", reason=err,
                              evidence=tb_note, pkg_path=rel_path))
             continue
 
-        status, evidence = classify(pkg_name, pkg_lic, lic_texts, spdx_hdrs)
+        status, reason, evidence = classify(pkg_name, pkg_lic, lic_texts, spdx_hdrs)
         rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
-                         status=status,
-                         evidence=f"[{tb_note}] {evidence}"[:300],
+                         status=status, reason=reason,
+                         evidence=f"[{tb_note}] {evidence}"[:300] if evidence else "",
                          pkg_path=rel_path))
 
         n += 1
@@ -944,7 +946,7 @@ def main():
 
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(
-            f, fieldnames=["pkg_name", "pkg_license", "status", "evidence", "pkg_path"]
+            f, fieldnames=["pkg_name", "pkg_license", "status", "reason", "evidence", "pkg_path"]
         )
         w.writeheader()
         w.writerows(rows)
@@ -994,19 +996,19 @@ def main():
         print(_line("- other",        other),     file=sys.stderr)
     print(f"\nCSV written to: {out}", file=sys.stderr)
 
-    bad = [r for r in rows if r["status"].startswith("incorrect")]
+    bad = [r for r in rows if r["status"] == "incorrect"]
     if bad:
         print(f"\n{'='*60}", file=sys.stderr)
         print(f"INCORRECT ({len(bad)}):", file=sys.stderr)
         for r in bad:
-            print(f"  {r['pkg_name']}: {r['status']}", file=sys.stderr)
+            print(f"  {r['pkg_name']}: {r['reason']}", file=sys.stderr)
 
-    tb_errors = [r for r in rows if r["status"].startswith("tarball-error")]
+    tb_errors = [r for r in rows if r["status"] == "tarball-error"]
     if tb_errors:
         print(f"\n{'='*60}", file=sys.stderr)
         print(f"TARBALL ERRORS ({len(tb_errors)}):", file=sys.stderr)
         for r in tb_errors:
-            print(f"  {r['pkg_name']}: {r['status']} (file: {r['evidence']})",
+            print(f"  {r['pkg_name']}: {r['reason']} (file: {r['evidence']})",
                   file=sys.stderr)
 
     missing = [r for r in rows if r["status"] == "missing-tarball"]
@@ -1038,17 +1040,24 @@ def main():
             if status.startswith("tarball-error"): return " err"
             return "   ?"
 
-        name_w = max(len(r["pkg_name"])    for r in rows)
-        lic_w  = max(len(r["pkg_license"]) for r in rows)
+        name_w   = max(len(r["pkg_name"]) for r in rows)
+        reason_w = min(max(len(r["reason"]) for r in rows), 60) if args.verbose >= 2 else 0
 
         print(f"\n{'='*60}", file=sys.stderr)
         print("Full results (confidence desc, then package name):", file=sys.stderr)
         print(file=sys.stderr)
         for r in sorted(rows, key=_row_sort_key):
-            print(f"  {_label(r['status'])}  "
-                  f"{r['pkg_name']:<{name_w}}  "
-                  f"{r['pkg_license']:<{lic_w}}",
-                  file=sys.stderr)
+            if args.verbose >= 2:
+                print(f"  {_label(r['status'])}  "
+                      f"{r['pkg_name']:<{name_w}}  "
+                      f"{r['reason'][:reason_w]:<{reason_w}}  "
+                      f"{r['evidence'][:80]}",
+                      file=sys.stderr)
+            else:
+                print(f"  {_label(r['status'])}  "
+                      f"{r['pkg_name']:<{name_w}}  "
+                      f"{r['reason']}",
+                      file=sys.stderr)
 
 
 if __name__ == "__main__":
