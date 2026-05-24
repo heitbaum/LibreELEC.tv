@@ -861,6 +861,29 @@ def main():
         if args.package and pkg_name != args.package:
             continue
 
+        # LICENCE_CONFIRMED short-circuit — skip tarball lookup entirely.
+        # classify() also checks this table, but it is never reached when
+        # find_tarball() returns None or read_tarball() errors.  Checking
+        # here avoids spurious missing-tarball / tarball-error rows for
+        # packages whose version is dynamic or whose source is not a tarball.
+        if pkg_name in LICENCE_CONFIRMED:
+            confirmed = LICENCE_CONFIRMED[pkg_name]
+            if normalise_id(normalise_spdx_expr(pkg_lic)) == normalise_id(
+                    normalise_spdx_expr(confirmed)):
+                rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
+                                 status="correct - 100%",
+                                 evidence=(f"manually confirmed from source grant "
+                                           f"text: {confirmed} (see LICENCE_CONFIRMED "
+                                           f"table)"),
+                                 pkg_path=rel_path))
+            else:
+                rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
+                                 status=(f"incorrect - declared '{pkg_lic}', "
+                                         f"confirmed '{confirmed}'"),
+                                 evidence="see LICENCE_CONFIRMED table",
+                                 pkg_path=rel_path))
+            continue
+
         mk_text = mk_path.read_text(errors="replace")
 
         no_src = detect_no_source(vals, mk_text)
