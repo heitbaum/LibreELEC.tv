@@ -157,35 +157,36 @@ TARBALL_EXTS = [
 ]
 
 def find_tarball(pkg_name, pkg_version, _source_from=SOURCE_FROM):
-    """Return Path to the source tarball, or None.
+    """Return (Path, version_matched) to the source tarball, or (None, False).
+    version_matched is True when the tarball filename contains PKG_VERSION.
     Redirects to another package's source directory when SOURCE_FROM applies."""
     if pkg_name in _source_from:
         pkg_dir = SOURCES / _source_from[pkg_name]
     else:
         pkg_dir = SOURCES / pkg_name
     if not pkg_dir.is_dir():
-        return None
+        return None, False
 
     # Exact name + version first
     if pkg_version and not pkg_version.startswith("$("):
         for ext in TARBALL_EXTS:
             p = pkg_dir / f"{pkg_name}-{pkg_version}{ext}"
             if p.exists():
-                return p
-        # Version-prefixed (e.g. commit hash appended)
+                return p, True
+        # Version-prefixed (e.g. commit hash appended to name)
         for f in sorted(pkg_dir.iterdir()):
             if (f.name.startswith(f"{pkg_name}-{pkg_version}")
                     and f.suffix not in {".sha256", ".url", ".sig", ".asc"}
                     and not f.name.endswith((".sha256", ".url", ".sig", ".asc"))):
-                return f
+                return f, True
 
     # Any tarball present (fallback / dynamic version)
     for f in sorted(pkg_dir.iterdir()):
         if (any(f.name.endswith(ext) for ext in TARBALL_EXTS)
                 and not f.name.endswith((".sha256", ".url", ".sig", ".asc"))):
-            return f
+            return f, False
 
-    return None
+    return None, False
 
 # ── tarball reading ───────────────────────────────────────────────────────────
 
@@ -795,6 +796,11 @@ def main():
         description="Validate PKG_LICENSE fields against source tarballs."
     )
     parser.add_argument(
+        "package",
+        nargs="?",
+        help="Process only this package name (optional; processes all if omitted)",
+    )
+    parser.add_argument(
         "-o", "--output",
         default="license_validation.csv",
         help="CSV output file (default: license_validation.csv in current directory)",
@@ -805,7 +811,10 @@ def main():
 
     mk_files = sorted(REPO.glob("packages/**/package.mk"))
     total    = len(mk_files)
-    print(f"Scanning {total} package.mk files...", file=sys.stderr)
+    if args.package:
+        print(f"Scanning for package '{args.package}'...", file=sys.stderr)
+    else:
+        print(f"Scanning {total} package.mk files...", file=sys.stderr)
 
     rows = []
     n    = 0
@@ -820,6 +829,9 @@ def main():
         if not pkg_name or not pkg_lic:
             continue
 
+        if args.package and pkg_name != args.package:
+            continue
+
         mk_text = mk_path.read_text(errors="replace")
 
         no_src = detect_no_source(vals, mk_text)
@@ -829,7 +841,7 @@ def main():
                              evidence="", pkg_path=rel_path))
             continue
 
-        tb = find_tarball(pkg_name, pkg_ver)
+        tb, ver_matched = find_tarball(pkg_name, pkg_ver)
         if tb is None:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
                              status="missing-tarball",
@@ -837,16 +849,19 @@ def main():
                              pkg_path=rel_path))
             continue
 
+        tb_note = tb.name if ver_matched else f"FALLBACK:{tb.name}"
+
         lic_texts, spdx_hdrs, err = read_tarball(tb)
         if err:
             rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
                              status=f"tarball-error - {err}",
-                             evidence=str(tb.name), pkg_path=rel_path))
+                             evidence=tb_note, pkg_path=rel_path))
             continue
 
         status, evidence = classify(pkg_name, pkg_lic, lic_texts, spdx_hdrs)
         rows.append(dict(pkg_name=pkg_name, pkg_license=pkg_lic,
-                         status=status, evidence=evidence[:300],
+                         status=status,
+                         evidence=f"[{tb_note}] {evidence}"[:300],
                          pkg_path=rel_path))
 
         n += 1
@@ -893,6 +908,14 @@ def main():
         print(f"INCORRECT ({len(bad)}):", file=sys.stderr)
         for r in bad:
             print(f"  {r['pkg_name']}: {r['status']}", file=sys.stderr)
+
+    tb_errors = [r for r in rows if r["status"].startswith("tarball-error")]
+    if tb_errors:
+        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"TARBALL ERRORS ({len(tb_errors)}):", file=sys.stderr)
+        for r in tb_errors:
+            print(f"  {r['pkg_name']}: {r['status']} (file: {r['evidence']})",
+                  file=sys.stderr)
 
     missing = [r for r in rows if r["status"] == "missing-tarball"]
     if missing:
