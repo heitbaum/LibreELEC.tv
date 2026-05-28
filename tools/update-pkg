@@ -254,10 +254,10 @@ for pkgmk in ${PACKAGE_LIST}; do
 
   [[ $(type -t custom_post_script) == function ]] && custom_post_script
 
-  # For addons, bump PKG_REV after the version change.
+  # For addons, update PKG_REV after the version change.
   isaddon=$(grep "^PKG_REV=" "${pkgmk}" | tr -d '"')
   if [[ ! -z "${isaddon}" ]]; then
-    # Bump addon revision when PKG_REV exists.
+    # Update addon revision when PKG_REV exists.
     export ${isaddon}
     new_pkg_rev=$(($PKG_REV + 1))
     sed -e "s|^PKG_REV=.*|PKG_REV=\"${new_pkg_rev}\"|" -i "${pkgmk}"
