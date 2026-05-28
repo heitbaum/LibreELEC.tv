@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
+
+# Scan a commit range for addon-depends updates and bump PKG_REV of each
+# dependent addon package (once per addon, with a body listing all triggers).
+#
+# Usage: tools/bump-addon-revs [commit-range]
+#   commit-range defaults to all commits on the current branch not yet on master.
+#
+# Example: tools/bump-addon-revs master..HEAD
+
+set -euo pipefail
+
+RANGE="${1:-$(git merge-base HEAD master)..HEAD}"
+
+declare -A dep_msgs   # dep_pkgname -> newline-separated commit subjects
+declare -A dep_pkgmk  # dep_pkgname -> path to its package.mk
+
+while IFS= read -r commit; do
+  subject=$(git log --format="%s" -1 "${commit}")
+
+  while IFS= read -r file; do
+    [[ "${file}" == packages/addons/addon-depends/* ]] || continue
+    [[ "${file}" == */package.mk ]] || continue
+
+    # Only act on commits that change PKG_VERSION= (not SPDX fixes, patches, etc.).
+    git diff "${commit}^" "${commit}" -- "${file}" 2>/dev/null \
+      | grep -q "^[-+]PKG_VERSION=" || continue
+
+    pkgname=$(basename "$(dirname "${file}")")
+
+    while IFS= read -r d_pkgmk; do
+      [ -z "${d_pkgmk}" ] && continue
+      d_pkgname=$(basename "$(dirname "${d_pkgmk}")")
+      d_rev=$(grep "^PKG_REV=" "${d_pkgmk}" | sed 's/PKG_REV="//;s/"//')
+      [ -z "${d_rev}" ] && continue
+      # Skip if this subject is already recorded for this dependent.
+      [[ "${dep_msgs[${d_pkgname}]:-}" == *"${subject}"* ]] && continue
+      dep_msgs[${d_pkgname}]+="${subject}"$'\n'
+      dep_pkgmk[${d_pkgname}]="${d_pkgmk}"
+    done < <(find packages/addons -type f -name "package.mk" \
+      -not -path "packages/addons/addon-depends/*" \
+      | xargs grep -wl "${pkgname}" 2>/dev/null)
+  done < <(git diff-tree --no-commit-id -r --name-only "${commit}")
+done < <(git log --reverse --format="%H" "${RANGE}")
+
+if [ ${#dep_msgs[@]} -eq 0 ]; then
+  echo "No addon-depends updates found in range: ${RANGE}"
+  exit 0
+fi
+
+for d_pkgname in "${!dep_msgs[@]}"; do
+  d_pkgmk_path="${dep_pkgmk[${d_pkgname}]}"
+
+  # Skip if the dependent addon was already bumped in this range.
+  if git log --quiet --format="%H" "${RANGE}" -- "${d_pkgmk_path}" | grep -q .; then
+    echo "skip ${d_pkgname}: already updated in range"
+    continue
+  fi
+
+  old_rev=$(grep "^PKG_REV=" "${d_pkgmk_path}" | sed 's/PKG_REV="//;s/"//')
+  new_rev=$(( old_rev + 1 ))
+  sed -e "s|^PKG_REV=.*|PKG_REV=\"${new_rev}\"|" -i "${d_pkgmk_path}"
+
+  commit_msg="${d_pkgname}: bump to addon (${new_rev})"$'\n'
+  while IFS= read -r line; do
+    [ -z "${line}" ] && continue
+    commit_msg+=$'\n'"- ${line}"
+  done <<< "${dep_msgs[${d_pkgname}]}"
+
+  printf "%s" "${commit_msg}" | git commit -F - "${d_pkgmk_path}"
+  echo "bumped ${d_pkgname} to addon (${new_rev})"
+done
