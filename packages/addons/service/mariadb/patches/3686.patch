@@ -1,0 +1,188 @@
+From 67dd37e25ba846874069dffcb50d5a533ba321cb Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 9 Dec 2024 18:02:40 +1100
+Subject: [PATCH 1/3] mysys: use void for sig_handler returns
+
+fixes:
+    ../mysys/stacktrace.c: In function 'default_handle_fatal_signal':
+    ../mysys/stacktrace.c:53:3: error: 'return' with no value, in function
+    returning non-void [-Wreturn-mismatch]
+       53 |   return;
+          |   ^~~~~~
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ mysys/stacktrace.c | 2 +-
+ mysys/thr_timer.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/mysys/stacktrace.c b/mysys/stacktrace.c
+index f203bba4d8d9a..a071e25779621 100644
+--- a/mysys/stacktrace.c
++++ b/mysys/stacktrace.c
+@@ -41,7 +41,7 @@
+    Default handler for printing stacktrace
+ */
+ 
+-static sig_handler default_handle_fatal_signal(int sig)
++static void default_handle_fatal_signal(int sig)
+ {
+   my_safe_printf_stderr("%s: Got signal %d. Attempting backtrace\n",
+                         my_progname_short, sig);
+diff --git a/mysys/thr_timer.c b/mysys/thr_timer.c
+index a7de5a1905ea2..c0e1657bc0c7e 100644
+--- a/mysys/thr_timer.c
++++ b/mysys/thr_timer.c
+@@ -244,7 +244,7 @@ void thr_timer_end(thr_timer_t *timer_data)
+   Come here when some timer in queue is due.
+ */
+ 
+-static sig_handler process_timers(struct timespec *now)
++static void process_timers(struct timespec *now)
+ {
+   thr_timer_t *timer_data;
+   DBUG_ENTER("process_timers");
+
+From 13133b463d3b3ca04b108c6cc75295145a1d3396 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 9 Dec 2024 08:10:15 +0000
+Subject: [PATCH 2/3] client: use void for sig_handler returns
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ client/mysql.cc      | 12 ++++++------
+ client/mysqladmin.cc |  4 ++--
+ client/mysqltest.cc  |  4 ++--
+ 3 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/client/mysql.cc b/client/mysql.cc
+index 88cce350471c2..150662efa22c8 100644
+--- a/client/mysql.cc
++++ b/client/mysql.cc
+@@ -1168,10 +1168,10 @@ static void print_warnings(void);
+ static void end_timer(ulonglong start_time, char *buff);
+ static void nice_time(double sec, char *buff, size_t buff_size,
+                       bool part_second);
+-extern "C" sig_handler mysql_end(int sig) __attribute__ ((noreturn));
+-extern "C" sig_handler handle_sigint(int sig);
++extern "C" void mysql_end(int sig) __attribute__ ((noreturn));
++extern "C" void handle_sigint(int sig);
+ #if defined(HAVE_TERMIOS_H) && defined(GWINSZ_IN_SYS_IOCTL)
+-static sig_handler window_resize(int sig);
++static void window_resize(int sig);
+ #endif
+ 
+ static void end_in_sig_handler(int sig);
+@@ -1409,7 +1409,7 @@ int main(int argc,char *argv[])
+ #endif
+ }
+ 
+-sig_handler mysql_end(int sig)
++void mysql_end(int sig)
+ {
+ #ifndef _WIN32
+   /*
+@@ -1594,7 +1594,7 @@ bool kill_query(const char *reason)
+   If 'source' is executed, abort source command
+   no query in process, regenerate prompt.
+ */
+-sig_handler handle_sigint(int sig)
++void handle_sigint(int sig)
+ {
+   /*
+      On Unix only, if no query is being executed just clear the prompt,
+@@ -1634,7 +1634,7 @@ sig_handler handle_sigint(int sig)
+ 
+ 
+ #if defined(HAVE_TERMIOS_H) && defined(GWINSZ_IN_SYS_IOCTL)
+-sig_handler window_resize(int sig)
++void window_resize(int sig)
+ {
+   struct winsize window_size;
+ 
+diff --git a/client/mysqladmin.cc b/client/mysqladmin.cc
+index 304e26afa3b4f..17fedada7211c 100644
+--- a/client/mysqladmin.cc
++++ b/client/mysqladmin.cc
+@@ -62,7 +62,7 @@ static my_bool sql_connect(MYSQL *mysql, uint wait);
+ static int execute_commands(MYSQL *mysql,int argc, char **argv);
+ static char **mask_password(int argc, char ***argv);
+ static int drop_db(MYSQL *mysql,const char *db);
+-extern "C" sig_handler endprog(int signal_number);
++extern "C" void endprog(int signal_number);
+ static void nice_time(ulong sec,char *buff);
+ static void print_header(MYSQL_RES *result);
+ static void print_top(MYSQL_RES *result);
+@@ -513,7 +513,7 @@ int main(int argc,char *argv[])
+ }
+ 
+ 
+-sig_handler endprog(int signal_number __attribute__((unused)))
++void endprog(int signal_number __attribute__((unused)))
+ {
+   interrupted=1;
+ }
+diff --git a/client/mysqltest.cc b/client/mysqltest.cc
+index c01f996677cc1..91f7f7b218956 100644
+--- a/client/mysqltest.cc
++++ b/client/mysqltest.cc
+@@ -98,7 +98,7 @@ static int setenv(const char *name, const char *value, int overwrite);
+ #endif
+ 
+ C_MODE_START
+-static sig_handler signal_handler(int sig);
++static void signal_handler(int sig);
+ static my_bool get_one_option(const struct my_option *, const char *,
+                               const char *);
+ C_MODE_END
+@@ -10077,7 +10077,7 @@ static void dump_backtrace(void)
+ 
+ #endif
+ 
+-static sig_handler signal_handler(int sig)
++static void signal_handler(int sig)
+ {
+   fprintf(stderr, "mysqltest got " SIGNAL_FMT "\n", sig);
+   dump_backtrace();
+
+From 4d0ec966e35a7843393105d6d1483cd82c0779a1 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 9 Dec 2024 08:10:43 +0000
+Subject: [PATCH 3/3] sql: use void for sig_handler returns
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ sql/mysqld.cc | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/sql/mysqld.cc b/sql/mysqld.cc
+index 28f02f7162fdd..cf1cfc4a58ba3 100644
+--- a/sql/mysqld.cc
++++ b/sql/mysqld.cc
+@@ -271,7 +271,7 @@ inline void setup_fpu()
+ extern "C" int gethostname(char *name, int namelen);
+ #endif
+ 
+-extern "C" sig_handler handle_fatal_signal(int sig);
++extern "C" void handle_fatal_signal(int sig);
+ 
+ #if defined(__linux__)
+ #define ENABLE_TEMP_POOL 1
+@@ -1868,7 +1868,7 @@ static void close_connections(void)
+ #endif /*EMBEDDED_LIBRARY*/
+ 
+ 
+-extern "C" sig_handler print_signal_warning(int sig)
++extern "C" void print_signal_warning(int sig)
+ {
+   if (global_system_variables.log_warnings)
+     sql_print_warning("Got signal %d from thread %u", sig,
+@@ -2836,7 +2836,7 @@ void close_connection(THD *thd, uint sql_errno)
+ 
+ /** Called when mysqld is aborted with ^C */
+ /* ARGSUSED */
+-extern "C" sig_handler end_mysqld_signal(int sig __attribute__((unused)))
++extern "C" void end_mysqld_signal(int sig __attribute__((unused)))
+ {
+   DBUG_ENTER("end_mysqld_signal");
+   /* Don't kill if signal thread is not running */
