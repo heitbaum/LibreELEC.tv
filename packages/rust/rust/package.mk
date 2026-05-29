@@ -22,16 +22,13 @@ pre_configure_host() {
     cd ${PKG_BUILD}
 
     # Download the crates
-    curl -L https://crates.io/api/v1/crates/curl-sys/0.4.87+curl-8.19.0/download -o curl-sys-0.4.87+curl-8.19.0.crate
-    curl -L https://crates.io/api/v1/crates/openssl-sys/0.9.114/download -o openssl-sys-0.9.114.crate
+    curl -L -H "User-Agent: LibreELEC-build/1.0 (builder@libreelec.tv)" \
+      https://crates.io/api/v1/crates/openssl-sys/0.9.114/download -o openssl-sys-0.9.114.crate
 
     # Extract and replace in vendor
-    tar -xzf curl-sys-0.4.87+curl-8.19.0.crate -C vendor/
     tar -xzf openssl-sys-0.9.114.crate -C vendor/
 
     # Create checksum files
-    echo '{"files":{},"package":"61a460380f0ef783703dcbe909107f39c162adeac050d73c850055118b5b6327"}' \
-      > vendor/curl-sys-0.4.87+curl-8.19.0/.cargo-checksum.json
     echo '{"files":{},"package":"13ce1245cd07fcc4cfdb438f7507b0c7e4f3849a69fd84d52374c66d83741bb6"}' \
       > vendor/openssl-sys-0.9.114/.cargo-checksum.json
   )
