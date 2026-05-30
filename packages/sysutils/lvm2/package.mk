@@ -7,8 +7,8 @@ PKG_SHA256="60c9bb5c0a109f20267bb40ba50c00c84a110fc14c129f21afb5566929bf5645"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2 LGPL2.1"
 PKG_SITE="https://sourceware.org/lvm2"
-PKG_URL="http://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.$PKG_VERSION.tgz"
-PKG_SOURCE_DIR="LVM2.$PKG_VERSION"
+PKG_URL="http://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.${PKG_VERSION}.tgz"
+PKG_SOURCE_DIR="LVM2.${PKG_VERSION}"
 PKG_DEPENDS_TARGET="toolchain systemd readline util-linux libaio"
 PKG_SECTION="sysutils"
 PKG_SHORTDESC="Logical Volume Manager 2 utilities"
@@ -28,7 +28,7 @@ LVM2_CONFIG_DEFAULT="ac_cv_func_malloc_0_nonnull=yes \
                      --with-clvmd=none \
                      --with-cluster=none"
 
-PKG_CONFIGURE_OPTS_TARGET="$LVM2_CONFIG_DEFAULT \
+PKG_CONFIGURE_OPTS_TARGET="${LVM2_CONFIG_DEFAULT} \
                            --enable-pkgconfig \
                            --disable-applib \
                            --disable-cmdlib \
@@ -55,33 +55,33 @@ post_configure_target() {
 
 post_makeinstall_target() {
   # more install targets
-  make install_system_dirs DESTDIR=$INSTALL
-  # make install_initscripts DESTDIR=$INSTALL
-  make install_systemd_units DESTDIR=$INSTALL
-  make install_systemd_generators DESTDIR=$INSTALL
-  make install_tmpfiles_configuration DESTDIR=$INSTALL
+  make install_system_dirs DESTDIR=${INSTALL}
+  # make install_initscripts DESTDIR=${INSTALL}
+  make install_systemd_units DESTDIR=${INSTALL}
+  make install_systemd_generators DESTDIR=${INSTALL}
+  make install_tmpfiles_configuration DESTDIR=${INSTALL}
 
   # detele cache dir
-  rm -rf $INSTALL/storage/.config/lvm/cache
+  rm -rf ${INSTALL}/storage/.config/lvm/cache
 
   # moving config to the right place
-  mkdir -p $INSTALL/usr/config
-  mv $INSTALL/storage/.config/lvm $INSTALL/usr/config
-  rmdir $INSTALL/storage/.config $INSTALL/storage
+  mkdir -p ${INSTALL}/usr/config
+  mv ${INSTALL}/storage/.config/lvm ${INSTALL}/usr/config
+  rmdir ${INSTALL}/storage/.config ${INSTALL}/storage
 
   # fix config
-  sed -i -e 's|cache_dir = "/etc/lvm/cache"|cache_dir = "/run/lvm"|g' $INSTALL/usr/config/lvm/lvm.conf
-  sed -i -e 's|cache_dir = "/storage/.config/lvm/cache"|cache_dir = "/run/lvm"|g' $INSTALL/usr/config/lvm/lvm.conf
-  pushd $INSTALL/usr/config/lvm
+  sed -i -e 's|cache_dir = "/etc/lvm/cache"|cache_dir = "/run/lvm"|g' ${INSTALL}/usr/config/lvm/lvm.conf
+  sed -i -e 's|cache_dir = "/storage/.config/lvm/cache"|cache_dir = "/run/lvm"|g' ${INSTALL}/usr/config/lvm/lvm.conf
+  pushd ${INSTALL}/usr/config/lvm
   for i in `ls -1 lvm*.conf profile/*.profile`; do
-    sed -i -e 's|\([" ]\)/etc/lvm\([/ ]\)|\1/storage/.config/lvm\2|g' $i
+    sed -i -e 's|\([" ]\)/etc/lvm\([/ ]\)|\1/storage/.config/lvm\2|g' ${i}
   done
   popd
 
   # symlink for config
-  mkdir -p $INSTALL/etc
-  ln -s /storage/.config/lvm $INSTALL/etc/lvm
+  mkdir -p ${INSTALL}/etc
+  ln -s /storage/.config/lvm ${INSTALL}/etc/lvm
 
   # fix rebuild problem
-  chmod u+w $INSTALL/usr/lib/libdevmapper.so*
+  chmod u+w ${INSTALL}/usr/lib/libdevmapper.so*
 }
