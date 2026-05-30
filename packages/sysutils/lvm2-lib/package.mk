@@ -12,8 +12,8 @@ PKG_SHA256="60c9bb5c0a109f20267bb40ba50c00c84a110fc14c129f21afb5566929bf5645"
 PKG_ARCH="any"
 PKG_LICENSE="GPLv2 LGPL2.1"
 PKG_SITE="https://sourceware.org/lvm2"
-PKG_URL="http://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.$PKG_VERSION.tgz"
-PKG_SOURCE_DIR="LVM2.$PKG_VERSION"
+PKG_URL="http://mirrors.kernel.org/sourceware/lvm2/releases/LVM2.${PKG_VERSION}.tgz"
+PKG_SOURCE_DIR="LVM2.${PKG_VERSION}"
 PKG_DEPENDS_TARGET="toolchain libaio util-linux"
 PKG_SECTION="sysutils"
 PKG_SHORTDESC="Logical Volume Manager 2 libdevmapper"
@@ -33,7 +33,7 @@ LVM2_CONFIG_DEFAULT="ac_cv_func_malloc_0_nonnull=yes \
                      --with-clvmd=none \
                      --with-cluster=none"
 
-PKG_CONFIGURE_OPTS_TARGET="$LVM2_CONFIG_DEFAULT \
+PKG_CONFIGURE_OPTS_TARGET="${LVM2_CONFIG_DEFAULT} \
                          --with-optimisation=-Os \
                          --disable-readline \
                          --disable-applib \
