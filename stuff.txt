@@ -16,3 +16,19 @@ config/functions:826, tools/distro-tool:36,749,832,889, packages/addons/addon-de
 Unbraced $VAR — config/functions is the main offender (~296 instances); isolated cases in lvm2, speech-dispatcher packages
 
 [[ ]] without justification — config/options:2 uses [[ "${EUID}" -eq 0 ]] with no regex or glob — plain [ ] would do
+
+
+STANDARDS.md: initial coding standards document
+
+Add STANDARDS.md establishing project coding conventions for build
+system scripts and package.mk files:
+
+- Full 40-char git revisions for PKG_VERSION
+- Double-quote variables to avoid special character issues
+- String comparisons use = not ==; numeric comparisons use -eq
+- Prefer [ ] over [[ ]] for simple tests; permit [[ ]] when
+  short-circuit evaluation is required
+- Shell variables use braces: ${FOO} not $FOO
+- foo && bar is permitted but care needed re non-zero exit codes
+- Paths no longer need quoting for spaces after #3351
+- Reference packages/readme.md for package structure detail
