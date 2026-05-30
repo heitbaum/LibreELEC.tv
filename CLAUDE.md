@@ -4,6 +4,9 @@
 
 LibreELEC is a minimal "Just Enough OS" Linux distribution built exclusively to run Kodi. It is a fork of OpenELEC. GPL-2.0.
 
+# Coding Standards
+@STANDARDS.md
+
 ## Branch Model
 
 - `dev` — Rudi's development branch. Contains patches waiting to go upstream, WIP patches, and experiments. Commits near `HEAD` are WIP/getting ready; commits near the merge base with `master` are PRs already submitted/waiting for review.
