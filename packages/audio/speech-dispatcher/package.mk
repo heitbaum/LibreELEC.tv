@@ -6,7 +6,7 @@ PKG_VERSION="0.12.1"
 PKG_SHA256="b14a5238d287d2dcce4dd42bbd66ca65fa228e7e683708267f7b34036f7ba4b4"
 PKG_LICENSE="LGPL"
 PKG_SITE="https://freebsoft.org/speechd"
-PKG_URL="https://github.com/brailcom/speechd/releases/download/$PKG_VERSION/$PKG_NAME-$PKG_VERSION.tar.gz"
+PKG_URL="https://github.com/brailcom/speechd/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain dotconf glib libsndfile libpthread-stubs alsa-lib pulseaudio"
 PKG_LONGDESC="Common high-level interface to SS"
 PKG_TOOLCHAIN="autotools"
@@ -24,5 +24,5 @@ post_unpack() {
 }
 
 post_makeinstall_target() {
-  cp -a $PKG_DIR/locale $INSTALL/usr/lib/
+  cp -a ${PKG_DIR}/locale ${INSTALL}/usr/lib/
 }
