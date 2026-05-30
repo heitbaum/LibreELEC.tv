@@ -1,0 +1,18 @@
+Violations (repo still breaks a rule)
+Backtick command substitution — config/functions has 5 genuine subshell backticks:
+
+:1552 requires_addonname=`echo $i | cut -f1 -d ":"`
+:1553 requires_addonversion=`echo $i | cut -f2 -d ":"`
+:1666 if [ -z "`grep "$1:" ${INSTALL}/etc/group`" ]
+:1681 for target in `grep '^WantedBy' ...`
+:1688 for target in `grep '^Alias' ...`
+packages/sysutils/lvm2/package.mk:76 for i in `ls -1 lvm*.conf ...`
+== in [ ] string comparisons — rule still says =:
+
+config/functions:239,242, scripts/check_kernel_config:14,19,32,37, tools/adjust_kernel_config:6,27, tools/repo-tool:187,190
+source instead of . — rule still says . :
+
+config/functions:826, tools/distro-tool:36,749,832,889, packages/addons/addon-depends/docker/moby/package.mk:39
+Unbraced $VAR — config/functions is the main offender (~296 instances); isolated cases in lvm2, speech-dispatcher packages
+
+[[ ]] without justification — config/options:2 uses [[ "${EUID}" -eq 0 ]] with no regex or glob — plain [ ] would do
