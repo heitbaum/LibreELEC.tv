@@ -1,0 +1,117 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+set -uo pipefail
+
+PROG="$(basename "${0}")"
+
+usage() {
+  echo "Usage: ${PROG} <target-root>"
+  echo ""
+  echo "Scan all ELF binaries under <target-root> for rpath/runpath entries."
+  echo "Entries containing build-host path patterns are reported as errors."
+  echo "Known-good target rpaths (systemd, pulseaudio, glibc) are silently"
+  echo "skipped; any other rpath is reported as a warning."
+  echo ""
+  echo "Point at the unpacked image system root, e.g.:"
+  echo "  ${PROG} build.Generic-x86_64.13.0-devel/image/system"
+  exit 1
+}
+
+[ "${#}" -eq 1 ] || usage
+
+TARGET="${1%/}"
+[ -d "${TARGET}" ] || { echo "${PROG}: not a directory: ${TARGET}" >&2; exit 1; }
+
+ERRORS=0
+WARNS=0
+
+# Path patterns that must not appear in a target binary's rpath/runpath.
+# Their presence indicates a build-host path leaked into the image.
+HOST_PATTERNS=(
+  "/build\."
+  "/toolchain"
+  "/output/"
+  "/home/"
+  "/root/"
+  "/tmp/"
+  "TOOLCHAIN"
+)
+
+# Rpath values that are intentional on the target and need no review.
+# Each entry is matched as a prefix against every colon-separated component.
+ALLOWED_PREFIXES=(
+  "/usr/lib/systemd"
+  "/usr/lib/pulseaudio"
+  "/usr/lib/pulse"
+  "/usr/lib"
+  "\$ORIGIN"
+)
+
+# Return 0 if every component of a colon-separated rpath string is allowed.
+rpath_is_allowed() {
+  local rpath="${1}" component prefix allowed
+  IFS=: read -ra components <<< "${rpath}"
+  for component in "${components[@]}"; do
+    allowed=0
+    for prefix in "${ALLOWED_PREFIXES[@]}"; do
+      if [ "${component#${prefix}}" != "${component}" ] || \
+         [ "${component}" = "${prefix}" ]; then
+        allowed=1
+        break
+      fi
+    done
+    [ "${allowed}" -eq 1 ] || return 1
+  done
+  return 0
+}
+
+check_file() {
+  local file="${1}"
+  local rel="${file#${TARGET}/}"
+  local rpath component pattern is_host
+
+  # readelf exits non-zero for non-ELF files; suppress errors
+  rpath="$(readelf -d "${file}" 2>/dev/null \
+    | grep -E '\(RPATH\)|\(RUNPATH\)' \
+    | sed 's/.*\[\(.*\)\]/\1/')" || return 0
+
+  [ -n "${rpath}" ] || return 0
+
+  # Check for host path leak (definite error)
+  is_host=0
+  IFS=: read -ra components <<< "${rpath}"
+  for component in "${components[@]}"; do
+    for pattern in "${HOST_PATTERNS[@]}"; do
+      if echo "${component}" | grep -qE "${pattern}"; then
+        is_host=1
+        break 2
+      fi
+    done
+  done
+
+  if [ "${is_host}" -eq 1 ]; then
+    printf 'ERROR  %s\n       rpath: %s\n' "${rel}" "${rpath}"
+    ERRORS=$(( ERRORS + 1 ))
+    return 0
+  fi
+
+  # Skip known-good target rpaths
+  rpath_is_allowed "${rpath}" && return 0
+
+  printf 'WARN   %s\n       rpath: %s\n' "${rel}" "${rpath}"
+  WARNS=$(( WARNS + 1 ))
+}
+
+while IFS= read -r -d '' file; do
+  check_file "${file}"
+done < <(find "${TARGET}" -type f -print0)
+
+echo ""
+printf 'errors (host path leak): %d\n' "${ERRORS}"
+printf 'warnings (any rpath):    %d\n' "${WARNS}"
+echo ""
+
+[ "${ERRORS}" -eq 0 ]
