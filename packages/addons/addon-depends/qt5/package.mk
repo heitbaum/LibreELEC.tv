@@ -143,4 +143,10 @@ EOF
 makeinstall_target() {
   make install INSTALL_ROOT="${INSTALL}"
   [ -d "${INSTALL}${TOOLCHAIN}" ] && cp -PRf "${INSTALL}${TOOLCHAIN}/"* "${TOOLCHAIN}/"
+  # Qt cmake configs reference mkspecs via a path relative to /usr that resolves
+  # incorrectly from the staging area. Symlink the top-level path component so the
+  # computed path reaches the real toolchain mkspecs.
+  local _tc_root
+  _tc_root=$(printf '%s' "${TOOLCHAIN}" | cut -d/ -f1-2)
+  ln -sfn "${_tc_root}" "${INSTALL}${_tc_root}"
 }
