@@ -11,6 +11,7 @@ PKG_URL="https://github.com/awawa-dev/HyperHDR/archive/v${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain flatbuffers:host alsa-lib libjpeg-turbo qt5 systemd rpi_ws281x zstd \
                     hyperhdr-linalg hyperhdr-lunasvg hyperhdr-mdns hyperhdr-nanopb hyperhdr-qmqtt \
                     hyperhdr-sdbus-cpp hyperhdr-stb"
+PKG_DEPENDS_CONFIG="qt5"
 PKG_TOOLCHAIN="cmake"
 PKG_SECTION="service"
 PKG_SHORTDESC="HyperHDR: an ambient lighting controller"
