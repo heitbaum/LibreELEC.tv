@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+Date: Tue, 10 Jun 2026 00:00:00 +0000
+Subject: [PATCH] dtoc: handle non-ASCII files without warnings
+
+src_scan opens every .c and .h file in the tree looking for
+U_BOOT_DRIVER/UCLASS_DRIVER/struct macros. Files that contain invalid
+UTF-8 byte sequences trigger a UnicodeDecodeError and are silently
+skipped with a 'Skipping file ... due to unicode error' message.
+
+Using errors='replace' lets Python substitute the replacement character
+(U+FFFD) for any invalid byte sequence instead of raising an exception.
+The replacement character never appears in a macro name so parsing is
+unaffected; files that contain no relevant macros are still skipped by
+the existing 'U_BOOT_DRIVER'/'struct' guards.
+
+The existing test_unicode_error test exercises this path with a \x81
+byte and continues to pass: the file is read with a replacement
+character and the macro guards skip it, same as before.
+
+This silences the spurious warnings produced for lwip headers that
+carry non-ASCII author names in their copyright lines.
+
+Signed-off-by: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+---
+ tools/dtoc/src_scan.py | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/tools/dtoc/src_scan.py b/tools/dtoc/src_scan.py
+--- a/tools/dtoc/src_scan.py
++++ b/tools/dtoc/src_scan.py
+@@ -621,13 +621,8 @@ class Scanner:
+         Args
+             fname: Driver filename to scan
+         """
+-        with open(fname, encoding='utf-8') as inf:
+-            try:
+-                buff = inf.read()
+-            except UnicodeDecodeError:
+-                # This seems to happen on older Python versions
+-                print("Skipping file '%s' due to unicode error" % fname)
+-                return
++        with open(fname, encoding='utf-8', errors='replace') as inf:
++            buff = inf.read()
+
+             # If this file has any U_BOOT_DRIVER() declarations, process it to
+             # obtain driver information
+@@ -646,13 +641,8 @@ class Scanner:
+         Args
+             fname: header filename to scan
+         """
+-        with open(fname, encoding='utf-8') as inf:
+-            try:
+-                buff = inf.read()
+-            except UnicodeDecodeError:
+-                # This seems to happen on older Python versions
+-                print("Skipping file '%s' due to unicode error" % fname)
+-                return
++        with open(fname, encoding='utf-8', errors='replace') as inf:
++            buff = inf.read()
+
+             # If this file has any U_BOOT_DRIVER() declarations, process it to
+             # obtain driver information
