@@ -54,6 +54,11 @@ pre_build_target() {
 
 pre_configure_target() {
   echo "" >../cmake/FindGitVersion.cmake
+  cat > "${PKG_BUILD}/toolchain-qt5.cmake" <<EOF
+include("${CMAKE_CONF}")
+list(APPEND CMAKE_FIND_ROOT_PATH "$(get_install_dir qt5)/usr")
+EOF
+  PKG_CMAKE_OPTS_TARGET+=" -DCMAKE_TOOLCHAIN_FILE=${PKG_BUILD}/toolchain-qt5.cmake"
 }
 
 addon() {
