@@ -50,6 +50,14 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON \
                        -Wno-dev"
 
 pre_configure_target() {
+  # Qt cmake configs reference mkspecs via a path relative to /usr that resolves
+  # incorrectly from the staging area. Symlink the top-level path component so the
+  # computed path reaches the real toolchain mkspecs.
+  local _tc_root _qt5_install
+  _qt5_install="$(get_install_dir qt5)"
+  _tc_root=$(printf '%s' "${TOOLCHAIN}" | cut -d/ -f1-2)
+  ln -sfn "${_tc_root}" "${_qt5_install}${_tc_root}"
+
   cat > "${PKG_BUILD}/toolchain-qt5.cmake" <<EOF
 include("${CMAKE_CONF}")
 list(APPEND CMAKE_FIND_ROOT_PATH "$(get_install_dir qt5)/usr")
