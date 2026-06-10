@@ -66,6 +66,7 @@ EOF
   pkg_flatbuffers_version=$(get_pkg_version flatbuffers)
   tar --strip-components=1 -xf "${SOURCES}/flatbuffers/flatbuffers-${pkg_flatbuffers_version}.tar.gz" -C "${PKG_BUILD}/external/flatbuffers"
   cp -a $(get_build_dir rpi_ws281x)/* ${PKG_BUILD}/external/rpi_ws281x
+  rm -f ${PKG_BUILD}/external/rpi_ws281x/version
   cp -a $(get_build_dir hyperhdr-lunasvg)/* ${PKG_BUILD}/external/lunasvg
   cp -a $(get_build_dir hyperhdr-nanopb)/* ${PKG_BUILD}/external/nanopb
   cp -a $(get_build_dir hyperhdr-stb)/* ${PKG_BUILD}/external/stb

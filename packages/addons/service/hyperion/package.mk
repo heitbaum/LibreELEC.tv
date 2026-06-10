@@ -50,6 +50,7 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON \
 
 pre_build_target() {
   cp -a $(get_build_dir rpi_ws281x)/* ${PKG_BUILD}/dependencies/external/rpi_ws281x
+  rm -f ${PKG_BUILD}/dependencies/external/rpi_ws281x/version
 }
 
 pre_configure_target() {
