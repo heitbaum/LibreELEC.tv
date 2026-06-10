@@ -1,0 +1,39 @@
+From c6faf583c4c2b237c42b7797794d00424248ea0d Mon Sep 17 00:00:00 2001
+From: Heinrich Schuchardt <heinrich.schuchardt@canonical.com>
+Date: Sat, 18 Apr 2026 00:00:00 +0000
+Subject: [PATCH] scripts/dtc: avoid discarded qualifiers in
+ overlay_fixup_phandle
+
+When building with GCC 15.2 the following warning show up:
+
+    scripts/dtc/libfdt/fdt_overlay.c:422:21: warning:
+    assignment discards 'const' qualifier from pointer target type
+    [-Wdiscarded-qualifiers]
+      422 |                 sep = memchr(fixup_str, ':', fixup_len);
+          |                     ^
+    scripts/dtc/libfdt/fdt_overlay.c:432:21: warning:
+    assignment discards 'const' qualifier from pointer target type
+    [-Wdiscarded-qualifiers]
+      432 |                 sep = memchr(name, ':', fixup_len);
+          |                     ^
+
+Define sep as const char *.
+
+Signed-off-by: Heinrich Schuchardt <heinrich.schuchardt@canonical.com>
+---
+ scripts/dtc/libfdt/fdt_overlay.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/dtc/libfdt/fdt_overlay.c b/scripts/dtc/libfdt/fdt_overlay.c
+--- a/scripts/dtc/libfdt/fdt_overlay.c
++++ b/scripts/dtc/libfdt/fdt_overlay.c
+@@ -407,7 +407,8 @@ static int overlay_fixup_phandle(void *fdt, void *fdto, int symbols_off,
+ 		const char *fixup_str = value;
+ 		uint32_t path_len, name_len;
+ 		uint32_t fixup_len;
+-		char *sep, *endptr;
++		const char *sep;
++		char *endptr;
+ 		int poffset, ret;
+
+ 		fixup_end = memchr(value, '\0', len);
