@@ -1,0 +1,78 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+Date: Tue, 10 Jun 2026 00:00:00 +0000
+Subject: [PATCH] rockchip: rk3288: syscon: use per-driver of_match tables
+
+The OF_PLATDATA section shares a single rk3288_syscon_ids[] table across
+four drivers, pointing each driver at its entry via pointer arithmetic:
+
+  .of_match = rk3288_syscon_ids + 1,  /* grf  */
+  .of_match = rk3288_syscon_ids + 2,  /* sgrf */
+  .of_match = rk3288_syscon_ids + 3,  /* pmu  */
+
+dtoc's src_scan.py parses driver source files to build of-platdata but
+does not evaluate pointer arithmetic, so each suffix triggers:
+
+  Warning: unexpected suffix ' + N' on .of_match line for compat
+  'rk3288_syscon_ids'
+
+Replace the shared-table-with-offset pattern with small per-driver
+tables, eliminating the three build warnings.
+
+Signed-off-by: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+---
+ arch/arm/mach-rockchip/rk3288/syscon_rk3288.c | 21 ++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/mach-rockchip/rk3288/syscon_rk3288.c b/arch/arm/mach-rockchip/rk3288/syscon_rk3288.c
+--- a/arch/arm/mach-rockchip/rk3288/syscon_rk3288.c
++++ b/arch/arm/mach-rockchip/rk3288/syscon_rk3288.c
+@@ -133,6 +133,21 @@ static int rk3288_syscon_bind_of_plat(struct udevice *dev)
+ }
+ #endif
+
++static const struct udevice_id rk3288_grf_ids[] = {
++	{ .compatible = "rockchip,rk3288-grf", .data = ROCKCHIP_SYSCON_GRF },
++	{ }
++};
++
++static const struct udevice_id rk3288_sgrf_ids[] = {
++	{ .compatible = "rockchip,rk3288-sgrf", .data = ROCKCHIP_SYSCON_SGRF },
++	{ }
++};
++
++static const struct udevice_id rk3288_pmu_ids[] = {
++	{ .compatible = "rockchip,rk3288-pmu", .data = ROCKCHIP_SYSCON_PMU },
++	{ }
++};
++
+ U_BOOT_DRIVER(rockchip_rk3288_noc) = {
+ 	.name = "rockchip_rk3288_noc",
+ 	.id = UCLASS_SYSCON,
+@@ -148,7 +163,7 @@ U_BOOT_DRIVER(rockchip_rk3288_noc) = {
+ U_BOOT_DRIVER(rockchip_rk3288_grf) = {
+ 	.name = "rockchip_rk3288_grf",
+ 	.id = UCLASS_SYSCON,
+-	.of_match = rk3288_syscon_ids + 1,
++	.of_match = rk3288_grf_ids,
+ #if IS_ENABLED(CONFIG_FDT_64BIT)
+ 	.bind = rk3288_grf_bind_of_plat,
+ 	.plat_auto = sizeof(struct rockchip_rk3288_grf_plat),
+@@ -160,7 +175,7 @@ U_BOOT_DRIVER(rockchip_rk3288_grf) = {
+ U_BOOT_DRIVER(rockchip_rk3288_sgrf) = {
+ 	.name = "rockchip_rk3288_sgrf",
+ 	.id = UCLASS_SYSCON,
+-	.of_match = rk3288_syscon_ids + 2,
++	.of_match = rk3288_sgrf_ids,
+ #if IS_ENABLED(CONFIG_FDT_64BIT)
+ 	.bind = rk3288_sgrf_bind_of_plat,
+ 	.plat_auto = sizeof(struct rockchip_rk3288_sgrf_plat),
+@@ -172,7 +187,7 @@ U_BOOT_DRIVER(rockchip_rk3288_sgrf) = {
+ U_BOOT_DRIVER(rockchip_rk3288_pmu) = {
+ 	.name = "rockchip_rk3288_pmu",
+ 	.id = UCLASS_SYSCON,
+-	.of_match = rk3288_syscon_ids + 3,
++	.of_match = rk3288_pmu_ids,
+ #if IS_ENABLED(CONFIG_FDT_64BIT)
+ 	.bind = rk3288_pmu_bind_of_plat,
+ 	.plat_auto = sizeof(struct rockchip_rk3288_pmu_plat),
