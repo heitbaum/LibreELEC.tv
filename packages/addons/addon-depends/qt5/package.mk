@@ -142,4 +142,5 @@ EOF
 
 makeinstall_target() {
   make install INSTALL_ROOT="${INSTALL}"
+  [ -d "${INSTALL}${TOOLCHAIN}" ] && cp -PRf "${INSTALL}${TOOLCHAIN}/"* "${TOOLCHAIN}/"
 }
