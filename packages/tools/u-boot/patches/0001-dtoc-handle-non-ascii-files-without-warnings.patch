@@ -1,30 +1,41 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
-Date: Tue, 10 Jun 2026 00:00:00 +0000
-Subject: [PATCH] dtoc: handle non-ASCII files without warnings
+Date: Wed, 11 Jun 2026 00:00:00 +0000
+Subject: [PATCH] dtoc: use latin-1 to read source files with non-ASCII bytes
 
 src_scan opens every .c and .h file in the tree looking for
-U_BOOT_DRIVER/UCLASS_DRIVER/struct macros. Files that contain invalid
-UTF-8 byte sequences trigger a UnicodeDecodeError and are silently
-skipped with a 'Skipping file ... due to unicode error' message.
+U_BOOT_DRIVER, UCLASS_DRIVER and struct macros. Files that contain
+bytes which are not valid UTF-8 — for example lwip headers with
+Latin-1 encoded author names in their copyright lines — trigger a
+UnicodeDecodeError, causing the file to be skipped with a warning:
 
-Using errors='replace' lets Python substitute the replacement character
-(U+FFFD) for any invalid byte sequence instead of raising an exception.
-The replacement character never appears in a macro name so parsing is
-unaffected; files that contain no relevant macros are still skipped by
-the existing 'U_BOOT_DRIVER'/'struct' guards.
+  Skipping file '<path>' due to unicode error
 
-The existing test_unicode_error test exercises this path with a \x81
-byte and continues to pass: the file is read with a replacement
-character and the macro guards skip it, same as before.
+Skipping the file entirely is incorrect: a source file with a non-ASCII
+byte in a comment could still contain a U_BOOT_DRIVER() registration
+that would then be silently missed.
 
-This silences the spurious warnings produced for lwip headers that
-carry non-ASCII author names in their copyright lines.
+dtoc only searches for ASCII identifiers; the encoding of non-ASCII
+bytes in comments or string literals is irrelevant to parsing. latin-1
+maps every possible byte value (0x00-0xFF) one-to-one to a Unicode code
+point and never raises a decoding exception, making it the appropriate
+encoding for reading C source files that may contain arbitrary byte
+sequences outside of identifier tokens.
+
+Replace encoding='utf-8' and the UnicodeDecodeError try/except with
+encoding='latin-1'. The comment "This seems to happen on older Python
+versions" was a misdiagnosis — the error is a property of the file
+content, not the Python version.
+
+Update test_unicode_error and test_struct_scan_errors to reflect the
+new behaviour: files with non-ASCII bytes are now read silently with no
+warning and no skipping.
 
 Signed-off-by: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
 ---
- tools/dtoc/src_scan.py | 18 ++++--------------
- 1 file changed, 4 insertions(+), 14 deletions(-)
+ tools/dtoc/src_scan.py      | 18 ++++--------------
+ tools/dtoc/test_src_scan.py | 16 ++++++++--------
+ 2 files changed, 12 insertions(+), 22 deletions(-)
 
 diff --git a/tools/dtoc/src_scan.py b/tools/dtoc/src_scan.py
 --- a/tools/dtoc/src_scan.py
@@ -40,7 +51,7 @@ diff --git a/tools/dtoc/src_scan.py b/tools/dtoc/src_scan.py
 -                # This seems to happen on older Python versions
 -                print("Skipping file '%s' due to unicode error" % fname)
 -                return
-+        with open(fname, encoding='utf-8', errors='replace') as inf:
++        with open(fname, encoding='latin-1') as inf:
 +            buff = inf.read()
 
              # If this file has any U_BOOT_DRIVER() declarations, process it to
@@ -56,8 +67,55 @@ diff --git a/tools/dtoc/src_scan.py b/tools/dtoc/src_scan.py
 -                # This seems to happen on older Python versions
 -                print("Skipping file '%s' due to unicode error" % fname)
 -                return
-+        with open(fname, encoding='utf-8', errors='replace') as inf:
++        with open(fname, encoding='latin-1') as inf:
 +            buff = inf.read()
 
              # If this file has any U_BOOT_DRIVER() declarations, process it to
              # obtain driver information
+diff --git a/tools/dtoc/test_src_scan.py b/tools/dtoc/test_src_scan.py
+--- a/tools/dtoc/test_src_scan.py
++++ b/tools/dtoc/test_src_scan.py
+@@ -70,11 +70,12 @@
+                          scan._driver_aliases['sandbox_gpio_alias2'])
+
+     def test_unicode_error(self):
+-        """Test running dtoc with an invalid unicode file
++        """Test that files with non-ASCII bytes are processed without warning
+
+-        To be able to perform this test without adding a weird text file which
+-        would produce issues when using checkpatch.pl or patman, generate the
+-        file at runtime and then process it.
++        latin-1 maps every byte value to a Unicode code point, so no exception
++        is raised and no warning is produced.  To avoid adding a file with
++        non-ASCII content that would cause issues with checkpatch.pl or patman,
++        generate the file at runtime.
+         """
+         driver_fn = '/tmp/' + next(tempfile._get_candidate_names())
+         with open(driver_fn, 'wb+') as fout:
+@@ -83,8 +84,7 @@
+         scan = src_scan.Scanner(None, [driver_fn])
+         with terminal.capture() as (stdout, _):
+             scan.scan_drivers()
+-        self.assertRegex(stdout.getvalue(),
+-                         r"Skipping file '.*' due to unicode error\s*")
++        self.assertEqual('', stdout.getvalue())
+
+     def test_driver(self):
+         """Test the Driver class"""
+@@ -375,14 +375,14 @@
+                          str(struc))
+
+     def test_struct_scan_errors(self):
+-        """Test scanning a header file with an invalid unicode file"""
++        """Test scanning a header file with non-ASCII bytes"""
+         output = tools.get_output_filename('output.h')
+         tools.write_file(output, b'struct this is a test \x81 of bad unicode')
+
+         scan = src_scan.Scanner(None, None)
+         with terminal.capture() as (stdout, _):
+             scan.scan_header(output)
+-        self.assertIn('due to unicode error', stdout.getvalue())
++        self.assertEqual('', stdout.getvalue())
+
+     def setup_dup_drivers(self, name, phase=''):
+         """Set up for a duplcate test
