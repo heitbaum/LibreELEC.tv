@@ -4,7 +4,7 @@
 # Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
 
 . config/options ""
-export GH_TOKEN
+export GH_TOKEN="${github_token}"
 
 # main code
 progname=${0}
