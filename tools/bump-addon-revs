@@ -15,15 +15,16 @@ set -euo pipefail
 
 RANGE="${1:-$(git merge-base HEAD master)..HEAD}"
 
-declare -A dep_msgs   # dep_pkgname -> newline-separated commit subjects
-declare -A dep_pkgmk  # dep_pkgname -> path to its package.mk
+declare -A dep_msgs=()   # dep_pkgname -> newline-separated commit subjects
+declare -A dep_pkgmk=()  # dep_pkgname -> path to its package.mk
 
 while IFS= read -r commit; do
   subject=$(git log --format="%s" -1 "${commit}")
 
   while IFS= read -r file; do
-    [[ "${file}" == packages/addons/addon-depends/* ]] || continue
-    [[ "${file}" == */package.mk ]] || continue
+    [[ "${file}" == packages/*/package.mk ]] || continue
+    # Skip addon packages themselves; addon-depends and all other packages are in scope
+    [[ "${file}" == packages/addons/* && "${file}" != packages/addons/addon-depends/* ]] && continue
 
     # Only act on commits that change PKG_VERSION= (not SPDX fixes, patches, etc.).
     git diff "${commit}^" "${commit}" -- "${file}" 2>/dev/null \
@@ -40,14 +41,14 @@ while IFS= read -r commit; do
       [[ "${dep_msgs[${d_pkgname}]:-}" == *"${subject}"* ]] && continue
       dep_msgs[${d_pkgname}]+="${subject}"$'\n'
       dep_pkgmk[${d_pkgname}]="${d_pkgmk}"
-    done < <(find packages/addons -type f -name "package.mk" \
+    done < <(find packages/addons packages/mediacenter/kodi-binary-addons -type f -name "package.mk" \
       -not -path "packages/addons/addon-depends/*" \
       | xargs grep -wl "${pkgname}" 2>/dev/null)
   done < <(git diff-tree --no-commit-id -r --name-only "${commit}")
 done < <(git log --reverse --format="%H" "${RANGE}")
 
 if [ ${#dep_msgs[@]} -eq 0 ]; then
-  echo "No addon-depends updates found in range: ${RANGE}"
+  echo "No package updates with dependent addons found in range: ${RANGE}"
   exit 0
 fi
 
