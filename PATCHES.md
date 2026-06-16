@@ -154,6 +154,7 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 
 | Package | Patch | Notes |
 |---------|-------|-------|
+| network/cifs-utils | `0001-fix-const-correctness-in-parse-options.patch` | Rudi Heitbaum — parse_options() const on data parameter was wrong; submitted to linux-cifs@vger.kernel.org |
 | compress/7-zip | `0008-Fix-Globally-suppress-GCC-16-Warray-bounds-false-pos.patch` | YOKOTA Hiroshi — GCC 16 -Warray-bounds false positive; [sourceforge bug #2604](https://sourceforge.net/p/sevenzip/bugs/2604/) |
 | debug/gdb | `0001-gdbserver-ctrl-c-handling.patch` | Khem Raj — gdbserver SIGINT fix; [GDB Bugzilla #18945](https://sourceware.org/bugzilla/show_bug.cgi?id=18945) |
 | textproc/xmlstarlet | `0001-usage2c.awk-fix-wrong-basename-regexp.patch` | Matthieu Crapet — fix basename regexp; submitted to sourceforge |

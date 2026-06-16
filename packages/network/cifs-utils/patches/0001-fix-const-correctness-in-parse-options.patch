@@ -1,0 +1,29 @@
+From 69201ea77ceca33ceef34e7fea3ffce8fc486533 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+Date: Tue, 16 Jun 2026 20:09:22 +1000
+Subject: [PATCH] fix const correctness in parse_options
+
+parse_options() modifies the string it receives in-place, temporarily
+null-terminating keyword and value boundaries. The const qualifier on
+the data parameter was wrong; remove it so the compiler can verify
+the pointer assignments are valid.
+---
+ mount.cifs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mount.cifs.c b/mount.cifs.c
+index 836a060..b57c7d3 100644
+--- a/mount.cifs.c
++++ b/mount.cifs.c
+@@ -834,7 +834,7 @@ static int parse_opt_token(const char *token)
+ }
+ 
+ static int
+-parse_options(const char *data, struct parsed_mount_info *parsed_info)
++parse_options(char *data, struct parsed_mount_info *parsed_info)
+ {
+ 	char *value = NULL;
+ 	char *equals = NULL;
+-- 
+2.47.1.windows.2
+
