@@ -257,7 +257,7 @@ Triage notes:
 
 ### Retire / Replace
 
-- **rapidjson** — retire once the 2 remaining Kodi addons drop the dependency. Upstream issues filed: pvr.teleboy https://github.com/rbuehlma/pvr.teleboy/issues/99 and pvr.zattoo https://github.com/rbuehlma/pvr.zattoo/issues/224 — maintainer (@rbuehlma) says PRs welcome, no plans to implement. Prior art for PRs: kodi-pvr/pvr.plutotv#127+#129, flubshi/pvr.waipu#420 (all successfully migrated from rapidjson to nlohmann-json)
+- **rapidjson** — retire once the last remaining Kodi addon drops the dependency. pvr.teleboy migrated (22.2.2-Piers, merged in LE master). Still pending: pvr.zattoo https://github.com/rbuehlma/pvr.zattoo/issues/224 — dev branch carries patches `0002`–`0004` for the migration; waiting on upstream release
 - **Docker iptables → nftables** — move Docker to native nft (still experimental; target LE14+)
 - **iptables** — drop completely once nft transition is complete
 

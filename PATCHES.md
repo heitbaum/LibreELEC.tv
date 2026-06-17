@@ -26,9 +26,6 @@ Patches that should be sent to the upstream project but have not yet been submit
 | addons/addon-depends/chrome-depends/gtk3 | `0001-disable-to-pixdata-build.patch` | Disable to_pixdata build step |
 | addons/addon-depends/chrome-depends/unclutter | `0001-fix-gcc-14-1-build.patch` | gcc-14 build fix |
 | addons/addon-depends/chrome-depends/unclutter | `0002-fix-gcc-15-1-build.patch` | gcc-15 build fix |
-| addons/addon-depends/cxxtools | `0001-Change-parameter-type-of-str-function-to-const.patch` | OpenSSL 4 const X509_NAME fix |
-| addons/addon-depends/cxxtools | `0002-add-cmake-build-and-install-rules.patch` | Add cmake BUILD_DEMOS/BUILD_TESTS options and install rules |
-| addons/addon-depends/cxxtools | `0003-fix-convert-h-use-cpp11-type-aliases.patch` | Use C++11 typename ::type instead of C++14 _t aliases |
 | addons/addon-depends/ffmpegx | `0001-fix-NULL-dereference-if-no-frames-before-end-of-strea.patch` | NULL dereference in demuxer |
 | addons/addon-depends/icu | `0001-ldflags.patch` | Comment out -nodefaultlibs/-nostdlib that break cross-compile |
 | addons/addon-depends/multimedia-tools-depends/opencaster | `0001-headers.patch` | Use linux/if_tun.h |
@@ -185,6 +182,7 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 | sysutils/open-vm-tools | `0779-glib-stubs--avoid-GLib-g-free-macro-redefinition-erro.patch` | Khem Raj — [PR #779](https://github.com/vmware/open-vm-tools/pull/779) avoid g_free macro redefinition with glib 2.78+ |
 | sysutils/open-vm-tools | `0783-fix-initialization-discards-const-qualifier-from-poi.patch` | Rudi Heitbaum — [PR #783](https://github.com/vmware/open-vm-tools/pull/783) fix glibc-2.43 const-qualifier |
 | tools/bcm2835-utils | `0088-vclog--fix-max-realloc-compiler-error.patch` | Rudi Heitbaum — [PR #88](https://github.com/raspberrypi/utils/pull/88) fix alloc-size compiler error |
+| addons/addon-depends/cxxtools | `0001-add-cmake-build-and-install-rules.patch` | Rudi Heitbaum — add cmake BUILD_DEMOS/BUILD_TESTS options and install rules; [maekitalo/cxxtools PRs](https://github.com/maekitalo/cxxtools/pulls) |
 | wayland/wayland-protocols | `0001-build-add-Cflags-to-pkg-config-when-headers-are-inst.patch` | Rudi Heitbaum — add Cflags to pkg-config for wlroots 0.20+ |
 
 ### Intentionally local (le-specific)
@@ -281,7 +279,6 @@ Patches already merged in the upstream project — drop on the next version bump
 | network/libnfs | `0514-socket-use-void-cast-to-allow-compile-for-arm32.patch` | [upstream PR #514](https://github.com/sahlberg/libnfs/pull/514) |
 | network/libnfs | `0576-Do-not-edit-const-and-use-const-qualifier...` | [upstream PR #576](https://github.com/sahlberg/libnfs/pull/576) |
 | tools/syslinux | `0001-fix-build-with-glibc-2.28.patch` | Mike Frysinger (Gentoo) |
-| lang/Python3 | `Python3-146403-Add-support-for-OpenSSL-4.0.0.patch` | [CPython issue #146403](https://github.com/python/cpython/issues/146403) |
 | addons/addon-depends/rsyslog-depends/snappy | `0086-add-pkg-config-file.patch` | Sebastien Lavoie — [upstream PR #86](https://github.com/google/snappy/pull/86) add CMake pkg-config file |
 | addons/addon-depends/steamlink-depends/krb5 | `0001-Fix-strchr-conformance-to-C23.patch` | Alexander Bokovoy (Red Hat) — [upstream ticket #9191](https://bugs.mit.edu/show_bug.cgi?id=9191) |
 | addons/addon-depends/steamlink-depends/krb5 | `1485-autoconf-ac-init.patch` | Samuel Cabrero (SUSE) — [upstream ticket #9202](https://bugs.mit.edu/show_bug.cgi?id=9202) autoconf 2.73 compat |
@@ -293,7 +290,6 @@ Patches already merged in the upstream project — drop on the next version bump
 | security/libxcrypt | `0001-fix-Werror-discarded-qualifiers.patch` | Stanislav Zidek (Red Hat) — remove const casts on strchr return value (GCC strict const) |
 | textproc/itstool | `0001-Fix-insufficiently-quoted-regular-expressions.patch` | Nils Philippsen — fix Python 3.12 regex quoting warnings |
 | textproc/itstool | `0057-use-lxml-not-libxml2.patch` | Nick Wellnhofer — switch from libxml2 Python bindings to lxml |
-| textproc/jsoncpp | `0001-fix-crashes.patch` | Jordan Bayles (Chromium) — fix C++17 ABI breakage; [upstream #1668](https://github.com/open-source-parsers/jsoncpp/issues/1668) |
 | x11/xserver/xorg-server | `1002-add-fedora-extra-modes-list.patch` | Adam Jackson (Red Hat) — extra display mode definitions carried by Fedora |
 | devel/crossguid | `0001-pr67-include-missing-cstdint.patch` | Khem Raj (OE) — [upstream PR #67](https://github.com/graeme-hill/crossguid/pull/67) add <cstdint> for GCC 13 |
 | devel/elfutils | `0002-libelf--Add-libeu-objects-to-libelf.a-static-archive.patch` | Mark Wielaard (elfutils maintainer) — static archive fix; [Bugzilla #32293](https://sourceware.org/bugzilla/show_bug.cgi?id=32293) |
