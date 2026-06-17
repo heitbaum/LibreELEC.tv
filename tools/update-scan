@@ -50,6 +50,7 @@ test_github_api() {
 
 check_for_update() {
   local PKG_NAME PKG_URL PKG_VERSION RMO_API_RESPONSE GH_API_TAG
+  local pkg_major nvidia_latest_all nvidia_project_id nvidia_latest_series
 
   # source variables from package.mk
   PKG_NAME="$(grep -oP -m 1 '(?<=PKG_NAME=\").*(?=\")' ${1} || true)"
@@ -95,6 +96,28 @@ check_for_update() {
       tvheadend43)
         upstream_version=$(curl -m 5 -sL "${github_api_token}" "https://api.github.com/repos/tvheadend/tvheadend/git/refs/heads/master" | jq -r '.object.sha' || true)
         [[ -z "${upstream_version}" || "${upstream_version}" = "null" ]] && upstream_version="! unable to read github head !"
+        ;;
+      nvidia)
+        # nvidia is pinned to a specific major version series; find the highest version in
+        # that series using PKG_VERSION's major number as the filter; show the overall latest
+        # in brackets only when displaying an available update within the pinned series
+        pkg_major="${PKG_VERSION%%.*}"
+        RMO_API_RESPONSE=$(curl -m 5 -sL "https://release-monitoring.org/api/v2/packages/?name=${PKG_NAME}&distribution=LibreELEC" || true)
+        nvidia_latest_all=$(echo "${RMO_API_RESPONSE}" | jq -r '.items[0].version' || true)
+        nvidia_project_id=$(curl -m 5 -sL "https://release-monitoring.org/api/v2/projects/?name=${PKG_NAME}" | jq -r '.items[0].id' || true)
+        if [[ -n "${nvidia_project_id}" && "${nvidia_project_id}" != "null" ]]; then
+          nvidia_latest_series=$(curl -m 5 -sL "https://release-monitoring.org/api/project/${nvidia_project_id}/" | \
+            jq -r ".versions[] | select(startswith(\"${pkg_major}.\"))" | sort -V | tail -1)
+        fi
+        if [[ -n "${nvidia_latest_series}" ]]; then
+          if [[ "${nvidia_latest_series}" != "${nvidia_latest_all}" && "${PKG_VERSION}" != "${nvidia_latest_series}" ]]; then
+            upstream_version="${nvidia_latest_series} (${nvidia_latest_all})"
+          else
+            upstream_version="${nvidia_latest_series}"
+          fi
+        else
+          upstream_version="${nvidia_latest_all:-! unable to read from tracker !}"
+        fi
         ;;
       *)
         # check if package exists at tracker
