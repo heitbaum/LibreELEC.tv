@@ -1,0 +1,58 @@
+From ea566b9920e1316a8f2bdec5c50a40744fefc9e1 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Thu, 18 Jun 2026 13:32:33 +0000
+Subject: [PATCH] net,nfs,avahi: use fmt/format.h not fmt/core.h
+
+Since libfmt 12.0.0, fmt/core.h is a shim that only includes
+fmt/base.h which does not provide fmt::format(). Include
+fmt/format.h directly in files that call fmt::format().
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ src/lib/avahi/Publisher.cxx | 2 +-
+ src/lib/nfs/FileReader.cxx  | 2 +-
+ src/net/ToString.cxx        | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/lib/avahi/Publisher.cxx b/src/lib/avahi/Publisher.cxx
+index 1ac4d61e6..174f57198 100644
+--- a/src/lib/avahi/Publisher.cxx
++++ b/src/lib/avahi/Publisher.cxx
+@@ -13,7 +13,7 @@
+ #include <avahi-common/malloc.h>
+ #include <avahi-common/alternative.h>
+ 
+-#include <fmt/core.h>
++#include <fmt/format.h>
+ 
+ #include <cassert>
+ 
+diff --git a/src/lib/nfs/FileReader.cxx b/src/lib/nfs/FileReader.cxx
+index bc14fd325..805babef6 100644
+--- a/src/lib/nfs/FileReader.cxx
++++ b/src/lib/nfs/FileReader.cxx
+@@ -10,7 +10,7 @@
+ 
+ #include <nfsc/libnfs.h> // for struct nfs_stat_64
+ 
+-#include <fmt/core.h>
++#include <fmt/format.h>
+ 
+ #include <cassert>
+ #include <cstring>
+diff --git a/src/net/ToString.cxx b/src/net/ToString.cxx
+index 6f9706c0a..539ad5c61 100644
+--- a/src/net/ToString.cxx
++++ b/src/net/ToString.cxx
+@@ -6,7 +6,7 @@
+ #include "IPv4Address.hxx"
+ #include "net/Features.hxx" // for HAVE_TCP, HAVE_IPV6, HAVE_UN
+ 
+-#include <fmt/core.h>
++#include <fmt/format.h>
+ 
+ #include <algorithm>
+ #include <cassert>
+-- 
+2.53.0
+
