@@ -181,7 +181,6 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 | sysutils/open-vm-tools | `0779-glib-stubs--avoid-GLib-g-free-macro-redefinition-erro.patch` | Khem Raj — [PR #779](https://github.com/vmware/open-vm-tools/pull/779) avoid g_free macro redefinition with glib 2.78+ |
 | sysutils/open-vm-tools | `0783-fix-initialization-discards-const-qualifier-from-poi.patch` | Rudi Heitbaum — [PR #783](https://github.com/vmware/open-vm-tools/pull/783) fix glibc-2.43 const-qualifier |
 | tools/bcm2835-utils | `0088-vclog--fix-max-realloc-compiler-error.patch` | Rudi Heitbaum — [PR #88](https://github.com/raspberrypi/utils/pull/88) fix alloc-size compiler error |
-| addons/addon-depends/cxxtools | `0001-add-cmake-build-and-install-rules.patch` | Rudi Heitbaum — add cmake BUILD_DEMOS/BUILD_TESTS options and install rules; [maekitalo/cxxtools PRs](https://github.com/maekitalo/cxxtools/pulls) |
 | wayland/wayland-protocols | `0001-build-add-Cflags-to-pkg-config-when-headers-are-inst.patch` | Rudi Heitbaum — add Cflags to pkg-config for wlroots 0.20+ |
 
 ### Intentionally local (le-specific)
