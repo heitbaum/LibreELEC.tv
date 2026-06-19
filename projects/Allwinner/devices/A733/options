@@ -1,0 +1,38 @@
+################################################################################
+# setup system defaults
+################################################################################
+
+  # The TARGET_CPU variable controls which processor should be targeted for
+  # generated code.
+    case $TARGET_ARCH in
+      aarch64)
+        TARGET_CPU="cortex-a55"
+        TARGET_CPU_FLAGS="+crc+crypto"
+        TARGET_FEATURES="64bit"
+        TARGET_KERNEL_ARCH="arm64"
+        ;;
+    esac
+
+  # Kernel target
+    KERNEL_TARGET="Image"
+
+  # U-Boot firmware package(s) to use
+    UBOOT_FIRMWARE="atf"
+
+  # ATF platform
+    ATF_PLATFORM="sun55i_a527"
+
+  # OpenGL-ES implementation to use (no / bcm2835-driver / mesa)
+    OPENGLES="mesa"
+
+  # KODI Player implementation to use (default / bcm2835-driver / libfslvpuwrap)
+    KODIPLAYER_DRIVER="$OPENGLES"
+
+  # set the addon project
+    ADDON_PROJECT="ARMv8"
+
+  # Graphic drivers to use (overrides project default of lima panfrost)
+    GRAPHIC_DRIVERS="imagination"
+
+  # Vulkan implementation to use (vulkan-loader / no)
+    VULKAN="vulkan-loader"
