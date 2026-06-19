@@ -233,14 +233,10 @@ Also check whether these patches need `git format-patch` headers added (same fol
 
 ### Open Issues (https://github.com/LibreELEC/LibreELEC.tv/issues)
 
-Triage notes:
-- `#9384` — fixed by PR `#11406`
-
 ### Open PRs (https://github.com/LibreELEC/LibreELEC.tv/pulls)
 
 Triage notes:
-- `#3055` — replaced by `#11403` (stale, close)
-- `#9395`, `#10678` — junk, close
+- `#9395` — junk, close
 
 ### Improvements
 
@@ -257,7 +253,6 @@ Triage notes:
 
 ### Retire / Replace
 
-- **rapidjson** — retire once the last remaining Kodi addon drops the dependency. pvr.teleboy migrated (22.2.2-Piers, merged in LE master). Still pending: pvr.zattoo https://github.com/rbuehlma/pvr.zattoo/issues/224 — dev branch carries patches `0002`–`0004` for the migration; waiting on upstream release
 - **Docker iptables → nftables** — move Docker to native nft (still experimental; target LE14+)
 - **iptables** — drop completely once nft transition is complete
 
