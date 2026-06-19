@@ -31,7 +31,8 @@
   # set the addon project
     ADDON_PROJECT="ARMv8"
 
-  # Imagination BXS GPU (overrides project default of lima panfrost)
+  # Graphic drivers to use (overrides project default of lima panfrost)
     GRAPHIC_DRIVERS="imagination"
 
+  # Vulkan implementation to use (vulkan-loader / no)
     VULKAN="vulkan-loader"
