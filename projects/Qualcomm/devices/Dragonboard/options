@@ -72,7 +72,7 @@
   # Windowmanager to use (weston / no)
     WINDOWMANAGER="no"
 
-  # Xorg Graphic drivers to use (all / freedreno)
+  # Graphic drivers to use (all / freedreno)
   # Space separated list is supported,
   # e.g. GRAPHIC_DRIVERS="freedreno"
     GRAPHIC_DRIVERS="freedreno"

@@ -44,7 +44,7 @@
   # Windowmanager to use (weston / no)
     WINDOWMANAGER="no"
 
-  # Xorg Graphic drivers to use (all / lima,panfrost)
+  # Graphic drivers to use (all / lima,panfrost)
   # Space separated list is supported,
   # e.g. GRAPHIC_DRIVERS="lima panfrost"
     GRAPHIC_DRIVERS="lima panfrost"

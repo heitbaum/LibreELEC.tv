@@ -50,7 +50,7 @@
   # Windowmanager to use (weston / no)
     WINDOWMANAGER="no"
 
-  # Xorg Graphic drivers to use (all / vc4 / none)
+  # Graphic drivers to use (all / vc4 / none)
   # Space separated list is supported,
   # e.g. GRAPHIC_DRIVERS="vc4"
     GRAPHIC_DRIVERS="vc4"

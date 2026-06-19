@@ -99,7 +99,7 @@
   # build and install diskmounter support (udevil)
     UDEVIL="no"
 
-  # Xorg Graphic drivers to use (all / nvidia)
+  # Graphic drivers to use (all / mesa)
     GRAPHIC_DRIVERS="mesa"
 
   # build and install remote support (yes / no)

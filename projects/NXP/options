@@ -44,7 +44,7 @@
   # Windowmanager to use (weston / no)
     WINDOWMANAGER="no"
 
-  # Xorg Graphic drivers to use (all / etnaviv)
+  # Graphic drivers to use (all / etnaviv)
   # Space separated list is supported,
   # e.g. GRAPHIC_DRIVERS="etnaviv"
     GRAPHIC_DRIVERS="etnaviv"
