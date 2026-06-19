@@ -161,7 +161,6 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 | addons/addon-depends/network-tools-depends/lftp | `0001-link-readline-with-termcap.patch` | Lukas Rusak — link readline with termcap |
 | addons/addon-depends/network-tools-depends/lftp | `0776-allow-build-with-OpenSSL-4.x.patch` | Rudi Heitbaum — [PR #776](https://github.com/lavv17/lftp/pull/776) OpenSSL 4.x build fix |
 | addons/addon-depends/network-tools-depends/nmap | `0001-allow-build-with-automake-1-17.patch` | Rudi Heitbaum — automake 1.17 build fix |
-| addons/addon-depends/network-tools-depends/nmap | `3331-Fix-build-with-OpenSSL-4-x.patch` | Rudi Heitbaum — [PR #3331](https://github.com/nmap/nmap/pull/3331) OpenSSL 4.x build fix |
 | addons/addon-depends/network-tools-depends/rar2fs | `0002-fix-configure.patch` | Rudi Heitbaum — autotools configure fix |
 | addons/addon-depends/system-tools-depends/encfs | `0677-build-with-cmake-4.0.0.patch` | Rudi Heitbaum — [PR #677](https://github.com/vgough/encfs/pull/677) CMake 4.0 build fix |
 | addons/addon-depends/system-tools-depends/hid_mapper | `0001-crosscompile.patch` | Lukas Rusak — use ${CXX} instead of hardcoded g++ |
@@ -291,6 +290,7 @@ Patches already merged in the upstream project — drop on the next version bump
 | textproc/itstool | `0001-Fix-insufficiently-quoted-regular-expressions.patch` | Nils Philippsen — fix Python 3.12 regex quoting warnings |
 | textproc/itstool | `0057-use-lxml-not-libxml2.patch` | Nick Wellnhofer — switch from libxml2 Python bindings to lxml |
 | x11/xserver/xorg-server | `1002-add-fedora-extra-modes-list.patch` | Adam Jackson (Red Hat) — extra display mode definitions carried by Fedora |
+| addons/addon-depends/network-tools-depends/nmap | `0002-Fix-build-with-OpenSSL-4-x.patch` | Rudi Heitbaum — [PR #3331](https://github.com/nmap/nmap/pull/3331) OpenSSL 4.x build fix |
 | devel/crossguid | `0001-pr67-include-missing-cstdint.patch` | Khem Raj (OE) — [upstream PR #67](https://github.com/graeme-hill/crossguid/pull/67) add <cstdint> for GCC 13 |
 | devel/elfutils | `0002-libelf--Add-libeu-objects-to-libelf.a-static-archive.patch` | Mark Wielaard (elfutils maintainer) — static archive fix; [Bugzilla #32293](https://sourceware.org/bugzilla/show_bug.cgi?id=32293) |
 | devel/gcem | `0054-fix-cmake-minimum~required.patch` | BartolomeyKant — update CMake minimum to 3.10..3.31 |
