@@ -43,6 +43,12 @@ devices = \
         'crust_config': 'pine64_plus_defconfig',
       },
     },
+    'A733': {
+      'radxa-cubie-a7a': {
+        'dtb': 'sun60i-a733-cubie-a7a.dtb',
+        'config': 'radxa-cubie-a7a_defconfig',
+      },
+    },
     'H2-plus': {
       'bananapi-m2-zero': {
         'dtb': 'sun8i-h2-plus-bananapi-m2-zero.dtb',
