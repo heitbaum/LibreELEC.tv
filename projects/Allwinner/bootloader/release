@@ -25,6 +25,7 @@ mkdir -p "$DSTDIR/overlays"
       *) PREFIXES="$PREFIXES $prefix" ;;
     esac
   done
+  cp -a "$SRCDIR"/sun55i-a527-cubie-a5e.dtb "$SRCDIR"/sun60i-a733-cubie-a7a.dtb
 
   for prefix in $PREFIXES; do
     cp -a "$SRCDIR"/overlays/${prefix}-*.dtbo "$DSTDIR"/overlays > /dev/null 2>&1 || true
