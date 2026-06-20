@@ -9,6 +9,7 @@ mkdir -p "$DSTDIR/overlays"
     cp -a "$SRCDIR/u-boot-sunxi-with-spl.bin" "$DSTDIR"
   fi
 
+  cp -a "$SRCDIR"/sun55i-a527-cubie-a5e.dtb "$SRCDIR"/sun60i-a733-cubie-a7a.dtb
   cp -a "$SRCDIR"/sun*-${DEVICE,,}-*.dtb "$DSTDIR"
 
   cp -a "$SRCDIR"/overlays/sun*-${DEVICE,,}-*.dtbo "$DSTDIR"/overlays > /dev/null 2>&1 || true
