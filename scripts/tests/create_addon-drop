@@ -1,0 +1,169 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+# Test harness for the create_addon "-<addon>" drop logic (see #9917).
+#
+# It exercises the REAL get_addons()/verify_addon() functions extracted from
+# scripts/create_addon (so the test tracks the live code) against a fake package
+# cache, and mirrors the script's main-loop drop logic. Run from the repo root:
+#
+#   scripts/tests/create_addon-drop
+#
+# Exits non-zero if any assertion fails.
+
+# NB: no `set -u` — create_addon runs without nounset, and get_addons() reads an
+# optional ${2}; enabling nounset here would not reflect the real runtime.
+
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+CREATE_ADDON="${ROOT_DIR}/scripts/create_addon"
+
+[ -f "${CREATE_ADDON}" ] || { echo "cannot find ${CREATE_ADDON}" >&2; exit 2; }
+
+# ---------------------------------------------------------------------------
+# Stub the slice of build environment that get_addons()/verify_addon() touch
+# ---------------------------------------------------------------------------
+ROOT="/fake"
+TARGET_ARCH="x86_64"
+DEVICE=""
+PROJECT="Generic"
+
+print_color() { echo "$2"; }
+die() { echo "DIE${1:+: $1}" >&2; exit 99; }
+
+# verbatim from config/functions
+listcontains() {
+  if [ -n "$1" -a -n "$2" ]; then
+    [[ ${1} =~ (^|[[:space:]])${2}($|[[:space:]]) ]] && return 0 || return 1
+  else
+    return 1
+  fi
+}
+
+# Fake package cache. _ANCHOR ("@?+?@") is appended exactly as config/functions does.
+_ANCHOR="@?+?@"
+_CACHE_PACKAGE_LOCAL="$(mktemp)"
+_CACHE_PACKAGE_GLOBAL="$(mktemp)"
+: >"${_CACHE_PACKAGE_GLOBAL}"
+trap 'rm -f "${_CACHE_PACKAGE_LOCAL}" "${_CACHE_PACKAGE_GLOBAL}"' EXIT
+
+# name|relative-path-under-packages|PKG_ARCH
+FIXTURE="
+pvr.hts|mediacenter/kodi-binary-addons/pvr.hts|
+inputstream.adaptive|mediacenter/kodi-binary-addons/inputstream.adaptive|
+vfs.sftp|mediacenter/kodi-binary-addons/vfs.sftp|
+service.snapclient|addons/service.snapclient|
+argononecontrol|addons/argononecontrol|aarch64
+"
+while IFS='|' read -r name path arch; do
+  [ -n "${name}" ] || continue
+  echo "${ROOT}/packages/${path}${_ANCHOR}" >>"${_CACHE_PACKAGE_LOCAL}"
+done <<<"${FIXTURE}"
+
+# source_package() fixture: derive PKG_* from the dir name in the fixture table
+source_package() {
+  local dir name
+  dir="$(dirname "$1")"
+  name="$(basename "${dir}")"
+  PKG_NAME="${name}"
+  PKG_IS_ADDON="yes"
+  PKG_ADDON_PROJECTS=""
+  PKG_ARCH="$(echo "${FIXTURE}" | awk -F'|' -v n="${name}" '$1==n{print $3}')"
+}
+
+# ---------------------------------------------------------------------------
+# Pull the real functions out of scripts/create_addon
+# ---------------------------------------------------------------------------
+eval "$(sed -n '/^get_addons() {/,/^}/p'  "${CREATE_ADDON}")"
+eval "$(sed -n '/^verify_addon() {/,/^}/p' "${CREATE_ADDON}")"
+
+# Mirror of the create_addon main loop (argument parsing + drop filtering).
+# Prints the sorted build set; returns 99 if get_addons() called die.
+plan_addons() {
+  local addons="" addons_drop="" arg a wanted=""
+  for arg in "$@"; do
+    case ${arg} in
+      -*) addons_drop+=" $(get_addons "${arg:1}" optional)" || return 99 ;;
+      *)  addons+=" $(get_addons "${arg}")" || return 99 ;;
+    esac
+  done
+  for a in $(echo ${addons} | tr ' ' '\n' | sort -u); do
+    listcontains "${addons_drop}" "${a}" || wanted+=" ${a}"
+  done
+  echo ${wanted} | tr ' ' '\n' | sort | xargs
+}
+
+# Probe: the exact-name filter path (create_addon:73, "${filter}@?+?@") relies on
+# a non-portable ERE; some bash builds (e.g. Windows Git Bash) reject "?+".
+_filter_works() { [[ "/x/p/probe${_ANCHOR}" =~ ^.*/probe@?+?@ ]]; }
+
+# ---------------------------------------------------------------------------
+# Assertions
+# ---------------------------------------------------------------------------
+PASS=0 FAIL=0 SKIP=0
+
+norm() { echo "$1" | tr ' ' '\n' | sort | xargs; }
+
+assert_set() { # name  expected  args...
+  local name="$1" expected; expected="$(norm "$2")"; shift 2
+  local got; got="$(plan_addons "$@")"
+  if [ "${got}" = "${expected}" ]; then
+    echo "PASS: ${name}"; PASS=$((PASS + 1))
+  else
+    echo "FAIL: ${name}"; echo "        args:     $*"
+    echo "        expected: {${expected}}"; echo "        got:      {${got}}"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+assert_aborts() { # name  args...
+  local name="$1"; shift
+  if plan_addons "$@" >/dev/null 2>&1; then
+    echo "FAIL: ${name} (expected abort, but it succeeded)"; FAIL=$((FAIL + 1))
+  else
+    echo "PASS: ${name}"; PASS=$((PASS + 1))
+  fi
+}
+
+skip() { echo "SKIP: $1 ($2)"; SKIP=$((SKIP + 1)); }
+
+ALL="pvr.hts inputstream.adaptive vfs.sftp service.snapclient"   # argononecontrol is incompatible
+
+echo "== create_addon drop-list tests (#9917) =="
+
+# #9917 core: dropping an arch-incompatible addon must not abort the build
+assert_set "drop incompatible addon does not abort" \
+  "pvr.hts inputstream.adaptive vfs.sftp" \
+  binary -argononecontrol
+
+# group drops must still work (the regression the naive raw-name fix introduced)
+assert_set "all -binary keeps only non-binary" \
+  "service.snapclient" \
+  all -binary
+
+assert_set "all -official keeps only binary" \
+  "pvr.hts inputstream.adaptive vfs.sftp" \
+  all -official
+
+# no drop: full compatible set, incompatible silently excluded
+assert_set "all builds every compatible addon" "${ALL}" all
+
+# safety: dropping a nonexistent addon is a no-op, never aborts
+assert_set "drop nonexistent addon is harmless" "${ALL}" all -nosuchaddon
+
+# safety: an unmatched KEEP filter must still abort (unchanged behaviour)
+assert_aborts "unmatched keep filter still aborts" nosuchaddon
+
+# exact-name drop of a compatible addon (needs the non-portable filter regex)
+if _filter_works; then
+  assert_set "exact-name drop removes a compatible addon" \
+    "pvr.hts inputstream.adaptive vfs.sftp" \
+    all -service.snapclient
+else
+  skip "exact-name drop removes a compatible addon" "bash rejects the create_addon:73 '?+' ERE"
+fi
+
+echo
+echo "== ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+[ "${FAIL}" -eq 0 ]
