@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+# Regression guard for issue #5536 "Cross Compiled meson not using cross
+# compiled libraries and failing meson.build tests".
+#
+# The bug: when the target architecture equals the build architecture
+# (e.g. Generic x86_64) meson treated the build as native -- meson.is_cross_build()
+# returned false -- so run-time checks (e.g. glib's frexp()/frexpl()) executed the
+# freshly built test binary on the host, which linked the newer target glibc and
+# failed with "GLIBC_2.34 not found".
+#
+# Fixed by ad84c1e24b (needs_exe_wrapper = true / always cross) and PR #11143
+# (native-file for host/pkg-config). This test reproduces the exact setup --
+# LE's generated cross-file + native-file via meson setup -- and asserts the two
+# properties that were wrong:
+#   * meson.is_cross_build()        is true
+#   * meson.can_run_host_binaries() is false  (meson will not run target binaries)
+#
+# Run from the repo root on a build host:  scripts/tests/meson-cross-build
+# Defaults to Generic/x86_64 (the arch the bug was reported on); override with
+# PROJECT=/ARCH= in the environment.
+
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+PASS=0 FAIL=0 SKIP=0
+ok() { echo "PASS: $1"; PASS=$((PASS + 1)); }
+no() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
+sk() { echo "SKIP: $1 ($2)"; SKIP=$((SKIP + 1)); }
+
+echo "== #5536: meson cross-build regression guard =="
+
+result="$(
+  cd "${ROOT_DIR}" || exit 0
+  export PROJECT="${PROJECT:-Generic}" ARCH="${ARCH:-x86_64}"
+  . ./config/options "" >/dev/null 2>&1 || { echo "SKIP:could not source config/options"; exit 0; }
+  # "target meson" (not just "target") selects the meson branch of setup_toolchain,
+  # which sets TARGET_CC/CXX/AR, HOST_CC/CXX and CC=host-gcc -- exactly what
+  # create_meson_conf_target/host and the meson invocation below expect.
+  setup_toolchain target meson >/dev/null 2>&1 || { echo "SKIP:setup_toolchain target meson failed"; exit 0; }
+  # config/options brings in `set -e` + an ERR trap; drop them so our own control
+  # flow is not aborted by an expected non-zero (e.g. a probe).
+  set +e; trap - ERR 2>/dev/null
+  type create_meson_conf_target >/dev/null 2>&1 || { echo "SKIP:create_meson_conf_target unavailable"; exit 0; }
+
+  MESON_BIN="${TOOLCHAIN}/bin/meson"; [ -x "${MESON_BIN}" ] || MESON_BIN="$(command -v meson 2>/dev/null)"
+  [ -x "${MESON_BIN}" ] || { echo "SKIP:no meson (build meson:host / the toolchain first)"; exit 0; }
+
+  # create_meson_conf_target reads these via python os.getenv(); they are set by
+  # setup_toolchain but not necessarily exported to child processes -- export them
+  # (empty if unset; their value is irrelevant to this test).
+  export TARGET_CFLAGS="${TARGET_CFLAGS-}" TARGET_CXXFLAGS="${TARGET_CXXFLAGS-}" TARGET_LDFLAGS="${TARGET_LDFLAGS-}"
+
+  tmp="$(mktemp -d)"; mkdir -p "${tmp}/src"
+  cat > "${tmp}/src/meson.build" <<'MB'
+project('le5536', 'c')
+assert(meson.is_cross_build(),
+       'meson.is_cross_build() is false - regression of #5536')
+assert(not meson.can_run_host_binaries(),
+       'meson.can_run_host_binaries() is true (needs_exe_wrapper missing) - regression of #5536')
+MB
+
+  # exactly as scripts/build does for a target meson build
+  create_meson_conf_target le5536 "${tmp}/meson.conf"      2>/dev/null
+  create_meson_conf_host   le5536 "${tmp}/meson-host.conf" 2>/dev/null
+  if [ ! -s "${tmp}/meson.conf" ] || [ ! -s "${tmp}/meson-host.conf" ]; then
+    echo "SKIP:meson conf generation produced no output"; cd /; rm -rf "${tmp}"; exit 0
+  fi
+
+  CC="${HOST_CC}" CXX="${HOST_CXX}" "${MESON_BIN}" setup "${tmp}/build" \
+      --cross-file="${tmp}/meson.conf" --native-file="${tmp}/meson-host.conf" \
+      "${tmp}/src" > "${tmp}/setup.log" 2>&1
+  rc=$?
+
+  if [ ${rc} -eq 0 ]; then
+    echo "OK"
+  elif grep -q 'regression of #5536' "${tmp}/setup.log"; then
+    echo "FAIL"; grep -m1 'regression of #5536' "${tmp}/setup.log"
+  else
+    echo "SKIP:meson setup failed for an unrelated reason"; tail -6 "${tmp}/setup.log"
+  fi
+  cd /; rm -rf "${tmp}"
+)"
+
+case "${result}" in
+  OK)    ok "LE meson cross setup => is_cross_build()=true and target binaries are not run (needs_exe_wrapper)" ;;
+  FAIL*) no "$(printf '%s' "${result}" | sed -n '2p')" ;;
+  SKIP*) sk "meson cross build" "${result#SKIP:}" ;;
+  "")    sk "meson cross build" "env bring-up produced no result (run from repo root on a build host)" ;;
+  *)     no "unexpected result:"; printf '%s\n' "${result}" | sed 's/^/    /' ;;
+esac
+
+echo
+echo "== ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+[ "${FAIL}" -eq 0 ]
