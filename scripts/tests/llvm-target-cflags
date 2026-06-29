@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-only
+# Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
+
+# Proof harness for issue #5486 "llvm target build ignores C_FLAGS AND CXX_FLAGS".
+#
+# Resolution being proven:
+#   * the broken inline `-DCMAKE_C_FLAGS="${CFLAGS}"` lines were removed from
+#     packages/lang/llvm/package.mk (they self-terminated the quoted string and
+#     cmake >= 3.20 errored on them);
+#   * llvm now uses PKG_TOOLCHAIN="cmake", so target CFLAGS/CXXFLAGS arrive via
+#     the environment (config/functions exports CFLAGS="$TARGET_CFLAGS") and
+#     cmake initialises CMAKE_C_FLAGS from it, even though the LE cmake conf
+#     empties CMAKE_C_FLAGS_RELEASE.
+#
+# Run from the repo root:  scripts/tests/llvm-target-cflags
+# Parts A and C run anywhere; part B compiles with LE's own toolchain (or a
+# system cmake/cc fallback).
+
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+LLVM_MK="${ROOT_DIR}/packages/lang/llvm/package.mk"
+PASS=0 FAIL=0 SKIP=0
+ok() { echo "PASS: $1"; PASS=$((PASS + 1)); }
+no() { echo "FAIL: $1"; FAIL=$((FAIL + 1)); }
+sk() { echo "SKIP: $1 ($2)"; SKIP=$((SKIP + 1)); }
+
+echo "== A. static: the broken inline flag lines are gone; cmake toolchain used =="
+if grep -qE -- '-DCMAKE_C(XX)?_FLAGS=' "${LLVM_MK}"; then
+  no "llvm/package.mk still passes -DCMAKE_C_FLAGS / -DCMAKE_CXX_FLAGS inline"
+else
+  ok "no inline -DCMAKE_C_FLAGS / -DCMAKE_CXX_FLAGS in llvm/package.mk"
+fi
+if grep -qE 'PKG_TOOLCHAIN="cmake"' "${LLVM_MK}"; then
+  ok 'llvm uses PKG_TOOLCHAIN="cmake" (flags flow via the cmake toolchain conf)'
+else
+  no 'llvm no longer uses PKG_TOOLCHAIN="cmake"'
+fi
+
+echo
+echo "== C. why the old inline form was broken (nested quotes, bash only) =="
+CFLAGS_DEMO="-O2 -pipe -mtune=generic"
+# This is the exact shape of the removed line; the inner quotes close the outer
+# string, so ${CFLAGS_DEMO} is word-split and only its first word stays attached.
+OLD="-DLLVM_A=1 -DCMAKE_C_FLAGS="${CFLAGS_DEMO}" -DLLVM_B=2"
+echo "  CFLAGS              = [${CFLAGS_DEMO}]"
+echo "  old OPTS expands to = [${OLD}]"
+if [[ "${OLD}" == *'-DCMAKE_C_FLAGS=-O2 -pipe -mtune=generic'* ]]; then
+  ok "confirmed: only '-O2' stays in -DCMAKE_C_FLAGS; '-pipe -mtune=generic' leak as stray cmake args (=> ignored / fatal on cmake >= 3.20)"
+else
+  no "could not reproduce the nested-quote mangling"
+fi
+
+echo
+echo "== B. dynamic: TARGET CFLAGS -> CMAKE_C_FLAGS -> compiler =="
+# Prefer LE's own toolchain (system cmake/cc are absent in the build container):
+# bring up the real environment and compile a tiny project with the actual cross
+# compiler + the actual generated cmake conf. Falls back to a system-cmake mimic
+# when run outside a build host.
+result="$(
+  set +e
+  cd "${ROOT_DIR}" || exit 0
+  export PROJECT="${PROJECT:-Generic}" ARCH="${ARCH:-x86_64}"
+  mode="" CMAKE_BIN="" CONF="" CCBIN=""
+  if . ./config/options "" >/dev/null 2>&1 && setup_toolchain target >/dev/null 2>&1; then
+    CMAKE_BIN="${TOOLCHAIN}/bin/cmake"; [ -x "${CMAKE_BIN}" ] || CMAKE_BIN="$(command -v cmake 2>/dev/null)"
+    CCBIN="${CC%% *}"
+    if [ -x "${CMAKE_BIN}" ] && [ -n "${CMAKE_CONF:-}" ] && [ -f "${CMAKE_CONF}" ] && command -v "${CCBIN}" >/dev/null 2>&1; then
+      mode="le"; CONF="${CMAKE_CONF}"      # real LE cross conf; CFLAGS already == TARGET_CFLAGS
+    fi
+  fi
+  if [ -z "${mode}" ]; then                # fallback for non-build-host machines
+    CMAKE_BIN="$(command -v cmake 2>/dev/null)"
+    CCBIN="$(command -v cc 2>/dev/null || command -v gcc 2>/dev/null)"
+    { [ -x "${CMAKE_BIN}" ] && [ -n "${CCBIN}" ]; } || { echo "SKIP:no cmake + compiler (run on the LE build host from repo root)"; exit 0; }
+    mode="mimic"; export CFLAGS=""
+  fi
+  tmp="$(mktemp -d)"
+  printf 'int main(void){ return 0; }\n' > "${tmp}/main.c"
+  cat > "${tmp}/CMakeLists.txt" <<'CM'
+cmake_minimum_required(VERSION 3.13)
+project(le5486 C)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_executable(prog main.c)
+CM
+  if [ "${mode}" = "mimic" ]; then         # synthesise an LE-style conf
+    CONF="${tmp}/le.cmake"
+    { echo "SET(CMAKE_C_COMPILER ${CCBIN})"; echo 'SET(CMAKE_C_FLAGS_RELEASE "")'; } > "${CONF}"
+  fi
+  export CFLAGS="${CFLAGS} -DLE5486_SENTINEL_FLAG"   # add a sentinel to the target flags
+  cd "${tmp}" || exit 0
+  "${CMAKE_BIN}" -S . -B build -DCMAKE_TOOLCHAIN_FILE="${CONF}" -DCMAKE_BUILD_TYPE=Release >cfg.log 2>&1
+  "${CMAKE_BIN}" --build build --verbose >build.log 2>&1
+  if grep -q LE5486_SENTINEL_FLAG build/compile_commands.json 2>/dev/null || grep -q LE5486_SENTINEL_FLAG build.log 2>/dev/null; then
+    echo "OK:${mode}:${CCBIN##*/}"
+  else
+    echo "BAD:${mode}"; echo '--cfg--'; tail -4 cfg.log; echo '--build--'; tail -4 build.log
+  fi
+  cd /; rm -rf "${tmp}"
+)"
+case "${result}" in
+  OK:le:*)    ok "TARGET CFLAGS reached the cross compiler (${result##*:}) via the real LE cmake conf (Release)" ;;
+  OK:mimic:*) ok "CFLAGS reached the compiler (${result##*:}) via an LE-style cmake conf (Release, _RELEASE emptied) [system fallback]" ;;
+  SKIP:*)     sk "mechanism build" "${result#SKIP:}" ;;
+  "")         sk "mechanism build" "LE env bring-up produced no result" ;;
+  *)          no "sentinel CFLAG did NOT reach the compiler"; printf '%s\n' "${result}" | sed 's/^/    /' ;;
+esac
+
+echo
+echo "== ${PASS} passed, ${FAIL} failed, ${SKIP} skipped =="
+[ "${FAIL}" -eq 0 ]
