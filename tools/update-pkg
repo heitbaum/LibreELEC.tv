@@ -115,7 +115,7 @@ function check_patches() {
       if grep -qE '^GIT binary patch$|^rename from|^rename to' "${i}"; then
         out=$(git apply --directory="${check_dir}" -p1 --whitespace=nowarn --unsafe-paths < "${i}" 2>&1)
       else
-        out=$(patch -d "${check_dir}" -p1 --batch --no-backup-if-mismatch < "${i}" 2>&1)
+        out=$(patch -d "${check_dir}" -p1 --batch --forward --dry-run --no-backup-if-mismatch < "${i}" 2>&1)
       fi
       prc=$?
       if [ ${prc} -ne 0 ]; then
