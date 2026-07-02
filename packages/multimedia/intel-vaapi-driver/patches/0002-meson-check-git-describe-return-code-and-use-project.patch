@@ -1,0 +1,43 @@
+From e806b67b2e53f9508ca349f64b5e2ede45d79535 Mon Sep 17 00:00:00 2001
+From: Eli Schwartz <eschwartz@archlinux.org>
+Date: Thu, 2 Jul 2026 21:12:50 +1000
+Subject: [PATCH 2/3] meson: check git describe return code and use
+ project_source_root
+
+run_command() without a check kwarg warns that the default will flip to
+true in meson 2.0; when building from a tarball (git present but no .git)
+the describe fails and the version string is left empty. Set check:false,
+default the version to the project version, and only override it when git
+describe succeeds. Also replace the deprecated meson.source_root() with
+meson.project_source_root().
+---
+ src/meson.build | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/src/meson.build b/src/meson.build
+index 7c454b4a..8755c874 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -20,13 +20,14 @@ config_file = configure_file(
+   output : 'config.h',
+   configuration : config_cfg)
+ 
++intel_driver_git_version = intel_vaapi_driver_version
+ if git.found()
+   git_version = run_command(
+-    git, '--git-dir', join_paths(meson.source_root(), '.git'),
+-    'describe', '--tags')
+-  intel_driver_git_version = git_version.stdout().strip()
+-else
+-  intel_driver_git_version = intel_vaapi_driver_version
++    git, '--git-dir', join_paths(meson.project_source_root(), '.git'),
++    'describe', '--tags', check : false)
++  if git_version.returncode() == 0
++    intel_driver_git_version = git_version.stdout().strip()
++  endif
+ endif
+ 
+ version_cfg = configuration_data()
+-- 
+2.47.1.windows.2
+
