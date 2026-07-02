@@ -25,6 +25,12 @@ else
                            -Denable-wayland=false"
 fi
 
+# non-x11 images do not ship libX11, so pull in its Compose/locale data
+# separately for libxkbcommon dead-key and key-composing support
+if [ ! "${DISPLAYSERVER}" = "x11" ]; then
+  PKG_DEPENDS_TARGET+=" libx11-compose-data"
+fi
+
 pre_configure_target() {
   if [ "${DISPLAYSERVER}" = "x11" ]; then
     TARGET_LDFLAGS="${LDFLAGS} -lXau -lxcb"
