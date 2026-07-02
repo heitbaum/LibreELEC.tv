@@ -1,0 +1,38 @@
+From 18a3c2065abb2c04554df92edd436766971ae255 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Thu, 2 Jul 2026 21:12:50 +1000
+Subject: [PATCH 3/3] meson: replace deprecated get_pkgconfig_variable with
+ get_variable
+
+dependency.get_pkgconfig_variable() has been deprecated since meson
+0.56.0. Use get_variable(pkgconfig : ...) for the libva driverdir and
+the wayland-scanner prefix lookups.
+---
+ meson.build | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 25171ac9..bb0dcf67 100644
+--- a/meson.build
++++ b/meson.build
+@@ -41,7 +41,7 @@ va_api_minor_version = '33'
+ driverdir = get_option('driverdir')
+ if libva_dep.type_name() == 'pkgconfig'
+   if driverdir == ''
+-    driverdir = libva_dep.get_pkgconfig_variable('driverdir')
++    driverdir = libva_dep.get_variable(pkgconfig : 'driverdir')
+   endif
+   va_api_version_array = libva_dep.version().split('.')
+   va_api_major_version = va_api_version_array[0]
+@@ -80,7 +80,7 @@ if get_option('with_wayland_drm') != 'no'
+     required : get_option('with_wayland_drm') == 'yes')
+ 
+   if wayland_client_dep.found()
+-    prefix = wayland_client_dep.get_pkgconfig_variable('prefix')
++    prefix = wayland_client_dep.get_variable(pkgconfig : 'prefix')
+     wayland_scanner = join_paths(prefix, 'bin', 'wayland-scanner')
+   else
+     wayland_scanner = ''
+-- 
+2.47.1.windows.2
+
