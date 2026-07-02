@@ -46,3 +46,7 @@ projects/**/*.old
 
 # ignore Claude Code local settings
 .claude/
+
+# ignore local tool output (validate-licenses.py report, rename_plan.py stderr)
+/license_validation.csv
+/rename_stderr.txt
