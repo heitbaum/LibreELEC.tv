@@ -21,6 +21,56 @@ PACKAGES_NOT_REGISTERED=""
 github_api_token=""
 github_api="no"
 
+normalise_version() {
+  # reduce a version string to a comparable core so cosmetic differences
+  # (packaging/prefix/snapshot suffixes) do not read as an update:
+  #  - strip a leading "v" (only when followed by a digit)
+  #  - drop a "+..." packaging tail (e.g. +dfsg)
+  #  - drop a trailing qualifier suffix (-RELEASE/-final/-GA/-stable)
+  #  - drop a trailing "-<digits>" packaging/snapshot release
+  #  - strip leading zeros from each dotted numeric component (3.00 -> 3.0)
+  local v="${1}" out="" part IFS=.
+  [[ "${v}" =~ ^v[0-9] ]] && v="${v#v}"
+  v="${v%%+*}"
+  shopt -s nocasematch
+  while [[ "${v}" =~ -(RELEASE|final|GA|stable)$ ]]; do v="${v%-*}"; done
+  shopt -u nocasematch
+  while [[ "${v}" =~ -[0-9]+$ ]]; do v="${v%-*}"; done
+  for part in ${v}; do
+    [[ "${part}" =~ ^[0-9]+$ ]] && part=$((10#${part}))
+    out="${out:+${out}.}${part}"
+  done
+  printf '%s' "${out}"
+}
+
+is_plain_version() {
+  # true only for a normal upstream version string - not a git hash, not a
+  # multi-field github/nvidia string, not a tracker error marker
+  local v="${1}"
+  case "${v}" in
+    *[\ \|\(\!]*) return 1 ;;
+  esac
+  [[ "${v}" =~ ^[0-9a-f]{7,}$ ]] && return 1
+  [[ "${v}" =~ ^[vV]?[0-9] ]] || return 1
+  return 0
+}
+
+upstream_newer() {
+  # decide whether upstream (${2}) is worth reporting over current (${1});
+  # for plain versions require upstream to be strictly newer, otherwise fall
+  # back to plain inequality (git hashes, formatted/error strings)
+  local cur="${1}" up="${2}" nc nu lo
+  if is_plain_version "${cur}" && is_plain_version "${up}"; then
+    nc="$(normalise_version "${cur}")"
+    nu="$(normalise_version "${up}")"
+    [ "${nc}" = "${nu}" ] && return 1
+    lo="$(printf '%s\n%s\n' "${nc}" "${nu}" | sort -V | head -1)"
+    [ "${lo}" = "${nc}" ] && return 0
+    return 1
+  fi
+  [ "${cur}" != "${up}" ]
+}
+
 test_github_api() {
   # check for github user and token present at ~/.libreelec/options to activate github api checks
   if [[ -n "${github_token}" || -n "${github_user}" ]]; then
@@ -180,12 +230,12 @@ check_for_update() {
   fi
 
   # print version output line
-  if [[ "${AUTO_UPDATE}" == "yes" ]] && [ "${PKG_VERSION}" != "${upstream_version}" ]; then
+  if [[ "${AUTO_UPDATE}" == "yes" ]] && upstream_newer "${PKG_VERSION}" "${upstream_version}"; then
     echo "${PKG_NAME} ${PKG_VERSION} ${upstream_version}"
   elif [ ! -z "${API}" ]; then
     printf "%s %s %s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"
     printf '\n'
-  elif [ "${PKG_VERSION}" != "${upstream_version}" ]; then
+  elif upstream_newer "${PKG_VERSION}" "${upstream_version}"; then
     printf "%-35s | %-40s | %-20s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"
     printf '\n'
   else
