@@ -17,25 +17,20 @@ command -v jq >/dev/null 2>&1 || die "please install jq"
 # global vars
 PACKAGES_CURRENT=""
 PACKAGES_IGNORED=""
+PACKAGES_PRERELEASE=""
 PACKAGES_NOT_REGISTERED=""
 github_api_token=""
 github_api="no"
 
 normalise_version() {
-  # reduce a version string to a comparable core so cosmetic differences
-  # (packaging/prefix/snapshot suffixes) do not read as an update:
-  #  - strip a leading "v" (only when followed by a digit)
-  #  - drop a "+..." packaging tail (e.g. +dfsg)
-  #  - drop a trailing qualifier suffix (-RELEASE/-final/-GA/-stable)
-  #  - drop a trailing "-<digits>" packaging/snapshot release
-  #  - strip leading zeros from each dotted numeric component (3.00 -> 3.0)
+  # reduce a version to a comparable core using only transforms that are safe
+  # for every package: strip a leading "v" and zero-pad dotted numeric parts
+  # (3.00 -> 3.0). package-specific cosmetic suffixes (-RELEASE, +dfsg, anitya
+  # -N, snapshot tails) are meaning-dependent so they are handled per package
+  # in the case block below, never stripped globally (e.g. ncurses 6.6-YYYYMMDD
+  # is a real newer snapshot, not cosmetic).
   local v="${1}" out="" part IFS=.
   [[ "${v}" =~ ^v[0-9] ]] && v="${v#v}"
-  v="${v%%+*}"
-  shopt -s nocasematch
-  while [[ "${v}" =~ -(RELEASE|final|GA|stable)$ ]]; do v="${v%-*}"; done
-  shopt -u nocasematch
-  while [[ "${v}" =~ -[0-9]+$ ]]; do v="${v%-*}"; done
   for part in ${v}; do
     [[ "${part}" =~ ^[0-9]+$ ]] && part=$((10#${part}))
     out="${out:+${out}.}${part}"
@@ -55,20 +50,30 @@ is_plain_version() {
   return 0
 }
 
-upstream_newer() {
-  # decide whether upstream (${2}) is worth reporting over current (${1});
-  # for plain versions require upstream to be strictly newer, otherwise fall
-  # back to plain inequality (git hashes, formatted/error strings)
-  local cur="${1}" up="${2}" nc nu lo
-  if is_plain_version "${cur}" && is_plain_version "${up}"; then
-    nc="$(normalise_version "${cur}")"
-    nu="$(normalise_version "${up}")"
-    [ "${nc}" = "${nu}" ] && return 1
-    lo="$(printf '%s\n%s\n' "${nc}" "${nu}" | sort -V | head -1)"
-    [ "${lo}" = "${nc}" ] && return 0
-    return 1
-  fi
-  [ "${cur}" != "${up}" ]
+is_prerelease() {
+  # true if a version string looks like an upstream pre-release
+  local v="${1}" r=1
+  shopt -s nocasematch
+  [[ "${v}" =~ (rc|alpha|beta|snapshot|_alpha|-dev$|\.dev|pre[0-9]|-b\.[0-9]|[0-9](a|b|rc)[0-9]) ]] && r=0
+  shopt -u nocasematch
+  return ${r}
+}
+
+cosmetic_equal() {
+  # true if two plain versions are equal after normalisation
+  is_plain_version "${1}" && is_plain_version "${2}" || return 1
+  [ "$(normalise_version "${1}")" = "$(normalise_version "${2}")" ]
+}
+
+upstream_strictly_newer() {
+  # true if upstream (${2}) is a plain version strictly newer than current (${1})
+  local nc nu lo
+  is_plain_version "${1}" && is_plain_version "${2}" || return 1
+  nc="$(normalise_version "${1}")"
+  nu="$(normalise_version "${2}")"
+  [ "${nc}" = "${nu}" ] && return 1
+  lo="$(printf '%s\n%s\n' "${nc}" "${nu}" | sort -V | head -1)"
+  [ "${lo}" = "${nc}" ]
 }
 
 test_github_api() {
@@ -177,12 +182,20 @@ check_for_update() {
         upstream_version=$(echo "${RMO_API_RESPONSE}" | jq -r '.items[0].version' || true)
 
         # special handling based on release-monitoring formatting
+        # (cosmetic packaging suffixes that are known equivalent for the package)
         case ${PKG_NAME} in
           krb5)
             upstream_version=${upstream_version//-final/}
             ;;
           lm_sensors)
             upstream_version=${upstream_version//-/.}
+            ;;
+          boost)
+            # anitya appends a packaging release number (e.g. 1.91.0-1)
+            upstream_version=${upstream_version%-[0-9]*}
+            ;;
+          libsodium)
+            upstream_version=${upstream_version%-RELEASE}
             ;;
         esac
         ;;
@@ -229,13 +242,26 @@ check_for_update() {
     fi
   fi
 
-  # print version output line
-  if [[ "${AUTO_UPDATE}" == "yes" ]] && upstream_newer "${PKG_VERSION}" "${upstream_version}"; then
-    echo "${PKG_NAME} ${PKG_VERSION} ${upstream_version}"
-  elif [ ! -z "${API}" ]; then
+  # classify and print
+  #  - API mode is a raw dump: one line per package regardless
+  #  - cosmetic-equal versions are current
+  #  - upstream pre-releases are suppressed unless PRERELEASE=yes
+  #  - AUTO_UPDATE (bot) only acts on a strictly newer stable version, so it
+  #    never opens a downgrade or pre-release PR
+  #  - the human table shows anything else that differs, including a version
+  #    that is older upstream (a stale/broken tracker lookup worth a look)
+  if [ ! -z "${API}" ]; then
     printf "%s %s %s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"
     printf '\n'
-  elif upstream_newer "${PKG_VERSION}" "${upstream_version}"; then
+  elif cosmetic_equal "${PKG_VERSION}" "${upstream_version}"; then
+    PACKAGES_CURRENT+="${PKG_NAME} "
+  elif [ "${PRERELEASE}" != "yes" ] && is_prerelease "${upstream_version}"; then
+    PACKAGES_PRERELEASE+="${PKG_NAME} "
+  elif [[ "${AUTO_UPDATE}" == "yes" ]]; then
+    if upstream_strictly_newer "${PKG_VERSION}" "${upstream_version}"; then
+      echo "${PKG_NAME} ${PKG_VERSION} ${upstream_version}"
+    fi
+  elif [ "${PKG_VERSION}" != "${upstream_version}" ]; then
     printf "%-35s | %-40s | %-20s" "${PKG_NAME}" "${PKG_VERSION}" "${upstream_version}"
     printf '\n'
   else
@@ -290,6 +316,9 @@ elif [ -z "${API}" ]; then
   fi
   if [ -n "${PACKAGES_IGNORED}" ]; then
     echo -e "\nIgnored $(echo ${PACKAGES_IGNORED} | wc -w):\n${PACKAGES_IGNORED}"
+  fi
+  if [ -n "${PACKAGES_PRERELEASE}" ]; then
+    echo -e "\nUpstream pre-release only $(echo ${PACKAGES_PRERELEASE} | wc -w) (set PRERELEASE=yes to show):\n${PACKAGES_PRERELEASE}"
   fi
   if [ -n "${PACKAGES_NOT_REGISTERED}" ]; then
     echo -e "\nPackages not known at tracker $(echo ${PACKAGES_NOT_REGISTERED} | wc -w):\n${PACKAGES_NOT_REGISTERED}\n"
