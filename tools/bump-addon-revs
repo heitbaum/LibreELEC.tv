@@ -18,6 +18,30 @@ RANGE="${1:-$(git merge-base HEAD master)..HEAD}"
 declare -A dep_msgs=()   # dep_pkgname -> newline-separated commit subjects
 declare -A dep_pkgmk=()  # dep_pkgname -> path to its package.mk
 
+# Emit the bundled target-dependency tokens of a package.mk: the values of
+# PKG_DEPENDS_TARGET / PKG_ADDON_REQUIRES with line-continuations joined and
+# ':host' build-only tools dropped. An addon only bundles - and so is only
+# rebuilt by - a package listed here, so host tooling (cmake:host) and
+# packages named only in hooks/comments (e.g. the patchelf command) are
+# correctly excluded and never trigger a spurious rev bump.
+addon_target_deps() {
+  awk '
+    {
+      line = $0
+      if (line ~ /\\[[:space:]]*$/) { sub(/\\[[:space:]]*$/, "", line); buf = buf line " "; next }
+      buf = buf line
+      if (buf ~ /^[[:space:]]*(PKG_DEPENDS_TARGET|PKG_ADDON_REQUIRES)[[:space:]]*\+?=/) {
+        sub(/^[^=]*=/, "", buf)
+        gsub(/"/, "", buf)
+        n = split(buf, t, /[[:space:]]+/)
+        for (i = 1; i <= n; i++)
+          if (t[i] != "" && t[i] !~ /:host$/) print t[i]
+      }
+      buf = ""
+    }
+  ' "${1}"
+}
+
 while IFS= read -r commit; do
   subject=$(git log --format="%s" -1 "${commit}")
 
@@ -34,6 +58,10 @@ while IFS= read -r commit; do
 
     while IFS= read -r d_pkgmk; do
       [ -z "${d_pkgmk}" ] && continue
+      # Only bump addons that actually bundle this package as a target
+      # dependency - skip host build tools (cmake:host etc.) and packages
+      # merely referenced in hooks/comments (e.g. the patchelf command).
+      addon_target_deps "${d_pkgmk}" | grep -qxF "${pkgname}" || continue
       d_pkgname=$(basename "$(dirname "${d_pkgmk}")")
       d_rev=$(grep "^PKG_REV=" "${d_pkgmk}" | sed 's/PKG_REV="//;s/"//')
       [ -z "${d_rev}" ] && continue
