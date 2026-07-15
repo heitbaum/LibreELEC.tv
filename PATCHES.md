@@ -119,6 +119,8 @@ Patches that should be sent to the upstream project but have not yet been submit
 | devel/glibc | `0001-Makerules-install-the-ABI-lib-names-header-from-the-.patch` | Rudi Heitbaum — 2.44 dropped the top-level `.NOTPARALLEL`, so parallel `make install` races `csu/subdir_install` against the top-level install of `gnu/lib-names-<abi>.h`; still unfixed on upstream master and `release/2.44/master`; to submit to libc-alpha |
 | devel/intltool | `0001-fix-regex-expressions.patch` | Fix Perl regex escaping (${ in character classes) in intltool-update.in |
 | devel/libbpf | `0001-fix-crosscompile-and-sysroot.patch` | Fix sysroot-relative prefix in .pc and add -lz to Libs |
+| devel/libcec | `0001-use-snprintf-in-FindAdapters-for-nul-termination.patch` | Rudi Heitbaum — snprintf in FindAdapters to fix gcc-16 -Wstringop-truncation; to submit to Pulse-Eight/libcec |
+| devel/libcec | `0002-size-cecc-client-port-buffer-to-full-length.patch` | Rudi Heitbaum — enlarge cecc-client g_strPort to 1024 to fix gcc-16 -Wformat-truncation; to submit to Pulse-Eight/libcec |
 | devel/libconfuse | `0001-gettext-0.20-libconfuse.patch` | Add AM_GNU_GETTEXT_REQUIRE_VERSION for gettext compat |
 | devel/libffi | `0001-Fix-installation-location-of-libffi.patch` | Install to lib instead of toolexeclib (multilib cross-compile fix) |
 | devel/libffi | `0002-fix-pkgconf.patch` | Fix pkgconf: use ${libdir} instead of ${toolexeclibdir} |
