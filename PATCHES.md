@@ -2,7 +2,7 @@
 
 Every patch carried in `master` must be classified. The goal is to avoid accumulating patches: either submit fixes upstream or explicitly declare them intentionally local.
 
-> **Last reconciled with the tree:** upstream/master `6dab8beb89`, dev re-checked after the 2026-08-01 cleanup. Run `tools/patch-scan.py --ref upstream/master` — the default `master` ref is a local branch that lags behind a fetch; both directions are clean. The cleanup dropped dev's libwebsockets revert (dev is on 5.0.0 with the const patch, same as master), the 11 carried libtool commits (dev re-landed 2.6.2), all 12 post-0.11.1 libaacs patches (dev is on 0.12.0, unpatched) and the mesa addrlib patch — those rows are gone. Dev now carries 35 patches that master does not; master carries 2 that dev does not (avahi `0001-dbus`, grub `0001-build-fix`, both annotated on their rows). No "drop on a release past X" threshold has been reached.
+> **Last reconciled with the tree:** upstream/master `6dab8beb89`, dev re-checked after the 2026-08-01 cleanup. Run `tools/patch-scan.py --ref upstream/master` — the default `master` ref is a local branch that lags behind a fetch. Nothing is untracked in either direction, but as of 2026-08-03 the scan reports 2 stale rows: the two `devel/libcec` gcc-16 rows under "Pending upstream submission" name patch files that are in neither tree (`packages/devel/libcec/patches/` is empty and libcec is now on 8.1.3) — resubmit or drop those rows. The cleanup dropped dev's libwebsockets revert (dev is on 5.0.0 with the const patch, same as master), the 11 carried libtool commits (dev re-landed 2.6.2), all 12 post-0.11.1 libaacs patches (dev is on 0.12.0, unpatched) and the mesa addrlib patch — those rows are gone. Dev now carries 36 patches that master does not (35 at the reconcile, plus the x265 asm-objects fix added 2026-08-03); master carries 2 that dev does not (avahi `0001-dbus`, grub `0001-build-fix`, both annotated on their rows). No "drop on a release past X" threshold has been reached.
 
 ### Status codes
 
@@ -38,7 +38,7 @@ Patches that should be sent to the upstream project but have not yet been submit
 | addons/addon-depends/qt5 | `0002-QSslSocket-make-it-work-with-OpenSSL-v4.patch` | OpenSSL v4 QSslSocket fix |
 | addons/addon-depends/snapcast-depends/aixlog | `0019-build-with-cmake-4.0.0.patch` | CMake 4.0 build fix |
 | addons/addon-depends/system-tools-depends/st | `0001-le-fixes.patch` | Use XParseColor for #rrggbb colours (XftColorAllocName bug) |
-| network/wsdd-native | `0001-dlopen-libsystemd-by-soname-not-configure-time-path.patch` | Rudi Heitbaum — `find_library()` bakes the configure-time absolute path into the binary as the `dlopen()` argument, so a cross build loads a sysroot path that does not exist on the target and the daemon exits under `--systemd`; to submit to gershnik/wsdd-native |
+| network/wsdd-native | `0001-dlopen-libsystemd-by-soname-not-configure-time-path.patch` | Rudi Heitbaum — `find_library()` bakes the configure-time absolute path into the binary as the `dlopen()` argument, so a cross build loads a sysroot path that does not exist on the target and the daemon exits under `--systemd`; submitted as [PR #27](https://github.com/gershnik/wsdd-native/pull/27) and **rejected** — upstream keeps the absolute path deliberately and directs packagers to set `-DHAVE_SYSTEMD=ON -DLIBSYSTEMD_SO=libsystemd.so.0` instead, which works, so the patch should be dropped in favour of those cmake options |
 | addons/addon-depends/ttyd-depends/libwebsockets | `0001-tls-openssl-build-with-the-constified-X509-name-acce.patch` | Rudi Heitbaum — OpenSSL 4 constified `X509_get_subject_name()`/`X509_get_issuer_name()`, breaking lws's own `-Werror -Wignored-qualifiers` TLS build; unfixed on upstream `main`; to submit to warmcat/libwebsockets. Carried with libwebsockets 5.0.0 on both master and dev, which also needs `-DLWS_WITH_HTTP3=OFF` since 5.0.0 otherwise force-selects GnuTLS |
 | addons/addon-depends/vdr-plugins/vdr-plugin-dvbapi | `0001-crosscompiling.patch` | Build FFdecsa.o target not all in cross-compile |
 | addons/addon-depends/vdr-plugins/vdr-plugin-epgsearch | `0001-don-t-build-unused-plugins.patch` | Skip unused plugin binaries |
@@ -117,9 +117,10 @@ Patches that should be sent to the upstream project but have not yet been submit
 | devel/cmake | `0001-disable-free-comp-methods.patch` | Disable SSL_COMP_free_compression_methods for OpenSSL 1.1+ |
 | devel/elfutils | `0001-make-executables-optional.patch` | Add --enable-programs flag (defaults to disabled) |
 | devel/flex | `0001-use-flex-host-for-target-cross-compile.patch` | Use host flex binary for target cross-compile (replaces sed dance) |
-| devel/glibc | `0001-Makerules-install-the-ABI-lib-names-header-from-the-.patch` | Rudi Heitbaum — 2.44 dropped the top-level `.NOTPARALLEL`, so parallel `make install` races `csu/subdir_install` against the top-level install of `gnu/lib-names-<abi>.h`; still unfixed on upstream master and `release/2.44/master`; to submit to libc-alpha |
 | devel/intltool | `0001-fix-regex-expressions.patch` | Fix Perl regex escaping (${ in character classes) in intltool-update.in |
 | devel/libbpf | `0001-fix-crosscompile-and-sysroot.patch` | Fix sysroot-relative prefix in .pc and add -lz to Libs |
+| devel/libcec | `0001-use-snprintf-in-FindAdapters-for-nul-termination.patch` | Rudi Heitbaum — snprintf in FindAdapters to fix gcc-16 -Wstringop-truncation; to submit to Pulse-Eight/libcec |
+| devel/libcec | `0002-size-cecc-client-port-buffer-to-full-length.patch` | Rudi Heitbaum — enlarge cecc-client g_strPort to 1024 to fix gcc-16 -Wformat-truncation; to submit to Pulse-Eight/libcec |
 | devel/libconfuse | `0001-gettext-0.20-libconfuse.patch` | Add AM_GNU_GETTEXT_REQUIRE_VERSION for gettext compat |
 | devel/libffi | `0001-Fix-installation-location-of-libffi.patch` | Install to lib instead of toolexeclib (multilib cross-compile fix) |
 | devel/libffi | `0002-fix-pkgconf.patch` | Fix pkgconf: use ${libdir} instead of ${toolexeclibdir} |
@@ -168,6 +169,7 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 | addons/addon-depends/comskip | `0001-drop-deprecated-ffmpeg8-ticks-per-frame.patch` | Greg Scaffidi — FFmpeg 8 deprecated ticks-per-frame; [PR #187](https://github.com/erikkaashoek/Comskip/pull/187) (open) |
 | addons/addon-depends/comskip | `0002-fix-OutputFrame-declaration-for-gcc15.patch` | Rudi Heitbaum — gcc-15 fix; [PR #177](https://github.com/erikkaashoek/Comskip/pull/177) **merged 2025-04-18** — drop on a comskip release past V0.83 (V0.83 tag predates the merge) |
 | addons/addon-depends/docker/tini | `0233-build-with-cmake-4.0.0.patch` | Rudi Heitbaum — [PR #233](https://github.com/krallin/tini/pull/233) CMake 4.0 build fix; **merged to master** — drop when tini releases past 0.19.0 |
+| addons/addon-depends/ffmpegx-depends/x265 | `0001-cmake-generate-asm-objects-from-a-single-target.patch` | Rudi Heitbaum — the asm objects are listed as sources of both x265-static and x265-shared, so the generating rule is written into each target and a parallel build can run two compilers writing the same object file; a link then reads a truncated object (`ld.gold: error: p2s-sve.S.o: file is empty`) and the aarch64 addon build fails intermittently. Drives the rules from one `x265-asm` target the consumers depend on. Sent to x265-devel@videolan.org; **dev only**, master carries no x265 patches. Drop on an x265 release past 4.2 that includes the fix |
 | addons/addon-depends/network-tools-depends/lftp | `0001-link-readline-with-termcap.patch` | Lukas Rusak — link readline with termcap |
 | addons/addon-depends/network-tools-depends/lftp | `0776-allow-build-with-OpenSSL-4.x.patch` | Rudi Heitbaum — [PR #776](https://github.com/lavv17/lftp/pull/776) OpenSSL 4.x build fix; **merged 2026-03** — drop on an lftp release past 4.9.3 |
 | addons/addon-depends/network-tools-depends/nmap | `0001-allow-build-with-automake-1-17.patch` | Rudi Heitbaum — automake 1.17 build fix; **no upstream PR found** (submit to nmap-dev or confirm) |
@@ -297,6 +299,7 @@ Patches already merged in the upstream project — drop on the next version bump
 | addons/addon-depends/network-tools-depends/nmap | `0002-Fix-build-with-OpenSSL-4-x.patch` | Daniel Miller — OpenSSL 4.x build fix ([nmap issue #3375](https://github.com/nmap/nmap/issues/3375)); not in the 7.99 release |
 | devel/crossguid | `0001-pr67-include-missing-cstdint.patch` | Khem Raj (OE) — [upstream PR #67](https://github.com/graeme-hill/crossguid/pull/67) add <cstdint> for GCC 13 |
 | devel/gcem | `0054-fix-cmake-minimum~required.patch` | BartolomeyKant — update CMake minimum to 3.10..3.31 |
+| devel/glibc | `0001-Makerules-install-the-ABI-lib-names-header-from-the-.patch` | Rudi Heitbaum — [BZ 34439](https://sourceware.org/bugzilla/show_bug.cgi?id=34439); **merged** as [`82c0a96b8e`](https://sourceware.org/git/?p=glibc.git;a=commit;h=82c0a96b8e63005a49ba52ddb21993811030613f) on master and cherry-picked to `release/2.44/master` as [`45b8a13c48`](https://sourceware.org/git/?p=glibc.git;a=commit;h=45b8a13c48da92bc5dd6fe102011391dd6847862). Drop on 2.44.1 or 2.45. Upstream's version adds an explanatory comment above the `ifndef subdir`; ours is otherwise identical |
 | devel/gmp | `0001-acinclude.m4-fix-std-c23-build-failure.patch` | upstream GMP hg [18477:8e7bb4ae7a18](https://gmplib.org/repo/gmp/rev/8e7bb4ae7a18) — fix -std=c23 configure test failure |
 | devel/heimdal | `1229-cf-largefile.m4-Fix-build-with-autoconf-2.72.patch` | Bernd Kuhls (Buildroot) — fix for [upstream heimdal issue #1201](https://github.com/heimdal/heimdal/issues/1201) |
 | devel/libevent | `0001-build-with-cmake-4.0.0.patch` | Azat Khuzhin (libevent author) — require CMake 3.1.2 for OpenSSL detection |
@@ -330,6 +333,108 @@ it reports untracked patches for the tracked ref (master) only. Classify or drop
 | tools/fwupd | 1 | Build with static libarchive |
 | x11/proto/xorgproto | 1 | pkgconfig fix |
 | supervisedthinking/…/makemkv | 1 | Build warning fix in the third-party makemkv addon tree |
+
+### Project patches — `projects/`, outside patch-scan's reach
+
+`tools/patch-scan.py` only walks `packages/`, so nothing under `projects/` is
+reconciled by it or was tracked here at all. The Coral Dev Board set is the one
+body of work large enough to need rows. It is **dev only** — 21 patches under
+`projects/NXP/devices/iMX8/patches/linux/`, all against linux 7.2-rc5, applying
+with no fuzz. Full working notes are in
+`NXP.md`; this table is the submission state.
+
+| Patch | Status | Notes |
+|-------|--------|-------|
+| `0001` `PCI: imx6: Avoid dereferencing a NULL clock name` | submitted | sent standalone 2026-08-02, `Acked-by: Richard Zhu` (NXP) 2026-08-03. Carries `Fixes: d8574ce57d76` and `Cc: stable`, so it should not wait for the merge window. Awaiting a PCI maintainer |
+| `0002` `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock` | submitted | series 1/3. **Awaiting a direction from Frank Li** - see `0003` |
+| `0003` `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | submitted | series 2/3. **Needs a v2 and the shape is not ours to choose.** Frank Li agrees `enable_ext_refclk` is the right direction for i.MX95 alignment but flagged a real backward-compatibility break: on i.MX8MQ the absence of `"extref"` is ambiguous, meaning both "existing devicetree, reference on the pad" and "this board drives REF_CLK from the internal PLL", so clearing `REF_USE_PAD` regresses any devicetree without the new clock. `0004` covers all five in-tree boards, leaving old-DTB-with-new-kernel and out-of-tree devicetrees exposed. A new devicetree property was tried in the NXP tree and rejected, so we asked Frank how he wants the internal-PLL case described rather than proposing a shape (replied 2026-08-08) |
+| `0004` `arm64: dts: imx8mq: Declare the PCIe extref clock` | submitted | series 3/3, 5 boards. May become unnecessary depending on `0003`'s v2 |
+| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline, patch dropped** | [`588852647b81`](https://git.kernel.org/torvalds/c/588852647b81), landed 2026-08-08 via `broonie/sound`. Verified: `SND_SOC_RT5645` now reads `tristate "Realtek RT5645/RT5650 Codec"` in Linus's tree. Dropped from the tree on `linux-7.2`, whose kernel is now 7.2 final and so carries it, which also satisfies `0010`'s dependency from the base. It cannot be dropped on a tree still at rc5 or rc6 - verified, 7.2-rc5 reads a bare `tristate` while 7.2-rc7 reads the prompt: `SND_SOC_RT5645` goes back to being promptless, `olddefconfig` then silently drops `CONFIG_SND_SOC_RT5645=y` and the analog card disappears with no error. The hash is now a mainline one, so it may be cited in a commit message |
+| `0006` phanbell keep the GPU rail on (buck3 always-on) | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; `buck3` is already in mainline phanbell |
+| `0007` phanbell do not hardcode a cooling state | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
+| `0008` phanbell enable i2c2 and i2c3 | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; depends on nothing |
+| `0009` phanbell mux the 32 kHz reference clock pad | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; the one hog entry with a real signal behind it |
+| `0010` phanbell rt5645 analog audio | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; needs `0005` and `0008` (appends into its `&i2c3`). v2 adds `avdd-supply`/`cpvdd-supply` with a fixed `reg_audio_1v8`, and the `"IN1P", "Headphone Mic"` route, both from Frank Li's review of v1; `CHECK_DTBS` is clean. The cpu dai deliberately carries no `clocks` - naming one bypasses `fsl_sai_set_mclk_rate()` and breaks 44.1 kHz. Moved ahead of the pcie patches in `30b2660e3f` so the submittable set is a prefix |
+| `0011` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
+| `0012` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
+| `0014` `ASoC: rt5645: Perform the initial jack detect at probe` | **in mainline, patch dropped** | Landed between 7.2-rc7 and 7.2 final - verified absent from both 7.2-rc5 and 7.2-rc7, and present in 7.2 final at `sound/soc/codecs/rt5645.c:3498`, byte-identical to the patch down to the comment. Dropped on `linux-7.2`/`kernel13` alongside `0005`, but it must stay on any tree still at rc5 or rc6, which includes `dev`. The bug: any `simple-audio-card` user of rt5645/rt5650 with `hp-detect-gpios` and `jd-mode = 0` is silent until the jack is physically replugged, because nothing calls `rt5645_set_jack_detect()` and so nothing force enables the `LDO2`/`Mic Det Power` supplies `HP amp` depends on. It carried **no `Fixes:` and no `Cc: stable`**: no in-tree DTS references `realtek,rt5645`, the three `rt5650` boards (mt8173-elm, mt8186-corsola-squirtle/chinchou) all set `realtek,jd-mode = <2>`, and no DT anywhere uses `hp-detect-gpios`, so both conditions it tests were unmet upstream and it could not affect a released kernel |
+| `0015` `PCI: dwc: Fix stray newline in the no-fixup notice` | pending | Rudi Heitbaum — `dw_pcie_parent_bus_offset()` breaks its format string before the semicolon, so the "no fixup was ever needed" note is emitted as two log records and the second carries no device prefix. The three sibling messages in the same function all keep the `"; "` inline with a single trailing newline. Carries `Fixes: 3b69e1d3815f` ("PCI: dwc: Add dw_pcie_parent_bus_offset() checking and debug") - `git log -S "no fixup was ever needed"` over `pcie-designware.c` returns that one commit, so the message has read this way since it was written. No `Cc: stable`, it only affects the log. Not a 7.2 regression either: the same text is in 6.17.6, 7.1-rc6, 7.2-rc5, 7.2-rc7 and 7.2 final. Applies with no fuzz to 7.2-rc5, 7.2-rc7 and 7.2 final, so it can be carried on `dev` and on the PR branch unchanged; to submit to linux-pci |
+| `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
+| `0021`-`0028` Cadence MHDP8501 HDMI/DP (Laurentiu Palcu, `[PATCH v23 0/8]`) | imported | 8 patches, unmerged upstream but in active review. Applies clean to 7.2-rc6, so two of the three 7.2 fixes the v20 import needed are gone - the `drm_atomic_commit` rename and the `devm_drm_bridge_alloc` conversion. The third is still needed and is now carried separately as `0034`. Needs `CONFIG_DRM_DISPLAY_CONNECTOR` |
+| `0029` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs the MHDP series |
+| `0030` imx8mq-pico-pi DCSS + HDMI (Lukas Rusak) | imported | downstream, needs the MHDP series |
+| `0031` imx8mq-phanbell DCSS + HDMI | pending | needs the MHDP series; **working** on hardware |
+| `0032` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs the MHDP series. v23 still has no audio, so this remains a real gap and is now worth posting as a follow-up to a **live** series rather than a dead one. Reworked for v23: `bridge_to_mhdp()` not `bridge->driver_private`, which v23 leaves NULL since it allocates the bridge with `devm_drm_bridge_alloc()` |
+| `0033` phanbell HDMI audio card on sai4 | pending | needs `0032` and `0031`; **working** - 44.1 kHz plays and Kodi playback is fine |
+| `0034` `drm: bridge: cadence: use system_percpu_wq for the MHDP` | pending | the one 7.2 fix the v23 MHDP import still needs: `cdns_mhdp8501_irq_thread()` queues its debounce work with `mod_delayed_work(system_wq, ...)` and 7.2 marks `system_wq` `__WQ_DEPRECATED`, so the hotplug warning returns on the first HDMI plug event. One line. Worth sending to Laurentiu as a follow-up to v23 |
+
+**Where this set lives.** The numbering in these tables is the `linux-7.2`
+branch, which is the current state - `kernel13` carries the same set and is what
+build `devel-20260821133825-25429bf` was cut from. Its kernel is now 7.2 final:
+`0005` and `0014` are both dropped because the base carries them, the MHDP series
+is at v23 as `0021`-`0028`, `0034` carries the one 7.2 fix that import still
+needs, and `CONFIG_DRM_DISPLAY_CONNECTOR=y`. `dev` still has the older shape -
+kernel 7.2-rc5, `0005` and `0014` both still required, and the v20 MHDP import as
+`0021`-`0026` - so read these tables against `linux-7.2`, not against `dev`.
+`0015` is the exception: it is new, it lives on `dev`, and it applies unchanged
+to every 7.2 so it can be carried on either branch.
+
+**Submit only a prefix.** Every patch's diff context is generated against the
+state its predecessors leave, so a prefix always applies and an arbitrary subset
+may not — `30b2660e3f` exists because the audio patch had been built on top of
+the pcie ones and applied with fuzz without them. The order now matches the plan:
+
+| patches | when |
+|---|---|
+| `0006`–`0010` | now; the kernel carries `588852647b81`, so the Kconfig half comes from the base and `0010` needs only `0008` |
+| `0011`–`0012` | when `0003` lands |
+| `0013` | keep local; last so it never blocks a prefix |
+| `0021`–`0034` | blocked on the MHDP series |
+
+Verified with `git apply`, which refuses fuzz and so is the real test for
+`git am`: `0001`–`0014` apply in order, `0006`–`0010` apply to a pristine
+`imx8mq-phanbell.dts`, `0011`–`0012` apply on top, and `0013` on top of that.
+`0015` touches `pcie-designware.c`, which nothing else in the set touches, so it
+carries no ordering dependency either way.
+
+Three of these dependencies are functional rather than textual, and reading patch
+context does not find that class at all. `0012` applies to a tree without `0011`
+and then fails to download firmware, because nothing has enabled WL_REG_ON.
+`0010` applied without `0005` would describe a codec whose driver cannot be
+enabled, since `SND_SOC_RT5645` was promptless upstream until `588852647b81`.
+`0011`'s dependency on `0003` is the same shape: it is about what `REF_USE_PAD`
+defaults to, so nothing in the diff hints at it.
+
+`0008` through `0013` were rebuilt for upstream in `3d25559614`. The old `0008`
+bundled five unrelated changes; what came out of it, and what was dropped as
+downstream-only or certain to be rejected, is recorded in that commit message.
+The pmic `IRQ_TYPE_LEVEL_LOW` → `GPIO_ACTIVE_LOW` retune noted here previously is
+one of the things dropped, so that question is settled.
+
+**Booted clean on 7.2-rc6, build 20260804161745**, which exercises both things the
+rework changed rather than merely rearranged:
+
+- WL_REG_ON went from a gpio-hog to a `regulator-fixed` consumed as pcie0's
+  `vpcie-supply`. ath10k enumerates the QCA6174 and loads firmware, and
+  `QCA setup on UART is completed`, so both halves of the combo part are
+  powered. The intended ordering change is visible: pcie0's host bridge appears
+  at 0.883 s where it used to appear at 0.746 s, i.e. the probe now defers on
+  the regulator instead of racing the hog.
+- the pmic interrupt went back to `IRQ_TYPE_LEVEL_LOW`. `bd718xx-pwrkey`
+  registers and the boot proceeds with no interrupt storm, which was the one way
+  the vendor's edge-triggered value could have been deliberate.
+
+Audio on the three cards is complete and verified as of 2026-08-06, which took
+four commits beyond the enablement patches - `b07e398f62` (the mixer path is
+muted at reset), `1a5c9410ec`/`0014` (nothing performs the initial jack detect),
+`869864bf5a` (neither audio PLL family was declared) and `1896dce677` (the SAI
+was never marked as the system clock provider, so the mclk rate was never set at
+all). All three cards now play 44.1 kHz natively and 48 kHz. Working notes in
+`NXP.md`.
+
+Dropping `ecspi1` and ten of the eleven hogged pins broke nothing, and `hoggrp`
+still resolves with its single remaining pin.
+
 ### Needs triage
 
 Patches in these packages have not yet been classified. Each patch should be assigned one of the status codes above:
