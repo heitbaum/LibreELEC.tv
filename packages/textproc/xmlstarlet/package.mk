@@ -16,33 +16,11 @@ PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_HOST="  ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_func_realloc_0_nonnull=yes \
-                           LIBXML_CONFIG=${TOOLCHAIN}/bin/xml2-config \
-                           LIBXSLT_CONFIG=${TOOLCHAIN}/bin/xslt-config \
-                           --with-libxml-include-prefix=${TOOLCHAIN}/include/libxml2 \
-                           --with-libxml-libs-prefix=${TOOLCHAIN}/lib \
-                           --with-libxslt-include-prefix=${TOOLCHAIN}/include \
-                           --with-libxslt-libs-prefix=${TOOLCHAIN}/lib \
-                           --disable-build-docs"
+                           --disable-install-docs"
 
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_func_realloc_0_nonnull=yes \
-                           LIBXML_CONFIG=${SYSROOT_PREFIX}/usr/bin/xml2-config \
-                           LIBXSLT_CONFIG=${SYSROOT_PREFIX}/usr/bin/xslt-config \
-                           --with-libxml-include-prefix=${SYSROOT_PREFIX}/usr/include/libxml2 \
-                           --with-libxml-libs-prefix=${SYSROOT_PREFIX}/usr/lib \
-                           --with-libxslt-include-prefix=${SYSROOT_PREFIX}/usr/include \
-                           --with-libxslt-libs-prefix=${SYSROOT_PREFIX}/usr/lib \
-                           --disable-build-docs"
-
-post_configure_host() {
-  PKG_MAKE_OPTS_HOST+=" man_MANS= dist_doc_DATA="
-  PKG_MAKEINSTALL_OPTS_HOST+=" man_MANS= dist_doc_DATA="
-}
-
-post_configure_target() {
-  PKG_MAKE_OPTS_TARGET+=" man_MANS= dist_doc_DATA="
-  PKG_MAKEINSTALL_OPTS_TARGET+=" man_MANS= dist_doc_DATA="
-}
+                           --disable-install-docs"
 
 post_makeinstall_host() {
   ln -sf xml ${TOOLCHAIN}/bin/xmlstarlet
