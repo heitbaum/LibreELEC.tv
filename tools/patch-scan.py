@@ -122,6 +122,16 @@ def main():
     if stale:
         rc = 1
 
+    # le-specific rows are tracked by count, not filename: flag any whose
+    # package no longer has a single patch in the tree
+    le_leaves_with_patch = {leaf(pkg_of(p)) for p in both}
+    le_stale = sorted(p for p in le_pkgs if leaf(p) not in le_leaves_with_patch)
+    print(f"\n=== STALE le-specific ({len(le_stale)}): package row but no patch in tree ===")
+    for p in le_stale:
+        print(f"  {p}")
+    if le_stale:
+        rc = 1
+
     named_keys = {(lf, base) for (_, _, lf, base) in named}
     untracked = []
     for p in sorted(ref_set):
