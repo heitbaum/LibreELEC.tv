@@ -1,0 +1,78 @@
+--- a/kernel/nvidia/os-interface.c
++++ b/kernel/nvidia/os-interface.c
+@@ -729,8 +729,7 @@
+ void NV_API_CALL os_get_current_process_name(char *buf, NvU32 len)
+ {
+     task_lock(current);
+-    strncpy(buf, current->comm, len - 1);
+-    buf[len - 1] = '\0';
++    strscpy(buf, current->comm, len);
+     task_unlock(current);
+ }
+ 
+--- a/kernel/nvidia/linux_nvswitch.c
++++ b/kernel/nvidia/linux_nvswitch.c
+@@ -2038,7 +2038,7 @@
+         return -NVL_ERR_GENERIC;
+     }
+ 
+-    strncpy(regkey_val, regkey_val_start, regkey_val_len);
++    memcpy(regkey_val, regkey_val_start, regkey_val_len);
+     regkey_val[regkey_val_len] = '\0';
+ 
+     if (nvswitch_os_strtouint(regkey_val, data) != 0)
+@@ -2393,7 +2393,19 @@
+     NvLength length
+ )
+ {
+-    return strncpy(dest, src, length);
++    /*
++     * strncpy() was removed from the kernel in 7.2; open-code it to
++     * preserve its exact semantics (zero-pad to length, no forced
++     * NUL-termination) for the callers in nv-kernel.o.
++     */
++    NvLength i;
++
++    for (i = 0; i < length && src[i] != '\0'; i++)
++        dest[i] = src[i];
++    for (; i < length; i++)
++        dest[i] = '\0';
++
++    return dest;
+ }
+ 
+ int
+--- a/kernel/nvidia-modeset/nvidia-modeset-linux.c
++++ b/kernel/nvidia-modeset/nvidia-modeset-linux.c
+@@ -666,7 +666,19 @@
+ 
+ char* nvkms_strncpy(char *dest, const char *src, size_t n)
+ {
+-    return strncpy(dest, src, n);
++    /*
++     * strncpy() was removed from the kernel in 7.2; open-code it to
++     * preserve its exact semantics (zero-pad to n, no forced
++     * NUL-termination) for the callers in nv-modeset-kernel.o.
++     */
++    size_t i;
++
++    for (i = 0; i < n && src[i] != '\0'; i++)
++        dest[i] = src[i];
++    for (; i < n; i++)
++        dest[i] = '\0';
++
++    return dest;
+ }
+ 
+ void nvkms_usleep(NvU64 usec)
+--- a/kernel/nvidia-uvm/uvm_pmm_gpu.c
++++ b/kernel/nvidia-uvm/uvm_pmm_gpu.c
+@@ -2804,7 +2804,7 @@
+             size_t size;
+             size_t align;
+             if (level == 0) {
+-                strncpy(chunk_split_cache[level].name, "uvm_gpu_chunk_t", sizeof(chunk_split_cache[level].name) - 1);
++                strscpy(chunk_split_cache[level].name, "uvm_gpu_chunk_t", sizeof(chunk_split_cache[level].name));
+                 size = sizeof(uvm_gpu_chunk_t);
+                 align = __alignof__(uvm_gpu_chunk_t);
+             } else {
