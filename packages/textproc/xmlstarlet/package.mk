@@ -3,16 +3,15 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xmlstarlet"
-PKG_VERSION="c99e79b7b4058d862b1be5fbbcd8049075610618"
-PKG_SHA256="d90e05287f765061a021baff875c15b0839b7184cdd0a4cc6e614ed6e6cb8a8a"
+PKG_VERSION="1.6.1"
+PKG_SHA256="15d838c4f3375332fd95554619179b69e4ec91418a3a5296e7c631b7ed19e7ca"
 PKG_LICENSE="MIT"
-PKG_SITE="https://xmlstarlet.github.io/"
-PKG_URL="https://github.com/xmlstarlet/xmlstarlet/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
+PKG_SITE="http://xmlstar.sourceforge.net"
+PKG_URL="https://downloads.sourceforge.net/project/xmlstar/xmlstarlet/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_HOST="libxml2:host libxslt:host"
 PKG_DEPENDS_TARGET="toolchain libxml2 libxslt"
 PKG_LONGDESC="XMLStarlet is a command-line XML utility which allows the modification and validation of XML documents."
 PKG_BUILD_FLAGS="-cfg-libs -cfg-libs:host"
-PKG_TOOLCHAIN="autotools"
 
 PKG_CONFIGURE_OPTS_HOST="  ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_func_realloc_0_nonnull=yes \
@@ -21,8 +20,7 @@ PKG_CONFIGURE_OPTS_HOST="  ac_cv_func_malloc_0_nonnull=yes \
                            --with-libxml-include-prefix=${TOOLCHAIN}/include/libxml2 \
                            --with-libxml-libs-prefix=${TOOLCHAIN}/lib \
                            --with-libxslt-include-prefix=${TOOLCHAIN}/include \
-                           --with-libxslt-libs-prefix=${TOOLCHAIN}/lib \
-                           --disable-build-docs"
+                           --with-libxslt-libs-prefix=${TOOLCHAIN}/lib"
 
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            ac_cv_func_realloc_0_nonnull=yes \
@@ -31,18 +29,7 @@ PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_malloc_0_nonnull=yes \
                            --with-libxml-include-prefix=${SYSROOT_PREFIX}/usr/include/libxml2 \
                            --with-libxml-libs-prefix=${SYSROOT_PREFIX}/usr/lib \
                            --with-libxslt-include-prefix=${SYSROOT_PREFIX}/usr/include \
-                           --with-libxslt-libs-prefix=${SYSROOT_PREFIX}/usr/lib \
-                           --disable-build-docs"
-
-post_configure_host() {
-  PKG_MAKE_OPTS_HOST+=" man_MANS= dist_doc_DATA="
-  PKG_MAKEINSTALL_OPTS_HOST+=" man_MANS= dist_doc_DATA="
-}
-
-post_configure_target() {
-  PKG_MAKE_OPTS_TARGET+=" man_MANS= dist_doc_DATA="
-  PKG_MAKEINSTALL_OPTS_TARGET+=" man_MANS= dist_doc_DATA="
-}
+                           --with-libxslt-libs-prefix=${SYSROOT_PREFIX}/usr/lib"
 
 post_makeinstall_host() {
   ln -sf xml ${TOOLCHAIN}/bin/xmlstarlet
