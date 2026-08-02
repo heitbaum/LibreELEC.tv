@@ -45,7 +45,8 @@ the one piece not yet enabled — see problem 3.
 | `0011`/`0012` | anatop `"syscon"` compatible + binding | only exist to make `0008` work |
 | `0015` | phanbell hdmi audio | dead — `0001` has no audio driver, see problem 3 |
 | `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
-| `0017` | phanbell rt5645 analog audio via `simple-audio-card` | untested, see problem 3 |
+| `0017` | phanbell rt5645 analog audio via `simple-audio-card` | needs `0018`, see problem 3 |
+| `0018` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | to submit to alsa-devel |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
 
@@ -374,7 +375,33 @@ the one in-tree i.MX8MQ board with a SAI2 group.
   `IMX8MQ_CLK_SAI2_ROOT` as the codec's `mclk1`, which implies it is, and
   `mclk-fs = <256>` assumes so.
 
-Checks after the first boot:
+**First boot result: the codec driver was not built.** The only line the whole
+log produced was
+
+```
+platform sound-analog: deferred probe pending: asoc-simple-card: parse error
+```
+
+with no `rt5645` message anywhere. `SND_SOC_RT5645` is a **promptless** Kconfig
+symbol (`sound/soc/codecs/Kconfig:1858` — contrast `SND_SOC_RT5640` directly
+above it, which has one). Nothing can turn it on:
+
+- the only `imply` is from `SND_SOC_ALL_CODECS`, which is `depends on
+  COMPILE_TEST` and therefore absent from any real config;
+- every driver that `select`s it is x86 (`intel/boards`, `amd`), MediaTek or
+  Rockchip — all machine drivers, none usable here.
+
+So an i.MX8MQ board using `simple-audio-card` cannot build the codec at all,
+even though the part has its own binding. `0018` gives the symbol a prompt and
+the config enables it plus the `RL6231` helper it pulls in
+(`default y if SND_SOC_RT5645=y`). Worth submitting to alsa-devel.
+
+The "parse error" itself is `asoc_simple_parse_dai()` failing to resolve
+`sound-dai = <&rt5645>` — with no component registered for that node,
+`snd_soc_get_dlc()` returns `-EPROBE_DEFER` and simple-card reports it through
+`dev_err_probe()`.
+
+Checks after the next boot:
 
 ```sh
 dmesg | grep -iE 'rt5645|sai|simple-audio|asoc'
