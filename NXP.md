@@ -45,6 +45,7 @@ the one piece not yet enabled — see problem 3.
 | `0011`/`0012` | anatop `"syscon"` compatible + binding | only exist to make `0008` work |
 | `0015` | phanbell hdmi audio | dead — `0001` has no audio driver, see problem 3 |
 | `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
+| `0017` | phanbell rt5645 analog audio via `simple-audio-card` | untested, see problem 3 |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
 
@@ -317,32 +318,86 @@ While looking, other things about `0015` worth knowing:
   the HDMI TX. Unresolved, but moot until there is a driver.
 - No mainline freescale board uses `fsl,imx-audio-hdmi` at all.
 
-#### The analog path is the one that could actually work
+#### The analog path — `0017`, awaiting a first boot
 
-From the reverted `00e8a492832` + `e7509d7e646` (reverted by `8af0ab558a` +
-`2feb913152`). Not in the tree; recorded because the board facts are real and
-were nearly lost:
+Both devices are on the bus, confirmed on hardware:
 
-- `rt5645` codec on `&i2c3` at `0x1a` — the 3.5mm jack. `mclk1` from
-  `IMX8MQ_CLK_SAI2_ROOT`; jack detect on `gpio5` line 4, `IRQ_TYPE_EDGE_BOTH`,
-  with `realtek,jd-mode = <0>`, `jd-invert`, `jd-low-volt-enable`;
-  `realtek,dmic1-data-pin = <2>`. `sound/soc/codecs/rt5645.c` **is** upstream,
-  so only the machine glue is missing.
-- `sound-rt5645` — machine node with `compatible = "google,edgetpu-audio-card"`,
-  `audio-cpu = <&sai2>`. Zero hits in mainline; the machine driver is
-  Mendel-only and could never have bound here. Almost certainly why the pair got
-  reverted. Replace with `simple-audio-card` or `audio-graph-card`.
-- `sound-header` — `simple-audio-card` on `&sai1` against a
-  `linux,snd-soc-dummy` codec, i.e. raw I2S to the 40-pin header. Both halves
-  of that are upstream, so it should just work.
-- Also carried, unrelated to audio but a real Coral device: `typec_ptn5150` on
-  `&i2c3` at `0x3d`, `nxp,ptn5150a`, irq `gpio3` line 0. `e7509d7e646`
-  ("audio2") did nothing but blank out a stray `#pinctrl-0 = <&pinctrl_typec>;`
-  typo in that node.
+```
+# i2cdetect -y -r 2        (i2c3)
+10: -- ... 1a --           rt5645 codec
+30: -- ... 3d --           ptn5150 USB-C controller
+```
 
-The SAI1 ownership conflict between the two designs is therefore not live: HDMI
-audio cannot claim SAI1 until it has a driver, and when that driver arrives it
-will settle the SAI4 question itself.
+`0017` describes the codec with `simple-audio-card`: rt5645 on `&i2c3` at
+`0x1a`, `&sai2` enabled with `fsl,sai-mclk-direction-output`, and a
+`pinctrl_sai2` group. The board facts come from the reverted commits, the
+mechanism from mainline.
+
+What was carried over from the reverted patches and what was dropped:
+
+- Kept: `interrupt-parent = <&gpio5>`, `interrupts = <4 IRQ_TYPE_EDGE_BOTH>`,
+  `hp-detect-gpios = <&gpio5 4 …>`, `realtek,dmic1-data-pin = <2>`,
+  `realtek,jd-mode = <0>`. The doubled-up irq/gpio on the same line is correct:
+  `rt5645.c:4254` requests the i2c irq as the edge trigger and `:3244` reads the
+  level through `gpiod_hp_det` when `jd_mode == 0`.
+- Dropped `clocks = <&clk IMX8MQ_CLK_SAI2_ROOT>` / `clock-names = "mclk1"` —
+  `rt5645.c` has no `devm_clk_get` at all, so those were inert.
+- Dropped `realtek,jd-invert` and `realtek,jd-low-volt-enable` — the driver only
+  reads `in2-differential`, `dmic1-data-pin`, `dmic2-data-pin` and `jd-mode`
+  (`rt5645.c:3939`). Mendel-kernel properties.
+- Dropped `google,edgetpu-audio-card` entirely for `simple-audio-card`.
+- `#sound-dai-cells = <0>` selects `rt5645-aif1`: `snd_soc_get_dlc()` maps
+  `args_count == 0` to `id = 0`, i.e. `dai_drv[0]`.
+
+Only the SAI2 *transmit* clocks are muxed (MCLK, TXFS, TXC, TXD0) plus RXD0.
+That relies on `fsl_sai` leaving `RCR2.SYNC` set by default — `fsl_sai.c:905-907`
+writes `TCR2.SYNC` from `synchronous[TX]` and `RCR2.SYNC` from
+`synchronous[RX]`, and the default is `RX = true, TX = false`, so receive takes
+its clocks from transmit. That is what a codec with one BCLK/LRCK pair needs.
+Note the in-code comments here are misleading and `fsl,sai-synchronous-rx` does
+the *opposite* of what its name suggests; go by the register writes.
+
+Pad settings are `0xd6` on all five, copied from `imx8mq-mnt-reform2.dts:323`,
+the one in-tree i.MX8MQ board with a SAI2 group.
+
+**Not verified — needs a schematic before this can go upstream:**
+
+- `avdd-supply` / `cpvdd-supply` are **required** by
+  `realtek,rt5645.yaml` and are omitted, because which BD71837 rail feeds them
+  is unknown. `devm_regulator_bulk_get()` will fall back to dummy regulators and
+  log `supply avdd not found, using dummy regulator`, so it still probes.
+- No `widgets` / `routing` yet. HPOL/HPOR almost certainly reach the jack and
+  the board has a 4-pin speaker terminal that SPOL/SPOR would drive, but that
+  is not confirmed, so nothing is asserted. Add them once `amixer` shows what
+  the codec actually exposes.
+- Whether SAI2_MCLK is physically routed to the codec. The reverted patch named
+  `IMX8MQ_CLK_SAI2_ROOT` as the codec's `mclk1`, which implies it is, and
+  `mclk-fs = <256>` assumes so.
+
+Checks after the first boot:
+
+```sh
+dmesg | grep -iE 'rt5645|sai|simple-audio|asoc'
+aplay -l
+amixer -c 0 scontrols
+speaker-test -c2 -twav -l1
+```
+
+If it stops the board booting, back it out at u-boot without a rebuild:
+
+```
+fdt set /sound-analog status disabled
+fdt set /soc@0/bus@30800000/sai@308b0000 status disabled
+```
+
+Still to do on the analog side: the 40-pin header (`simple-audio-card` on
+`&sai1` against a `linux,snd-soc-dummy` codec — both halves are upstream), and
+`typec_ptn5150` at `0x3d` (`nxp,ptn5150a`, irq `gpio3` line 0), which is a real
+Coral device but a separate concern from audio.
+
+The SAI1 ownership conflict between the two designs is not live: HDMI audio
+cannot claim SAI1 until it has a driver, and when that driver arrives it will
+settle the SAI4 question itself.
 
 #### SAI address map (7.2-rc5 `imx8mq.dtsi`, all `status = "disabled"`)
 
