@@ -759,6 +759,12 @@ and `cpu_alert1` (80 °C) maps both name `A53_0`, so both had nothing to bind to
 65 °C fan trip and the 90 °C critical trip did anything, which is exactly the
 path to a shutdown: fan on, no throttling, straight up to critical.
 
+The governor is `ondemand` with LibreELEC's `up_threshold=50`
+(`packages/sysutils/systemd/scripts/cpufreq`), and it was observed sitting at a
+constant 1500000 kHz at ~62 °C. That is real sustained load, not a pinned
+governor — worth chasing separately, since if Kodi is pegging a core at the
+idle GUI it may not be rendering through etnaviv.
+
 Fixed with `CONFIG_CPU_THERMAL=y` + `CONFIG_CPU_FREQ_THERMAL=y`, plus
 `THERMAL_GOV_BANG_BANG=y` for the active fan trip and `SENSORS_GPIO_FAN=y`
 instead of `=m` (as a module it did not load until ~11 s, long after the cores
