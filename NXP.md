@@ -781,9 +781,18 @@ Still unknown, and worth resolving before writing the node:
 - **The uart2 pinmux.** Not yet extracted:
   `sed -n '/uart2grp/,/};/p' /boot/vendor.dts`.
 
-Firmware will also be needed — QCA6174 BT wants `qca/nvm_*.bin` and
-`qca/rampatch_*.bin`, so `kernel-firmware-any.dat` grows the same way it did for
-ath10k.
+**Firmware: `qca/*00130302.bin`, added.** `btqca` builds both names from the
+SoC version it reads out of the chip — `"qca/rampatch_%08x.bin"` and
+`"qca/nvm_%08x.bin"` (`btqca.c:850,944`) — so the version had to be known
+before the files could be listed. The vendor rootfs gives it without a boot:
+`/lib/firmware/rampatch_tlv_3.2.tlv` is a symlink to
+`qca/rampatch_00130302.bin`, the legacy name the old driver used. Both
+`rampatch_00130302.bin` and `nvm_00130302.bin` exist in linux-firmware
+20260622.
+
+Getting this right mattered more than usual: the firmware list loader `die`s on
+a pattern that matches nothing (`kernel-firmware/package.mk:62`), so a guessed
+glob would have broken the build rather than just leaving bluetooth quiet.
 
 ## Testing
 
