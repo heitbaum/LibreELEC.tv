@@ -4142,7 +4142,7 @@ index 0000000000000..157b4d44b9e2b
 +}
 +
 +static void cdns_dp_bridge_atomic_disable(struct drm_bridge *bridge,
-+					  struct drm_atomic_state *state)
++					  struct drm_atomic_commit *state)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
 +
@@ -4153,7 +4153,7 @@ index 0000000000000..157b4d44b9e2b
 +}
 +
 +static void cdns_dp_bridge_atomic_enable(struct drm_bridge *bridge,
-+					 struct drm_atomic_state *state)
++					 struct drm_atomic_commit *state)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
 +	struct drm_connector *connector;
@@ -4577,12 +4577,12 @@ index 0000000000000..9556d0929e21d
 +
 +static int reset_pipe(struct drm_crtc *crtc)
 +{
-+	struct drm_atomic_state *state;
++	struct drm_atomic_commit *state;
 +	struct drm_crtc_state *crtc_state;
 +	struct drm_modeset_acquire_ctx ctx;
 +	int ret;
 +
-+	state = drm_atomic_state_alloc(crtc->dev);
++	state = drm_atomic_commit_alloc(crtc->dev);
 +	if (!state)
 +		return -ENOMEM;
 +
@@ -4600,7 +4600,7 @@ index 0000000000000..9556d0929e21d
 +
 +	ret = drm_atomic_commit(state);
 +out:
-+	drm_atomic_state_put(state);
++	drm_atomic_commit_put(state);
 +	drm_modeset_drop_locks(&ctx);
 +	drm_modeset_acquire_fini(&ctx);
 +
@@ -4816,7 +4816,7 @@ index 0000000000000..9556d0929e21d
 +}
 +
 +static void cdns_hdmi_bridge_atomic_disable(struct drm_bridge *bridge,
-+					    struct drm_atomic_state *state)
++					    struct drm_atomic_commit *state)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
 +
@@ -4826,7 +4826,7 @@ index 0000000000000..9556d0929e21d
 +}
 +
 +static void cdns_hdmi_bridge_atomic_enable(struct drm_bridge *bridge,
-+					   struct drm_atomic_state *state)
++					   struct drm_atomic_commit *state)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
 +	struct drm_connector *connector;
