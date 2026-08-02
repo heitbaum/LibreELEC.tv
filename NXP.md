@@ -26,8 +26,9 @@ upstream `ath10k`, which wants entirely different firmware.
 
 Works: both PCIe ports, ath10k with firmware, and — separately — HDMI.
 
-**You cannot currently have HDMI and wifi at the same time.** Enabling the
-display controller stops pcie0 linking. See open problem 1.
+All four work together with `clk_ignore_unused` on the kernel command line.
+Without it, enabling the display stops pcie0 linking - see open problem 1 for
+why, and the narrow fix that should remove the need for the flag.
 
 ## Patches
 
@@ -171,13 +172,20 @@ never completes. Do not enable pcie0 without the firmware present.
 
 ## Open problems
 
-### 1. Enabling dcss stops pcie0 linking
+### 1. Enabling dcss stops pcie0 linking - RESOLVED
 
-0/5 boots link pcie0 with `display-controller@32e00000` enabled; 4/4 link with it
-disabled. True both with and without `0008`, so it is not only the clock-gating
-race above. Unexplained.
+This is the clock-gating race described above, nothing more. Enabling the
+display shifts probe order so that `clk_disable_unused()` runs *after* `0008`
+writes anatop instead of before, and the CLK2_P/N gate is switched off.
 
-Symptoms with dcss on:
+Evidence, all on the same build:
+
+- dcss off: 4/4 boots link pcie0
+- dcss on: 0/5, with `devmem 0x30360074 32` reading `0x0B` - CKE cleared
+- dcss on plus `clk_ignore_unused`: everything works at once - both PCIe ports
+  link, ath10k loads firmware, and the HDMI framebuffer comes up
+
+Symptoms when it fails:
 
 ```
 imx6q-pcie 33800000.pcie: Device found, but not active
@@ -185,6 +193,12 @@ pci 0000:00:00.0: removing 2.5GT/s downstream link speed restriction
 pci 0000:00:00.0: retraining failed
 pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
 ```
+
+`clk_ignore_unused` is a global workaround. The narrow fix is to hold a
+reference on the gate by naming `IMX8MQ_CLK_MON_CLK2_OUT` as pcie0's `pcie_bus`
+clock, replacing the `IMX8MQ_CLK_DUMMY` placeholder, so
+`clk_bulk_prepare_enable()` keeps it on. That keeps `0008`'s register writes, so
+it changes one thing rather than two - unlike the attempt in problem 2.
 
 ### 2. Describing the reference clock in DT does not work
 
