@@ -414,8 +414,34 @@ Note the numbering is not address order and there is no `sai@30020000`.
 
 ### 4. Smaller ones
 
-- `platform cpufreq-dt: deferred probe pending: (reason unknown)` — cpufreq never
-  comes up.
+- `platform cpufreq-dt: deferred probe pending: (reason unknown)` — **fixed,
+  awaiting a boot.** `CONFIG_MFD_ROHM_BD718XX=y` but
+  `# CONFIG_REGULATOR_BD718XX is not set`, so the PMIC registered its pwrkey
+  child (`bd718xx-pwrkey` at 9.79s in the log) and no regulators. phanbell gives
+  all four A53s `cpu-supply = <&buck2>`, so `dev_pm_opp_set_regulators()` →
+  `regulator_get_optional(cpu_dev, "cpu")` deferred forever
+  (`cpufreq-dt.c:186-192`). The reason is blank because `dev_err_probe()` is
+  called on `cpu0`, not on the `platform cpufreq-dt` device the timeout message
+  walks — and `-EPROBE_DEFER` prints at debug level regardless. Enabling
+  `CONFIG_REGULATOR_BD718XX=y` is also what makes DVFS *safe*: buck2 is
+  constrained to 850000-1000000 and this speed grade selects the 900000 and
+  1000000 operating points, so without the driver the core voltage is just
+  whatever u-boot left. Confirm with `cat
+  /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies` — expect
+  1000000 and 1500000 (see the OPP note below).
+- OPP filtering on this board, for reference. `imx-cpufreq-dt` reports
+  `supported-hw 0x8 0x1` (speed grade 3, market segment 0) and
+  `a53_opp_table` in `imx8mq.dtsi` masks each entry as
+  `opp-supported-hw = <grade>, <market>`:
+
+  | OPP | masks | selected |
+  |---|---|---|
+  | 800 MHz | `<0xf>, <0x4>` | no — market `0x4 & 0x1 = 0` (industrial only) |
+  | 1000 MHz | `<0xe>, <0x3>` | yes |
+  | 1300 MHz | `<0xc>, <0x4>` | no — industrial only |
+  | 1500 MHz | `<0x8>, <0x3>` | yes |
+
+  So two operating points, 1.0 and 1.5 GHz. The table is not the problem.
 - `of_irq_parse_pci: failed with rc=134` — 134 is not an errno; seen once, on the
   boot that then locked up on ath10k. Not seen since; watch for it.
 - `ath10k_pci: failed to fetch board data for … subsystem-vendor=0000,
