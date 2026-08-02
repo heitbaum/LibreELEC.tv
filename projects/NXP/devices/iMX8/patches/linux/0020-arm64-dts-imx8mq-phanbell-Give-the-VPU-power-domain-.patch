@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 23:33:15 +1000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Give the VPU power domain its
+ supply
+
+BUCK4 feeds the VPU rail but nothing on this board says so. The vendor
+kernel's regulator_summary lists the VPU power domain and the VPU itself
+against BUCK4, and BUCK3 against the GPU domain, so describe the second
+half of that pair the same way as the first.
+
+No functional change today: BUCK4 is marked regulator-always-on, so
+unlike BUCK3 it was never at risk of being switched off as unused. This
+is for completeness, and so the domain rather than a constraint keeps
+the rail up.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index f8bd1e4..8c27fbe 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -263,6 +263,10 @@
+ 	power-supply = <&buck3>;
+ };
+ 
++&pgc_vpu {
++	power-supply = <&buck4>;
++};
++
+ &fec1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fec1>;
