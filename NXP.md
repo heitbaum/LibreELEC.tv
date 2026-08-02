@@ -26,9 +26,9 @@ upstream `ath10k`, which wants entirely different firmware.
 
 Works: both PCIe ports, ath10k with firmware, and — separately — HDMI.
 
-All four work together with `clk_ignore_unused` on the kernel command line.
-Without it, enabling the display stops pcie0 linking - see open problem 1 for
-why, and the narrow fix that should remove the need for the flag.
+Display, both PCIe ports and wifi all come up together with no kernel command
+line workaround, since `0006` holds a reference on the CLK2_P/N gate. Audio is
+the one piece not yet enabled.
 
 ## Patches
 
@@ -194,11 +194,13 @@ pci 0000:00:00.0: retraining failed
 pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
 ```
 
-`clk_ignore_unused` is a global workaround. The narrow fix is to hold a
-reference on the gate by naming `IMX8MQ_CLK_MON_CLK2_OUT` as pcie0's `pcie_bus`
-clock, replacing the `IMX8MQ_CLK_DUMMY` placeholder, so
-`clk_bulk_prepare_enable()` keeps it on. That keeps `0008`'s register writes, so
-it changes one thing rather than two - unlike the attempt in problem 2.
+Fixed in `0006` by naming `IMX8MQ_CLK_MON_CLK2_OUT` as pcie0's `pcie_bus` clock,
+replacing the `IMX8MQ_CLK_DUMMY` placeholder, so `clk_bulk_prepare_enable()`
+holds a reference and the gate cannot be switched off. `0008`'s register writes
+are kept, so this changes one thing rather than two.
+
+Confirmed: with the display enabled and no `clk_ignore_unused`,
+`clk: Disabling unused clocks` runs, both ports link, and ath10k loads firmware.
 
 ### 2. Describing the reference clock in DT does not work
 
@@ -239,6 +241,14 @@ both are well before PERST# is released.
 So `0008` does something the DT description does not, and what that is has not
 been established. Until it is, `0008` stays and the phanbell pcie0 patch cannot
 go upstream.
+
+Narrowed since: holding the reference on its own works (see problem 1), so the
+failure is in the other half - replacing the register writes with
+`assigned-clocks`. One difference not yet ruled out is *when* the mux is
+switched. `assigned-clocks` sets it at probe, before the gate is enabled;
+`0008` sets it in `init_phy()`, after `clk_bulk_prepare_enable()` has already
+turned the gate on. The next experiment is to add `assigned-clocks` back on top
+of the working configuration, keeping `0008`, and only then remove the writes.
 
 Next step, rather than more guessing: instrument `0008` to read the three fields
 back at the end of `imx8mq_pcie_init_phy()` and again at link-check time, then
