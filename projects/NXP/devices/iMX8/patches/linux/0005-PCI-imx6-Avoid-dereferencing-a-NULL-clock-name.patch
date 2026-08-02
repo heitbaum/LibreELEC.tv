@@ -11,6 +11,7 @@ id unconditionally, so such a node oopses during probe.
 Check clk_bulk_data::id before dereferencing it.
 
 Fixes: d8574ce57d76 ("PCI: imx6: Add external reference clock input mode support")
+Cc: stable@vger.kernel.org
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
