@@ -1,2 +1,8 @@
-# Atheros QCA6174 (168c:003e) on the Coral Dev Board, reached over pcie0
-ath10k/QCA6174/hw3.0/*
+# Atheros QCA6174 (168c:003e) on the Coral Dev Board, reached over pcie0.
+# ath10k asks for the highest firmware API it finds, so only the API 6 blob
+# is needed; board-2.bin is selected by board id, board.bin is its fallback.
+# The sdio firmware and the other API notices are for variants we do not have.
+ath10k/QCA6174/hw3.0/firmware-6.bin
+ath10k/QCA6174/hw3.0/board-2.bin
+ath10k/QCA6174/hw3.0/board.bin
+ath10k/QCA6174/hw3.0/notice_ath10k_firmware-6.txt
