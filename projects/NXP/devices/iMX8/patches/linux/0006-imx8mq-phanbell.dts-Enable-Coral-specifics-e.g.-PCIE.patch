@@ -1,22 +1,18 @@
-From cb2d5e40471f76e658bb82ed0386e2c948e65d39 Mon Sep 17 00:00:00 2001
+From 2806bcdfbe52eeba6d09d3a952e270bdba4b8f19 Mon Sep 17 00:00:00 2001
 From: Khem Raj <raj.khem@gmail.com>
 Date: Tue, 7 Mar 2023 21:02:46 -0800
 Subject: [PATCH] imx8mq-phanbell.dts: Enable Coral specifics e.g. PCIE
 
 Signed-off-by: Khem Raj <raj.khem@gmail.com>
-[pcie0 takes REF_CLK from the internal PLL and drives CLK2_P/N out to
- the endpoint, described with the monitor clocks instead of poking
- anatop; pcie1 names its oscillator as the extref clock]
-Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 163 +++++++++++++++++-
- 1 file changed, 162 insertions(+), 1 deletion(-)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 155 +++++++++++++++++-
+ 1 file changed, 154 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index f7a634b..2c557ef 100644
+index a3b9d615a3b4..5ce4fc21443e 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -21,6 +21,10 @@
+@@ -21,6 +21,10 @@ memory@40000000 {
  		reg = <0x00000000 0x40000000 0 0x40000000>;
  	};
  
@@ -27,9 +23,9 @@ index f7a634b..2c557ef 100644
  	pmic_osc: clock-pmic {
  		compatible = "fixed-clock";
  		#clock-cells = <0>;
-@@ -57,6 +61,12 @@
- 			};
- 		};
+@@ -46,6 +50,12 @@ fan: gpio-fan {
+ 		pinctrl-0 = <&pinctrl_gpio_fan>;
+ 		status = "okay";
  	};
 +
 +	pcie1_refclk: pcie1-refclk {
@@ -40,7 +36,7 @@ index f7a634b..2c557ef 100644
  };
  
  &A53_0 {
-@@ -148,6 +158,17 @@
+@@ -111,6 +121,17 @@ map4 {
  	};
  };
  
@@ -58,7 +54,7 @@ index f7a634b..2c557ef 100644
  &i2c1 {
  	clock-frequency = <400000>;
  	pinctrl-names = "default";
-@@ -163,7 +184,7 @@
+@@ -126,7 +147,7 @@ pmic: pmic@4b {
  		clocks = <&pmic_osc>;
  		clock-output-names = "pmic_clk";
  		interrupt-parent = <&gpio1>;
@@ -67,7 +63,7 @@ index f7a634b..2c557ef 100644
  
  		regulators {
  			buck1: BUCK1 {
-@@ -296,6 +317,78 @@
+@@ -259,6 +280,70 @@ ldo7: LDO7 {
  	};
  };
  
@@ -89,21 +85,12 @@ index f7a634b..2c557ef 100644
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_pcie0>;
 +	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
-+	/*
-+	 * REF_CLK is taken from the internal PLL, so the SoC also has to
-+	 * drive the 100 MHz reference out to the endpoint on CLK2_P/N.
-+	 * Listing the monitor gate in "clocks" keeps a reference on it, so
-+	 * clk_disable_unused() cannot switch the endpoint's clock off.
-+	 */
 +	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
-+		 <&clk IMX8MQ_CLK_MON_CLK2_OUT>,
++		 <&clk IMX8MQ_CLK_DUMMY>,
 +		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
 +		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
-+	assigned-clocks = <&clk IMX8MQ_CLK_MON_SEL>,
-+			  <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
-+	assigned-clock-parents = <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
-+	assigned-clock-rates = <0>, <100000000>;
 +	fsl,max-link-speed = <1>;
++	hard-wired = <1>;
 +	supports-clkreq;
 +	status = "okay";
 +};
@@ -118,6 +105,7 @@ index f7a634b..2c557ef 100644
 +		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
 +		 <&pcie1_refclk>;
 +	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++	hard-wired = <1>;
 +	supports-clkreq;
 +	status = "okay";
 +};
@@ -146,7 +134,7 @@ index f7a634b..2c557ef 100644
  &fec1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_fec1>;
-@@ -370,6 +463,54 @@
+@@ -333,6 +418,54 @@ &wdog1 {
  };
  
  &iomuxc {
@@ -201,7 +189,7 @@ index f7a634b..2c557ef 100644
  	pinctrl_fec1: fec1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
-@@ -403,6 +544,20 @@
+@@ -366,6 +499,20 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
  		>;
  	};
  
@@ -222,7 +210,7 @@ index f7a634b..2c557ef 100644
  	pinctrl_pmic: pmicirqgrp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
-@@ -515,4 +670,10 @@
+@@ -478,4 +625,10 @@ pinctrl_wdog: wdoggrp {
  			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
  		>;
  	};
@@ -234,5 +222,5 @@ index f7a634b..2c557ef 100644
 +	};
  };
 -- 
-2.47.1
+2.39.2
 
