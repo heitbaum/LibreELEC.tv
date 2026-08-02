@@ -41,8 +41,16 @@ Not finished:
   once cpufreq started reaching 1.5 GHz, and the board hit a critical shutdown.
   Fixed; `cpufreq-cpu0` now exists. `0024` clears the one remaining bind
   failure. See problem 5.
-- **`0019`** has never actually been exercised — every boot so far has carried
-  `regulator_ignore_unused`.
+- **`0019`** has never been exercised as intended — every boot so far has
+  carried `regulator_ignore_unused`.
+- **An intermittent lockup**, seen once: network and serial both died the moment
+  `kodi.target` came up. The same image booted clean on the next reset and
+  stayed up, so it is **not** deterministic. A GPU-power-domain explanation was
+  proposed and does not survive that — `0019` hands buck3 to `pgc_gpu`, and if
+  that were the mechanism it would fail every time Kodi renders. Unexplained;
+  catch it with data rather than theory. The u-boot banner on the recovery boot
+  is the discriminator: a high temperature or `Critical temperature hit` means
+  thermal, a normal reading with `Reset cause: POR` means a kernel wedge.
 - **`0008`** still blocks the phanbell pcie0 patch from upstreaming; problem 2
   now explains *why* the old approach worked but not how to replace it.
 
