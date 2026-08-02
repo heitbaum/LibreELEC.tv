@@ -1,0 +1,60 @@
+From a579654af6dfd6ec439ef4252ba5db5b38410002 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 17:45:29 +1000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: disable pcie, hdmi and hdmi
+ audio
+
+Bring-up aid: turn everything off so the board can be brought back one
+device at a time. Delete a block to re-enable that device.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 35 +++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index 41ec7ab..961ab77 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -712,3 +712,38 @@
+ 		>;
+ 	};
+ };
++
++/*
++ * Bring-up switches. These come last in the file, so they win over the
++ * status = "okay" set above. Delete a block to re-enable that device.
++ */
++
++&pcie0 {
++	status = "disabled";
++};
++
++&pcie1 {
++	status = "disabled";
++};
++
++&mhdp {
++	status = "disabled";
++};
++
++&dcss {
++	status = "disabled";
++};
++
++&hdmi_audio {
++	status = "disabled";
++};
++
++&sai1 {
++	status = "disabled";
++};
++
++/ {
++	sound-hdmi {
++		status = "disabled";
++	};
++};
+-- 
+2.47.1
+
