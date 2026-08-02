@@ -4,9 +4,6 @@ Date: Tue, 7 Mar 2023 21:19:36 -0800
 Subject: [PATCH] PCI: imx6: Use the external clock as REF_CLK when needed
  for i.MX8MQ
 
-Do not use the external clock when the internal PLL is used as PCIe
-REF_CLK.
-
 i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
 internal PLL. The driver unconditionally selected the oscillator, which
 is what the
@@ -24,7 +21,7 @@ support").
 
 Signed-off-by: Ryosuke Saito <rsaito@redhat.com>
 Signed-off-by: Khem Raj <raj.khem@gmail.com>
-[rebased onto the enable_ext_refclk flag added in v7.2]
+[rebased onto the enable_ext_refclk flag from commit d8574ce57d76]
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
