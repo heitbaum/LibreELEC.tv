@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Sun, 2 Aug 2026 23:53:58 +1000
+Date: Mon, 3 Aug 2026 00:41:52 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable the rt5645 analog audio
 
 The Coral Dev Board has a Realtek RT5645 codec on i2c3 at 0x1a driving
@@ -11,11 +11,14 @@ Headphone detect and the codec interrupt are both on gpio5 line 4; with
 realtek,jd-mode = <0> the driver reads the line through hp-detect-gpios
 and uses the i2c interrupt as the edge trigger.
 
-The widgets and routing reproduce what the vendor kernel's DAPM graph
-shows on this board: the jack fed from HPOL and HPOR, the headset mic
-powering micbias1, and the two onboard microphones on DMIC L1 and R1.
-There is deliberately no speaker widget, because the vendor card does
-not have one either.
+The widgets and routing follow the vendor kernel's DAPM graph on this
+board: the jack fed from HPOL and HPOR, the headset mic tied to
+micbias1, and the two onboard microphones on DMIC L1 and R1. There is
+deliberately no speaker widget, because the vendor card has none either.
+
+Note micbias1 is a supply widget, so it has to be the source rather than
+the sink: snd_soc_dapm_add_path() rejects a non-supply source feeding a
+supply sink. The vendor's 4.14 graph has that pair the other way round.
 
 Only the SAI2 transmit clocks are muxed. fsl_sai defaults to RCR2.SYNC
 set, so the receive side takes its bit and frame clock from the transmit
@@ -27,7 +30,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 58 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 520e841..6c71d34 100644
+index 520e841..67da6ba 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -21,6 +21,33 @@
@@ -48,7 +51,7 @@ index 520e841..6c71d34 100644
 +
 +		simple-audio-card,routing = "Headphone Jack", "HPOL",
 +					    "Headphone Jack", "HPOR",
-+					    "micbias1", "Headphone Mic",
++					    "Headphone Mic", "micbias1",
 +					    "DMIC L1", "Internal Mic",
 +					    "DMIC R1", "Internal Mic";
 +
