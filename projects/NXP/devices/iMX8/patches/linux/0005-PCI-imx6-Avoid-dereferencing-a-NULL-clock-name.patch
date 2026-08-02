@@ -8,7 +8,7 @@ has no matching entry in "clock-names", which is legal: a node may list
 more "clocks" phandles than it names. The extref scan dereferences that
 id unconditionally, so such a node oopses during probe.
 
-Skip unnamed clocks.
+Check clk_bulk_data::id before dereferencing it.
 
 Fixes: d8574ce57d76 ("PCI: imx6: Add external reference clock input mode support")
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
