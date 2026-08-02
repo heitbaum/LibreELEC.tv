@@ -32,30 +32,26 @@ card 0: Analog [Coral Analog],   device 0: sai-tx-rx-rt5645-aif1 rt5645-aif1-0
 card 1: Header [40-pin Header],  device 0: sai-tx-rx-dit-hifi dit-hifi-0
 ```
 
-Display, both PCIe ports and wifi come up together with no kernel command line
-workaround, since `0006` holds a reference on the CLK2_P/N gate.
+Display, both PCIe ports and wifi come up together, and **the kernel command
+line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
+took a reference on the CLK2_P/N gate, and `regulator_ignore_unused` went when
+`0019` marked buck3 `regulator-always-on`.
 
 Not finished:
 
-- **Thermal** — `CONFIG_CPU_THERMAL` was off, so nothing throttled the cores
-  once cpufreq started reaching 1.5 GHz, and the board hit a critical shutdown.
-  Fixed; `cpufreq-cpu0` now exists. `0024` clears the one remaining bind
-  failure. See problem 5.
-- **`0019`** has never been exercised as intended — every boot so far has
-  carried `regulator_ignore_unused`.
-- **An intermittent lockup**, seen once: network and serial both died the moment
-  `kodi.target` came up. The same image booted clean on the next reset and
-  stayed up, so it is **not** deterministic. A GPU-power-domain explanation was
-  proposed and does not survive that — `0019` hands buck3 to `pgc_gpu`, and if
-  that were the mechanism it would fail every time Kodi renders. The mapping
-  itself is not in doubt: the vendor aliases name `gpu_pd = "/gpc_power_domain@4"`
-  and `regulator_summary` puts buck3 on `@4`, so `0019` gives the right rail to
-  the right domain. Unexplained;
-  catch it with data rather than theory. The u-boot banner on the recovery boot
-  is the discriminator: a high temperature or `Critical temperature hit` means
-  thermal, a normal reading with `Reset cause: POR` means a kernel wedge.
+- **Thermal throttling has never actually engaged.** `cpufreq-cpu0` exists and
+  `0024` cleared the last bind failure, but nothing has driven the board to
+  75 °C since, so the passive path is present rather than proven. See problem 5.
+- **The `kodi.target` lockup is fixed but not explained.** Handing buck3 to
+  `pgc_gpu` killed the board silently in six of thirteen boots; removing that
+  one property gave five clean boots in a row. Why the handoff fails here when
+  `imx8mq-librem5.dtsi` does the same thing and works is unknown. Problem 4.
 - **`0008`** still blocks the phanbell pcie0 patch from upstreaming; problem 2
   now explains *why* the old approach worked but not how to replace it.
+- **`0016`** is a bring-up aid and should go once nothing more needs switching
+  on and off, folding its enables into the dts.
+- **The lockup detectors** (`13f13f1d7b`) were added to chase the hang and are
+  no longer needed. Revert before this config goes near master.
 
 A note on reading these boots: `deferred probe pending` at ~10 s is the
 `deferred_probe_timeout` report, not a verdict. Both SAIs and both cards appear
