@@ -170,6 +170,32 @@ board_file api 1 bmi_id N/A crc32 ed5f849a
 — and it falls back to the generic `board.bin`. That message is expected, not a
 defect.
 
+**The subsystem ids cannot be fixed, and do not need to be.** They are read
+straight out of the card's PCI config space — `ath10k/pci.c:3626` copies
+`pdev->subsystem_vendor` and `pdev->subsystem_device` into `ar->id`, and
+`ath10k_core_create_board_name()` (`core.c:1595`) formats them into the
+board-2.bin lookup key. This module simply does not have them programmed, so
+there is nothing for software to set.
+
+Three reasons not to chase it:
+
+- The message is `ath10k_err` (`core.c:1545`), which is why it reads like a
+  failure, but the very next thing the code does is fall back to `board.bin`,
+  and that succeeds — hence `board_file api 1` on the following line.
+- **The real calibration is not in the board file anyway.** Our log says
+  `cal otp`, i.e. `ATH10K_CAL_MODE_OTP` (`core.h:876,897`) — the chip's own OTP.
+  A board-2.bin match would supply board data, not calibration.
+- There is no Coral entry to match against. ath10k *does* offer
+  `qcom,ath10k-calibration-variant` (`core.c:1167-1170`), which appends
+  `,variant=<x>` to the same key, but the base still contains
+  `subsystem-vendor=0000,subsystem-device=0000`, so it only helps once
+  linux-firmware carries a matching entry. Nobody can produce one from the
+  vendor either: Mendel binds `hif_pci` (qcacld), not ath10k, so no ath10k board
+  data for this module exists.
+
+Using the variant property would also mean adding a DT node for the PCI device
+under the root port, since ath10k reads it from `ar->dev->of_node`.
+
 **ath10k without firmware is not benign on this board.** A failed probe leaves the
 device in D3cold; the driver then retries against an inaccessible device, each
 register access times out at -110, CPUs stop answering NMI, RCU stalls, and boot
@@ -330,7 +356,25 @@ as well as playback. Three things settled:
   downstream, which matches the MHDP audio driver having been dropped from the
   patch set.
 
-**SAI2 confirmed for the codec.** `/sys/kernel/debug/asoc/` on Mendel:
+**SAI2 confirmed for the codec**, and the vendor boot log says it in words:
+
+```
+edgetpu-audio-card sound-rt5645: clock set to 24576000
+edgetpu-audio-card sound-rt5645: rt5645-aif1 <-> 308b0000.sai mapping ok
+asoc-simple-card sound-header: snd-soc-dummy-dai <-> 30010000.sai mapping ok
+```
+
+The second line is `0017`'s pairing and the third is `0021`'s, including the
+`asoc-simple-card` driver itself — so both patches describe what the vendor
+describes.
+
+One difference worth remembering if the analog output sounds wrong: the vendor
+sets a **fixed** 24.576 MHz sysclk, while `0017` uses `mclk-fs = <256>`, which
+gives 12.288 MHz at 48 kHz and scales with rate. Both are legitimate; if rt5645
+turns out to want a fixed MCLK, drop `mclk-fs` and set
+`system-clock-frequency = <24576000>` on the codec instead.
+
+Supporting detail from `/sys/kernel/debug/asoc/`:
 
 ```
 platforms:  308b0000.sai  30010000.sai  snd-soc-dummy  dummy-dai
@@ -571,6 +615,21 @@ Only two rails on phanbell have a declared consumer at all: `buck2`
 (`cpu-supply` on the four A53s) and the fixed `reg_usdhc2_vmmc`. Every other
 regulator survives solely because it is marked `regulator-always-on` — and
 BUCK3 is the one exception, so it is the only thing the sweep can touch.
+
+**The vendor prints the same line and survives it**, which is the clearest
+possible statement of what `0019` fixes:
+
+```
+[    6.587235] VSD_3V3: disabling
+[    6.599401] buck3: disabling
+```
+
+Mendel then goes on to load the GPU driver at 9.53s and run normally. It can,
+because there BUCK3 belongs to the GPU power domain: the sweep switches it off
+as *currently* unused, and the domain switches it back on when the GPU needs
+it. On our tree the rail has no owner at all, so once off it stays off — and it
+was already powering a GPU that had been running since boot. Same message, two
+completely different meanings.
 
 **BUCK3 is the GPU rail — confirmed from the vendor OS.** `regulator_summary`
 under Mendel on the same board:
