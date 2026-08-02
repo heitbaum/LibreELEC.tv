@@ -812,6 +812,23 @@ Two other things that showed up while measuring:
   (`imx8mq.dtsi:339`), not by anything in phanbell. The CPU passive path was
   the only broken one.
 
+- **The fan physically works — verified.** Driving it by hand spins it up:
+
+  ```sh
+  for f in /sys/class/hwmon/hwmon*/pwm1; do echo 255 > "$f"; done
+  ```
+
+  Note the glob has to be in a `for` list: redirection targets are not
+  pathname-expanded in busybox ash. `gpio-fan.c:209` maps the pwm value to
+  `speed_index = DIV_ROUND_UP(val * (num_speed - 1), 255)`, so 255 is on and 0
+  is off. There is no tacho, so the `fan1` RPM reading is the `speed-map` value
+  echoed back rather than a measurement — listen for it instead.
+
+  Expected behaviour in service: `fan_toggle0` is 65 °C with `hysteresis =
+  <10000>`, so it starts at 65 °C and does not stop until 55 °C. The board idles
+  around 61-62 °C, so once it comes on it will mostly stay on. That is the
+  hysteresis doing its job rather than a fault.
+
 - **`sensors` reporting the fan as `MANUAL CONTROL` is cosmetic.** gpio-fan sets
   `pwm_enable = true` at probe (`gpio-fan.c:377`) purely so the hwmon `pwm1`
   attribute is writable. `gpio_fan_set_cur_state()` (`:409`) does not consult
