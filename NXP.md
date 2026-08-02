@@ -465,29 +465,52 @@ settle the SAI4 question itself.
 
 Note the numbering is not address order and there is no `sai@30020000`.
 
-### 4. `buck3: disabling` kills the board 30s in — fixed by `0019`
+### 4. `buck3: disabling` costs network access 30s in — `0019`, mechanism unconfirmed
 
 A regression from enabling `CONFIG_REGULATOR_BD718XX`. With real regulators
-present the core runs its unused-regulator sweep at the end of init, and
-phanbell's BUCK3 is the **only** rail on the board with neither a consumer nor
-`regulator-always-on`. So:
+present the core runs its unused-regulator sweep at the end of init:
 
 ```
 [   32.057712] buck3: disabling
 ```
 
-and access to the board goes with it. BUCK3 feeds the GPU rail, and the GPU is
-driving the display.
+and the board stops answering the network. Observed symptom is **loss of
+network, not of display** — the monitor keeps showing an image.
 
-`imx8mq-pico-pi.dts` and `imx8mq-librem5.dtsi` describe BUCK3 identically —
-`regulator-boot-on` and a `rohm,dvs-run-voltage`, no always-on — but librem5
-adds `&pgc_gpu { power-supply = <&buck3_reg>; }`
-(`imx8mq-librem5.dtsi:1264`), so the GPU power domain holds a reference and the
-core never sees the rail as unused. phanbell has no such line. `0019` adds it.
+Only two rails on phanbell have a declared consumer at all: `buck2`
+(`cpu-supply` on the four A53s) and the fixed `reg_usdhc2_vmmc`. Every other
+regulator survives solely because it is marked `regulator-always-on` — and
+BUCK3 is the one exception, so it is the only thing the sweep can touch.
 
-That is the honest description of the hardware, which is why it is preferable
-to just setting `regulator-always-on`. **pico-pi has the same latent bug** and
-would need the same treatment — worth mentioning if `0019` goes upstream.
+What BUCK3 feeds is **inferred, not verified from a schematic.** Two things
+point at the GPU rail: `imx8mq-librem5.dtsi:1264` maps BUCK3 to the GPU power
+domain on the other in-tree i.MX8MQ + BD71837 board, and phanbell's
+`rohm,dvs-run-voltage = <900000>` is a 0.9 V DVS core rail, which rules out a
+PHY or IO supply.
+
+That is consistent with the symptom, but only loosely. DCSS is not in
+`pgc_gpu`, so the display would keep scanning out the last frame from DRAM
+regardless; etnaviv GC7000 *is* (`imx8mq.dtsi:1636`), and Kodi renders through
+it, so losing the rail mid-render could fault the GPU or take an external abort
+on an unpowered block and wedge the kernel — which would drop ssh while leaving
+a static picture on screen. **Plausible, not established.**
+
+To settle it:
+
+- boot with `regulator_ignore_unused` and confirm the board survives past 32s —
+  that alone proves BUCK3 is the trigger;
+- `cat /sys/kernel/debug/regulator/regulator_summary` to see buck3's voltage and
+  who, if anyone, claims it;
+- with serial attached, boot *without* the workaround: if the serial console
+  dies at 32s too it is a kernel wedge, if only ssh goes it is something else
+  and this diagnosis is wrong;
+- `systemctl stop kodi` before the 32s mark — if BUCK3 then goes away harmlessly,
+  the GPU link is confirmed.
+
+`0019` gives `pgc_gpu` its `power-supply`, matching librem5. That is worth doing
+on its own merits — a power domain should own its regulator — and it stops the
+sweep either way. **pico-pi has the same missing line** and would need the same
+treatment if this goes upstream.
 
 Unblock without a rebuild: add `regulator_ignore_unused` to the kernel command
 line (`drivers/regulator/core.c:6855`), the direct analogue of
