@@ -836,29 +836,30 @@ can only reach `uartclk/16`, so on the default parent the host stops at
 reparent their uarts the same way, and the vendor uses `SYS1_PLL_160M` for this
 same port.
 
-**Firmware: `qca/*00130302.bin`, added.** `btqca` builds both names from the
-SoC version it reads out of the chip — `"qca/rampatch_%08x.bin"` and
-`"qca/nvm_%08x.bin"` (`btqca.c:850,944`) — so the version had to be known
-before the files could be listed. Three independent things on the vendor OS say
-`00130302`:
+**Firmware: `qca/*00440302*.bin`.** `btqca` builds both names from the
+controller version it reads out of the chip — `"qca/rampatch_%08x.bin"` and
+`"qca/nvm_%08x.bin"` (`btqca.c:850,944`). The chip answers for itself once the
+uart works:
 
-- `/lib/firmware/rampatch_tlv_3.2.tlv` is a symlink to
-  `qca/rampatch_00130302.bin` — the legacy name the old driver used, pointing at
-  the modern one;
-- `/lib/firmware/nvm_tlv_3.2.bin` is 1968 bytes, byte-for-byte the size of
-  `qca/nvm_00130302.bin`;
-- the vendor dmesg reports `HW:QCA6174_REV3_2`.
+```
+Bluetooth: hci0: QCA controller version 0x00440302
+Bluetooth: hci0: QCA Downloading qca/rampatch_00440302.bin
+```
 
-The vendor's `qca/` also carries the `00130300` (rev 3.0) pair and four
-`*_usb_*` files, none of which apply here. Both `rampatch_00130302.bin` and
-`nvm_00130302.bin` exist in linux-firmware 20260622.
+**An earlier guess of `00130302` was wrong, and the way it was wrong is worth
+remembering.** Three things on the vendor OS agreed on it — the
+`rampatch_tlv_3.2.tlv` symlink, the byte size of `nvm_tlv_3.2.bin`, and
+`HW:QCA6174_REV3_2` in the vendor dmesg. But the first two describe what the
+vendor *shipped* under the old downstream driver's naming, and the third came
+from the **WLAN** driver, not bluetooth. Three views of the same vendor rootfs
+are not three independent confirmations of the hardware.
+`mt8183-kukui.dtsi:966`, the precedent already cited for this part, uses
+`nvm_00440302_i2s.bin` — the answer was visible from the start.
 
-If the chip ever reports something else, the boot log names the file it wanted
-verbatim — `Direct firmware load for qca/rampatch_XXXXXXXX.bin failed`.
-
-Getting this right mattered more than usual: the firmware list loader `die`s on
-a pattern that matches nothing (`kernel-firmware/package.mk:62`), so a guessed
-glob would have broken the build rather than just leaving bluetooth quiet.
+The firmware list loader `die`s on a pattern that matches nothing
+(`kernel-firmware/package.mk:62`), so the wrong glob would have broken the
+build rather than leaving bluetooth quiet. It did not, only because the
+00130302 files also exist in linux-firmware.
 
 ## Testing
 
