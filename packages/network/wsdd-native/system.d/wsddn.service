@@ -7,7 +7,7 @@ ConditionPathExists=/run/samba/smb.conf
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/wsddn --systemd --smb-conf=/run/samba/smb.conf
+ExecStart=/usr/sbin/wsddn --systemd --smb-conf=/run/samba/smb.conf
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 DynamicUser=true
