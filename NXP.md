@@ -48,7 +48,19 @@ the only thing `0021` buys.
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
 took a reference on the CLK2_P/N gate, and `regulator_ignore_unused` went when
-`0019` marked buck3 `regulator-always-on`.
+`0019` marked buck3 `regulator-always-on`. Verified on hardware:
+
+```
+# ls /proc/device-tree/…/pmic@4b/regulators/BUCK3/
+regulator-always-on  regulator-boot-on  regulator-min-microvolt  …
+
+# grep '^ buck3' /sys/kernel/debug/regulator/regulator_summary
+ buck3      use 1   open 0   900mV
+```
+
+`use 1, open 0` is enabled with no consumer — held up by the constraint alone,
+which is the whole point. buck4 reads the same, confirming that dropping the
+VPU counterpart cost nothing.
 
 Not finished:
 
