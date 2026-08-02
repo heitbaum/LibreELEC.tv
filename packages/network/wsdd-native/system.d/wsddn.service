@@ -1,6 +1,6 @@
 [Unit]
 Description=WS-Discovery Host
-BindsTo=smbd.service
+PartOf=smbd.service
 After=network-online.target smbd.service
 Wants=network-online.target
 ConditionPathExists=/run/samba/smb.conf
@@ -17,4 +17,4 @@ ProtectSystem=full
 ProtectHome=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=smbd.service
