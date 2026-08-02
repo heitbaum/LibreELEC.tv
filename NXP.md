@@ -24,7 +24,8 @@ upstream `ath10k`, which wants entirely different firmware.
 
 ## Current state
 
-Working: display, both PCIe ports, ath10k wifi, cpufreq, and both audio cards.
+Working: display, both PCIe ports, ath10k wifi, bluetooth, cpufreq, and both
+audio cards.
 
 ```
 card 0: Analog [Coral Analog],   device 0: sai-tx-rx-rt5645-aif1 rt5645-aif1-0
@@ -36,11 +37,10 @@ workaround, since `0006` holds a reference on the CLK2_P/N gate.
 
 Not finished:
 
-- **Bluetooth** reaches the controller and reads its version, but the firmware
-  list named the wrong file until now — `qca/*00440302*.bin` is in but untested.
 - **Thermal** — `CONFIG_CPU_THERMAL` was off, so nothing throttled the cores
   once cpufreq started reaching 1.5 GHz, and the board hit a critical shutdown.
-  Fixed but untested; see problem 5.
+  Fixed; `cpufreq-cpu0` now exists. `0024` clears the one remaining bind
+  failure. See problem 5.
 - **`0019`** has never actually been exercised — every boot so far has carried
   `regulator_ignore_unused`.
 - **`0008`** still blocks the phanbell pcie0 patch from upstreaming; problem 2
@@ -71,6 +71,8 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0020` | `… Give the VPU power domain its supply` | completeness, matches the vendor |
 | `0021` | `… add the 40-pin header I2S card` | SAI1, matches the vendor |
 | `0022` | `… Supply the PCIe PHY VPH rail` | functional, see the VREG_BYPASS note |
+| `0023` | `… describe the QCA6174 Bluetooth` | **working**, uart2 + gpio3 line 6 |
+| `0024` | `… Do not hardcode a cooling state that may not exist` | fixes the trip 3 bind failure |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
 
