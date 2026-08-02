@@ -771,9 +771,26 @@ Two other things that showed up while measuring:
   *adds* to the ones already in `imx8mq.dtsi` rather than replacing them, so
   80 °C passive and 90 °C critical each appear twice. Harmless, but it means
   the board's own numbers are not the whole picture.
-- **The GPU has a cooling device that no trip uses.** `38000000.gpu` with six
-  states exists, but phanbell's cooling maps only name `A53_0` and the fan.
-  Worth considering once the CPU side is proven.
+- **There are three thermal zones, not one.** The TMU has three sensors and
+  `imx8mq.dtsi:289,320,348` gives each its own zone. `sensors` shows them as
+  `cpu_thermal_0`, `gpu_thermal_1`, `vpu_thermal_2`. Only `thermal_zone0` is
+  the CPU; reading just that one understates the picture.
+
+  | zone | passive | active | critical |
+  |---|---|---|---|
+  | cpu-thermal | 75 °C + 80 °C → `A53_0` **(was inert)** | 65 °C → gpio-fan | 90 °C |
+  | gpu-thermal | 80 °C → `38000000.gpu` | — | 90 °C |
+  | vpu-thermal | — | — | 90 °C |
+
+  So the GPU's six-state cooling device *is* wired up — by its own zone's map
+  (`imx8mq.dtsi:339`), not by anything in phanbell. The CPU passive path was
+  the only broken one.
+
+- **`sensors` reporting the fan as `MANUAL CONTROL` is cosmetic.** gpio-fan sets
+  `pwm_enable = true` at probe (`gpio-fan.c:377`) purely so the hwmon `pwm1`
+  attribute is writable. `gpio_fan_set_cur_state()` (`:409`) does not consult
+  it, so thermal control of the fan is unaffected. `fan1: 0 RPM` at 56 °C is
+  correct — its trip is 65 °C.
 
 ### 6. Smaller ones
 
