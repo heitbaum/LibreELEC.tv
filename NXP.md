@@ -47,7 +47,10 @@ Not finished:
   `kodi.target` came up. The same image booted clean on the next reset and
   stayed up, so it is **not** deterministic. A GPU-power-domain explanation was
   proposed and does not survive that — `0019` hands buck3 to `pgc_gpu`, and if
-  that were the mechanism it would fail every time Kodi renders. Unexplained;
+  that were the mechanism it would fail every time Kodi renders. The mapping
+  itself is not in doubt: the vendor aliases name `gpu_pd = "/gpc_power_domain@4"`
+  and `regulator_summary` puts buck3 on `@4`, so `0019` gives the right rail to
+  the right domain. Unexplained;
   catch it with data rather than theory. The u-boot banner on the recovery boot
   is the discriminator: a high temperature or `Critical temperature hit` means
   thermal, a normal reading with `Reset cause: POR` means a kernel wedge.
@@ -716,9 +719,16 @@ under Mendel on the same board:
 ```
 
 BUCK4 lists `38300000.vpu` outright — that is the G1 decoder — so BUCK4 is the
-VPU rail and its domain is `@5`. BUCK3's domain `@4` is therefore the GPU. (The
-unit addresses are the vendor BSP's own numbering; mainline names the same nodes
-`pgc_gpu: power-domain@5` and `pgc_vpu: power-domain@6`, `imx8mq.dtsi:939,948`.)
+VPU rail and its domain is `@5`. BUCK3's domain `@4` is the GPU, and the vendor
+devicetree says so directly rather than by elimination:
+
+```
+/boot/vendor.dts:2111:   gpu_pd = "/gpc_power_domain@4";
+```
+
+(The unit addresses are the vendor BSP's own numbering; mainline names the same
+nodes `pgc_gpu: power-domain@5` and `pgc_vpu: power-domain@6`,
+`imx8mq.dtsi:939,948`.)
 
 So `0019` reproduces what the vendor kernel already describes, and matches
 `imx8mq-librem5.dtsi:1264` on the other in-tree i.MX8MQ + BD71837 board.
