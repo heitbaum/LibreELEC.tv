@@ -561,6 +561,43 @@ Note the boot ordering oddity: `rt5645 2-001a` appears *before*
 `i2c_add_adapter()` registers DT children before the imx driver prints its
 banner.
 
+**Third boot: three faults, all now fixed.** Worth recording because two of
+them are traps for anyone copying a vendor devicetree.
+
+1. **`micbias1` is a supply widget, so the route direction matters.**
+
+```
+Connecting non-supply widget to supply widget is not supported (Headphone Mic -> micbias1)
+asoc-simple-card sound-analog: error -EINVAL: parse error
+```
+
+`snd_soc_dapm_add_path()` rejects `wsink->is_supply && !wsource->is_supply`
+(`soc-dapm.c:621`). The vendor's 4.14 DAPM graph has the pair the other way
+round and its kernel allowed it, so copying the direction verbatim broke the
+whole card. Correct form is the supply as *source*:
+`"Headphone Mic", "micbias1"`.
+
+2. **`linux,snd-soc-dummy` does not exist upstream.** Zero hits in the whole
+tree. `sound/soc/soc-utils.c:295` creates the dummy as a *faux device* with no
+`of_match_table`, so a devicetree node naming that compatible never binds and
+the header card could not resolve its codec. `linux,spdif-dit`
+(`spdif_transmitter.c:69`) is the real stand-in and `CONFIG_SND_SOC_SPDIF` was
+already on. It is a transmitter, so the header is now **playback only**, where
+the vendor's dummy gave both directions.
+
+3. **The bluetooth susclk needed a driver, not a devicetree change.**
+`hci_uart_qca serial0-0: failed to acquire clk` and then a deferred serdev.
+`clocks = <&pmic>` was right — phanbell already declares the PMIC as a provider
+with `#clock-cells = <0>` and `clock-output-names = "pmic_clk"` — but
+`CONFIG_COMMON_CLK_BD718XX` was off, so nothing registered the clock and
+`devm_clk_get_optional()` returned `-EPROBE_DEFER` forever.
+`clk-bd718x7.c:87,133` registers `bd718xx-32k-out` from exactly that parent
+property.
+
+Note `0019` was **not** exercised on that boot: `regulator_ignore_unused` was
+still on the command line, so the log ends `regulator: Not disabling unused
+regulators`. Drop it next time to test the real fix.
+
 Checks after the next boot:
 
 ```sh
