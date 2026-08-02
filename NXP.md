@@ -253,6 +253,44 @@ switched. `assigned-clocks` sets it at probe, before the gate is enabled;
 turned the gate on. The next experiment is to add `assigned-clocks` back on top
 of the working configuration, keeping `0008`, and only then remove the writes.
 
+**The vendor programs exactly the same values.** Read from Mendel on this board:
+
+```
+0x30360074 = 0x0000001b     mux 0xb = sys_pll1_out_monitor, gate bit 4 set
+0x3036007c = 0x00000007     divider /8, 800 -> 100 MHz
+```
+
+That is bit-for-bit what `0008` writes and what our working configuration ends
+up with, so the register-level programming was never in doubt, and problem 2 is
+purely about *how* to express it. Note the vendor kernel is NXP BSP derived and
+does the same direct register writes — there is no vendor precedent for a DT
+description, so nothing to copy. `0008` is not a hack relative to the vendor;
+it is the same design. It is still the wrong shape for upstream, since a PCI
+controller driver has no business writing a clock controller's registers.
+
+**And the vendor's clock framework does not know these clocks exist.**
+`grep -iE 'monitor|pcie' vendor-clk.txt` on Mendel returns only pcie entries —
+there is no `pllout_monitor_sel`, no `pllout_monitor_clk2`, no
+`sys_pll1_out_monitor` anywhere in its `clk_summary`.
+
+That explains the entire history of this bug. The NXP BSP the Coral patches came
+from never registered those three anatop fields as clocks, so nothing could gate
+them and raw register writes stuck permanently. Mainline `clk-imx8mq.c:389,394,395`
+*does* register them, which is what let `clk_disable_unused()` reclaim the gate
+out from under the PCIe driver.
+
+So the patches were not wrong when written; the ground moved. It also means
+there is no "correct" vendor DT description to copy — holding a reference from
+`0006` is our own answer and appears to be the right one.
+
+For reference, the vendor's PCIe clock rates, which ours should match:
+
+```
+pcie1_phy  / pcie2_phy    100000000
+pcie1_aux  / pcie2_aux     25000000
+pcie1_ctrl / pcie2_ctrl   250000000
+```
+
 Next step, rather than more guessing: instrument `0008` to read the three fields
 back at the end of `imx8mq_pcie_init_phy()` and again at link-check time, then
 diff a working boot against a rework boot. If they match at both points, the
@@ -597,8 +635,49 @@ line (`drivers/regulator/core.c:6855`), the direct analogue of
   `board_file api 1`. It falls back to `board.bin` and the radio works; the
   QCA6174 on this board reports a null subsystem ID so it can never match a
   board-2.bin entry. Cosmetic.
-- No bluetooth HCI device appears. The QCA6174 is a combo part with BT on a
-  UART; nothing in the DT describes it. Not investigated.
+- No bluetooth HCI device appears, because nothing in the DT describes it. This
+  is an unclaimed feature rather than a fault, and it is reachable upstream —
+  see below.
+
+### 6. Bluetooth — not described, but straightforward to add
+
+The vendor OS has it working:
+
+```
+hci0:  Type: Primary  Bus: UART   Manufacturer: Qualcomm (29)
+       LMP Version: 4.1 (0x7)  Subversion: 0x25a
+Bluetooth: HCI UART protocol QCA registered
+```
+
+So it is the QCA6174's BT side on a UART, driven by `hci_qca` over serdev.
+Upstream supports the part: `hci_qca.c:2777` matches `qcom,qca6174-bt`, and the
+binding is `qcom,qca2066-bt.yaml`, which requires exactly three things —
+`compatible`, `clocks` (one 32.768 kHz input) and `enable-gpios`, with an
+optional `firmware-name`.
+
+`arch/arm64/boot/dts/mediatek/mt8183-kukui.dtsi:959` is the precedent worth
+copying: a **non-Qualcomm** SoC driving a QCA6174 exactly this way.
+
+```dts
+&uartN {
+	bluetooth {
+		compatible = "qcom,qca6174-bt";
+		enable-gpios = <&gpioX Y GPIO_ACTIVE_HIGH>;
+		clocks = <&pmic>;
+		firmware-name = "nvm_00440302.bin";
+	};
+};
+```
+
+Three unknowns, all answered by the vendor devicetree: **which UART**, **the
+enable GPIO**, and whether the 32 kHz comes from the PMIC. Note phanbell already
+describes `pmic_osc` (a 32768 Hz fixed-clock) and the `pmic` node itself is a
+clock provider (`#clock-cells = <0>`, `clock-output-names = "pmic_clk"`), so the
+clock is probably already in the tree.
+
+Firmware will also be needed — QCA6174 BT wants `qca/nvm_*.bin` and
+`qca/rampatch_*.bin`, so `kernel-firmware-any.dat` grows the same way it did for
+ath10k.
 
 ## Testing
 
