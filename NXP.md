@@ -24,11 +24,32 @@ upstream `ath10k`, which wants entirely different firmware.
 
 ## Current state
 
-Works: both PCIe ports, ath10k with firmware, and — separately — HDMI.
+Working: display, both PCIe ports, ath10k wifi, cpufreq, and both audio cards.
 
-Display, both PCIe ports and wifi all come up together with no kernel command
-line workaround, since `0006` holds a reference on the CLK2_P/N gate. Audio is
-the one piece not yet enabled — see problem 3.
+```
+card 0: Analog [Coral Analog],   device 0: sai-tx-rx-rt5645-aif1 rt5645-aif1-0
+card 1: Header [40-pin Header],  device 0: sai-tx-rx-dit-hifi dit-hifi-0
+```
+
+Display, both PCIe ports and wifi come up together with no kernel command line
+workaround, since `0006` holds a reference on the CLK2_P/N gate.
+
+Not finished:
+
+- **Bluetooth** reaches the controller and reads its version, but the firmware
+  list named the wrong file until now — `qca/*00440302*.bin` is in but untested.
+- **Thermal** — `CONFIG_CPU_THERMAL` was off, so nothing throttled the cores
+  once cpufreq started reaching 1.5 GHz, and the board hit a critical shutdown.
+  Fixed but untested; see problem 5.
+- **`0019`** has never actually been exercised — every boot so far has carried
+  `regulator_ignore_unused`.
+- **`0008`** still blocks the phanbell pcie0 patch from upstreaming; problem 2
+  now explains *why* the old approach worked but not how to replace it.
+
+A note on reading these boots: `deferred probe pending` at ~10 s is the
+`deferred_probe_timeout` report, not a verdict. Both SAIs and both cards appear
+in it on a slow boot because `imx-sdma` loads as a module afterwards; probing
+resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 
 ## Patches
 
@@ -973,6 +994,44 @@ dmesg | grep -iE 'blue|hci|qca'
 
 **5. Lower value, but cheap:** `lspci -nnvv` (link speeds and the Edge TPU),
 `ls /sys/class/typec/` (the ptn5150), `cat /sys/class/thermal/thermal_zone*/type`.
+
+### Temperature and throttling
+
+There is one thermal zone, `cpu-thermal`, in millidegrees:
+
+```sh
+awk '{printf "%.1fC\n", $1/1000}' /sys/class/thermal/thermal_zone0/temp
+```
+
+Watch it against the current frequency — this is the pair that matters, since
+the failure mode was the cores sitting at 1.5 GHz with nothing throttling them:
+
+```sh
+while :; do
+  printf '%s  %s kHz\n' \
+    "$(awk '{printf "%.1fC", $1/1000}' /sys/class/thermal/thermal_zone0/temp)" \
+    "$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq)"
+  sleep 2
+done
+```
+
+`CONFIG_CPU_THERMAL` working shows up as cooling devices existing at all:
+
+```sh
+for d in /sys/class/thermal/cooling_device*; do
+  echo "$(cat $d/type) cur=$(cat $d/cur_state) max=$(cat $d/max_state)"
+done
+```
+
+Expect a `cpufreq-*` entry and a `gpio-fan` entry. Before the fix there were
+none, which is precisely why nothing throttled. The trip points the board
+should be acting on are in `imx8mq-phanbell.dts`: fan on at 65 °C, passive at
+75 °C and 80 °C, critical at 90 °C.
+
+```sh
+grep . /sys/class/thermal/thermal_zone0/trip_point_*_type \
+       /sys/class/thermal/thermal_zone0/trip_point_*_temp
+```
 
 ### Serial console
 
