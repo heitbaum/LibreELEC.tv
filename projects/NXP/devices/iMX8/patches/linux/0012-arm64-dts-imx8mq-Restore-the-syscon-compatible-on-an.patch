@@ -1,0 +1,36 @@
+From 076b7b2d5e206617a43f78bdd3977cf233266d84 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 15:53:50 +1000
+Subject: [PATCH] arm64: dts: imx8mq: Restore the syscon compatible on
+ anatop
+
+Commit f98c2dfedb73 ("arm64: dts: imx8m: align anatop with bindings")
+dropped "syscon" from the anatop node. Consumers reaching the block with
+syscon_regmap_lookup_by_compatible() have failed ever since, including
+the PCIe driver configuring the internal PLL as REF_CLK, which leaves
+the port without a reference clock.
+
+Restore the compatible; the node keeps its clock-controller role.
+
+Fixes: f98c2dfedb73 ("arm64: dts: imx8m: align anatop with bindings")
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ arch/arm64/boot/dts/freescale/imx8mq.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq.dtsi b/arch/arm64/boot/dts/freescale/imx8mq.dtsi
+index e60872a..bb23c0c 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mq.dtsi
+@@ -809,7 +809,7 @@
+ 			};
+ 
+ 			anatop: clock-controller@30360000 {
+-				compatible = "fsl,imx8mq-anatop";
++				compatible = "fsl,imx8mq-anatop", "syscon";
+ 				reg = <0x30360000 0x10000>;
+ 				interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
+ 				#clock-cells = <1>;
+-- 
+2.47.1
+
