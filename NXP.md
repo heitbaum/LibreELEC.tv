@@ -607,6 +607,65 @@ build.LibreELEC-iMX8.aarch64-13.0-devel/toolchain/bin/mkimage \
     -A arm64 -O linux -T script -C none -d bootle.txt bootle.scr
 ```
 
+### Harvesting from the vendor OS
+
+Mendel is dual-bootable on the same eMMC, and it is the only authoritative
+description of this board we have. `regulator_summary` from it already settled
+the BUCK3/BUCK4 mapping and killed a wrong theory about the codec supplies.
+Worth grabbing the rest while it is there. In rough order of value:
+
+**1. The whole vendor devicetree.** Answers most remaining questions at once —
+which SAI carries audio, the DAPM routing, whether PCIe uses `vpcie-supply` or
+`vph-supply` for LDO7, how bluetooth is wired, the typec node.
+
+```sh
+apt install -y device-tree-compiler          # if needed
+dtc -I fs -O dts /proc/device-tree > /boot/vendor.dts
+# or just take the blob and decompile it elsewhere:
+cp /sys/firmware/fdt /boot/vendor.dtb
+```
+
+**2. The clock tree.** This is the one that bears on open problem 2 — the PCIe
+reference clock that works via `0008`'s register writes but not via an
+equivalent DT description.
+
+```sh
+cat /sys/kernel/debug/clk/clk_summary > /boot/vendor-clk.txt
+```
+
+and the three anatop fields directly, to compare against what we set:
+
+```sh
+busybox devmem 0x30360074 32     # mux bits 3:0, gate bit 4
+busybox devmem 0x3036007c 32     # divider bits 2:0
+# fallback if devmem is absent and /dev/mem is readable:
+dd if=/dev/mem bs=4 count=1 skip=$((0x30360074/4)) 2>/dev/null | xxd
+```
+
+**3. Audio runtime state.** Settles the SAI1/SAI2/SAI4 question and shows what
+the codec actually exposes, which is what the missing `widgets`/`routing` in
+`0017` need.
+
+```sh
+aplay -l; arecord -l; cat /proc/asound/cards
+amixer -c0 scontrols
+ls /sys/kernel/debug/asoc/; cat /sys/kernel/debug/asoc/components
+```
+
+Whether an HDMI card appears here is also worth knowing — it would say the
+vendor's MHDP audio driver works and via which SAI.
+
+**4. Bluetooth**, which we have never looked at. The QCA6174 is a combo part
+with BT on a UART and nothing in our DT describes it.
+
+```sh
+hciconfig -a; ls /sys/class/bluetooth/
+dmesg | grep -iE 'blue|hci|qca'
+```
+
+**5. Lower value, but cheap:** `lspci -nnvv` (link speeds and the Edge TPU),
+`ls /sys/class/typec/` (the ptn5150), `cat /sys/class/thermal/thermal_zone*/type`.
+
 ### Serial console
 
 **The console going quiet is not a hang.** `packages/sysutils/busybox/scripts/init:887`
