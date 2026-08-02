@@ -47,6 +47,7 @@ the one piece not yet enabled — see problem 3.
 | `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
 | `0017` | phanbell rt5645 analog audio via `simple-audio-card` | needs `0018`, see problem 3 |
 | `0018` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | to submit to alsa-devel |
+| `0019` | `arm64: dts: imx8mq-phanbell: Give the GPU power domain its supply` | fixes `buck3: disabling`, see problem 4 |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
 
@@ -401,6 +402,31 @@ The "parse error" itself is `asoc_simple_parse_dai()` failing to resolve
 `snd_soc_get_dlc()` returns `-EPROBE_DEFER` and simple-card reports it through
 `dev_err_probe()`.
 
+**Second boot, with `0018`: the driver loads and reaches the chip.** It binds as
+`rt5645 2-001a`, takes dummy regulators as expected, and then two boots
+disagreed:
+
+- one reported `Device with ID register 0x6308 is not rt5645 or rt5650` at
+  ~10.5s;
+- the next produced no ID message at all, with the probe starting at 0.316s.
+
+**The error message contradicts the source.** `RT5645_DEVICE_ID` *is* `0x6308`
+(`rt5645.c:47`), and the switch at `:4085` has `case RT5645_DEVICE_ID`, so a
+read of 0x6308 cannot reach the `default:` arm that prints it. Nothing in our
+tree patches `rt5645.c`. Unexplained — do not build on it until a clean
+single-boot log settles which behaviour is real.
+
+The likely mechanism for a bad read, if the error is real, is the missing
+supplies: `rt5645_i2c_probe` does `regulator_bulk_enable()` then
+`msleep(TIME_TO_POWER_MS)` before reading the ID, and with dummy regulators
+that 400ms is measured from nothing. Which is another reason to find the real
+avdd/cpvdd rails.
+
+Note the boot ordering oddity: `rt5645 2-001a` appears *before*
+`i2c i2c-2: IMX I2C adapter registered`. That is normal —
+`i2c_add_adapter()` registers DT children before the imx driver prints its
+banner.
+
 Checks after the next boot:
 
 ```sh
@@ -439,10 +465,39 @@ settle the SAI4 question itself.
 
 Note the numbering is not address order and there is no `sai@30020000`.
 
-### 4. Smaller ones
+### 4. `buck3: disabling` kills the board 30s in — fixed by `0019`
 
-- `platform cpufreq-dt: deferred probe pending: (reason unknown)` — **fixed,
-  awaiting a boot.** `CONFIG_MFD_ROHM_BD718XX=y` but
+A regression from enabling `CONFIG_REGULATOR_BD718XX`. With real regulators
+present the core runs its unused-regulator sweep at the end of init, and
+phanbell's BUCK3 is the **only** rail on the board with neither a consumer nor
+`regulator-always-on`. So:
+
+```
+[   32.057712] buck3: disabling
+```
+
+and access to the board goes with it. BUCK3 feeds the GPU rail, and the GPU is
+driving the display.
+
+`imx8mq-pico-pi.dts` and `imx8mq-librem5.dtsi` describe BUCK3 identically —
+`regulator-boot-on` and a `rohm,dvs-run-voltage`, no always-on — but librem5
+adds `&pgc_gpu { power-supply = <&buck3_reg>; }`
+(`imx8mq-librem5.dtsi:1264`), so the GPU power domain holds a reference and the
+core never sees the rail as unused. phanbell has no such line. `0019` adds it.
+
+That is the honest description of the hardware, which is why it is preferable
+to just setting `regulator-always-on`. **pico-pi has the same latent bug** and
+would need the same treatment — worth mentioning if `0019` goes upstream.
+
+Unblock without a rebuild: add `regulator_ignore_unused` to the kernel command
+line (`drivers/regulator/core.c:6855`), the direct analogue of
+`clk_ignore_unused`.
+
+### 5. Smaller ones
+
+- `platform cpufreq-dt: deferred probe pending: (reason unknown)` — **fixed and
+  confirmed on hardware**, `scaling_available_frequencies` now reads
+  `1000000 1500000`. `CONFIG_MFD_ROHM_BD718XX=y` but
   `# CONFIG_REGULATOR_BD718XX is not set`, so the PMIC registered its pwrkey
   child (`bd718xx-pwrkey` at 9.79s in the log) and no regulators. phanbell gives
   all four A53s `cpu-supply = <&buck2>`, so `dev_pm_opp_set_regulators()` →
