@@ -732,7 +732,50 @@ Unblock without a rebuild: add `regulator_ignore_unused` to the kernel command
 line (`drivers/regulator/core.c:6855`), the direct analogue of
 `clk_ignore_unused`.
 
-### 5. Smaller ones
+### 5. Nothing was throttling the CPU — critical shutdown
+
+Enabling the BD718XX regulator made cpufreq work, and the cores went from
+u-boot's 1000 MHz to 1.5 GHz at 1.0 V. Nothing throttled them, and the board
+shut down on the critical trip; u-boot reported it on the next power-up:
+
+```
+CPU Temperature (94000C) has exceeded alert (85000C), close to critical (95000C)
+Critical temperature hit. Shutting down, a power cycle will be necessary
+```
+
+**Confirmed on hardware.** `CONFIG_CPU_THERMAL` was off, so `cpufreq_cooling`
+never existed:
+
+```
+# for d in /sys/class/thermal/cooling_device*; do ...
+38000000.gpu   cur=0 max=6
+gpio-fan       cur=0 max=1
+ath10k_thermal cur=0 max=100
+```
+
+Three cooling devices and **no `cpufreq` one**. phanbell's `cpu_alert0` (75 °C)
+and `cpu_alert1` (80 °C) maps both name `A53_0`, so both had nothing to bind to
+— the entire passive half of the board's thermal design was inert. Only the
+65 °C fan trip and the 90 °C critical trip did anything, which is exactly the
+path to a shutdown: fan on, no throttling, straight up to critical.
+
+Fixed with `CONFIG_CPU_THERMAL=y` + `CONFIG_CPU_FREQ_THERMAL=y`, plus
+`THERMAL_GOV_BANG_BANG=y` for the active fan trip and `SENSORS_GPIO_FAN=y`
+instead of `=m` (as a module it did not load until ~11 s, long after the cores
+could be at full speed). Untested as yet — the check is simply whether a
+`cpufreq-*` cooling device appears.
+
+Two other things that showed up while measuring:
+
+- **Six trip points, not four.** phanbell's `&cpu_thermal { trips { … } }`
+  *adds* to the ones already in `imx8mq.dtsi` rather than replacing them, so
+  80 °C passive and 90 °C critical each appear twice. Harmless, but it means
+  the board's own numbers are not the whole picture.
+- **The GPU has a cooling device that no trip uses.** `38000000.gpu` with six
+  states exists, but phanbell's cooling maps only name `A53_0` and the fan.
+  Worth considering once the CPU side is proven.
+
+### 6. Smaller ones
 
 - `platform cpufreq-dt: deferred probe pending: (reason unknown)` — **fixed and
   confirmed on hardware**, `scaling_available_frequencies` now reads
@@ -774,7 +817,7 @@ line (`drivers/regulator/core.c:6855`), the direct analogue of
   is an unclaimed feature rather than a fault, and it is reachable upstream —
   see below.
 
-### 6. Bluetooth — not described, but straightforward to add
+### 7. Bluetooth — not described, but straightforward to add
 
 The vendor OS has it working:
 
