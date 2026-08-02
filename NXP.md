@@ -784,11 +784,22 @@ Still unknown, and worth resolving before writing the node:
 **Firmware: `qca/*00130302.bin`, added.** `btqca` builds both names from the
 SoC version it reads out of the chip — `"qca/rampatch_%08x.bin"` and
 `"qca/nvm_%08x.bin"` (`btqca.c:850,944`) — so the version had to be known
-before the files could be listed. The vendor rootfs gives it without a boot:
-`/lib/firmware/rampatch_tlv_3.2.tlv` is a symlink to
-`qca/rampatch_00130302.bin`, the legacy name the old driver used. Both
-`rampatch_00130302.bin` and `nvm_00130302.bin` exist in linux-firmware
-20260622.
+before the files could be listed. Three independent things on the vendor OS say
+`00130302`:
+
+- `/lib/firmware/rampatch_tlv_3.2.tlv` is a symlink to
+  `qca/rampatch_00130302.bin` — the legacy name the old driver used, pointing at
+  the modern one;
+- `/lib/firmware/nvm_tlv_3.2.bin` is 1968 bytes, byte-for-byte the size of
+  `qca/nvm_00130302.bin`;
+- the vendor dmesg reports `HW:QCA6174_REV3_2`.
+
+The vendor's `qca/` also carries the `00130300` (rev 3.0) pair and four
+`*_usb_*` files, none of which apply here. Both `rampatch_00130302.bin` and
+`nvm_00130302.bin` exist in linux-firmware 20260622.
+
+If the chip ever reports something else, the boot log names the file it wanted
+verbatim — `Direct firmware load for qca/rampatch_XXXXXXXX.bin failed`.
 
 Getting this right mattered more than usual: the firmware list loader `die`s on
 a pattern that matches nothing (`kernel-firmware/package.mk:62`), so a guessed
