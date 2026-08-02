@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Mon, 3 Aug 2026 00:05:59 +1000
+Date: Mon, 3 Aug 2026 00:58:09 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: describe the QCA6174 Bluetooth
 
 The Coral Dev Board's QCA6174 has its Bluetooth side on uart2 with flow
@@ -14,34 +14,33 @@ its uart2 pinctrl group mixes the four uart pins in with that same GPIO
 as NAND_DATA00_GPIO3_IO6. Note the flow control pins are muxed from the
 UART4 pads, not the UART2 ones.
 
-Two details are not derivable from the vendor tree and are set by
-convention here:
-
-  - enable-gpios polarity. The vendor marks its bt-power-gpios active
-    low, but that is a different property on a different binding. QCA
-    BT_EN is active high in the upstream users, so use that; the failure
-    mode if it is wrong is simply no hci0.
-
-  - clocks. The binding requires a 32.768kHz input and the vendor node
-    describes none, so it is hardwired on this board. The BD71837 is a
-    32768Hz provider and is the plausible source.
+uart2 has to be reparented off the 25MHz oscillator. hci_qca declares
+oper_speed 3000000 and hci_uart_setup() applies it immediately after the
+115200 init speed, but the imx uart caps out at uartclk/16, so on the
+default parent the host lands at 1.5625MHz while the controller has
+moved to 3MHz. The result is a stream of "Frame reassembly failed
+(-84)" and "command 0xfc00 tx timeout". SYS1_PLL_80M gives 5MHz of
+headroom and follows imx8mq-hummingboard-pulse and
+imx8mq-kontron-pitx-imx8m, which reparent their uarts the same way.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 30 +++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 33ca224..9505357 100644
+index 3c104eb..b7291b9 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -501,6 +501,21 @@
+@@ -501,6 +501,23 @@
  	status = "okay";
  };
  
 +&uart2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_uart2>;
++	assigned-clocks = <&clk IMX8MQ_CLK_UART2>;
++	assigned-clock-parents = <&clk IMX8MQ_SYS1_PLL_80M>;
 +	uart-has-rtscts;
 +	status = "okay";
 +
@@ -57,7 +56,7 @@ index 33ca224..9505357 100644
  &usdhc1 {
  	pinctrl-names = "default", "state_100mhz", "state_200mhz";
  	pinctrl-0 = <&pinctrl_usdhc1>;
-@@ -649,6 +664,21 @@
+@@ -649,6 +666,21 @@
  		>;
  	};
  
