@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Sun, 2 Aug 2026 22:22:04 +1000
+Date: Sun, 2 Aug 2026 23:51:01 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable the rt5645 analog audio
 
 The Coral Dev Board has a Realtek RT5645 codec on i2c3 at 0x1a driving
@@ -21,11 +21,11 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 48 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 222b213..d14bac3 100644
+index 520e841..9013e6e 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -44,6 +44,23 @@
- 		status = "okay";
+@@ -21,6 +21,23 @@
+ 		reg = <0x00000000 0x40000000 0 0x40000000>;
  	};
  
 +	sound-analog {
@@ -48,24 +48,7 @@ index 222b213..d14bac3 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -354,6 +371,16 @@
- 	status = "okay";
- };
- 
-+&sai2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_sai2>;
-+	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
-+	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
-+	assigned-clock-rates = <24576000>;
-+	fsl,sai-mclk-direction-output;
-+	status = "okay";
-+};
-+
- &i2c2 {
- 	clock-frequency = <100000>;
- 	pinctrl-names = "default";
-@@ -366,6 +393,17 @@
+@@ -329,6 +346,27 @@
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -80,11 +63,21 @@ index 222b213..d14bac3 100644
 +		realtek,dmic1-data-pin = <2>;
 +		realtek,jd-mode = <0>;
 +	};
++};
++
++&sai2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_sai2>;
++	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
++	assigned-clock-rates = <24576000>;
++	fsl,sai-mclk-direction-output;
++	status = "okay";
  };
  
  &pcie0 {
-@@ -717,6 +755,16 @@
- 			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC	0xd6
+@@ -674,6 +712,16 @@
+ 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
  		>;
  	};
 +
