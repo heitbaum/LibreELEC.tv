@@ -328,9 +328,25 @@ as well as playback. Three things settled:
   downstream, which matches the MHDP audio driver having been dropped from the
   patch set.
 
-Still to confirm: which SAI card 0 uses. The reverted patch said `sai2`, which
-is what `0017` assumes — `cat /proc/asound/card0/pcm0p/info` on Mendel settles
-it.
+**SAI2 confirmed for the codec.** `/sys/kernel/debug/asoc/` on Mendel:
+
+```
+platforms:  308b0000.sai  30010000.sai  snd-soc-dummy  dummy-dai
+dais:       308b0000.sai  30010000.sai  rt5645-aif2  rt5645-aif1
+            i2s-hifi  snd-soc-dummy-dai  snd-soc-dummy-dai
+```
+
+`308b0000` is SAI2 and `30010000` is SAI1, so the codec is on SAI2 and the
+header on SAI1 — exactly the split `0017` and the reverted patch assume. The
+SAI2 half of the audio work is therefore validated against the vendor.
+
+One extra thing that list reveals: **`i2s-hifi` is present**, which is the
+`hdmi-codec` DAI (`sound/soc/codecs/hdmi-codec.c`). So the vendor's MHDP driver
+*does* register an `hdmi-audio-codec` component — the codec half of HDMI audio
+exists there — but no card in `aplay -l` uses it, so the machine link was never
+wired up. The "Uses SAI4 for HDMI output" in `0015`'s commit message looks like
+a plan that was never finished. Our `0001` has no audio driver at all, so we do
+not even have the codec.
 
 **Recommendation: delete `0015` rather than repair it.** It has no working
 codec to bind to, its second `hdmi_audio` node is the source of the historic
