@@ -28,7 +28,7 @@ Works: both PCIe ports, ath10k with firmware, and — separately — HDMI.
 
 Display, both PCIe ports and wifi all come up together with no kernel command
 line workaround, since `0006` holds a reference on the CLK2_P/N gate. Audio is
-the one piece not yet enabled.
+the one piece not yet enabled — see problem 3.
 
 ## Patches
 
@@ -255,14 +255,86 @@ back at the end of `imx8mq_pcie_init_phy()` and again at link-check time, then
 diff a working boot against a rework boot. If they match at both points, the
 clock is not the differentiator at all.
 
-### 3. Smaller ones
+### 3. Audio — two designs both claiming SAI1
+
+Nothing is enabled: `0016` disables `sai1`, `sound-hdmi` and `hdmi_audio`, so a
+current boot ends with
+
+```
+ALSA device list:
+  No soundcards found.
+```
+
+Two separate audio paths have been attempted on this board, and they collide.
+
+**A — HDMI audio (`0015`, in tree, never tested).** Michael Brooks (Google),
+Nov 2019. Adds:
+
+- `sound-hdmi` — `fsl,imx-audio-hdmi`, `audio-cpu = <&sai1>`, `protocol = <0>`,
+  `hdmi-out`, a `constraint-rate` list of the seven usual rates.
+- `hdmi_audio` — a *second* `fsl,imx-audio-hdmi` node, `model = "imx-hdmi"`,
+  property spelled `hdmi_out` (underscore, not the `hdmi-out` above) and **no
+  `audio-cpu` at all**. This is the node behind the historic
+  `imx-hdmi hdmi_audio: cpu dai phandle missing or invalid` / `-22`: the driver
+  does `of_parse_phandle(np, "audio-cpu", 0)` and there is nothing to find. Two
+  machine nodes with the same compatible, one of them incomplete — the second
+  one looks like leftover scaffolding and should probably just be deleted.
+- `&sai1` — clocks off AUDIO_PLL1 at 24576000, plus a one-pin pinctrl
+  (`MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC`).
+
+The machine driver is upstream: `sound/soc/fsl/imx-hdmi.c`, compatible
+`fsl,imx-audio-hdmi` at :205, `audio-cpu` parsed at :112. So this path is
+viable in principle.
+
+Two things do not add up. The commit message says *"Uses SAI4 for HDMI output …
+Uses SAI4"* twice, but the DT wires `&sai1`. And HDMI audio is an internal SoC
+path to the HDMI TX — it has no business muxing an external `SAI1_TX_SYNC` pin.
+Both point the same way: SAI1 was the wrong node and the pinctrl is a leftover
+from an external-I2S consumer. **Check the i.MX8MQ RM for which SAI actually
+feeds the HDMI TX before enabling this.** If it is SAI4, the conflict below
+evaporates.
+
+**B — analog jack and 40-pin header (reverted, `00e8a492832` + `e7509d7e646`,
+reverted by `8af0ab558a` + `2feb913152`).** Not in the tree; recorded here
+because the board facts in it are real and were nearly lost:
+
+- `rt5645` codec on `&i2c3` at `0x1a` — the 3.5mm jack. `mclk1` from
+  `IMX8MQ_CLK_SAI2_ROOT`; jack detect on `gpio5` line 4, `IRQ_TYPE_EDGE_BOTH`,
+  with `realtek,jd-mode = <0>`, `jd-invert`, `jd-low-volt-enable`;
+  `realtek,dmic1-data-pin = <2>`. `sound/soc/codecs/rt5645.c` is upstream, so
+  the codec itself is supported.
+- `sound-rt5645` — machine node with `compatible = "google,edgetpu-audio-card"`,
+  `audio-cpu = <&sai2>`. That compatible has **zero hits in mainline**; the
+  machine driver is Mendel-only and could never bind on our kernel. Almost
+  certainly why the pair got reverted. An upstream version would use
+  `simple-audio-card` or `audio-graph-card` instead.
+- `sound-header` — `simple-audio-card` on **`&sai1`** against a
+  `linux,snd-soc-dummy` codec, i.e. raw I2S out to the 40-pin header.
+- Also carried, unrelated to audio but a real Coral device:
+  `typec_ptn5150` on `&i2c3` at `0x3d`, `nxp,ptn5150a`, irq `gpio3` line 0.
+  `e7509d7e646` ("audio2") did nothing but blank out a stray
+  `#pinctrl-0 = <&pinctrl_typec>;` typo in that node.
+
+**The collision:** A gives SAI1 to HDMI, B gives SAI1 to the 40-pin header and
+SAI2 to the codec. Only one can own it. Resolve the SAI4 question first.
+
+Order to bring it up: `sai1` + `sound-hdmi` only, with `hdmi_audio` left
+disabled (or dropped from `0015`), and check whether a card appears at all
+before worrying about the analog side.
+
+### 4. Smaller ones
 
 - `platform cpufreq-dt: deferred probe pending: (reason unknown)` — cpufreq never
   comes up.
-- `imx-hdmi hdmi_audio: cpu dai phandle missing or invalid` / `-22` — predates all
-  of this, will resurface when `0015` is enabled.
 - `of_irq_parse_pci: failed with rc=134` — 134 is not an errno; seen once, on the
-  boot that then locked up on ath10k. Watch for it.
+  boot that then locked up on ath10k. Not seen since; watch for it.
+- `ath10k_pci: failed to fetch board data for … subsystem-vendor=0000,
+  subsystem-device=0000 from ath10k/QCA6174/hw3.0/board-2.bin` — then
+  `board_file api 1`. It falls back to `board.bin` and the radio works; the
+  QCA6174 on this board reports a null subsystem ID so it can never match a
+  board-2.bin entry. Cosmetic.
+- No bluetooth HCI device appears. The QCA6174 is a combo part with BT on a
+  UART; nothing in the DT describes it. Not investigated.
 
 ## Testing
 
@@ -288,7 +360,8 @@ booti ${loadaddr} - ${fdt_addr}
 ```
 
 Node paths: `/soc@0/pcie@33800000`, `/soc@0/pcie@33c00000`,
-`/soc@0/bus@32c00000/bridge@32c00000`, `/soc@0/bus@32c00000/display-controller@32e00000`.
+`/soc@0/bus@32c00000/bridge@32c00000`, `/soc@0/bus@32c00000/display-controller@32e00000`,
+`/soc@0/bus@30000000/sai@30010000` (sai1), `/sound-hdmi`, `/hdmi_audio`.
 
 The bridge will not probe unless the display controller is enabled too — the two
 have a DT dependency cycle and mhdp simply defers.
