@@ -21,6 +21,8 @@ configure_package() {
                          -DWSDDN_PREFER_SYSTEM_SPDLOG=ON \
                          -DWSDDN_WITH_SYSTEMD=yes \
                          -DCMAKE_INSTALL_BINDIR=sbin \
+                         -DUSERADD_PATH= \
+                         -DGROUPADD_PATH= \
                          -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
                          -DFETCHCONTENT_SOURCE_DIR_ARGUM=$(get_build_dir argum) \
                          -DFETCHCONTENT_SOURCE_DIR_ASIO=$(get_build_dir asio)/asio \
