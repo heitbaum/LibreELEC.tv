@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Sun, 2 Aug 2026 23:51:02 +1000
+Date: Sun, 2 Aug 2026 23:53:59 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: add the 40-pin header I2S card
 
 SAI1 goes to the 40-pin expansion header as plain I2S with no codec on
@@ -14,7 +14,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 39 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 9013e6e..470d0f9 100644
+index 6c71d34..1950b10 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -21,6 +21,25 @@
@@ -43,7 +43,7 @@ index 9013e6e..470d0f9 100644
  	sound-analog {
  		compatible = "simple-audio-card";
  		simple-audio-card,name = "Coral Analog";
-@@ -359,6 +378,16 @@
+@@ -369,6 +388,16 @@
  	};
  };
  
@@ -60,7 +60,7 @@ index 9013e6e..470d0f9 100644
  &sai2 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_sai2>;
-@@ -713,6 +742,16 @@
+@@ -723,6 +752,16 @@
  		>;
  	};
  
