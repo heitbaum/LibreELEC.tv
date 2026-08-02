@@ -35,12 +35,12 @@ display controller stops pcie0 linking. See open problem 1.
 |---|---|---|
 | `0001` | Cadence MHDP8501 HDMI/DP driver (NXP out-of-tree, ~6600 lines) | downstream only |
 | `0002`–`0004` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0001` |
-| `0005` | `PCI: imx6: Avoid dereferencing a NULL clock name` | **upstreamable, standalone** |
+| `0005` | `PCI: imx6: Avoid dereferencing a NULL clock name` | **submitted 2026-08-02** |
 | `0006` | phanbell Coral specifics (pcie0/pcie1, i2c, gpio) | needs `0008` resolved |
-| `0007` | `PCI: imx6: Use the external clock as REF_CLK when needed for i.MX8MQ` | **upstreamable** |
+| `0007` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | **submitted 2026-08-02** |
 | `0008` | `PCI: imx6: Provide a clock to the device for i.MX8MQ` (anatop writes) | blocker — see problem 2 |
-| `0009` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | **upstreamable** |
-| `0010` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | **upstreamable** |
+| `0009` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | **submitted 2026-08-02** |
+| `0010` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | **submitted 2026-08-02** |
 | `0011`/`0012` | anatop `"syscon"` compatible + binding | only exist to make `0008` work |
 | `0015` | phanbell hdmi audio | downstream, untested |
 | `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
@@ -292,33 +292,52 @@ early-boot hang while the kernel was in fact running fine and reachable over ssh
 If the console dies anyway, the image has `ssh` on the cmdline; the board is
 usually still up and `dmesg` tells the whole story.
 
-## Upstream plan
+## Upstream
 
-Against `v7.2-rc5`. Three independent items.
+Submitted 2026-08-02, against mainline. Awaiting review.
 
-1. **`PCI: imx6: Avoid dereferencing a NULL clock name`** — send standalone to
-   linux-pci. `of_clk_bulk_get()` leaves `clk_bulk_data::id` NULL when
-   `clock-names` is shorter than `clocks`; the extref scan added by
-   `d8574ce57d76` dereferences it. Has a `Fixes:` tag, no dependencies. Reasoned
-   from the source — this board's `clock-names` is complete, so the path has
-   never been exercised here.
+1. **`PCI: imx6: Avoid dereferencing a NULL clock name`** (`0005`) — sent
+   standalone to linux-pci. `of_clk_bulk_get()` leaves `clk_bulk_data::id` NULL
+   when `clock-names` is shorter than `clocks`; the extref scan added by
+   `d8574ce57d76` dereferences it. Carries `Fixes:` and `Cc: stable` — the buggy
+   commit is in v7.0 and v7.1, not v6.19, so v7.0 is the first affected release.
+   Reasoned from the source: this board's `clock-names` is complete, so the path
+   has never been exercised here.
 
-2. **extref for i.MX8MQ**, extending Richard Zhu's i.MX95 work in `d8574ce57d76`:
-   - `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ`
-   - `PCI: imx6: Use the external clock as REF_CLK when needed for i.MX8MQ`
-   - `arm64: dts: imx8mq: Declare the PCIe extref clock`
+2. **extref for i.MX8MQ** — a 3-patch series with a cover letter, extending
+   Richard Zhu's i.MX95 work in `d8574ce57d76`:
+   - 1/3 `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` (`0009`)
+   - 2/3 `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` (`0007`)
+   - 3/3 `arm64: dts: imx8mq: Declare the PCIe extref clock` (`0010`)
 
-   The last two **must go together**: the driver change alone silently drops
+   **2/3 must not land before 3/3**: the driver change alone silently drops
    `REF_USE_PAD` on every existing i.MX8MQ board, because they all describe their
-   oscillator as `pcie_bus`, which nothing looks up by name. Boards needing the
-   entry: evk, kontron-pitx-imx8m, mnt-reform2, tqma8mq-mba8mx, zii-ultra.
-   Endpoint nodes were left alone — all disabled, separate binding.
+   oscillator as `pcie_bus`, which nothing looks up by name. The reverse order is
+   safe. Boards touched: evk, kontron-pitx-imx8m, mnt-reform2, tqma8mq-mba8mx,
+   zii-ultra — all untested, no access to the hardware. Endpoint nodes were left
+   alone: all disabled, separate binding.
+
+   The series spans two trees — 1/3 and 2/3 are PCI, 3/3 is i.MX DTS — which the
+   cover letter calls out along with the ordering constraint.
 
    Validated on pcie1: `clock-names` ends in `extref`, link up Gen2, TPU
    enumerated.
 
-3. **`arm64: dts: imx8mq-phanbell: enable PCIe`** — blocked on open problems 1
-   and 2.
+   `0007` was reauthored before sending. Nothing of the original downstream patch
+   survives the rebase onto `enable_ext_refclk`, so carrying Ryosuke Saito's and
+   Khem Raj's `Signed-off-by` would have asserted they certified a patch neither
+   had seen.
+
+3. **`arm64: dts: imx8mq-phanbell: enable PCIe`** — not sent. Blocked on open
+   problems 1 and 2.
+
+Drop each patch from the tree once its upstream version lands.
+
+Note for the next series: `checkpatch` reports four `code indent should use tabs
+where possible` errors in `imx8mq-zii-ultra.dtsi`. That file aligns continuation
+lines with tab+spaces where the other four use tab+tab+space; the added lines
+match each file's local style, so checkpatch flags them while the identical lines
+directly above pass unexamined.
 
 `0001` and everything depending on it stays downstream: it is NXP's out-of-tree
 driver, not something that can be sent anywhere as-is.
