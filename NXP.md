@@ -43,7 +43,7 @@ the one piece not yet enabled — see problem 3.
 | `0009` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | **submitted 2026-08-02** |
 | `0010` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | **submitted 2026-08-02** |
 | `0011`/`0012` | anatop `"syscon"` compatible + binding | only exist to make `0008` work |
-| `0015` | phanbell hdmi audio | downstream, untested |
+| `0015` | phanbell hdmi audio | dead — `0001` has no audio driver, see problem 3 |
 | `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
@@ -255,7 +255,7 @@ back at the end of `imx8mq_pcie_init_phy()` and again at link-check time, then
 diff a working boot against a rework boot. If they match at both points, the
 clock is not the differentiator at all.
 
-### 3. Audio — two designs both claiming SAI1
+### 3. Audio — HDMI audio has no driver; the analog path is the reachable one
 
 Nothing is enabled: `0016` disables `sai1`, `sound-hdmi` and `hdmi_audio`, so a
 current boot ends with
@@ -265,62 +265,97 @@ ALSA device list:
   No soundcards found.
 ```
 
-Two separate audio paths have been attempted on this board, and they collide.
+and `aplay -l` agrees.
 
-**A — HDMI audio (`0015`, in tree, never tested).** Michael Brooks (Google),
-Nov 2019. Adds:
+#### HDMI audio cannot work today — do not bother enabling `0015`
 
-- `sound-hdmi` — `fsl,imx-audio-hdmi`, `audio-cpu = <&sai1>`, `protocol = <0>`,
-  `hdmi-out`, a `constraint-rate` list of the seven usual rates.
-- `hdmi_audio` — a *second* `fsl,imx-audio-hdmi` node, `model = "imx-hdmi"`,
-  property spelled `hdmi_out` (underscore, not the `hdmi-out` above) and **no
-  `audio-cpu` at all**. This is the node behind the historic
-  `imx-hdmi hdmi_audio: cpu dai phandle missing or invalid` / `-22`: the driver
-  does `of_parse_phandle(np, "audio-cpu", 0)` and there is nothing to find. Two
-  machine nodes with the same compatible, one of them incomplete — the second
-  one looks like leftover scaffolding and should probably just be deleted.
-- `&sai1` — clocks off AUDIO_PLL1 at 24576000, plus a one-pin pinctrl
-  (`MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC`).
+`0001` is Sandor Yu's MHDP8501 v2 series, and its own cover text says so:
 
-The machine driver is upstream: `sound/soc/fsl/imx-hdmi.c`, compatible
-`fsl,imx-audio-hdmi` at :205, `audio-cpu` parsed at :112. So this path is
-viable in principle.
+```
+- Audio driver are removed from the patch set, it will be add in another
+  patch set later.
+```
 
-Two things do not add up. The commit message says *"Uses SAI4 for HDMI output …
-Uses SAI4"* twice, but the DT wires `&sai1`. And HDMI audio is an internal SoC
-path to the HDMI TX — it has no business muxing an external `SAI1_TX_SYNC` pin.
-Both point the same way: SAI1 was the wrong node and the pinctrl is a leftover
-from an external-I2S consumer. **Check the i.MX8MQ RM for which SAI actually
-feeds the HDMI TX before enabling this.** If it is SAI4, the conflict below
-evaporates.
+The Kconfig hunk still carries `select DRM_CDNS_AUDIO` — a symbol that exists
+nowhere in 7.2-rc5 and is not added by the patch, so the select is dangling and
+does nothing.
 
-**B — analog jack and 40-pin header (reverted, `00e8a492832` + `e7509d7e646`,
-reverted by `8af0ab558a` + `2feb913152`).** Not in the tree; recorded here
-because the board facts in it are real and were nearly lost:
+That is fatal for `0015`, because `sound/soc/fsl/imx-hdmi.c` does not talk to
+the bridge directly. It hardcodes its codec side:
+
+```c
+data->dai.codecs->dai_name = "i2s-hifi";
+data->dai.codecs->name = "hdmi-audio-codec.1";
+```
+
+`hdmi-audio-codec` is `HDMI_CODEC_DRV_NAME` (`include/sound/hdmi-codec.h:138`),
+the generic `hdmi-codec` platform device that a *display* driver is supposed to
+register on the machine driver's behalf. Nothing on this board registers one,
+so the codec component never appears and `devm_snd_soc_register_card()` never
+completes. No card, no matter what the DT says.
+
+(The `.1` suffix is a `PLATFORM_DEVID_AUTO` instance number, so even once an
+audio driver exists, hardcoding `.1` is fragile.)
+
+So HDMI audio is blocked on the follow-up MHDP8501 audio patch set, not on
+anything in our tree. Check whether that series has been posted before spending
+more time here.
+
+While looking, other things about `0015` worth knowing:
+
+- `sound-hdmi` sets `protocol = <0>` and a seven-entry `constraint-rate` list.
+  Upstream `imx-hdmi.c` parses neither — only `audio-cpu`, `hdmi-out`/`hdmi-in`
+  and `model`. Downstream leftovers.
+- `hdmi_audio` is a *second* `fsl,imx-audio-hdmi` node with `model =
+  "imx-hdmi"`, the property spelled `hdmi_out` (underscore, so it is not the
+  `hdmi-out` the driver looks for) and **no `audio-cpu` at all**. That is the
+  node behind the historic `imx-hdmi hdmi_audio: cpu dai phandle missing or
+  invalid` / `-22`. It is scaffolding; delete it.
+- `audio-cpu = <&sai1>` contradicts the commit message, which says *"Uses SAI4
+  for HDMI output … Uses SAI4"* twice. The one-pin pinctrl
+  (`MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC`) is also wrong for an internal path to
+  the HDMI TX. Unresolved, but moot until there is a driver.
+- No mainline freescale board uses `fsl,imx-audio-hdmi` at all.
+
+#### The analog path is the one that could actually work
+
+From the reverted `00e8a492832` + `e7509d7e646` (reverted by `8af0ab558a` +
+`2feb913152`). Not in the tree; recorded because the board facts are real and
+were nearly lost:
 
 - `rt5645` codec on `&i2c3` at `0x1a` — the 3.5mm jack. `mclk1` from
   `IMX8MQ_CLK_SAI2_ROOT`; jack detect on `gpio5` line 4, `IRQ_TYPE_EDGE_BOTH`,
   with `realtek,jd-mode = <0>`, `jd-invert`, `jd-low-volt-enable`;
-  `realtek,dmic1-data-pin = <2>`. `sound/soc/codecs/rt5645.c` is upstream, so
-  the codec itself is supported.
+  `realtek,dmic1-data-pin = <2>`. `sound/soc/codecs/rt5645.c` **is** upstream,
+  so only the machine glue is missing.
 - `sound-rt5645` — machine node with `compatible = "google,edgetpu-audio-card"`,
-  `audio-cpu = <&sai2>`. That compatible has **zero hits in mainline**; the
-  machine driver is Mendel-only and could never bind on our kernel. Almost
-  certainly why the pair got reverted. An upstream version would use
-  `simple-audio-card` or `audio-graph-card` instead.
-- `sound-header` — `simple-audio-card` on **`&sai1`** against a
-  `linux,snd-soc-dummy` codec, i.e. raw I2S out to the 40-pin header.
-- Also carried, unrelated to audio but a real Coral device:
-  `typec_ptn5150` on `&i2c3` at `0x3d`, `nxp,ptn5150a`, irq `gpio3` line 0.
-  `e7509d7e646` ("audio2") did nothing but blank out a stray
-  `#pinctrl-0 = <&pinctrl_typec>;` typo in that node.
+  `audio-cpu = <&sai2>`. Zero hits in mainline; the machine driver is
+  Mendel-only and could never have bound here. Almost certainly why the pair got
+  reverted. Replace with `simple-audio-card` or `audio-graph-card`.
+- `sound-header` — `simple-audio-card` on `&sai1` against a
+  `linux,snd-soc-dummy` codec, i.e. raw I2S to the 40-pin header. Both halves
+  of that are upstream, so it should just work.
+- Also carried, unrelated to audio but a real Coral device: `typec_ptn5150` on
+  `&i2c3` at `0x3d`, `nxp,ptn5150a`, irq `gpio3` line 0. `e7509d7e646`
+  ("audio2") did nothing but blank out a stray `#pinctrl-0 = <&pinctrl_typec>;`
+  typo in that node.
 
-**The collision:** A gives SAI1 to HDMI, B gives SAI1 to the 40-pin header and
-SAI2 to the codec. Only one can own it. Resolve the SAI4 question first.
+The SAI1 ownership conflict between the two designs is therefore not live: HDMI
+audio cannot claim SAI1 until it has a driver, and when that driver arrives it
+will settle the SAI4 question itself.
 
-Order to bring it up: `sai1` + `sound-hdmi` only, with `hdmi_audio` left
-disabled (or dropped from `0015`), and check whether a card appears at all
-before worrying about the analog side.
+#### SAI address map (7.2-rc5 `imx8mq.dtsi`, all `status = "disabled"`)
+
+| label | node path |
+|---|---|
+| `sai1` | `/soc@0/bus@30000000/sai@30010000` |
+| `sai6` | `/soc@0/bus@30000000/sai@30030000` |
+| `sai5` | `/soc@0/bus@30000000/sai@30040000` |
+| `sai4` | `/soc@0/bus@30000000/sai@30050000` |
+| `sai2` | `/soc@0/bus@30800000/sai@308b0000` |
+| `sai3` | `/soc@0/bus@30800000/sai@308c0000` |
+
+Note the numbering is not address order and there is no `sai@30020000`.
 
 ### 4. Smaller ones
 
