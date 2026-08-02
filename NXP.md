@@ -364,10 +364,13 @@ the one in-tree i.MX8MQ board with a SAI2 group.
 
 **Not verified — needs a schematic before this can go upstream:**
 
-- `avdd-supply` / `cpvdd-supply` are **required** by
-  `realtek,rt5645.yaml` and are omitted, because which BD71837 rail feeds them
-  is unknown. `devm_regulator_bulk_get()` will fall back to dummy regulators and
-  log `supply avdd not found, using dummy regulator`, so it still probes.
+- `avdd-supply` / `cpvdd-supply` are **required** by `realtek,rt5645.yaml` and
+  are omitted, so `devm_regulator_bulk_get()` falls back to dummy regulators and
+  logs `supply avdd not found, using dummy regulator`. **The vendor OS does
+  exactly the same** — its `regulator_summary` shows `2-001a` twice under
+  `regulator-dummy` — so there is no rail to point at and the codec's supplies
+  are presumably hardwired. Still a `dtbs_check` failure, but not a functional
+  gap, and it rules out missing supplies as the cause of anything else.
 - No `widgets` / `routing` yet. HPOL/HPOR almost certainly reach the jack and
   the board has a 4-pin speaker terminal that SPOL/SPOR would drive, but that
   is not confirmed, so nothing is asserted. Add them once `amixer` shows what
@@ -416,11 +419,11 @@ read of 0x6308 cannot reach the `default:` arm that prints it. Nothing in our
 tree patches `rt5645.c`. Unexplained — do not build on it until a clean
 single-boot log settles which behaviour is real.
 
-The likely mechanism for a bad read, if the error is real, is the missing
-supplies: `rt5645_i2c_probe` does `regulator_bulk_enable()` then
-`msleep(TIME_TO_POWER_MS)` before reading the ID, and with dummy regulators
-that 400ms is measured from nothing. Which is another reason to find the real
-avdd/cpvdd rails.
+The "missing supplies caused a bad read" theory is **dead**: the vendor OS gives
+the same codec the same two dummy regulators and binds a driver to `2-001a`
+successfully. Since `rt5645` is the only driver asking for exactly `avdd` and
+`cpvdd`, the part at `0x1a` really is an rt5645/rt5650 and its ID read works
+under Mendel. Treat the one failing boot as unexplained until it reproduces.
 
 Note the boot ordering oddity: `rt5645 2-001a` appears *before*
 `i2c i2c-2: IMX I2C adapter registered`. That is normal —
@@ -482,35 +485,44 @@ Only two rails on phanbell have a declared consumer at all: `buck2`
 regulator survives solely because it is marked `regulator-always-on` — and
 BUCK3 is the one exception, so it is the only thing the sweep can touch.
 
-What BUCK3 feeds is **inferred, not verified from a schematic.** Two things
-point at the GPU rail: `imx8mq-librem5.dtsi:1264` maps BUCK3 to the GPU power
-domain on the other in-tree i.MX8MQ + BD71837 board, and phanbell's
-`rohm,dvs-run-voltage = <900000>` is a 0.9 V DVS core rail, which rules out a
-PHY or IO supply.
+**BUCK3 is the GPU rail — confirmed from the vendor OS.** `regulator_summary`
+under Mendel on the same board:
 
-That is consistent with the symptom, but only loosely. DCSS is not in
-`pgc_gpu`, so the display would keep scanning out the last frame from DRAM
-regardless; etnaviv GC7000 *is* (`imx8mq.dtsi:1636`), and Kodi renders through
-it, so losing the rail mid-render could fault the GPU or take an external abort
-on an unpowered block and wedge the kernel — which would drop ssh while leaving
-a static picture on screen. **Plausible, not established.**
+```
+ buck3        0  1  0   900mV  0mA   700mV  1300mV
+    gpc_power_domain@4
+ buck4        0  2  0  1000mV  0mA   700mV  1300mV
+    38300000.vpu
+    gpc_power_domain@5
+ buck2        0  1  0   850mV  0mA   850mV  1000mV
+    cpu0
+ ldo7         0  2  0  3300mV  0mA  1800mV  3300mV
+    33c00000.pcie
+    33800000.pcie
+```
 
-To settle it:
+BUCK4 lists `38300000.vpu` outright — that is the G1 decoder — so BUCK4 is the
+VPU rail and its domain is `@5`. BUCK3's domain `@4` is therefore the GPU. (The
+unit addresses are the vendor BSP's own numbering; mainline names the same nodes
+`pgc_gpu: power-domain@5` and `pgc_vpu: power-domain@6`, `imx8mq.dtsi:939,948`.)
 
-- boot with `regulator_ignore_unused` and confirm the board survives past 32s —
-  that alone proves BUCK3 is the trigger;
-- `cat /sys/kernel/debug/regulator/regulator_summary` to see buck3's voltage and
-  who, if anyone, claims it;
-- with serial attached, boot *without* the workaround: if the serial console
-  dies at 32s too it is a kernel wedge, if only ssh goes it is something else
-  and this diagnosis is wrong;
-- `systemctl stop kodi` before the 32s mark — if BUCK3 then goes away harmlessly,
-  the GPU link is confirmed.
+So `0019` reproduces what the vendor kernel already describes, and matches
+`imx8mq-librem5.dtsi:1264` on the other in-tree i.MX8MQ + BD71837 board.
+**pico-pi has the same missing line** and would need the same treatment if this
+goes upstream.
 
-`0019` gives `pgc_gpu` its `power-supply`, matching librem5. That is worth doing
-on its own merits — a power domain should own its regulator — and it stops the
-sweep either way. **pico-pi has the same missing line** and would need the same
-treatment if this goes upstream.
+The exact failure path is still only plausible: DCSS is not in `pgc_gpu`, so the
+display keeps scanning out the last frame from DRAM regardless, while etnaviv
+GC7000 *is* (`imx8mq.dtsi:1636`) and Kodi renders through it. Losing the rail
+mid-render could fault the GPU or take an external abort on an unpowered block
+and wedge the kernel — dropping ssh while the screen stays lit, which is the
+symptom. Not worth chasing further now that the fix is known to be right.
+
+Two more rails the vendor describes and mainline phanbell does not. Both are
+`regulator-always-on` so nothing breaks, but they are under-described:
+
+- `&pgc_vpu { power-supply = <&buck4>; }`
+- `vpcie-supply = <&ldo7>` on both `&pcie0` and `&pcie1`
 
 Unblock without a rebuild: add `regulator_ignore_unused` to the kernel command
 line (`drivers/regulator/core.c:6855`), the direct analogue of
