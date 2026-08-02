@@ -270,6 +270,37 @@ ALSA device list:
 
 and `aplay -l` agrees.
 
+#### What the vendor OS actually has
+
+```
+card 0: edgetpuaudiocar [edgetpu-audio-card], device 0: Coral Edge TPU HiFi rt5645-aif1-0
+card 1: Header [40-pin Header], device 0: 30010000.sai-snd-soc-dummy-dai snd-soc-dummy-dai-0
+```
+
+Both cards appear under `aplay -l` *and* `arecord -l`, so the codec does capture
+as well as playback. Three things settled:
+
+- **The part at `0x1a` is a real rt5645 and uses `aif1`.** That is `dai_drv[0]`,
+  so `0017`'s `#sound-dai-cells = <0>` selects the right DAI.
+- **SAI1 belongs to the 40-pin header**, not to HDMI — card 1's cpu DAI is
+  `30010000.sai`, which is `sai1`. The reverted 2024 patch had this right and
+  `0015` has it wrong.
+- **There is no HDMI audio card on the vendor OS either.** Only two cards, and
+  neither is HDMI. So `0015`'s `sound-hdmi` never worked on this board even
+  downstream, which matches the MHDP audio driver having been dropped from the
+  patch set.
+
+Still to confirm: which SAI card 0 uses. The reverted patch said `sai2`, which
+is what `0017` assumes — `cat /proc/asound/card0/pcm0p/info` on Mendel settles
+it.
+
+**Recommendation: delete `0015` rather than repair it.** It has no working
+codec to bind to, its second `hdmi_audio` node is the source of the historic
+`-22`, and its claim on SAI1 is simply wrong. Adding the header card
+(`simple-audio-card` on `&sai1` against a `linux,snd-soc-dummy` codec, both
+upstream) would then be free. `0016` references `&hdmi_audio` and `sound-hdmi`
+to disable them, so it has to be adjusted at the same time.
+
 #### HDMI audio cannot work today — do not bother enabling `0015`
 
 `0001` is Sandor Yu's MHDP8501 v2 series, and its own cover text says so:
@@ -631,16 +662,32 @@ equivalent DT description.
 
 ```sh
 cat /sys/kernel/debug/clk/clk_summary > /boot/vendor-clk.txt
+grep -iE 'monitor|pcie' /boot/vendor-clk.txt
 ```
 
-and the three anatop fields directly, to compare against what we set:
+This is worth more than the raw registers: what bit us was a *reference count*
+(nothing held `pllout_monitor_clk2`, so `clk_disable_unused()` gated it), not a
+wrong register value, and `clk_summary` prints `enable_cnt`/`prepare_cnt` per
+clock.
+
+The three anatop fields directly, to compare against what we set. Mendel is
+Debian and has no busybox, so use python rather than `devmem`; `mmap` with
+`O_SYNC` is also more reliable than `dd` on `/dev/mem` for MMIO on arm64:
 
 ```sh
-busybox devmem 0x30360074 32     # mux bits 3:0, gate bit 4
-busybox devmem 0x3036007c 32     # divider bits 2:0
-# fallback if devmem is absent and /dev/mem is readable:
-dd if=/dev/mem bs=4 count=1 skip=$((0x30360074/4)) 2>/dev/null | xxd
+python3 - <<'PY'
+import mmap, os, struct
+base = 0x30360000
+fd = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
+m = mmap.mmap(fd, 0x1000, mmap.MAP_SHARED, mmap.PROT_READ, offset=base)
+for off in (0x74, 0x7c):
+    print(f"{base+off:#010x} = {struct.unpack('<I', m[off:off+4])[0]:#010x}")
+PY
 ```
+
+`0x…74` low nibble is the mux (`0xb` = `sys_pll1_out_monitor`), bit 4 the gate;
+`0x…7c` bits 2:0 the divider (`7` = /8, 800 → 100 MHz). `apt install busybox` if
+`/dev/mem` turns out to be blocked.
 
 **3. Audio runtime state.** Settles the SAI1/SAI2/SAI4 question and shows what
 the codec actually exposes, which is what the missing `widgets`/`routing` in
