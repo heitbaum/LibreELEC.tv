@@ -32,6 +32,19 @@ card 0: Analog [Coral Analog],   device 0: sai-tx-rx-rt5645-aif1 rt5645-aif1-0
 card 1: Header [40-pin Header],  device 0: sai-tx-rx-dit-hifi dit-hifi-0
 ```
 
+**The card indices are not stable across boots.** A later boot came up with them
+the other way round, Header as card 0 and Analog as card 1. Neither
+`simple-audio-card` instance has a fixed index, so whichever probes first takes
+card 0, and that depends on when its SAI and codec become available — which
+already varies by seconds between boots depending on when `imx-sdma` loads.
+
+Consequence: anything selecting `hw:0`, `default` or "card 0" gets a different
+device from one boot to the next, and one of the two is a dummy `spdif-dit`
+with nothing attached. Refer to them by name — `hw:CARD=Analog,DEV=0` — which
+is stable. Worth deciding whether the header card earns its place on a media
+appliance at all, given it has no codec and destabilises the numbering; that is
+the only thing `0021` buys.
+
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
 took a reference on the CLK2_P/N gate, and `regulator_ignore_unused` went when
