@@ -43,11 +43,13 @@ the one piece not yet enabled — see problem 3.
 | `0009` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | **submitted 2026-08-02** |
 | `0010` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | **submitted 2026-08-02** |
 | `0011`/`0012` | anatop `"syscon"` compatible + binding | only exist to make `0008` work |
-| `0015` | phanbell hdmi audio | dead — `0001` has no audio driver, see problem 3 |
-| `0016` | bring-up aid: disables pcie/hdmi/audio | delete when bring-up ends |
-| `0017` | phanbell rt5645 analog audio via `simple-audio-card` | needs `0018`, see problem 3 |
+| `0016` | bring-up aid: disables pcie0/pcie1/mhdp/dcss | delete when bring-up ends |
+| `0017` | phanbell rt5645 analog audio via `simple-audio-card` | needs `0018`; matches the vendor |
 | `0018` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | to submit to alsa-devel |
 | `0019` | `arm64: dts: imx8mq-phanbell: Give the GPU power domain its supply` | fixes `buck3: disabling`, see problem 4 |
+| `0020` | `… Give the VPU power domain its supply` | completeness, matches the vendor |
+| `0021` | `… add the 40-pin header I2S card` | SAI1, matches the vendor |
+| `0022` | `… Supply the PCIe PHY VPH rail` | functional, see the VREG_BYPASS note |
 
 Numbering has gaps (`0013`, `0014`); that is pre-existing and fine.
 
@@ -685,11 +687,40 @@ copying: a **non-Qualcomm** SoC driving a QCA6174 exactly this way.
 };
 ```
 
-Three unknowns, all answered by the vendor devicetree: **which UART**, **the
-enable GPIO**, and whether the 32 kHz comes from the PMIC. Note phanbell already
-describes `pmic_osc` (a 32768 Hz fixed-clock) and the `pmic` node itself is a
-clock provider (`#clock-cells = <0>`, `clock-output-names = "pmic_clk"`), so the
-clock is probably already in the tree.
+**What the vendor devicetree gave us.** It does *not* use serdev — there is no
+bluetooth node at all, just an rfkill shim driven from userspace:
+
+```dts
+bt_rfkill {
+	compatible = "fsl,mxc_bt_rfkill";     /* downstream only */
+	bt-power-gpios = <0x38 0x06 0x01>;
+	status = "okay";
+};
+```
+
+Phandle `0x38` is **gpio3**: pcie0's `reset-gpio = <0x38 0x0a 0x01>` in the same
+dump is our `<&gpio3 10 GPIO_ACTIVE_LOW>`. So the power line is **gpio3 line 6**.
+
+The UART is **uart2, `serial@30890000`** — it is `status = "okay"` with
+`uart-has-rtscts` and a reset, and uart1/`30860000` is the console. Mainline
+agrees on the numbering (`imx8mq.dtsi:1151`), which is worth stating because the
+i.MX8MQ order is not monotonic: uart1 `30860000`, uart3 `30880000`, uart2
+`30890000`, uart4 `30a60000`.
+
+Still unknown, and worth resolving before writing the node:
+
+- **Polarity.** The vendor flags the GPIO `GPIO_ACTIVE_LOW`, but that is on its
+  own downstream `bt-power-gpios` property, whose sense need not match
+  `enable-gpios`. QCA BT_EN is conventionally active high and
+  `mt8183-kukui.dtsi:964` uses `<&pio 120 0>`. Cheap to test either way — wrong
+  polarity just means no `hci0`.
+- **The 32 kHz clock.** `ls /proc/device-tree/bt_rfkill/` shows only
+  `bt-power-gpios`, `compatible`, `name`, `status` — no clock. So it is
+  hardwired on this board, yet `qcom,qca2066-bt.yaml` lists `clocks` as
+  required. `<&pmic>` is the plausible stand-in (the pmic node is a 32768 Hz
+  provider), but that would be asserting a route nobody has confirmed.
+- **The uart2 pinmux.** Not yet extracted:
+  `sed -n '/uart2grp/,/};/p' /boot/vendor.dts`.
 
 Firmware will also be needed — QCA6174 BT wants `qca/nvm_*.bin` and
 `qca/rampatch_*.bin`, so `kernel-firmware-any.dat` grows the same way it did for
