@@ -803,20 +803,38 @@ agrees on the numbering (`imx8mq.dtsi:1151`), which is worth stating because the
 i.MX8MQ order is not monotonic: uart1 `30860000`, uart3 `30880000`, uart2
 `30890000`, uart4 `30a60000`.
 
-Still unknown, and worth resolving before writing the node:
+Both original guesses are now settled, and a third thing turned up that the
+vendor tree could not have told us.
 
-- **Polarity.** The vendor flags the GPIO `GPIO_ACTIVE_LOW`, but that is on its
-  own downstream `bt-power-gpios` property, whose sense need not match
-  `enable-gpios`. QCA BT_EN is conventionally active high and
-  `mt8183-kukui.dtsi:964` uses `<&pio 120 0>`. Cheap to test either way — wrong
-  polarity just means no `hci0`.
-- **The 32 kHz clock.** `ls /proc/device-tree/bt_rfkill/` shows only
-  `bt-power-gpios`, `compatible`, `name`, `status` — no clock. So it is
-  hardwired on this board, yet `qcom,qca2066-bt.yaml` lists `clocks` as
-  required. `<&pmic>` is the plausible stand-in (the pmic node is a 32768 Hz
-  provider), but that would be asserting a route nobody has confirmed.
-- **The uart2 pinmux.** Not yet extracted:
-  `sed -n '/uart2grp/,/};/p' /boot/vendor.dts`.
+**Polarity: active high, confirmed indirectly.** The first boot with the clock
+in place gave
+
+```
+Bluetooth: hci0: setting up ROME/QCA6390
+Bluetooth: hci0: Frame reassembly failed (-84)
+Bluetooth: hci0: command 0xfc00 tx timeout
+```
+
+`-84` is `EILSEQ` — bytes arriving with wrong framing. An unpowered controller
+would have given silence and timeouts with no framing errors, so the part is
+powered and `GPIO_ACTIVE_HIGH` is right, despite the vendor flagging its own
+`bt-power-gpios` `GPIO_ACTIVE_LOW`.
+
+**The clock was a Kconfig problem, not a devicetree one.** `clocks = <&pmic>`
+was correct all along — phanbell already declares the PMIC as a provider — but
+`CONFIG_COMMON_CLK_BD718XX` was off so nothing registered
+`bd718xx-32k-out` (`clk-bd718x7.c:87,133`) and `devm_clk_get_optional()`
+deferred forever.
+
+**uart2 has to be reparented off the 25 MHz oscillator.** `hci_qca` declares
+`oper_speed = 3000000` (`hci_qca.c:2097`) and `hci_uart_setup()` applies it
+immediately after the 115200 init speed (`hci_serdev.c:196-210`). The imx uart
+can only reach `uartclk/16`, so on the default parent the host stops at
+1.5625 MHz while the controller has already moved to 3 MHz — hence the EILSEQ.
+`SYS1_PLL_80M` gives 5 MHz of headroom;
+`imx8mq-hummingboard-pulse.dts:112` and `imx8mq-kontron-pitx-imx8m.dts:304`
+reparent their uarts the same way, and the vendor uses `SYS1_PLL_160M` for this
+same port.
 
 **Firmware: `qca/*00130302.bin`, added.** `btqca` builds both names from the
 SoC version it reads out of the chip — `"qca/rampatch_%08x.bin"` and
