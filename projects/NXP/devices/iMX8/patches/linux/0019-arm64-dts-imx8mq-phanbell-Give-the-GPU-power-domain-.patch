@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 23:21:23 +1000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Give the GPU power domain its
+ supply
+
+BUCK3 feeds the GPU rail but no consumer references it, and unlike every
+other regulator on this board it is not marked regulator-always-on. Once
+a driver for the BD71837 is present the regulator core therefore finds
+it unused and turns it off when it completes initialisation:
+
+  buck3: disabling
+
+which kills the board about thirty seconds into the boot.
+
+Describe the actual relationship instead of pinning the rail on: hand
+BUCK3 to the GPU power domain, the same way imx8mq-librem5.dtsi does.
+The domain then holds the reference while the GPU is powered and the
+core no longer considers the regulator unused.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index e34045d..f8bd1e4 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -259,6 +259,10 @@
+ 	};
+ };
+ 
++&pgc_gpu {
++	power-supply = <&buck3>;
++};
++
+ &fec1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fec1>;
