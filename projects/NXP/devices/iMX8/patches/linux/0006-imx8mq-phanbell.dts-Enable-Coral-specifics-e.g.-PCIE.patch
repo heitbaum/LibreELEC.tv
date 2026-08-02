@@ -90,7 +90,6 @@ index a3b9d615a3b4..5ce4fc21443e 100644
 +		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
 +		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
 +	fsl,max-link-speed = <1>;
-+	ext_osc = <0>;
 +	hard-wired = <1>;
 +	supports-clkreq;
 +	status = "okay";
@@ -103,8 +102,9 @@ index a3b9d615a3b4..5ce4fc21443e 100644
 +	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
 +		 <&pcie1_refclk>,
 +		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
-+	ext_osc = <1>;
++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++		 <&pcie1_refclk>;
++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
 +	hard-wired = <1>;
 +	supports-clkreq;
 +	status = "okay";
