@@ -1,8 +1,7 @@
 From 3a4f1a06648aee11526efbd155e5d5b2bb440351 Mon Sep 17 00:00:00 2001
-From: Khem Raj <raj.khem@gmail.com>
-Date: Tue, 7 Mar 2023 21:19:36 -0800
-Subject: [PATCH] PCI: imx6: Use the external clock as REF_CLK when needed
- for i.MX8MQ
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 21:15:00 +1000
+Subject: [PATCH] PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ
 
 i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
 internal PLL. The driver unconditionally selected the oscillator, which
@@ -19,9 +18,6 @@ supplied, to select between the two, as is already done for i.MX95 in
 commit d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
 support").
 
-Signed-off-by: Ryosuke Saito <rsaito@redhat.com>
-Signed-off-by: Khem Raj <raj.khem@gmail.com>
-[rebased onto the enable_ext_refclk flag from commit d8574ce57d76]
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
