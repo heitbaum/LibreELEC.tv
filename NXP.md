@@ -78,8 +78,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0016` | bring-up aid: disables pcie0/pcie1/mhdp/dcss | delete when bring-up ends |
 | `0017` | phanbell rt5645 analog audio via `simple-audio-card` | needs `0018`; matches the vendor |
 | `0018` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | to submit to alsa-devel |
-| `0019` | `arm64: dts: imx8mq-phanbell: Give the GPU power domain its supply` | fixes `buck3: disabling`, see problem 4 |
-| `0020` | `… Give the VPU power domain its supply` | completeness, matches the vendor |
+| `0019` | `arm64: dts: imx8mq-phanbell: Keep the GPU rail on` | fixes `buck3: disabling`, see problem 4 |
 | `0021` | `… add the 40-pin header I2S card` | SAI1, matches the vendor |
 | `0022` | `… Supply the PCIe PHY VPH rail` | functional, see the VREG_BYPASS note |
 | `0023` | `… describe the QCA6174 Bluetooth` | **working**, uart2 + gpio3 line 6 |
