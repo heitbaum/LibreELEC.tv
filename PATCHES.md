@@ -38,6 +38,7 @@ Patches that should be sent to the upstream project but have not yet been submit
 | addons/addon-depends/qt5 | `0002-QSslSocket-make-it-work-with-OpenSSL-v4.patch` | OpenSSL v4 QSslSocket fix |
 | addons/addon-depends/snapcast-depends/aixlog | `0019-build-with-cmake-4.0.0.patch` | CMake 4.0 build fix |
 | addons/addon-depends/system-tools-depends/st | `0001-le-fixes.patch` | Use XParseColor for #rrggbb colours (XftColorAllocName bug) |
+| network/wsdd-native | `0001-dlopen-libsystemd-by-soname-not-configure-time-path.patch` | Rudi Heitbaum — `find_library()` bakes the configure-time absolute path into the binary as the `dlopen()` argument, so a cross build loads a sysroot path that does not exist on the target and the daemon exits under `--systemd`; to submit to gershnik/wsdd-native |
 | addons/addon-depends/ttyd-depends/libwebsockets | `0001-tls-openssl-build-with-the-constified-X509-name-acce.patch` | Rudi Heitbaum — OpenSSL 4 constified `X509_get_subject_name()`/`X509_get_issuer_name()`, breaking lws's own `-Werror -Wignored-qualifiers` TLS build; unfixed on upstream `main`; to submit to warmcat/libwebsockets. Carried with libwebsockets 5.0.0 on both master and dev, which also needs `-DLWS_WITH_HTTP3=OFF` since 5.0.0 otherwise force-selects GnuTLS |
 | addons/addon-depends/vdr-plugins/vdr-plugin-dvbapi | `0001-crosscompiling.patch` | Build FFdecsa.o target not all in cross-compile |
 | addons/addon-depends/vdr-plugins/vdr-plugin-epgsearch | `0001-don-t-build-unused-plugins.patch` | Skip unused plugin binaries |
