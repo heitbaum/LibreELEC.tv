@@ -1,5 +1,5 @@
 From c7b46183539de5174ae12a2233b9fc36b6940f7f Mon Sep 17 00:00:00 2001
-From: Rudi Heitbaum <rudi.heitbaum@sparknel-dc.com.au>
+From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 17:08:06 +1000
 Subject: [PATCH] restart wsddn not wsdd2 on hostname change
 
