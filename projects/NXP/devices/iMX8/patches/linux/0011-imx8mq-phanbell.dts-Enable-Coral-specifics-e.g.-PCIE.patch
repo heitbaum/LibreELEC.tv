@@ -8,14 +8,14 @@ Signed-off-by: Khem Raj <raj.khem@gmail.com>
  reference on the CLK2_P/N monitor gate so it cannot be gated]
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 161 +++++++++++++++++-
- 1 file changed, 160 insertions(+), 1 deletion(-)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 180 +++++++++++++++++-
+ 1 file changed, 179 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index e34045d..ea44ab7 100644
+index e34045d10a12..783ea30b88c2 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -21,6 +21,10 @@
+@@ -21,6 +21,10 @@ memory@40000000 {
  		reg = <0x00000000 0x40000000 0 0x40000000>;
  	};
  
@@ -26,7 +26,7 @@ index e34045d..ea44ab7 100644
  	pmic_osc: clock-pmic {
  		compatible = "fixed-clock";
  		#clock-cells = <0>;
-@@ -46,6 +50,12 @@
+@@ -46,6 +50,12 @@ fan: gpio-fan {
  		pinctrl-0 = <&pinctrl_gpio_fan>;
  		status = "okay";
  	};
@@ -39,7 +39,7 @@ index e34045d..ea44ab7 100644
  };
  
  &A53_0 {
-@@ -111,6 +121,17 @@
+@@ -111,6 +121,17 @@ map4 {
  	};
  };
  
@@ -57,7 +57,7 @@ index e34045d..ea44ab7 100644
  &i2c1 {
  	clock-frequency = <400000>;
  	pinctrl-names = "default";
-@@ -126,7 +147,7 @@
+@@ -126,7 +147,7 @@ pmic: pmic@4b {
  		clocks = <&pmic_osc>;
  		clock-output-names = "pmic_clk";
  		interrupt-parent = <&gpio1>;
@@ -66,7 +66,7 @@ index e34045d..ea44ab7 100644
  
  		regulators {
  			buck1: BUCK1 {
-@@ -259,6 +280,76 @@
+@@ -259,6 +280,95 @@ ldo7: LDO7 {
  	};
  };
  
@@ -92,12 +92,31 @@ index e34045d..ea44ab7 100644
 +	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
 +	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
 +	 * the pllout_monitor_clk2 gate; hold a reference on it here so
-+	 * clk_disable_unused() cannot switch the endpoint's clock off.
++	 * clk_disable_unused() cannot switch the endpoint's clock off, and
++	 * set the mux and divider that feed it below.
 +	 */
 +	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
 +		 <&clk IMX8MQ_CLK_MON_CLK2_OUT>,
 +		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
 +		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++	/*
++	 * The first three repeat what imx8mq.dtsi already assigns for this
++	 * controller, because setting the property here replaces it rather
++	 * than adding to it. The last two point the monitor mux at
++	 * sys_pll1_out_monitor and divide its 800 MHz down to the 100 MHz
++	 * the endpoint needs.
++	 */
++	assigned-clocks = <&clk IMX8MQ_CLK_PCIE1_CTRL>,
++			  <&clk IMX8MQ_CLK_PCIE1_PHY>,
++			  <&clk IMX8MQ_CLK_PCIE1_AUX>,
++			  <&clk IMX8MQ_CLK_MON_SEL>,
++			  <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
++	assigned-clock-parents = <&clk IMX8MQ_SYS2_PLL_250M>,
++				 <&clk IMX8MQ_SYS2_PLL_100M>,
++				 <&clk IMX8MQ_SYS1_PLL_80M>,
++				 <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
++	assigned-clock-rates = <250000000>, <100000000>, <10000000>,
++				       <0>, <100000000>;
 +	fsl,max-link-speed = <1>;
 +	hard-wired = <1>;
 +	supports-clkreq;
@@ -143,7 +162,7 @@ index e34045d..ea44ab7 100644
  &fec1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_fec1>;
-@@ -333,6 +424,54 @@
+@@ -333,6 +443,54 @@ &wdog1 {
  };
  
  &iomuxc {
@@ -198,7 +217,7 @@ index e34045d..ea44ab7 100644
  	pinctrl_fec1: fec1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
-@@ -366,6 +505,20 @@
+@@ -366,6 +524,20 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
  		>;
  	};
  
@@ -219,7 +238,7 @@ index e34045d..ea44ab7 100644
  	pinctrl_pmic: pmicirqgrp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
-@@ -478,4 +631,10 @@
+@@ -478,4 +650,10 @@ pinctrl_wdog: wdoggrp {
  			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
  		>;
  	};

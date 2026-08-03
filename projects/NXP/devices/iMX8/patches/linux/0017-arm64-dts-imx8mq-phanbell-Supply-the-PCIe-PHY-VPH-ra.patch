@@ -19,7 +19,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index cd4948f04252..ca2654873d25 100644
+index c1d2a424c040..6897adf0273f 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -383,6 +383,7 @@ &pcie0 {
@@ -30,7 +30,7 @@ index cd4948f04252..ca2654873d25 100644
  	/*
  	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
  	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
-@@ -403,6 +404,7 @@ &pcie1 {
+@@ -422,6 +423,7 @@ &pcie1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_pcie1>;
  	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
