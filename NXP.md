@@ -53,9 +53,10 @@ default:CARD=Header     40-pin Header, sai-tx-rx-dit-hifi dit-hifi-0
 
 The exposure is to anything hardcoding an index — `amixer -c 0` already caught
 us out, returning nothing because card 0 happened to be the dummy that boot.
-Note also there is no HDMI entry, since `0001` ships no MHDP audio driver. Worth deciding whether the header card earns its place on a media
-appliance at all, given it has no codec and destabilises the numbering; that is
-the only thing `0021` buys.
+`0025` and `0026` add a third card, `Coral HDMI`, which makes the ordering worse
+before it makes it better. Worth deciding whether the header card earns its
+place on a media appliance at all, given it has no codec and destabilises the
+numbering; that is the only thing `0014` buys.
 
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
@@ -116,6 +117,8 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | | **0021–0030 — imported HDMI stack** | |
 | `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
+| `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | fills the gap v1 left; to submit |
+| `0026` | phanbell HDMI audio card on SAI4 | needs `0025` |
 | | **0031–0040 — WIP and scaffolding** | |
 | `0031` | `dt-bindings: clock: fsl,imx8m-anatop: Allow the syscon compatible` | only exists for `0033` |
 | `0032` | `arm64: dts: imx8mq: Restore the syscon compatible on anatop` | only exists for `0033` |
