@@ -482,11 +482,36 @@ pokes — and `sys_pll1_out_monitor` is index 11 in `pllout_monitor_sels`, so th
 mux value the framework writes is the same `0xb`. `hard-wired`, which the
 rework also dropped, is read by nothing in the PCI or DWC code.
 
-Test in two steps: build with `0033` still in place (nothing should change),
-then delete `0033` and see whether pcie0 still links. If it does not, fall back
-to instrumenting `0033` — read the two anatop registers at the end of
-`imx8mq_pcie_init_phy()` and again at link-check time, and diff a working boot
-against a rework boot.
+Tested in two steps. **Step 1 — `0035` in, `0033` still in — links every time**,
+both ports, ath10k and the Edge TPU both enumerating. The reference snapshot
+from that boot, which is the data this problem always lacked:
+
+```
+pcie1_ctrl              1 1  250000000  Y
+   pcie1_root_clk       1 1  250000000  Y   pcie@33800000
+pcie1_phy               1 1  100000000  Y   pcie@33800000
+pcie1_aux               1 1   10000000  Y   pcie@33800000
+sys_pll1_out_monitor    1 1  100000000  Y
+   pllout_monitor_sel   1 1  100000000  Y
+      pllout_monitor_clk2 1 1 100000000 Y   pcie@33800000
+
+0x30360074 = 0x0000001B     0x3036007c = 0x00000007
+```
+
+The three `pcie1_*` rates are the values `imx8mq.dtsi` intends, preserved
+because `0035` lists all five assignments. The anatop registers are bit for bit
+what `0033` writes, and each bit has an independent source in `0035`: `MON_SEL`'s
+parent gives `0x74[3:0] = 0xb`, `MON_SYS_PLL1_DIV`'s rate gives `0x7c[2:0] = 7`,
+and `MON_CLK2_OUT` in `clocks` gives `0x74[4]` through
+`clk_bulk_prepare_enable()`. So `0033` is now rewriting values that are already
+correct.
+
+Step 2 is dropping `0033`. Both mechanisms are live in step 1, so the registers
+cannot say which one set them — only removing the writes can. If pcie0 stops
+linking, compare the `pcie1_ctrl` / `pcie1_phy` / `pcie1_aux` rows above against
+that boot; if those are intact and it still fails, fall back to instrumenting —
+read the two anatop registers at the end of `imx8mq_pcie_init_phy()` and again
+at link-check time.
 
 ### 3. Audio — HDMI audio has no driver; the analog path is the reachable one
 
