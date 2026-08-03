@@ -27,10 +27,10 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 67da6ba..f1e4a88 100644
+index 85b4974..71863c4 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -241,6 +241,7 @@
+@@ -223,6 +223,7 @@
  				regulator-min-microvolt = <700000>;
  				regulator-max-microvolt = <1300000>;
  				regulator-boot-on;
@@ -38,3 +38,6 @@ index 67da6ba..f1e4a88 100644
  				rohm,dvs-run-voltage = <900000>;
  			};
  
+-- 
+2.47.1
+

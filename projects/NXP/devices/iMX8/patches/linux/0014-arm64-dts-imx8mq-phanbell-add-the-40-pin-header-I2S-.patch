@@ -87,3 +87,6 @@ index 2b8d18d..0bdd22a 100644
  	pinctrl_sai2: sai2grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
+-- 
+2.47.1
+

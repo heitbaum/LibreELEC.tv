@@ -34,3 +34,6 @@ index 252f683..d43475a 100644
  	depends on I2C
  
  config SND_SOC_RT5651
+-- 
+2.47.1
+

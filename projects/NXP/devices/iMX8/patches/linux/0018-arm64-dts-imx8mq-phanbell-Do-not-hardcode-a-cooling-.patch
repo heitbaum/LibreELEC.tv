@@ -30,10 +30,10 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index b7291b9..bd81483 100644
+index d7d6b1e..28d2595 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -168,7 +168,7 @@
+@@ -157,7 +157,7 @@
  		map1 {
  			trip = <&cpu_alert1>;
  			cooling-device =
@@ -42,3 +42,6 @@ index b7291b9..bd81483 100644
  		};
  
  		map4 {
+-- 
+2.47.1
+
