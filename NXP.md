@@ -84,10 +84,10 @@ The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 1024x768@60 logs `pixel clock … is not in the N table` and falls back to the
 594000 entry, which will sound wrong.
 
-**The header card on sai1 has the same 24 bit bug** and failed identically while
-Kodi was cycling devices. It stopped once Kodi settled on HDMI, so it is latent
-rather than fixed — it belongs to `0014`, and refreshing that patch would churn
-six later ones.
+The header card on sai1 had the same 24 bit bug and failed identically while
+Kodi was cycling devices; it went quiet once Kodi settled on HDMI rather than
+being fixed. `0014` now pins 32 bit slots there too, which also lets 16 bit
+through since 1.536 MHz divides 24.576 MHz evenly as well.
 
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
