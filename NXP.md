@@ -137,14 +137,14 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3 |
 | `0004` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | series 3/3 |
 | `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **ready to submit**, alsa-devel |
-| `0006` | Keep the GPU rail on | **ready to submit**; fixes `buck3: disabling`, problem 4 |
-| `0007` | Do not hardcode a cooling state that may not exist | **ready to submit**; fixes the trip 3 bind failure |
-| | **0011–0020 — our fixes, blocked behind `0002`/`0003`** | |
-| `0011` | phanbell Coral specifics (pcie0/pcie1, i2c, gpio) | everything else builds on it |
-| `0013` | phanbell rt5645 analog audio via `simple-audio-card` | **working**; needs `0011` and `0005` |
-| `0014` | 40-pin header I2S card on SAI1 | **working**; needs `0013` |
-| `0015` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `WL_REG_ON` |
-| `0017` | Supply the PCIe PHY VPH rail | functional, VREG_BYPASS; needs `0011` |
+| `0006` | Keep the GPU rail on | **ready**; fixes `buck3: disabling`, problem 4 |
+| `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
+| `0008` | i2c2, i2c3, ecspi1 and the pin hogs | **ready**; depends on nothing |
+| `0009` | 40-pin header I2S card on SAI1 | **ready**, **working** |
+| `0010` | rt5645 analog audio via `simple-audio-card` | **working**; needs `0005` and `0008` |
+| | **0011–0020 — blocked behind `0003`** | |
+| `0011` | Enable pcie0 and pcie1, with the VPH rail | needs `0003`; carries the monitor clock description |
+| `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `WL_REG_ON` |
 | | **0021–0030 — imported HDMI stack** | |
 | `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
