@@ -522,6 +522,19 @@ pcie0 node in `0011`. anatop is back to plain `"fsl,imx8mq-anatop"`, which means
 `f98c2dfedb73` was never a regression to work around: the clock driver owning
 those registers is exactly what makes the description work.
 
+**The folded form was booted too**, and reproduces the same snapshot a third
+time. Three configurations, byte-identical clock state and anatop registers in
+all of them:
+
+| | `0033` writes | description | result |
+|---|---|---|---|
+| step 1 | yes | `0035` tail block | links |
+| step 2 | no | `0035` tail block | links |
+| shipped | no | in the pcie0 node in `0011` | links |
+
+Which is the whole argument: the register writes were redundant, and moving the
+description into the node changed nothing.
+
 ### 3. Audio — HDMI audio has no driver; the analog path is the reachable one
 
 Nothing is enabled: `0016` disables `sai1`, `sound-hdmi` and `hdmi_audio`, so a
