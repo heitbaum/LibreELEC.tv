@@ -25,11 +25,11 @@ already spoken for by AVI, SPD and vendor.
 ---
  drivers/gpu/drm/bridge/cadence/Kconfig        |   2 +-
  drivers/gpu/drm/bridge/cadence/Makefile       |   1 +
- .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 212 ++++++++++++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 221 ++++++++++++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.c   |   6 +-
  .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  35 +++
  .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  22 ++
- 6 files changed, 276 insertions(+), 2 deletions(-)
+ 6 files changed, 285 insertions(+), 2 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
@@ -56,10 +56,10 @@ index ea32728..94e6cbd 100644
 +cdns-mhdp8501-y += cdns-mhdp8501-audio.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 new file mode 100644
-index 0000000..5e2f123
+index 0000000..4ab736c
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
-@@ -0,0 +1,212 @@
+@@ -0,0 +1,221 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence MHDP8501 HDMI audio
@@ -69,6 +69,7 @@ index 0000000..5e2f123
 + *
 + * Copyright (C) 2019-2024 NXP Semiconductor, Inc.
 + */
++#include <drm/display/drm_hdmi_state_helper.h>
 +#include <drm/drm_connector.h>
 +#include <linux/io.h>
 +#include <linux/math64.h>
@@ -242,7 +243,13 @@ index 0000000..5e2f123
 +
 +	cdns_hdmi_audio_config_i2s(mhdp, hparms);
 +
-+	return 0;
++	/*
++	 * The sink stays muted until it sees an audio InfoFrame, so this is
++	 * not optional. The helper packs it into the connector state and the
++	 * bridge connector writes it out through hdmi_write_audio_infoframe().
++	 */
++	return drm_atomic_helper_connector_hdmi_update_audio_infoframe(connector,
++								       &hparms->cea);
 +}
 +
 +/**
@@ -254,6 +261,8 @@ index 0000000..5e2f123
 +			      struct drm_connector *connector)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
++
++	drm_atomic_helper_connector_hdmi_clear_audio_infoframe(connector);
 +
 +	writel(0, mhdp->regs + SPDIF_CTRL_ADDR);
 +
