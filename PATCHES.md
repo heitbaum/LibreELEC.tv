@@ -345,14 +345,14 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0002` `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock` | submitted | series 1/3 |
 | `0003` `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | submitted | series 2/3 |
 | `0004` `arm64: dts: imx8mq: Declare the PCIe extref clock` | submitted | series 3/3, 5 boards |
-| `0011` phanbell Coral specifics (pcie0/pcie1, i2c, gpio, spi) | pending | **blocked on `0002`–`0004`** — names pcie1's oscillator with the `"extref"` clock-name those add |
-| `0012` `ASoC: rt5645: Make the Kconfig symbol user selectable` | pending | ready; ASoC tree, independent of everything else here |
-| `0013` phanbell rt5645 analog audio | pending | needs `0011` (appends into the `&i2c3` node it adds) |
+| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | pending | **ready**; ASoC tree. The symbol is promptless upstream, so `0013`'s codec node has no enableable driver without it |
+| `0006` phanbell keep the GPU rail on (buck3 always-on) | pending | **ready**; `buck3` is already in mainline phanbell |
+| `0007` phanbell do not hardcode a cooling state | pending | **ready**; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
+| `0011` phanbell Coral specifics (pcie0/pcie1, i2c, gpio, spi) | pending | needs `0003` — pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses |
+| `0013` phanbell rt5645 analog audio | pending | needs `0011` (appends into the `&i2c3` node it adds) and `0005` (no driver to enable otherwise) |
 | `0014` phanbell 40-pin header I2S card on sai1 | pending | needs `0013` (anchors on its rt5645 node and `&sai2`) |
-| `0015` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` — applies standalone, but the QCA6174 is a combo part and `0011` hogs `WL_REG_ON` (GPIO3_IO11), which powers the Bluetooth side too |
-| `0016` phanbell keep the GPU rail on (buck3 always-on) | pending | ready; `buck3` is already in mainline phanbell |
+| `0015` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` — applies standalone, but the QCA6174 is a combo part and `0011` hogs `WL_REG_ON` (GPIO3_IO11), which powers the Bluetooth side as much as the wifi radio |
 | `0017` phanbell supply the PCIe PHY VPH rail | pending | needs `0011` (adds `vph-supply` to the pcie nodes it creates) |
-| `0018` phanbell do not hardcode a cooling state | pending | ready; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
 | `0021` Cadence MHDP8501 HDMI/DP (Sandor Yu, `[PATCH v20 0/8]`) | imported | ~6600 lines, unmerged upstream; carried verbatim, needed three 7.2 fixes |
 | `0022` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs `0021` |
 | `0023` imx8mq-pico-pi DCSS + HDMI (Lukas Rusak) | imported | downstream, needs `0021` |
@@ -360,11 +360,16 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0012`, `0016`, `0018`.
+Submittable now, with nothing waiting on them: `0005`, `0006`, `0007` — which
+is why they sit in the 0001–0010 range with the rest of the submittable work.
 
-Note that `0015`'s dependency is functional, not textual — it applies to a tree
-without `0011` and then fails to download firmware, because nothing has driven
-`WL_REG_ON`. Checking patch context alone does not find that class of dependency.
+Two of these dependencies are functional rather than textual, and reading patch
+context does not find that class at all. `0015` applies to a tree without `0011`
+and then fails to download firmware, because nothing has driven `WL_REG_ON`.
+`0013` applies without `0005` and describes a codec whose driver cannot be
+enabled, since `SND_SOC_RT5645` is promptless upstream. `0011`'s dependency on
+`0003` is the same shape: it is about what `REF_USE_PAD` defaults to, so nothing
+in the diff hints at it.
 
 ### Needs triage
 
