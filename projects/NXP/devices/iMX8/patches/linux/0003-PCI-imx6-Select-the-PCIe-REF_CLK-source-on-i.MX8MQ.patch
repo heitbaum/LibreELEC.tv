@@ -1,0 +1,303 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 2 Aug 2026 21:15:00 +1000
+Subject: [PATCH] PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ
+
+i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
+internal PLL. The driver unconditionally selected the oscillator, which
+is what the
+
+	/* TODO: This code assumes external oscillator is being used */
+
+comment refers to. Boards wiring an oscillator to the pad describe it as
+the "pcie_bus" clock, but nothing in the driver looks that clock up by
+name, so it does not select anything.
+
+Reuse the generic enable_ext_refclk flag, set when an "extref" clock is
+supplied, to select between the two, as is already done for i.MX95 in
+commit d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
+support").
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ _p.diff                                       |  57 +++---
+ drivers/pci/controller/dwc/pci-imx6.c         |   9 +-
+ ...fsl-imx6q-pcie-Add-extref-clock-for-.patch | 178 ++++++++++++++++++
+ 3 files changed, 209 insertions(+), 35 deletions(-)
+ create mode 100644 newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+
+diff --git a/_p.diff b/_p.diff
+index 4b3f428..a538eec 100644
+--- a/_p.diff
++++ b/_p.diff
+@@ -1,39 +1,30 @@
+ ---
+- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 8 ++++++--
+- 1 file changed, 6 insertions(+), 2 deletions(-)
++ drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
++ 1 file changed, 7 insertions(+), 2 deletions(-)
+ 
+-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+-index e8b8131..8fb0c91 100644
+---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+-@@ -46,7 +46,8 @@ properties:
+-       - description: PCIe PHY clock.
+-       - description: Additional required clock entry for imx6sx-pcie,
+-            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+--      - description: PCIe internal reference clock.
+-+      - description: PCIe internal reference clock for imx95-pcie, or the
+-+          external reference clock for imx8mq-pcie.
+-       - description: PCIe additional external reference clock.
++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++index 9a9efc2..5248ed0 100644
++--- a/drivers/pci/controller/dwc/pci-imx6.c
+++++ b/drivers/pci/controller/dwc/pci-imx6.c
++@@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+  
+-   clock-names:
+-@@ -173,13 +174,16 @@ allOf:
+-     then:
+-       properties:
+-         clocks:
+--          maxItems: 4
+-+          minItems: 4
+-+          maxItems: 5
+-         clock-names:
+-+          minItems: 4
+-           items:
+-             - const: pcie
+-             - const: pcie_bus
+-             - const: pcie_phy
+-             - const: pcie_aux
+-+            - const: extref  # Optional
+- 
+-   - if:
+-       properties:
++ static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
++ {
++-	/* TODO: This code assumes external oscillator is being used */
+++	bool ext = imx_pcie->enable_ext_refclk;
+++
+++	/*
+++	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
+++	 * supplied, otherwise fall back to the internal PLL.
+++	 */
++ 	regmap_update_bits(imx_pcie->iomuxc_gpr,
++ 			   imx_pcie_grp_offset(imx_pcie),
++ 			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
++-			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
+++			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
++ 	/*
++ 	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
++ 	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+ -- 
+ 2.47.1
+ 
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 9a9efc2..5248ed0 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+ 
+ static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
+ {
+-	/* TODO: This code assumes external oscillator is being used */
++	bool ext = imx_pcie->enable_ext_refclk;
++
++	/*
++	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
++	 * supplied, otherwise fall back to the internal PLL.
++	 */
+ 	regmap_update_bits(imx_pcie->iomuxc_gpr,
+ 			   imx_pcie_grp_offset(imx_pcie),
+ 			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
+-			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
++			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
+ 	/*
+ 	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
+ 	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+diff --git a/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch b/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+new file mode 100644
+index 0000000..307a464
+--- /dev/null
++++ b/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+@@ -0,0 +1,178 @@
++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++From: Rudi Heitbaum <rudi@heitbaum.com>
++Date: Sun, 2 Aug 2026 14:58:57 +1000
++Subject: [PATCH] dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for
++ i.MX8MQ
++
++i.MX8MQ can drive PCIe REF_CLK either from the internal PLL or from an
++off-chip oscillator. Allow an optional fifth "extref" clock to describe
++the latter, matching the name already used for i.MX95.
++
++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++---
++ .../bindings/pci/fsl,imx6q-pcie.yaml          |  8 ++-
++ _p.diff                                       | 48 +++++++++-----
++ ...void-dereferencing-a-NULL-clock-name.patch | 63 +++++++++++++++++++
++ 3 files changed, 102 insertions(+), 17 deletions(-)
++ create mode 100644 newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++
++diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++index e8b8131..8fb0c91 100644
++--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++@@ -46,7 +46,8 @@ properties:
++       - description: PCIe PHY clock.
++       - description: Additional required clock entry for imx6sx-pcie,
++            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
++-      - description: PCIe internal reference clock.
+++      - description: PCIe internal reference clock for imx95-pcie, or the
+++          external reference clock for imx8mq-pcie.
++       - description: PCIe additional external reference clock.
++ 
++   clock-names:
++@@ -173,13 +174,16 @@ allOf:
++     then:
++       properties:
++         clocks:
++-          maxItems: 4
+++          minItems: 4
+++          maxItems: 5
++         clock-names:
+++          minItems: 4
++           items:
++             - const: pcie
++             - const: pcie_bus
++             - const: pcie_phy
++             - const: pcie_aux
+++            - const: extref  # Optional
++ 
++   - if:
++       properties:
++diff --git a/_p.diff b/_p.diff
++index bfe77a4..4b3f428 100644
++--- a/_p.diff
+++++ b/_p.diff
++@@ -1,21 +1,39 @@
++ ---
++- drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
++- 1 file changed, 2 insertions(+), 1 deletion(-)
+++ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 8 ++++++--
+++ 1 file changed, 6 insertions(+), 2 deletions(-)
++ 
++-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++-index 98e1db7..9a9efc2 100644
++---- a/drivers/pci/controller/dwc/pci-imx6.c
++-+++ b/drivers/pci/controller/dwc/pci-imx6.c
++-@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
++- 		return dev_err_probe(dev, imx_pcie->num_clks,
++- 				     "failed to get clocks\n");
++- 	for (i = 0; i < imx_pcie->num_clks; i++)
++--		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++-+		if (imx_pcie->clks[i].id &&
++-+		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++- 			imx_pcie->enable_ext_refclk = true;
+++diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++index e8b8131..8fb0c91 100644
+++--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++@@ -46,7 +46,8 @@ properties:
+++       - description: PCIe PHY clock.
+++       - description: Additional required clock entry for imx6sx-pcie,
+++            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+++-      - description: PCIe internal reference clock.
++++      - description: PCIe internal reference clock for imx95-pcie, or the
++++          external reference clock for imx8mq-pcie.
+++       - description: PCIe additional external reference clock.
++  
++- 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
+++   clock-names:
+++@@ -173,13 +174,16 @@ allOf:
+++     then:
+++       properties:
+++         clocks:
+++-          maxItems: 4
++++          minItems: 4
++++          maxItems: 5
+++         clock-names:
++++          minItems: 4
+++           items:
+++             - const: pcie
+++             - const: pcie_bus
+++             - const: pcie_phy
+++             - const: pcie_aux
++++            - const: extref  # Optional
+++ 
+++   - if:
+++       properties:
++ -- 
++ 2.47.1
++ 
++diff --git a/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch b/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++new file mode 100644
++index 0000000..0e4359e
++--- /dev/null
+++++ b/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++@@ -0,0 +1,63 @@
+++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++From: Rudi Heitbaum <rudi@heitbaum.com>
+++Date: Sun, 2 Aug 2026 15:59:59 +1000
+++Subject: [PATCH] PCI: imx6: Avoid dereferencing a NULL clock name
+++
+++of_clk_bulk_get() leaves clk_bulk_data::id as NULL for every clock that
+++has no matching entry in "clock-names", which is legal: a node may list
+++more "clocks" phandles than it names. The extref scan dereferences that
+++id unconditionally, so such a node oopses during probe.
+++
+++Check clk_bulk_data::id before dereferencing it.
+++
+++Fixes: d8574ce57d76 ("PCI: imx6: Add external reference clock input mode support")
+++Cc: stable@vger.kernel.org
+++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++---
+++ _p.diff                               | 22 ++++++++++++++++++++++
+++ drivers/pci/controller/dwc/pci-imx6.c |  3 ++-
+++ 2 files changed, 24 insertions(+), 1 deletion(-)
+++ create mode 100644 _p.diff
+++
+++diff --git a/_p.diff b/_p.diff
+++new file mode 100644
+++index 0000000..bfe77a4
+++--- /dev/null
++++++ b/_p.diff
+++@@ -0,0 +1,22 @@
++++---
++++ drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
++++ 1 file changed, 2 insertions(+), 1 deletion(-)
++++
++++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++++index 98e1db7..9a9efc2 100644
++++--- a/drivers/pci/controller/dwc/pci-imx6.c
+++++++ b/drivers/pci/controller/dwc/pci-imx6.c
++++@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
++++ 		return dev_err_probe(dev, imx_pcie->num_clks,
++++ 				     "failed to get clocks\n");
++++ 	for (i = 0; i < imx_pcie->num_clks; i++)
++++-		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
+++++		if (imx_pcie->clks[i].id &&
+++++		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++ 			imx_pcie->enable_ext_refclk = true;
++++ 
++++ 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
++++-- 
++++2.47.1
++++
++++
+++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+++index 98e1db7..9a9efc2 100644
+++--- a/drivers/pci/controller/dwc/pci-imx6.c
++++++ b/drivers/pci/controller/dwc/pci-imx6.c
+++@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
+++ 		return dev_err_probe(dev, imx_pcie->num_clks,
+++ 				     "failed to get clocks\n");
+++ 	for (i = 0; i < imx_pcie->num_clks; i++)
+++-		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++		if (imx_pcie->clks[i].id &&
++++		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
+++ 			imx_pcie->enable_ext_refclk = true;
+++ 
+++ 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {

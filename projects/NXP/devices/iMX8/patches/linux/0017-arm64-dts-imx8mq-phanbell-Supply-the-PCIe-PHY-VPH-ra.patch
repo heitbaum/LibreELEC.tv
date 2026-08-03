@@ -1,0 +1,2331 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 3 Aug 2026 00:00:47 +1000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Supply the PCIe PHY VPH rail
+
+LDO7 feeds PCIE_VPH on both controllers, at 3.3V. The driver needs to
+know that: pci-imx6.c clears IMX8MQ_GPR_PCIE_VREG_BYPASS when the vph
+regulator reads above 3V, because the datasheet expects PCIE_VPH to be
+1.8V and the internal regulator has to be taken out of bypass when it
+is not.
+
+Without the property the supply is simply absent, the check never runs
+and the PHY is left in bypass with a 3.3V VPH. The vendor devicetree
+carries vph-supply on both ports for the same reason.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ _p.diff                                       |   30 +-
+ .../boot/dts/freescale/imx8mq-phanbell.dts    |    2 +
+ ...imx8mq-phanbell-Keep-the-GPU-rail-on.patch | 2241 +++++++++++++++++
+ 3 files changed, 2262 insertions(+), 11 deletions(-)
+ create mode 100644 newpatches/0016-arm64-dts-imx8mq-phanbell-Keep-the-GPU-rail-on.patch
+
+diff --git a/_p.diff b/_p.diff
+index d676263..97e2187 100644
+--- a/_p.diff
++++ b/_p.diff
+@@ -1,17 +1,25 @@
+ ---
+- arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 1 +
+- 1 file changed, 1 insertion(+)
++ arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 2 ++
++ 1 file changed, 2 insertions(+)
+ 
+ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+-index 67da6ba..f1e4a88 100644
++index e20f92d..33ca224 100644
+ --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+ +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+-@@ -241,6 +241,7 @@
+- 				regulator-min-microvolt = <700000>;
+- 				regulator-max-microvolt = <1300000>;
+- 				regulator-boot-on;
+-+				regulator-always-on;
+- 				rohm,dvs-run-voltage = <900000>;
+- 			};
+- 
++@@ -412,6 +412,7 @@
++ 	pinctrl-names = "default";
++ 	pinctrl-0 = <&pinctrl_pcie0>;
++ 	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
+++	vph-supply = <&ldo7>;
++ 	/*
++ 	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
++ 	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
++@@ -432,6 +433,7 @@
++ 	pinctrl-names = "default";
++ 	pinctrl-0 = <&pinctrl_pcie1>;
++ 	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
+++	vph-supply = <&ldo7>;
++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++ 		 <&pcie1_refclk>,
++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+ 
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index 71863c4..d7d6b1e 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -376,6 +376,7 @@
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pcie0>;
+ 	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
++	vph-supply = <&ldo7>;
+ 	/*
+ 	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
+ 	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
+@@ -396,6 +397,7 @@
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_pcie1>;
+ 	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
++	vph-supply = <&ldo7>;
+ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+ 		 <&pcie1_refclk>,
+ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+diff --git a/newpatches/0016-arm64-dts-imx8mq-phanbell-Keep-the-GPU-rail-on.patch b/newpatches/0016-arm64-dts-imx8mq-phanbell-Keep-the-GPU-rail-on.patch
+new file mode 100644
+index 0000000..df36110
+--- /dev/null
++++ b/newpatches/0016-arm64-dts-imx8mq-phanbell-Keep-the-GPU-rail-on.patch
+@@ -0,0 +1,2241 @@
++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++From: Rudi Heitbaum <rudi@heitbaum.com>
++Date: Mon, 3 Aug 2026 02:22:51 +1000
++Subject: [PATCH] arm64: dts: imx8mq-phanbell: Keep the GPU rail on
++
++BUCK3 feeds the GPU rail, and unlike every other regulator on this board
++it is marked neither regulator-always-on nor referenced by any consumer.
++Once a driver for the BD71837 is present the regulator core finds it
++unused and switches it off when it completes initialisation:
++
++  buck3: disabling
++
++which takes the board out about thirty seconds into the boot.
++
++Mark it always-on, matching the other seven bucks and all seven LDOs.
++
++Handing it to the GPU power domain instead, the way imx8mq-librem5.dtsi
++does, describes the hardware better but does not work here: the board
++dies silently the moment anything first uses the GPU, in roughly half of
++boots. With that link removed the same image boots reliably. Whatever
++goes wrong in the domain to regulator sequencing on this platform, a
++rail that is simply never switched avoids it.
++
++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++---
++ _p.diff                                       |   58 +-
++ .../boot/dts/freescale/imx8mq-phanbell.dts    |    1 +
++ ...-phanbell-describe-the-QCA6174-Bluet.patch | 2122 +++++++++++++++++
++ 3 files changed, 2133 insertions(+), 48 deletions(-)
++ create mode 100644 newpatches/0015-arm64-dts-imx8mq-phanbell-describe-the-QCA6174-Bluet.patch
++
++diff --git a/_p.diff b/_p.diff
++index fccac21..d676263 100644
++--- a/_p.diff
+++++ b/_p.diff
++@@ -1,55 +1,17 @@
++ ---
++- .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
++- 1 file changed, 32 insertions(+)
+++ arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 1 +
+++ 1 file changed, 1 insertion(+)
++ 
++ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++-index 3c104eb..b7291b9 100644
+++index 67da6ba..f1e4a88 100644
++ --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++ +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++-@@ -501,6 +501,23 @@
++- 	status = "okay";
++- };
+++@@ -241,6 +241,7 @@
+++ 				regulator-min-microvolt = <700000>;
+++ 				regulator-max-microvolt = <1300000>;
+++ 				regulator-boot-on;
++++				regulator-always-on;
+++ 				rohm,dvs-run-voltage = <900000>;
+++ 			};
++  
++-+&uart2 {
++-+	pinctrl-names = "default";
++-+	pinctrl-0 = <&pinctrl_uart2>;
++-+	assigned-clocks = <&clk IMX8MQ_CLK_UART2>;
++-+	assigned-clock-parents = <&clk IMX8MQ_SYS1_PLL_80M>;
++-+	uart-has-rtscts;
++-+	status = "okay";
++-+
++-+	bluetooth {
++-+		compatible = "qcom,qca6174-bt";
++-+		pinctrl-names = "default";
++-+		pinctrl-0 = <&pinctrl_bt>;
++-+		enable-gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
++-+		clocks = <&pmic>;
++-+	};
++-+};
++-+
++- &usdhc1 {
++- 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++- 	pinctrl-0 = <&pinctrl_usdhc1>;
++-@@ -649,6 +666,21 @@
++- 		>;
++- 	};
++- 
++-+	pinctrl_bt: btgrp {
++-+		fsl,pins = <
++-+			MX8MQ_IOMUXC_NAND_DATA00_GPIO3_IO6	0x19
++-+		>;
++-+	};
++-+
++-+	pinctrl_uart2: uart2grp {
++-+		fsl,pins = <
++-+			MX8MQ_IOMUXC_UART2_RXD_UART2_DCE_RX	0x49
++-+			MX8MQ_IOMUXC_UART2_TXD_UART2_DCE_TX	0x49
++-+			MX8MQ_IOMUXC_UART4_RXD_UART2_DCE_CTS_B	0x49
++-+			MX8MQ_IOMUXC_UART4_TXD_UART2_DCE_RTS_B	0x49
++-+		>;
++-+	};
++-+
++- 	pinctrl_uart1: uart1grp {
++- 		fsl,pins = <
++- 			MX8MQ_IOMUXC_UART1_RXD_UART1_DCE_RX		0x49
++ 
++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++index 85b4974..71863c4 100644
++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++@@ -223,6 +223,7 @@
++ 				regulator-min-microvolt = <700000>;
++ 				regulator-max-microvolt = <1300000>;
++ 				regulator-boot-on;
+++				regulator-always-on;
++ 				rohm,dvs-run-voltage = <900000>;
++ 			};
++ 
++diff --git a/newpatches/0015-arm64-dts-imx8mq-phanbell-describe-the-QCA6174-Bluet.patch b/newpatches/0015-arm64-dts-imx8mq-phanbell-describe-the-QCA6174-Bluet.patch
++new file mode 100644
++index 0000000..55a26f6
++--- /dev/null
+++++ b/newpatches/0015-arm64-dts-imx8mq-phanbell-describe-the-QCA6174-Bluet.patch
++@@ -0,0 +1,2122 @@
+++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++From: Rudi Heitbaum <rudi@heitbaum.com>
+++Date: Mon, 3 Aug 2026 00:58:09 +1000
+++Subject: [PATCH] arm64: dts: imx8mq-phanbell: describe the QCA6174 Bluetooth
+++
+++The Coral Dev Board's QCA6174 has its Bluetooth side on uart2 with flow
+++control, and a power line on gpio3 line 6. Describe it with the serdev
+++binding so hci_qca can drive it.
+++
+++The vendor devicetree does not use serdev - it has a downstream
+++"fsl,mxc_bt_rfkill" shim and leaves the rest to userspace hciattach -
+++but it does give the wiring. Its bt-power-gpios names gpio3 line 6, and
+++its uart2 pinctrl group mixes the four uart pins in with that same GPIO
+++as NAND_DATA00_GPIO3_IO6. Note the flow control pins are muxed from the
+++UART4 pads, not the UART2 ones.
+++
+++uart2 has to be reparented off the 25MHz oscillator. hci_qca declares
+++oper_speed 3000000 and hci_uart_setup() applies it immediately after the
+++115200 init speed, but the imx uart caps out at uartclk/16, so on the
+++default parent the host lands at 1.5625MHz while the controller has
+++moved to 3MHz. The result is a stream of "Frame reassembly failed
+++(-84)" and "command 0xfc00 tx timeout". SYS1_PLL_80M gives 5MHz of
+++headroom and follows imx8mq-hummingboard-pulse and
+++imx8mq-kontron-pitx-imx8m, which reparent their uarts the same way.
+++
+++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++---
+++ _p.diff                                       |   84 +-
+++ .../boot/dts/freescale/imx8mq-phanbell.dts    |   32 +
+++ ...-phanbell-add-the-40-pin-header-I2S-.patch | 1924 +++++++++++++++++
+++ 3 files changed, 1991 insertions(+), 49 deletions(-)
+++ create mode 100644 newpatches/0014-arm64-dts-imx8mq-phanbell-add-the-40-pin-header-I2S-.patch
+++
+++diff --git a/_p.diff b/_p.diff
+++index 64911ff..fccac21 100644
+++--- a/_p.diff
++++++ b/_p.diff
+++@@ -1,69 +1,55 @@
+++ ---
+++- .../boot/dts/freescale/imx8mq-phanbell.dts    | 39 +++++++++++++++++++
+++- 1 file changed, 39 insertions(+)
++++ .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
++++ 1 file changed, 32 insertions(+)
+++ 
+++ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++-index 67da6ba..8ebcd46 100644
++++index 3c104eb..b7291b9 100644
+++ --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++ +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++-@@ -21,6 +21,25 @@
+++- 		reg = <0x00000000 0x40000000 0 0x40000000>;
+++- 	};
+++- 
+++-+	header_codec: spdif-transmitter {
+++-+		compatible = "linux,spdif-dit";
+++-+		#sound-dai-cells = <0>;
+++-+	};
+++-+
+++-+	sound-header {
+++-+		compatible = "simple-audio-card";
+++-+		simple-audio-card,name = "40-pin Header";
+++-+		simple-audio-card,format = "i2s";
+++-+
+++-+		simple-audio-card,cpu {
+++-+			sound-dai = <&sai1>;
+++-+		};
+++-+
+++-+		simple-audio-card,codec {
+++-+			sound-dai = <&header_codec>;
+++-+		};
+++-+	};
+++-+
+++- 	sound-analog {
+++- 		compatible = "simple-audio-card";
+++- 		simple-audio-card,name = "Coral Analog";
+++-@@ -369,6 +388,16 @@
+++- 	};
++++@@ -501,6 +501,23 @@
++++ 	status = "okay";
+++  };
+++  
+++-+&sai1 {
+++++&uart2 {
+++ +	pinctrl-names = "default";
+++-+	pinctrl-0 = <&pinctrl_sai1>;
+++-+	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
+++-+	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
+++-+	assigned-clock-rates = <24576000>;
+++-+	fsl,sai-mclk-direction-output;
+++++	pinctrl-0 = <&pinctrl_uart2>;
+++++	assigned-clocks = <&clk IMX8MQ_CLK_UART2>;
+++++	assigned-clock-parents = <&clk IMX8MQ_SYS1_PLL_80M>;
+++++	uart-has-rtscts;
+++ +	status = "okay";
+++++
+++++	bluetooth {
+++++		compatible = "qcom,qca6174-bt";
+++++		pinctrl-names = "default";
+++++		pinctrl-0 = <&pinctrl_bt>;
+++++		enable-gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
+++++		clocks = <&pmic>;
+++++	};
+++ +};
+++ +
+++- &sai2 {
+++- 	pinctrl-names = "default";
+++- 	pinctrl-0 = <&pinctrl_sai2>;
+++-@@ -723,6 +752,16 @@
++++ &usdhc1 {
++++ 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++++ 	pinctrl-0 = <&pinctrl_usdhc1>;
++++@@ -649,6 +666,21 @@
+++  		>;
+++  	};
+++  
+++-+	pinctrl_sai1: sai1grp {
+++++	pinctrl_bt: btgrp {
+++++		fsl,pins = <
+++++			MX8MQ_IOMUXC_NAND_DATA00_GPIO3_IO6	0x19
+++++		>;
+++++	};
+++++
+++++	pinctrl_uart2: uart2grp {
+++ +		fsl,pins = <
+++-+			MX8MQ_IOMUXC_SAI1_MCLK_SAI1_MCLK	0xd6
+++-+			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC	0xd6
+++-+			MX8MQ_IOMUXC_SAI1_TXC_SAI1_TX_BCLK	0xd6
+++-+			MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
+++-+			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
+++++			MX8MQ_IOMUXC_UART2_RXD_UART2_DCE_RX	0x49
+++++			MX8MQ_IOMUXC_UART2_TXD_UART2_DCE_TX	0x49
+++++			MX8MQ_IOMUXC_UART4_RXD_UART2_DCE_CTS_B	0x49
+++++			MX8MQ_IOMUXC_UART4_TXD_UART2_DCE_RTS_B	0x49
+++ +		>;
+++ +	};
+++ +
+++- 	pinctrl_sai2: sai2grp {
++++ 	pinctrl_uart1: uart1grp {
+++  		fsl,pins = <
+++- 			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
++++ 			MX8MQ_IOMUXC_UART1_RXD_UART1_DCE_RX		0x49
+++ 
+++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++index 0bdd22a..85b4974 100644
+++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++@@ -454,6 +454,23 @@
+++ 	status = "okay";
+++ };
+++ 
++++&uart2 {
++++	pinctrl-names = "default";
++++	pinctrl-0 = <&pinctrl_uart2>;
++++	assigned-clocks = <&clk IMX8MQ_CLK_UART2>;
++++	assigned-clock-parents = <&clk IMX8MQ_SYS1_PLL_80M>;
++++	uart-has-rtscts;
++++	status = "okay";
++++
++++	bluetooth {
++++		compatible = "qcom,qca6174-bt";
++++		pinctrl-names = "default";
++++		pinctrl-0 = <&pinctrl_bt>;
++++		enable-gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
++++		clocks = <&pmic>;
++++	};
++++};
++++
+++ &usdhc1 {
+++ 	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+++ 	pinctrl-0 = <&pinctrl_usdhc1>;
+++@@ -602,6 +619,21 @@
+++ 		>;
+++ 	};
+++ 
++++	pinctrl_bt: btgrp {
++++		fsl,pins = <
++++			MX8MQ_IOMUXC_NAND_DATA00_GPIO3_IO6	0x19
++++		>;
++++	};
++++
++++	pinctrl_uart2: uart2grp {
++++		fsl,pins = <
++++			MX8MQ_IOMUXC_UART2_RXD_UART2_DCE_RX	0x49
++++			MX8MQ_IOMUXC_UART2_TXD_UART2_DCE_TX	0x49
++++			MX8MQ_IOMUXC_UART4_RXD_UART2_DCE_CTS_B	0x49
++++			MX8MQ_IOMUXC_UART4_TXD_UART2_DCE_RTS_B	0x49
++++		>;
++++	};
++++
+++ 	pinctrl_uart1: uart1grp {
+++ 		fsl,pins = <
+++ 			MX8MQ_IOMUXC_UART1_RXD_UART1_DCE_RX		0x49
+++diff --git a/newpatches/0014-arm64-dts-imx8mq-phanbell-add-the-40-pin-header-I2S-.patch b/newpatches/0014-arm64-dts-imx8mq-phanbell-add-the-40-pin-header-I2S-.patch
+++new file mode 100644
+++index 0000000..3d52402
+++--- /dev/null
++++++ b/newpatches/0014-arm64-dts-imx8mq-phanbell-add-the-40-pin-header-I2S-.patch
+++@@ -0,0 +1,1924 @@
++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++++From: Rudi Heitbaum <rudi@heitbaum.com>
++++Date: Mon, 3 Aug 2026 00:41:53 +1000
++++Subject: [PATCH] arm64: dts: imx8mq-phanbell: add the 40-pin header I2S card
++++
++++SAI1 goes to the 40-pin expansion header as plain I2S with no codec on
++++the far side, which the vendor kernel exposes as its "40-pin Header"
++++card.
++++
++++Use linux,spdif-dit as the far end. The vendor uses a
++++linux,snd-soc-dummy node, but that compatible does not exist upstream -
++++sound/soc/soc-utils.c creates the dummy as a faux device with no
++++of_match_table, so a devicetree node naming it never binds and the card
++++cannot resolve its codec. spdif-dit is the usual stand-in and is already
++++enabled here.
++++
++++One difference from the vendor as a result: spdif-dit is a transmitter,
++++so this card is playback only, where the vendor's dummy gave both
++++directions.
++++
++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++++---
++++ _p.diff                                       |   99 +-
++++ .../boot/dts/freescale/imx8mq-phanbell.dts    |   39 +
++++ ...-phanbell-enable-the-rt5645-analog-a.patch | 1693 +++++++++++++++++
++++ 3 files changed, 1772 insertions(+), 59 deletions(-)
++++ create mode 100644 newpatches/0013-arm64-dts-imx8mq-phanbell-enable-the-rt5645-analog-a.patch
++++
++++diff --git a/_p.diff b/_p.diff
++++index 3918cce..64911ff 100644
++++--- a/_p.diff
+++++++ b/_p.diff
++++@@ -1,88 +1,69 @@
++++ ---
++++- .../boot/dts/freescale/imx8mq-phanbell.dts    | 58 +++++++++++++++++++
++++- 1 file changed, 58 insertions(+)
+++++ .../boot/dts/freescale/imx8mq-phanbell.dts    | 39 +++++++++++++++++++
+++++ 1 file changed, 39 insertions(+)
++++ 
++++ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++-index 520e841..67da6ba 100644
+++++index 67da6ba..8ebcd46 100644
++++ --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++-@@ -21,6 +21,33 @@
+++++@@ -21,6 +21,25 @@
++++  		reg = <0x00000000 0x40000000 0 0x40000000>;
++++  	};
++++  
++++-+	sound-analog {
++++++	header_codec: spdif-transmitter {
++++++		compatible = "linux,spdif-dit";
++++++		#sound-dai-cells = <0>;
++++++	};
++++++
++++++	sound-header {
++++ +		compatible = "simple-audio-card";
++++-+		simple-audio-card,name = "Coral Analog";
++++++		simple-audio-card,name = "40-pin Header";
++++ +		simple-audio-card,format = "i2s";
++++-+		simple-audio-card,bitclock-master = <&sound_cpu>;
++++-+		simple-audio-card,frame-master = <&sound_cpu>;
++++-+		simple-audio-card,mclk-fs = <256>;
++++ +
++++-+		simple-audio-card,widgets = "Headphone", "Headphone Jack",
++++-+					    "Microphone", "Headphone Mic",
++++-+					    "Microphone", "Internal Mic";
++++-+
++++-+		simple-audio-card,routing = "Headphone Jack", "HPOL",
++++-+					    "Headphone Jack", "HPOR",
++++-+					    "Headphone Mic", "micbias1",
++++-+					    "DMIC L1", "Internal Mic",
++++-+					    "DMIC R1", "Internal Mic";
++++-+
++++-+		sound_cpu: simple-audio-card,cpu {
++++-+			sound-dai = <&sai2>;
++++++		simple-audio-card,cpu {
++++++			sound-dai = <&sai1>;
++++ +		};
++++ +
++++ +		simple-audio-card,codec {
++++-+			sound-dai = <&rt5645>;
++++++			sound-dai = <&header_codec>;
++++ +		};
++++ +	};
++++ +
++++- 	busfreq {
++++- 		status = "disabled";
+++++ 	sound-analog {
+++++ 		compatible = "simple-audio-card";
+++++ 		simple-audio-card,name = "Coral Analog";
+++++@@ -369,6 +388,16 @@
++++  	};
++++-@@ -329,6 +356,27 @@
++++- 	pinctrl-names = "default";
++++- 	pinctrl-0 = <&pinctrl_i2c3>;
++++- 	status = "okay";
++++-+
++++-+	rt5645: audio-codec@1a {
++++-+		compatible = "realtek,rt5645";
++++-+		reg = <0x1a>;
++++-+		#sound-dai-cells = <0>;
++++-+		interrupt-parent = <&gpio5>;
++++-+		interrupts = <4 IRQ_TYPE_EDGE_BOTH>;
++++-+		hp-detect-gpios = <&gpio5 4 GPIO_ACTIVE_HIGH>;
++++-+		realtek,dmic1-data-pin = <2>;
++++-+		realtek,jd-mode = <0>;
++++-+	};
++++-+};
++++-+
++++-+&sai2 {
+++++ };
+++++ 
++++++&sai1 {
++++ +	pinctrl-names = "default";
++++-+	pinctrl-0 = <&pinctrl_sai2>;
++++-+	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
++++++	pinctrl-0 = <&pinctrl_sai1>;
++++++	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
++++ +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
++++ +	assigned-clock-rates = <24576000>;
++++ +	fsl,sai-mclk-direction-output;
++++ +	status = "okay";
++++- };
++++- 
++++- &pcie0 {
++++-@@ -674,6 +722,16 @@
++++- 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
++++++};
++++++
+++++ &sai2 {
+++++ 	pinctrl-names = "default";
+++++ 	pinctrl-0 = <&pinctrl_sai2>;
+++++@@ -723,6 +752,16 @@
++++  		>;
++++  	};
++++-+
++++-+	pinctrl_sai2: sai2grp {
+++++ 
++++++	pinctrl_sai1: sai1grp {
++++ +		fsl,pins = <
++++-+			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
++++-+			MX8MQ_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC	0xd6
++++-+			MX8MQ_IOMUXC_SAI2_TXC_SAI2_TX_BCLK	0xd6
++++-+			MX8MQ_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0	0xd6
++++-+			MX8MQ_IOMUXC_SAI2_RXD0_SAI2_RX_DATA0	0xd6
++++++			MX8MQ_IOMUXC_SAI1_MCLK_SAI1_MCLK	0xd6
++++++			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC	0xd6
++++++			MX8MQ_IOMUXC_SAI1_TXC_SAI1_TX_BCLK	0xd6
++++++			MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
++++++			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
++++ +		>;
++++ +	};
++++- };
++++- 
++++- /*
++++++
+++++ 	pinctrl_sai2: sai2grp {
+++++ 		fsl,pins = <
+++++ 			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
++++ 
++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++index 2b8d18d..0bdd22a 100644
++++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++@@ -21,6 +21,25 @@
++++ 		reg = <0x00000000 0x40000000 0 0x40000000>;
++++ 	};
++++ 
+++++	header_codec: spdif-transmitter {
+++++		compatible = "linux,spdif-dit";
+++++		#sound-dai-cells = <0>;
+++++	};
+++++
+++++	sound-header {
+++++		compatible = "simple-audio-card";
+++++		simple-audio-card,name = "40-pin Header";
+++++		simple-audio-card,format = "i2s";
+++++
+++++		simple-audio-card,cpu {
+++++			sound-dai = <&sai1>;
+++++		};
+++++
+++++		simple-audio-card,codec {
+++++			sound-dai = <&header_codec>;
+++++		};
+++++	};
+++++
++++ 	sound-analog {
++++ 		compatible = "simple-audio-card";
++++ 		simple-audio-card,name = "Coral Analog";
++++@@ -332,6 +351,16 @@
++++ 	};
++++ };
++++ 
+++++&sai1 {
+++++	pinctrl-names = "default";
+++++	pinctrl-0 = <&pinctrl_sai1>;
+++++	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
+++++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
+++++	assigned-clock-rates = <24576000>;
+++++	fsl,sai-mclk-direction-output;
+++++	status = "okay";
+++++};
+++++
++++ &sai2 {
++++ 	pinctrl-names = "default";
++++ 	pinctrl-0 = <&pinctrl_sai2>;
++++@@ -686,6 +715,16 @@
++++ 		>;
++++ 	};
++++ 
+++++	pinctrl_sai1: sai1grp {
+++++		fsl,pins = <
+++++			MX8MQ_IOMUXC_SAI1_MCLK_SAI1_MCLK	0xd6
+++++			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC	0xd6
+++++			MX8MQ_IOMUXC_SAI1_TXC_SAI1_TX_BCLK	0xd6
+++++			MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
+++++			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
+++++		>;
+++++	};
+++++
++++ 	pinctrl_sai2: sai2grp {
++++ 		fsl,pins = <
++++ 			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
++++diff --git a/newpatches/0013-arm64-dts-imx8mq-phanbell-enable-the-rt5645-analog-a.patch b/newpatches/0013-arm64-dts-imx8mq-phanbell-enable-the-rt5645-analog-a.patch
++++new file mode 100644
++++index 0000000..34e5cb6
++++--- /dev/null
+++++++ b/newpatches/0013-arm64-dts-imx8mq-phanbell-enable-the-rt5645-analog-a.patch
++++@@ -0,0 +1,1693 @@
+++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++++From: Rudi Heitbaum <rudi@heitbaum.com>
+++++Date: Mon, 3 Aug 2026 00:41:52 +1000
+++++Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable the rt5645 analog audio
+++++
+++++The Coral Dev Board has a Realtek RT5645 codec on i2c3 at 0x1a driving
+++++the 3.5mm jack, fed from SAI2. Describe it with simple-audio-card - the
+++++codec driver is upstream, only the machine glue was missing.
+++++
+++++Headphone detect and the codec interrupt are both on gpio5 line 4; with
+++++realtek,jd-mode = <0> the driver reads the line through hp-detect-gpios
+++++and uses the i2c interrupt as the edge trigger.
+++++
+++++The widgets and routing follow the vendor kernel's DAPM graph on this
+++++board: the jack fed from HPOL and HPOR, the headset mic tied to
+++++micbias1, and the two onboard microphones on DMIC L1 and R1. There is
+++++deliberately no speaker widget, because the vendor card has none either.
+++++
+++++Note micbias1 is a supply widget, so it has to be the source rather than
+++++the sink: snd_soc_dapm_add_path() rejects a non-supply source feeding a
+++++supply sink. The vendor's 4.14 graph has that pair the other way round.
+++++
+++++Only the SAI2 transmit clocks are muxed. fsl_sai defaults to RCR2.SYNC
+++++set, so the receive side takes its bit and frame clock from the transmit
+++++side, which is what a codec with a single BCLK/LRCK pair needs.
+++++
+++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++++---
+++++ _p.diff                                       |   96 +-
+++++ .../boot/dts/freescale/imx8mq-phanbell.dts    |   58 +
+++++ ...e-the-Kconfig-symbol-user-selectable.patch | 1466 +++++++++++++++++
+++++ 3 files changed, 1607 insertions(+), 13 deletions(-)
+++++ create mode 100644 newpatches/0012-ASoC-rt5645-Make-the-Kconfig-symbol-user-selectable.patch
+++++
+++++diff --git a/_p.diff b/_p.diff
+++++index 6da6acb..3918cce 100644
+++++--- a/_p.diff
++++++++ b/_p.diff
+++++@@ -1,18 +1,88 @@
+++++ ---
+++++- sound/soc/codecs/Kconfig | 2 +-
+++++- 1 file changed, 1 insertion(+), 1 deletion(-)
++++++ .../boot/dts/freescale/imx8mq-phanbell.dts    | 58 +++++++++++++++++++
++++++ 1 file changed, 58 insertions(+)
+++++ 
+++++-diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+++++-index 252f683..d43475a 100644
+++++---- a/sound/soc/codecs/Kconfig
+++++-+++ b/sound/soc/codecs/Kconfig
+++++-@@ -1856,7 +1856,7 @@ config SND_SOC_RT5640
+++++- 	depends on I2C
++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++index 520e841..67da6ba 100644
++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++@@ -21,6 +21,33 @@
++++++ 		reg = <0x00000000 0x40000000 0 0x40000000>;
++++++ 	};
+++++  
+++++- config SND_SOC_RT5645
+++++--	tristate
+++++-+	tristate "Realtek RT5645/RT5650 Codec"
+++++- 	depends on I2C
+++++++	sound-analog {
+++++++		compatible = "simple-audio-card";
+++++++		simple-audio-card,name = "Coral Analog";
+++++++		simple-audio-card,format = "i2s";
+++++++		simple-audio-card,bitclock-master = <&sound_cpu>;
+++++++		simple-audio-card,frame-master = <&sound_cpu>;
+++++++		simple-audio-card,mclk-fs = <256>;
+++++++
+++++++		simple-audio-card,widgets = "Headphone", "Headphone Jack",
+++++++					    "Microphone", "Headphone Mic",
+++++++					    "Microphone", "Internal Mic";
+++++++
+++++++		simple-audio-card,routing = "Headphone Jack", "HPOL",
+++++++					    "Headphone Jack", "HPOR",
+++++++					    "Headphone Mic", "micbias1",
+++++++					    "DMIC L1", "Internal Mic",
+++++++					    "DMIC R1", "Internal Mic";
+++++++
+++++++		sound_cpu: simple-audio-card,cpu {
+++++++			sound-dai = <&sai2>;
+++++++		};
+++++++
+++++++		simple-audio-card,codec {
+++++++			sound-dai = <&rt5645>;
+++++++		};
+++++++	};
+++++++
++++++ 	busfreq {
++++++ 		status = "disabled";
++++++ 	};
++++++@@ -329,6 +356,27 @@
++++++ 	pinctrl-names = "default";
++++++ 	pinctrl-0 = <&pinctrl_i2c3>;
++++++ 	status = "okay";
+++++++
+++++++	rt5645: audio-codec@1a {
+++++++		compatible = "realtek,rt5645";
+++++++		reg = <0x1a>;
+++++++		#sound-dai-cells = <0>;
+++++++		interrupt-parent = <&gpio5>;
+++++++		interrupts = <4 IRQ_TYPE_EDGE_BOTH>;
+++++++		hp-detect-gpios = <&gpio5 4 GPIO_ACTIVE_HIGH>;
+++++++		realtek,dmic1-data-pin = <2>;
+++++++		realtek,jd-mode = <0>;
+++++++	};
+++++++};
+++++++
+++++++&sai2 {
+++++++	pinctrl-names = "default";
+++++++	pinctrl-0 = <&pinctrl_sai2>;
+++++++	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
+++++++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
+++++++	assigned-clock-rates = <24576000>;
+++++++	fsl,sai-mclk-direction-output;
+++++++	status = "okay";
++++++ };
+++++  
+++++- config SND_SOC_RT5651
++++++ &pcie0 {
++++++@@ -674,6 +722,16 @@
++++++ 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
++++++ 		>;
++++++ 	};
+++++++
+++++++	pinctrl_sai2: sai2grp {
+++++++		fsl,pins = <
+++++++			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
+++++++			MX8MQ_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC	0xd6
+++++++			MX8MQ_IOMUXC_SAI2_TXC_SAI2_TX_BCLK	0xd6
+++++++			MX8MQ_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0	0xd6
+++++++			MX8MQ_IOMUXC_SAI2_RXD0_SAI2_RX_DATA0	0xd6
+++++++		>;
+++++++	};
++++++ };
++++++ 
++++++ /*
+++++ 
+++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++index ea44ab7..2b8d18d 100644
+++++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++@@ -21,6 +21,33 @@
+++++ 		reg = <0x00000000 0x40000000 0 0x40000000>;
+++++ 	};
+++++ 
++++++	sound-analog {
++++++		compatible = "simple-audio-card";
++++++		simple-audio-card,name = "Coral Analog";
++++++		simple-audio-card,format = "i2s";
++++++		simple-audio-card,bitclock-master = <&sound_cpu>;
++++++		simple-audio-card,frame-master = <&sound_cpu>;
++++++		simple-audio-card,mclk-fs = <256>;
++++++
++++++		simple-audio-card,widgets = "Headphone", "Headphone Jack",
++++++					    "Microphone", "Headphone Mic",
++++++					    "Microphone", "Internal Mic";
++++++
++++++		simple-audio-card,routing = "Headphone Jack", "HPOL",
++++++					    "Headphone Jack", "HPOR",
++++++					    "Headphone Mic", "micbias1",
++++++					    "DMIC L1", "Internal Mic",
++++++					    "DMIC R1", "Internal Mic";
++++++
++++++		sound_cpu: simple-audio-card,cpu {
++++++			sound-dai = <&sai2>;
++++++		};
++++++
++++++		simple-audio-card,codec {
++++++			sound-dai = <&rt5645>;
++++++		};
++++++	};
++++++
+++++ 	busfreq {
+++++ 		status = "disabled";
+++++ 	};
+++++@@ -292,6 +319,27 @@
+++++ 	pinctrl-names = "default";
+++++ 	pinctrl-0 = <&pinctrl_i2c3>;
+++++ 	status = "okay";
++++++
++++++	rt5645: audio-codec@1a {
++++++		compatible = "realtek,rt5645";
++++++		reg = <0x1a>;
++++++		#sound-dai-cells = <0>;
++++++		interrupt-parent = <&gpio5>;
++++++		interrupts = <4 IRQ_TYPE_EDGE_BOTH>;
++++++		hp-detect-gpios = <&gpio5 4 GPIO_ACTIVE_HIGH>;
++++++		realtek,dmic1-data-pin = <2>;
++++++		realtek,jd-mode = <0>;
++++++	};
++++++};
++++++
++++++&sai2 {
++++++	pinctrl-names = "default";
++++++	pinctrl-0 = <&pinctrl_sai2>;
++++++	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
++++++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
++++++	assigned-clock-rates = <24576000>;
++++++	fsl,sai-mclk-direction-output;
++++++	status = "okay";
+++++ };
+++++ 
+++++ &pcie0 {
+++++@@ -637,4 +685,14 @@
+++++ 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
+++++ 		>;
+++++ 	};
++++++
++++++	pinctrl_sai2: sai2grp {
++++++		fsl,pins = <
++++++			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK	0xd6
++++++			MX8MQ_IOMUXC_SAI2_TXFS_SAI2_TX_SYNC	0xd6
++++++			MX8MQ_IOMUXC_SAI2_TXC_SAI2_TX_BCLK	0xd6
++++++			MX8MQ_IOMUXC_SAI2_TXD0_SAI2_TX_DATA0	0xd6
++++++			MX8MQ_IOMUXC_SAI2_RXD0_SAI2_RX_DATA0	0xd6
++++++		>;
++++++	};
+++++ };
+++++diff --git a/newpatches/0012-ASoC-rt5645-Make-the-Kconfig-symbol-user-selectable.patch b/newpatches/0012-ASoC-rt5645-Make-the-Kconfig-symbol-user-selectable.patch
+++++new file mode 100644
+++++index 0000000..d7c96eb
+++++--- /dev/null
++++++++ b/newpatches/0012-ASoC-rt5645-Make-the-Kconfig-symbol-user-selectable.patch
+++++@@ -0,0 +1,1466 @@
++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++++++From: Rudi Heitbaum <rudi@heitbaum.com>
++++++Date: Sun, 2 Aug 2026 22:49:43 +1000
++++++Subject: [PATCH] ASoC: rt5645: Make the Kconfig symbol user selectable
++++++
++++++SND_SOC_RT5645 has no prompt, so it can only be turned on by a machine
++++++driver that selects it. Every such driver is x86, MediaTek or Rockchip,
++++++which leaves the codec unreachable on any other platform.
++++++
++++++The part has a devicetree binding of its own,
++++++Documentation/devicetree/bindings/sound/realtek,rt5645.yaml, and nothing
++++++in the driver is machine specific, so a board that describes it with
++++++simple-audio-card or audio-graph-card should be able to build it. Today
++++++there is no configuration in which that is possible.
++++++
++++++Give the symbol a prompt, matching SND_SOC_RT5640 immediately above it.
++++++The machine drivers that select it are unaffected.
++++++
++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++++++---
++++++ _p.diff                                       |  222 +--
++++++ ...dts-Enable-Coral-specifics-e.g.-PCIE.patch | 1189 +++++++++++++++++
++++++ sound/soc/codecs/Kconfig                      |    2 +-
++++++ 3 files changed, 1203 insertions(+), 210 deletions(-)
++++++ create mode 100644 newpatches/0011-imx8mq-phanbell.dts-Enable-Coral-specifics-e.g.-PCIE.patch
++++++
++++++diff --git a/_p.diff b/_p.diff
++++++index 705e0b8..6da6acb 100644
++++++--- a/_p.diff
+++++++++ b/_p.diff
++++++@@ -1,214 +1,18 @@
++++++ ---
++++++- .../boot/dts/freescale/imx8mq-phanbell.dts    | 161 +++++++++++++++++-
++++++- 1 file changed, 160 insertions(+), 1 deletion(-)
+++++++ sound/soc/codecs/Kconfig | 2 +-
+++++++ 1 file changed, 1 insertion(+), 1 deletion(-)
++++++ 
++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++-index f7a634b..ed0920c 100644
++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++-@@ -21,6 +21,10 @@
++++++- 		reg = <0x00000000 0x40000000 0 0x40000000>;
++++++- 	};
+++++++diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+++++++index 252f683..d43475a 100644
+++++++--- a/sound/soc/codecs/Kconfig
++++++++++ b/sound/soc/codecs/Kconfig
+++++++@@ -1856,7 +1856,7 @@ config SND_SOC_RT5640
+++++++ 	depends on I2C
++++++  
++++++-+	busfreq {
++++++-+		status = "disabled";
++++++-+	};
++++++-+
++++++- 	pmic_osc: clock-pmic {
++++++- 		compatible = "fixed-clock";
++++++- 		#clock-cells = <0>;
++++++-@@ -148,6 +158,17 @@
++++++- 	};
++++++- };
+++++++ config SND_SOC_RT5645
+++++++-	tristate
++++++++	tristate "Realtek RT5645/RT5650 Codec"
+++++++ 	depends on I2C
++++++  
++++++-+&gpio3 {
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_wifi_reset>;
++++++-+
++++++-+	wl-reg-on {
++++++-+		gpio-hog;
++++++-+		gpios = <11 GPIO_ACTIVE_HIGH>;
++++++-+		output-high;
++++++-+	};
++++++-+};
++++++-+
++++++- &i2c1 {
++++++- 	clock-frequency = <400000>;
++++++- 	pinctrl-names = "default";
++++++-@@ -163,7 +184,7 @@
++++++- 		clocks = <&pmic_osc>;
++++++- 		clock-output-names = "pmic_clk";
++++++- 		interrupt-parent = <&gpio1>;
++++++--		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
++++++-+		interrupts = <3 GPIO_ACTIVE_LOW>;
++++++- 
++++++- 		regulators {
++++++- 			buck1: BUCK1 {
++++++-@@ -296,6 +317,76 @@
++++++- 	};
++++++- };
++++++- 
++++++-+&i2c2 {
++++++-+	clock-frequency = <100000>;
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_i2c2>;
++++++-+	status = "okay";
++++++-+};
++++++-+
++++++-+&i2c3 {
++++++-+	clock-frequency = <100000>;
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_i2c3>;
++++++-+	status = "okay";
++++++-+};
++++++-+
++++++-+&pcie0 {
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_pcie0>;
++++++-+	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
++++++-+	/*
++++++-+	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
++++++-+	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
++++++-+	 * the pllout_monitor_clk2 gate; hold a reference on it here so
++++++-+	 * clk_disable_unused() cannot switch the endpoint's clock off.
++++++-+	 */
++++++-+	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++-+		 <&clk IMX8MQ_CLK_MON_CLK2_OUT>,
++++++-+		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
++++++-+		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++-+	fsl,max-link-speed = <1>;
++++++-+	hard-wired = <1>;
++++++-+	supports-clkreq;
++++++-+	status = "okay";
++++++-+};
++++++-+
++++++-+&pcie1 {
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_pcie1>;
++++++-+	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
++++++-+	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++-+		 <&pcie1_refclk>,
++++++-+		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++-+		 <&pcie1_refclk>;
++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++-+	hard-wired = <1>;
++++++-+	supports-clkreq;
++++++-+	status = "okay";
++++++-+};
++++++-+
++++++-+&ecspi1 {
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
++++++-+	cs-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>,
++++++-+		   <&gpio3 2 GPIO_ACTIVE_HIGH>;
++++++-+	num-cs = <2>;
++++++-+	status = "disabled";
++++++-+
++++++-+	spidev@0 {
++++++-+		compatible = "rohm,dh2228fv";
++++++-+		spi-max-frequency = <20000000>;
++++++-+		reg = <0>;
++++++-+	};
++++++-+
++++++-+	spidev@1 {
++++++-+		compatible = "rohm,dh2228fv";
++++++-+		spi-max-frequency = <20000000>;
++++++-+		reg = <1>;
++++++-+	};
++++++-+};
++++++-+
++++++- &fec1 {
++++++- 	pinctrl-names = "default";
++++++- 	pinctrl-0 = <&pinctrl_fec1>;
++++++-@@ -370,6 +461,54 @@
++++++- };
++++++- 
++++++- &iomuxc {
++++++-+	pinctrl-names = "default";
++++++-+	pinctrl-0 = <&pinctrl_hog>;
++++++-+
++++++-+	pinctrl_hog: hoggrp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
++++++-+			MX8MQ_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19
++++++-+			MX8MQ_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
++++++-+			MX8MQ_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x19
++++++-+			MX8MQ_IOMUXC_NAND_DATA03_GPIO3_IO9		0x19
++++++-+			MX8MQ_IOMUXC_NAND_DATA07_GPIO3_IO13		0x19
++++++-+			MX8MQ_IOMUXC_NAND_READY_B_GPIO3_IO16		0x19
++++++-+			MX8MQ_IOMUXC_NAND_WE_B_GPIO3_IO17		0x19
++++++-+			MX8MQ_IOMUXC_ECSPI2_SCLK_GPIO5_IO10		0x19
++++++-+			MX8MQ_IOMUXC_ECSPI2_MISO_GPIO5_IO12		0x19
++++++-+			MX8MQ_IOMUXC_ECSPI2_SS0_GPIO5_IO13		0x19
++++++-+		>;
++++++-+	};
++++++-+
++++++-+	pinctrl_pcie0: pcie0grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_I2C4_SCL_PCIE1_CLKREQ_B		0x76
++++++-+			MX8MQ_IOMUXC_NAND_DATA04_GPIO3_IO10		0x16
++++++-+		>;
++++++-+	};
++++++-+
++++++-+	pinctrl_pcie1: pcie1grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_I2C4_SDA_PCIE2_CLKREQ_B		0x76
++++++-+			MX8MQ_IOMUXC_NAND_WP_B_GPIO3_IO18		0x19
++++++-+		>;
++++++-+	};
++++++-+
++++++-+	pinctrl_ecspi1: ecspi1grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK		0x82
++++++-+			MX8MQ_IOMUXC_ECSPI1_MOSI_ECSPI1_MOSI		0x82
++++++-+			MX8MQ_IOMUXC_ECSPI1_MISO_ECSPI1_MISO		0x82
++++++-+		>;
++++++-+	};
++++++-+
++++++-+	pinctrl_ecspi1_cs: ecspi1_cs_grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x82
++++++-+			MX8MQ_IOMUXC_NAND_CE1_B_GPIO3_IO2		0x82
++++++-+		>;
++++++-+	};
++++++-+
++++++- 	pinctrl_fec1: fec1grp {
++++++- 		fsl,pins = <
++++++- 			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
++++++-@@ -403,6 +542,20 @@
++++++- 		>;
++++++- 	};
++++++- 
++++++-+	pinctrl_i2c2: i2c2grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_I2C2_SCL_I2C2_SCL			0x4000007f
++++++-+			MX8MQ_IOMUXC_I2C2_SDA_I2C2_SDA			0x4000007f
++++++-+		>;
++++++-+	};
++++++-+
++++++-+	pinctrl_i2c3: i2c3grp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_I2C3_SCL_I2C3_SCL			0x4000007f
++++++-+			MX8MQ_IOMUXC_I2C3_SDA_I2C3_SDA			0x4000007f
++++++-+		>;
++++++-+	};
++++++-+
++++++- 	pinctrl_pmic: pmicirqgrp {
++++++- 		fsl,pins = <
++++++- 			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
++++++-@@ -515,4 +668,10 @@
++++++- 			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
++++++- 		>;
++++++- 	};
++++++-+
++++++-+	pinctrl_wifi_reset: wifiresetgrp {
++++++-+		fsl,pins = <
++++++-+			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
++++++-+		>;
++++++-+	};
++++++- };
++++++--- 
++++++-2.47.1
++++++-
+++++++ config SND_SOC_RT5651
++++++ 
++++++diff --git a/newpatches/0011-imx8mq-phanbell.dts-Enable-Coral-specifics-e.g.-PCIE.patch b/newpatches/0011-imx8mq-phanbell.dts-Enable-Coral-specifics-e.g.-PCIE.patch
++++++new file mode 100644
++++++index 0000000..8612452
++++++--- /dev/null
+++++++++ b/newpatches/0011-imx8mq-phanbell.dts-Enable-Coral-specifics-e.g.-PCIE.patch
++++++@@ -0,0 +1,1189 @@
+++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++++++From: Khem Raj <raj.khem@gmail.com>
+++++++Date: Tue, 7 Mar 2023 21:02:46 -0800
+++++++Subject: [PATCH] imx8mq-phanbell.dts: Enable Coral specifics e.g. PCIE
+++++++
+++++++Signed-off-by: Khem Raj <raj.khem@gmail.com>
+++++++[pcie1 names its oscillator as the extref clock; pcie0 holds a
+++++++ reference on the CLK2_P/N monitor gate so it cannot be gated]
+++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++++++---
+++++++ _p.diff                                       | 313 +++++----
+++++++ .../boot/dts/freescale/imx8mq-phanbell.dts    | 161 ++++-
+++++++ ...imx8mq-Declare-the-PCIe-extref-clock.patch | 616 ++++++++++++++++++
+++++++ 3 files changed, 974 insertions(+), 116 deletions(-)
+++++++ create mode 100644 newpatches/0004-arm64-dts-imx8mq-Declare-the-PCIe-extref-clock.patch
+++++++
+++++++diff --git a/_p.diff b/_p.diff
+++++++index 7f74bea..705e0b8 100644
+++++++--- a/_p.diff
++++++++++ b/_p.diff
+++++++@@ -1,129 +1,212 @@
+++++++ ---
+++++++- arch/arm64/boot/dts/freescale/imx8mq-evk.dts              | 8 ++++++--
+++++++- .../boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts      | 8 ++++++--
+++++++- arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts      | 4 +++-
+++++++- arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts   | 8 ++++++--
+++++++- arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi       | 8 ++++++--
+++++++- 5 files changed, 27 insertions(+), 9 deletions(-)
++++++++ .../boot/dts/freescale/imx8mq-phanbell.dts    | 161 +++++++++++++++++-
++++++++ 1 file changed, 160 insertions(+), 1 deletion(-)
+++++++ 
+++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++-index e7d87ea..3dc0047 100644
+++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++-@@ -374,7 +374,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++- 		 <&pcie0_refclk>,
+++++++- 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++-+		 <&pcie0_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	vph-supply = <&vgen5_reg>;
+++++++- 	supports-clkreq;
+++++++- 	status = "okay";
+++++++-@@ -402,7 +404,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++- 		 <&pcie0_refclk>,
+++++++- 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++-+		 <&pcie0_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	vpcie-supply = <&reg_pcie1>;
+++++++- 	vpcie3v3aux-supply = <&reg_pcie1>;
+++++++- 	vph-supply = <&vgen5_reg>;
+++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++-index d8cf1f2..8cf6a64 100644
+++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++-@@ -247,7 +247,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++- 		 <&pcie0_refclk>,
+++++++- 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++-+		 <&pcie0_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	status = "okay";
+++++++- };
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++++index f7a634b..ed0920c 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++++@@ -21,6 +21,10 @@
++++++++ 		reg = <0x00000000 0x40000000 0 0x40000000>;
++++++++ 	};
+++++++  
+++++++-@@ -256,7 +258,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++- 		 <&pcie1_refclk>,
+++++++- 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++-+		 <&pcie1_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	fsl,max-link-speed = <1>;
+++++++- 	status = "okay";
+++++++- };
+++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++-index 3ae3824..bf931d2 100644
+++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++-@@ -199,7 +199,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++- 		 <&pcie1_refclk>,
+++++++- 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++-+		 <&pcie1_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	status = "okay";
+++++++++	busfreq {
+++++++++		status = "disabled";
+++++++++	};
+++++++++
++++++++ 	pmic_osc: clock-pmic {
++++++++ 		compatible = "fixed-clock";
++++++++ 		#clock-cells = <0>;
++++++++@@ -148,6 +158,17 @@
++++++++ 	};
+++++++  };
+++++++  
+++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++-index 0165f3a..761c43d 100644
+++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++-@@ -97,7 +97,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++- 		 <&pcieclk 3>,
+++++++- 		 <&pcieclk 2>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++-+		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++-+		 <&pcieclk 3>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	status = "okay";
+++++++++&gpio3 {
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_wifi_reset>;
+++++++++
+++++++++	wl-reg-on {
+++++++++		gpio-hog;
+++++++++		gpios = <11 GPIO_ACTIVE_HIGH>;
+++++++++		output-high;
+++++++++	};
+++++++++};
+++++++++
++++++++ &i2c1 {
++++++++ 	clock-frequency = <400000>;
++++++++ 	pinctrl-names = "default";
++++++++@@ -163,7 +184,7 @@
++++++++ 		clocks = <&pmic_osc>;
++++++++ 		clock-output-names = "pmic_clk";
++++++++ 		interrupt-parent = <&gpio1>;
++++++++-		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
+++++++++		interrupts = <3 GPIO_ACTIVE_LOW>;
++++++++ 
++++++++ 		regulators {
++++++++ 			buck1: BUCK1 {
++++++++@@ -296,6 +317,76 @@
++++++++ 	};
+++++++  };
+++++++  
+++++++-@@ -109,7 +111,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++- 		 <&pcieclk 1>,
+++++++- 		 <&pcieclk 0>,
+++++++--		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++&i2c2 {
+++++++++	clock-frequency = <100000>;
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_i2c2>;
+++++++++	status = "okay";
+++++++++};
+++++++++
+++++++++&i2c3 {
+++++++++	clock-frequency = <100000>;
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_i2c3>;
+++++++++	status = "okay";
+++++++++};
+++++++++
+++++++++&pcie0 {
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_pcie0>;
+++++++++	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
+++++++++	/*
+++++++++	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
+++++++++	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
+++++++++	 * the pllout_monitor_clk2 gate; hold a reference on it here so
+++++++++	 * clk_disable_unused() cannot switch the endpoint's clock off.
+++++++++	 */
+++++++++	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++++		 <&clk IMX8MQ_CLK_MON_CLK2_OUT>,
+++++++++		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++++	fsl,max-link-speed = <1>;
+++++++++	hard-wired = <1>;
+++++++++	supports-clkreq;
+++++++++	status = "okay";
+++++++++};
+++++++++
+++++++++&pcie1 {
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_pcie1>;
+++++++++	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
+++++++++	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++		 <&pcie1_refclk>,
+++++++++		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++ +		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++-+		 <&pcieclk 1>;
+++++++++		 <&pcie1_refclk>;
+++++++ +	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	status = "okay";
+++++++++	hard-wired = <1>;
+++++++++	supports-clkreq;
+++++++++	status = "okay";
+++++++++};
+++++++++
+++++++++&ecspi1 {
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
+++++++++	cs-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>,
+++++++++		   <&gpio3 2 GPIO_ACTIVE_HIGH>;
+++++++++	num-cs = <2>;
+++++++++	status = "disabled";
+++++++++
+++++++++	spidev@0 {
+++++++++		compatible = "rohm,dh2228fv";
+++++++++		spi-max-frequency = <20000000>;
+++++++++		reg = <0>;
+++++++++	};
+++++++++
+++++++++	spidev@1 {
+++++++++		compatible = "rohm,dh2228fv";
+++++++++		spi-max-frequency = <20000000>;
+++++++++		reg = <1>;
+++++++++	};
+++++++++};
+++++++++
++++++++ &fec1 {
++++++++ 	pinctrl-names = "default";
++++++++ 	pinctrl-0 = <&pinctrl_fec1>;
++++++++@@ -370,6 +461,54 @@
+++++++  };
+++++++  
+++++++-diff --git a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++-index c7bbba4..31db96a 100644
+++++++---- a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++-+++ b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++-@@ -551,7 +551,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++- 	         <&pcie0_refclk>,
+++++++- 	         <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++--	         <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++-+	         <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++-+	         <&pcie0_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	vph-supply = <&vgen5_reg>;
+++++++- 	status = "okay";
+++++++- };
+++++++-@@ -563,7 +565,9 @@
+++++++- 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++- 	         <&pcie1_refclk>,
+++++++- 	         <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++--	         <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++-+	         <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++-+	         <&pcie1_refclk>;
+++++++-+	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++- 	vph-supply = <&vgen5_reg>;
+++++++- 	status = "okay";
++++++++ &iomuxc {
+++++++++	pinctrl-names = "default";
+++++++++	pinctrl-0 = <&pinctrl_hog>;
+++++++++
+++++++++	pinctrl_hog: hoggrp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
+++++++++			MX8MQ_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19
+++++++++			MX8MQ_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
+++++++++			MX8MQ_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x19
+++++++++			MX8MQ_IOMUXC_NAND_DATA03_GPIO3_IO9		0x19
+++++++++			MX8MQ_IOMUXC_NAND_DATA07_GPIO3_IO13		0x19
+++++++++			MX8MQ_IOMUXC_NAND_READY_B_GPIO3_IO16		0x19
+++++++++			MX8MQ_IOMUXC_NAND_WE_B_GPIO3_IO17		0x19
+++++++++			MX8MQ_IOMUXC_ECSPI2_SCLK_GPIO5_IO10		0x19
+++++++++			MX8MQ_IOMUXC_ECSPI2_MISO_GPIO5_IO12		0x19
+++++++++			MX8MQ_IOMUXC_ECSPI2_SS0_GPIO5_IO13		0x19
+++++++++		>;
+++++++++	};
+++++++++
+++++++++	pinctrl_pcie0: pcie0grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_I2C4_SCL_PCIE1_CLKREQ_B		0x76
+++++++++			MX8MQ_IOMUXC_NAND_DATA04_GPIO3_IO10		0x16
+++++++++		>;
+++++++++	};
+++++++++
+++++++++	pinctrl_pcie1: pcie1grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_I2C4_SDA_PCIE2_CLKREQ_B		0x76
+++++++++			MX8MQ_IOMUXC_NAND_WP_B_GPIO3_IO18		0x19
+++++++++		>;
+++++++++	};
+++++++++
+++++++++	pinctrl_ecspi1: ecspi1grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK		0x82
+++++++++			MX8MQ_IOMUXC_ECSPI1_MOSI_ECSPI1_MOSI		0x82
+++++++++			MX8MQ_IOMUXC_ECSPI1_MISO_ECSPI1_MISO		0x82
+++++++++		>;
+++++++++	};
+++++++++
+++++++++	pinctrl_ecspi1_cs: ecspi1_cs_grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x82
+++++++++			MX8MQ_IOMUXC_NAND_CE1_B_GPIO3_IO2		0x82
+++++++++		>;
+++++++++	};
+++++++++
++++++++ 	pinctrl_fec1: fec1grp {
++++++++ 		fsl,pins = <
++++++++ 			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
++++++++@@ -403,6 +542,20 @@
++++++++ 		>;
++++++++ 	};
++++++++ 
+++++++++	pinctrl_i2c2: i2c2grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_I2C2_SCL_I2C2_SCL			0x4000007f
+++++++++			MX8MQ_IOMUXC_I2C2_SDA_I2C2_SDA			0x4000007f
+++++++++		>;
+++++++++	};
+++++++++
+++++++++	pinctrl_i2c3: i2c3grp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_I2C3_SCL_I2C3_SCL			0x4000007f
+++++++++			MX8MQ_IOMUXC_I2C3_SDA_I2C3_SDA			0x4000007f
+++++++++		>;
+++++++++	};
+++++++++
++++++++ 	pinctrl_pmic: pmicirqgrp {
++++++++ 		fsl,pins = <
++++++++ 			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
++++++++@@ -515,4 +668,10 @@
++++++++ 			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
++++++++ 		>;
++++++++ 	};
+++++++++
+++++++++	pinctrl_wifi_reset: wifiresetgrp {
+++++++++		fsl,pins = <
+++++++++			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
+++++++++		>;
+++++++++	};
+++++++  };
+++++++ -- 
+++++++ 2.47.1
+++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++++index e34045d..ea44ab7 100644
+++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+++++++@@ -21,6 +21,10 @@
+++++++ 		reg = <0x00000000 0x40000000 0 0x40000000>;
+++++++ 	};
+++++++ 
++++++++	busfreq {
++++++++		status = "disabled";
++++++++	};
++++++++
+++++++ 	pmic_osc: clock-pmic {
+++++++ 		compatible = "fixed-clock";
+++++++ 		#clock-cells = <0>;
+++++++@@ -46,6 +50,12 @@
+++++++ 		pinctrl-0 = <&pinctrl_gpio_fan>;
+++++++ 		status = "okay";
+++++++ 	};
++++++++
++++++++	pcie1_refclk: pcie1-refclk {
++++++++		compatible = "fixed-clock";
++++++++		#clock-cells = <0>;
++++++++		clock-frequency = <100000000>;
++++++++	};
+++++++ };
+++++++ 
+++++++ &A53_0 {
+++++++@@ -111,6 +121,17 @@
+++++++ 	};
+++++++ };
+++++++ 
++++++++&gpio3 {
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_wifi_reset>;
++++++++
++++++++	wl-reg-on {
++++++++		gpio-hog;
++++++++		gpios = <11 GPIO_ACTIVE_HIGH>;
++++++++		output-high;
++++++++	};
++++++++};
++++++++
+++++++ &i2c1 {
+++++++ 	clock-frequency = <400000>;
+++++++ 	pinctrl-names = "default";
+++++++@@ -126,7 +147,7 @@
+++++++ 		clocks = <&pmic_osc>;
+++++++ 		clock-output-names = "pmic_clk";
+++++++ 		interrupt-parent = <&gpio1>;
+++++++-		interrupts = <3 IRQ_TYPE_LEVEL_LOW>;
++++++++		interrupts = <3 GPIO_ACTIVE_LOW>;
+++++++ 
+++++++ 		regulators {
+++++++ 			buck1: BUCK1 {
+++++++@@ -259,6 +280,76 @@
+++++++ 	};
+++++++ };
+++++++ 
++++++++&i2c2 {
++++++++	clock-frequency = <100000>;
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_i2c2>;
++++++++	status = "okay";
++++++++};
++++++++
++++++++&i2c3 {
++++++++	clock-frequency = <100000>;
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_i2c3>;
++++++++	status = "okay";
++++++++};
++++++++
++++++++&pcie0 {
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_pcie0>;
++++++++	reset-gpio = <&gpio3 10 GPIO_ACTIVE_LOW>;
++++++++	/*
++++++++	 * pcie0 takes REF_CLK from the internal PLL, and the SoC drives the
++++++++	 * 100 MHz reference out to the endpoint on CLK2_P/N. That output is
++++++++	 * the pllout_monitor_clk2 gate; hold a reference on it here so
++++++++	 * clk_disable_unused() cannot switch the endpoint's clock off.
++++++++	 */
++++++++	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++++		 <&clk IMX8MQ_CLK_MON_CLK2_OUT>,
++++++++		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++++	fsl,max-link-speed = <1>;
++++++++	hard-wired = <1>;
++++++++	supports-clkreq;
++++++++	status = "okay";
++++++++};
++++++++
++++++++&pcie1 {
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_pcie1>;
++++++++	reset-gpio = <&gpio3 18 GPIO_ACTIVE_LOW>;
++++++++	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++		 <&pcie1_refclk>,
++++++++		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++		 <&pcie1_refclk>;
++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++	hard-wired = <1>;
++++++++	supports-clkreq;
++++++++	status = "okay";
++++++++};
++++++++
++++++++&ecspi1 {
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
++++++++	cs-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>,
++++++++		   <&gpio3 2 GPIO_ACTIVE_HIGH>;
++++++++	num-cs = <2>;
++++++++	status = "disabled";
++++++++
++++++++	spidev@0 {
++++++++		compatible = "rohm,dh2228fv";
++++++++		spi-max-frequency = <20000000>;
++++++++		reg = <0>;
++++++++	};
++++++++
++++++++	spidev@1 {
++++++++		compatible = "rohm,dh2228fv";
++++++++		spi-max-frequency = <20000000>;
++++++++		reg = <1>;
++++++++	};
++++++++};
++++++++
+++++++ &fec1 {
+++++++ 	pinctrl-names = "default";
+++++++ 	pinctrl-0 = <&pinctrl_fec1>;
+++++++@@ -333,6 +424,54 @@
+++++++ };
+++++++ 
+++++++ &iomuxc {
++++++++	pinctrl-names = "default";
++++++++	pinctrl-0 = <&pinctrl_hog>;
++++++++
++++++++	pinctrl_hog: hoggrp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
++++++++			MX8MQ_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19
++++++++			MX8MQ_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
++++++++			MX8MQ_IOMUXC_GPIO1_IO08_GPIO1_IO8		0x19
++++++++			MX8MQ_IOMUXC_NAND_DATA03_GPIO3_IO9		0x19
++++++++			MX8MQ_IOMUXC_NAND_DATA07_GPIO3_IO13		0x19
++++++++			MX8MQ_IOMUXC_NAND_READY_B_GPIO3_IO16		0x19
++++++++			MX8MQ_IOMUXC_NAND_WE_B_GPIO3_IO17		0x19
++++++++			MX8MQ_IOMUXC_ECSPI2_SCLK_GPIO5_IO10		0x19
++++++++			MX8MQ_IOMUXC_ECSPI2_MISO_GPIO5_IO12		0x19
++++++++			MX8MQ_IOMUXC_ECSPI2_SS0_GPIO5_IO13		0x19
++++++++		>;
++++++++	};
++++++++
++++++++	pinctrl_pcie0: pcie0grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_I2C4_SCL_PCIE1_CLKREQ_B		0x76
++++++++			MX8MQ_IOMUXC_NAND_DATA04_GPIO3_IO10		0x16
++++++++		>;
++++++++	};
++++++++
++++++++	pinctrl_pcie1: pcie1grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_I2C4_SDA_PCIE2_CLKREQ_B		0x76
++++++++			MX8MQ_IOMUXC_NAND_WP_B_GPIO3_IO18		0x19
++++++++		>;
++++++++	};
++++++++
++++++++	pinctrl_ecspi1: ecspi1grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK		0x82
++++++++			MX8MQ_IOMUXC_ECSPI1_MOSI_ECSPI1_MOSI		0x82
++++++++			MX8MQ_IOMUXC_ECSPI1_MISO_ECSPI1_MISO		0x82
++++++++		>;
++++++++	};
++++++++
++++++++	pinctrl_ecspi1_cs: ecspi1_cs_grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_ECSPI1_SS0_GPIO5_IO9		0x82
++++++++			MX8MQ_IOMUXC_NAND_CE1_B_GPIO3_IO2		0x82
++++++++		>;
++++++++	};
++++++++
+++++++ 	pinctrl_fec1: fec1grp {
+++++++ 		fsl,pins = <
+++++++ 			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
+++++++@@ -366,6 +505,20 @@
+++++++ 		>;
+++++++ 	};
+++++++ 
++++++++	pinctrl_i2c2: i2c2grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_I2C2_SCL_I2C2_SCL			0x4000007f
++++++++			MX8MQ_IOMUXC_I2C2_SDA_I2C2_SDA			0x4000007f
++++++++		>;
++++++++	};
++++++++
++++++++	pinctrl_i2c3: i2c3grp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_I2C3_SCL_I2C3_SCL			0x4000007f
++++++++			MX8MQ_IOMUXC_I2C3_SDA_I2C3_SDA			0x4000007f
++++++++		>;
++++++++	};
++++++++
+++++++ 	pinctrl_pmic: pmicirqgrp {
+++++++ 		fsl,pins = <
+++++++ 			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+++++++@@ -478,4 +631,10 @@
+++++++ 			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
+++++++ 		>;
+++++++ 	};
++++++++
++++++++	pinctrl_wifi_reset: wifiresetgrp {
++++++++		fsl,pins = <
++++++++			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
++++++++		>;
++++++++	};
+++++++ };
+++++++diff --git a/newpatches/0004-arm64-dts-imx8mq-Declare-the-PCIe-extref-clock.patch b/newpatches/0004-arm64-dts-imx8mq-Declare-the-PCIe-extref-clock.patch
+++++++new file mode 100644
+++++++index 0000000..49caedc
+++++++--- /dev/null
++++++++++ b/newpatches/0004-arm64-dts-imx8mq-Declare-the-PCIe-extref-clock.patch
+++++++@@ -0,0 +1,616 @@
++++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++++++++From: Rudi Heitbaum <rudi@heitbaum.com>
++++++++Date: Sun, 2 Aug 2026 15:00:04 +1000
++++++++Subject: [PATCH] arm64: dts: imx8mq: Declare the PCIe extref clock
++++++++
++++++++Boards feeding PCIe REF_CLK from an off-chip oscillator described it as
++++++++the "pcie_bus" clock, which the driver never looks up by name and which
++++++++therefore selects nothing. The oscillator was used only because the
++++++++driver forced IMX8MQ_GPR_PCIE_REF_USE_PAD unconditionally.
++++++++
++++++++Now that the selection follows the "extref" clock, name the oscillator
++++++++explicitly on every board that depends on it so the behaviour is
++++++++unchanged. The "pcie_bus" entries are left alone.
++++++++
++++++++Endpoint nodes are not touched: they are all disabled and use a separate
++++++++binding.
++++++++
++++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++++++++---
++++++++ _p.diff                                       | 148 +++++++--
++++++++ arch/arm64/boot/dts/freescale/imx8mq-evk.dts  |   8 +-
++++++++ .../freescale/imx8mq-kontron-pitx-imx8m.dts   |   8 +-
++++++++ .../boot/dts/freescale/imx8mq-mnt-reform2.dts |   4 +-
++++++++ .../dts/freescale/imx8mq-tqma8mq-mba8mx.dts   |   8 +-
++++++++ .../boot/dts/freescale/imx8mq-zii-ultra.dtsi  |   8 +-
++++++++ ...t-the-PCIe-REF_CLK-source-on-i.MX8MQ.patch | 303 ++++++++++++++++++
++++++++ 7 files changed, 454 insertions(+), 33 deletions(-)
++++++++ create mode 100644 newpatches/0003-PCI-imx6-Select-the-PCIe-REF_CLK-source-on-i.MX8MQ.patch
++++++++
++++++++diff --git a/_p.diff b/_p.diff
++++++++index a538eec..7f74bea 100644
++++++++--- a/_p.diff
+++++++++++ b/_p.diff
++++++++@@ -1,30 +1,130 @@
++++++++ ---
++++++++- drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
++++++++- 1 file changed, 7 insertions(+), 2 deletions(-)
+++++++++ arch/arm64/boot/dts/freescale/imx8mq-evk.dts              | 8 ++++++--
+++++++++ .../boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts      | 8 ++++++--
+++++++++ arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts      | 4 +++-
+++++++++ arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts   | 8 ++++++--
+++++++++ arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi       | 8 ++++++--
+++++++++ 5 files changed, 27 insertions(+), 9 deletions(-)
++++++++ 
++++++++-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++++++++-index 9a9efc2..5248ed0 100644
++++++++---- a/drivers/pci/controller/dwc/pci-imx6.c
++++++++-+++ b/drivers/pci/controller/dwc/pci-imx6.c
++++++++-@@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++++index e7d87ea..3dc0047 100644
+++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
++++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++++@@ -374,7 +374,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++++ 		 <&pcie0_refclk>,
+++++++++ 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
++++++++++		 <&pcie0_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	vph-supply = <&vgen5_reg>;
+++++++++ 	supports-clkreq;
+++++++++ 	status = "okay";
+++++++++@@ -402,7 +404,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++ 		 <&pcie0_refclk>,
+++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++++		 <&pcie0_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	vpcie-supply = <&reg_pcie1>;
+++++++++ 	vpcie3v3aux-supply = <&reg_pcie1>;
+++++++++ 	vph-supply = <&vgen5_reg>;
+++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++++index d8cf1f2..8cf6a64 100644
+++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
++++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++++@@ -247,7 +247,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++++ 		 <&pcie0_refclk>,
+++++++++ 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
++++++++++		 <&pcie0_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	status = "okay";
+++++++++ };
++++++++  
++++++++- static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
++++++++- {
++++++++--	/* TODO: This code assumes external oscillator is being used */
++++++++-+	bool ext = imx_pcie->enable_ext_refclk;
++++++++-+
++++++++-+	/*
++++++++-+	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
++++++++-+	 * supplied, otherwise fall back to the internal PLL.
++++++++-+	 */
++++++++- 	regmap_update_bits(imx_pcie->iomuxc_gpr,
++++++++- 			   imx_pcie_grp_offset(imx_pcie),
++++++++- 			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
++++++++--			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
++++++++-+			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
++++++++- 	/*
++++++++- 	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
++++++++- 	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+++++++++@@ -256,7 +258,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++ 		 <&pcie1_refclk>,
+++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++++		 <&pcie1_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	fsl,max-link-speed = <1>;
+++++++++ 	status = "okay";
+++++++++ };
+++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++++index 3ae3824..bf931d2 100644
+++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
++++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++++@@ -199,7 +199,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++ 		 <&pcie1_refclk>,
+++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++++		 <&pcie1_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	status = "okay";
+++++++++ };
+++++++++ 
+++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++++index 0165f3a..761c43d 100644
+++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
++++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++++@@ -97,7 +97,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++++ 		 <&pcieclk 3>,
+++++++++ 		 <&pcieclk 2>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
++++++++++		 <&pcieclk 3>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	status = "okay";
+++++++++ };
+++++++++ 
+++++++++@@ -109,7 +111,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++ 		 <&pcieclk 1>,
+++++++++ 		 <&pcieclk 0>,
+++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
++++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++++		 <&pcieclk 1>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	status = "okay";
+++++++++ };
+++++++++ 
+++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++++index c7bbba4..31db96a 100644
+++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
++++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++++@@ -551,7 +551,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
+++++++++ 	         <&pcie0_refclk>,
+++++++++ 	         <&clk IMX8MQ_CLK_PCIE1_PHY>,
+++++++++-	         <&clk IMX8MQ_CLK_PCIE1_AUX>;
++++++++++	         <&clk IMX8MQ_CLK_PCIE1_AUX>,
++++++++++	         <&pcie0_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	vph-supply = <&vgen5_reg>;
+++++++++ 	status = "okay";
+++++++++ };
+++++++++@@ -563,7 +565,9 @@
+++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
+++++++++ 	         <&pcie1_refclk>,
+++++++++ 	         <&clk IMX8MQ_CLK_PCIE2_PHY>,
+++++++++-	         <&clk IMX8MQ_CLK_PCIE2_AUX>;
++++++++++	         <&clk IMX8MQ_CLK_PCIE2_AUX>,
++++++++++	         <&pcie1_refclk>;
++++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
+++++++++ 	vph-supply = <&vgen5_reg>;
+++++++++ 	status = "okay";
+++++++++ };
++++++++ -- 
++++++++ 2.47.1
++++++++ 
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
++++++++index e7d87ea..3dc0047 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-evk.dts
++++++++@@ -374,7 +374,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++++ 		 <&pcie0_refclk>,
++++++++ 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++++		 <&pcie0_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	vph-supply = <&vgen5_reg>;
++++++++ 	supports-clkreq;
++++++++ 	status = "okay";
++++++++@@ -402,7 +404,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++ 		 <&pcie0_refclk>,
++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++++		 <&pcie0_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	vpcie-supply = <&reg_pcie1>;
++++++++ 	vpcie3v3aux-supply = <&reg_pcie1>;
++++++++ 	vph-supply = <&vgen5_reg>;
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
++++++++index d8cf1f2..8cf6a64 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-kontron-pitx-imx8m.dts
++++++++@@ -247,7 +247,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++++ 		 <&pcie0_refclk>,
++++++++ 		 <&clk IMX8MQ_CLK_PCIE1_PHY>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++++		 <&pcie0_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	status = "okay";
++++++++ };
++++++++ 
++++++++@@ -256,7 +258,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++ 		 <&pcie1_refclk>,
++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++++		 <&pcie1_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	fsl,max-link-speed = <1>;
++++++++ 	status = "okay";
++++++++ };
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
++++++++index 3ae3824..bf931d2 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-mnt-reform2.dts
++++++++@@ -199,7 +199,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++ 		 <&pcie1_refclk>,
++++++++ 		 <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++++		 <&pcie1_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	status = "okay";
++++++++ };
++++++++ 
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
++++++++index 0165f3a..761c43d 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
++++++++@@ -97,7 +97,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++++ 		 <&pcieclk 3>,
++++++++ 		 <&pcieclk 2>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++++		 <&pcieclk 3>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	status = "okay";
++++++++ };
++++++++ 
++++++++@@ -109,7 +111,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++ 		 <&pcieclk 1>,
++++++++ 		 <&pcieclk 0>,
++++++++-		 <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++		 <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++++		 <&pcieclk 1>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	status = "okay";
++++++++ };
++++++++ 
++++++++diff --git a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
++++++++index c7bbba4..31db96a 100644
++++++++--- a/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
+++++++++++ b/arch/arm64/boot/dts/freescale/imx8mq-zii-ultra.dtsi
++++++++@@ -551,7 +551,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE1_ROOT>,
++++++++ 	         <&pcie0_refclk>,
++++++++ 	         <&clk IMX8MQ_CLK_PCIE1_PHY>,
++++++++-	         <&clk IMX8MQ_CLK_PCIE1_AUX>;
+++++++++	         <&clk IMX8MQ_CLK_PCIE1_AUX>,
+++++++++	         <&pcie0_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	vph-supply = <&vgen5_reg>;
++++++++ 	status = "okay";
++++++++ };
++++++++@@ -563,7 +565,9 @@
++++++++ 	clocks = <&clk IMX8MQ_CLK_PCIE2_ROOT>,
++++++++ 	         <&pcie1_refclk>,
++++++++ 	         <&clk IMX8MQ_CLK_PCIE2_PHY>,
++++++++-	         <&clk IMX8MQ_CLK_PCIE2_AUX>;
+++++++++	         <&clk IMX8MQ_CLK_PCIE2_AUX>,
+++++++++	         <&pcie1_refclk>;
+++++++++	clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "extref";
++++++++ 	vph-supply = <&vgen5_reg>;
++++++++ 	status = "okay";
++++++++ };
++++++++diff --git a/newpatches/0003-PCI-imx6-Select-the-PCIe-REF_CLK-source-on-i.MX8MQ.patch b/newpatches/0003-PCI-imx6-Select-the-PCIe-REF_CLK-source-on-i.MX8MQ.patch
++++++++new file mode 100644
++++++++index 0000000..8058460
++++++++--- /dev/null
+++++++++++ b/newpatches/0003-PCI-imx6-Select-the-PCIe-REF_CLK-source-on-i.MX8MQ.patch
++++++++@@ -0,0 +1,303 @@
+++++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++++++++From: Rudi Heitbaum <rudi@heitbaum.com>
+++++++++Date: Sun, 2 Aug 2026 21:15:00 +1000
+++++++++Subject: [PATCH] PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ
+++++++++
+++++++++i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
+++++++++internal PLL. The driver unconditionally selected the oscillator, which
+++++++++is what the
+++++++++
+++++++++	/* TODO: This code assumes external oscillator is being used */
+++++++++
+++++++++comment refers to. Boards wiring an oscillator to the pad describe it as
+++++++++the "pcie_bus" clock, but nothing in the driver looks that clock up by
+++++++++name, so it does not select anything.
+++++++++
+++++++++Reuse the generic enable_ext_refclk flag, set when an "extref" clock is
+++++++++supplied, to select between the two, as is already done for i.MX95 in
+++++++++commit d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
+++++++++support").
+++++++++
+++++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++++++++---
+++++++++ _p.diff                                       |  57 +++---
+++++++++ drivers/pci/controller/dwc/pci-imx6.c         |   9 +-
+++++++++ ...fsl-imx6q-pcie-Add-extref-clock-for-.patch | 178 ++++++++++++++++++
+++++++++ 3 files changed, 209 insertions(+), 35 deletions(-)
+++++++++ create mode 100644 newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+++++++++
+++++++++diff --git a/_p.diff b/_p.diff
+++++++++index 4b3f428..a538eec 100644
+++++++++--- a/_p.diff
++++++++++++ b/_p.diff
+++++++++@@ -1,39 +1,30 @@
+++++++++ ---
+++++++++- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 8 ++++++--
+++++++++- 1 file changed, 6 insertions(+), 2 deletions(-)
++++++++++ drivers/pci/controller/dwc/pci-imx6.c | 9 +++++++--
++++++++++ 1 file changed, 7 insertions(+), 2 deletions(-)
+++++++++ 
+++++++++-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++-index e8b8131..8fb0c91 100644
+++++++++---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++-@@ -46,7 +46,8 @@ properties:
+++++++++-       - description: PCIe PHY clock.
+++++++++-       - description: Additional required clock entry for imx6sx-pcie,
+++++++++-            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+++++++++--      - description: PCIe internal reference clock.
+++++++++-+      - description: PCIe internal reference clock for imx95-pcie, or the
+++++++++-+          external reference clock for imx8mq-pcie.
+++++++++-       - description: PCIe additional external reference clock.
++++++++++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++index 9a9efc2..5248ed0 100644
++++++++++--- a/drivers/pci/controller/dwc/pci-imx6.c
+++++++++++++ b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++@@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+++++++++  
+++++++++-   clock-names:
+++++++++-@@ -173,13 +174,16 @@ allOf:
+++++++++-     then:
+++++++++-       properties:
+++++++++-         clocks:
+++++++++--          maxItems: 4
+++++++++-+          minItems: 4
+++++++++-+          maxItems: 5
+++++++++-         clock-names:
+++++++++-+          minItems: 4
+++++++++-           items:
+++++++++-             - const: pcie
+++++++++-             - const: pcie_bus
+++++++++-             - const: pcie_phy
+++++++++-             - const: pcie_aux
+++++++++-+            - const: extref  # Optional
+++++++++- 
+++++++++-   - if:
+++++++++-       properties:
++++++++++ static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
++++++++++ {
++++++++++-	/* TODO: This code assumes external oscillator is being used */
+++++++++++	bool ext = imx_pcie->enable_ext_refclk;
+++++++++++
+++++++++++	/*
+++++++++++	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
+++++++++++	 * supplied, otherwise fall back to the internal PLL.
+++++++++++	 */
++++++++++ 	regmap_update_bits(imx_pcie->iomuxc_gpr,
++++++++++ 			   imx_pcie_grp_offset(imx_pcie),
++++++++++ 			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
++++++++++-			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
+++++++++++			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
++++++++++ 	/*
++++++++++ 	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
++++++++++ 	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+++++++++ -- 
+++++++++ 2.47.1
+++++++++ 
+++++++++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+++++++++index 9a9efc2..5248ed0 100644
+++++++++--- a/drivers/pci/controller/dwc/pci-imx6.c
++++++++++++ b/drivers/pci/controller/dwc/pci-imx6.c
+++++++++@@ -445,11 +445,16 @@ static int pcie_phy_write(struct imx_pcie *imx_pcie, int addr, u16 data)
+++++++++ 
+++++++++ static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
+++++++++ {
+++++++++-	/* TODO: This code assumes external oscillator is being used */
++++++++++	bool ext = imx_pcie->enable_ext_refclk;
++++++++++
++++++++++	/*
++++++++++	 * Select the off-chip oscillator as REF_CLK when an "extref" clock is
++++++++++	 * supplied, otherwise fall back to the internal PLL.
++++++++++	 */
+++++++++ 	regmap_update_bits(imx_pcie->iomuxc_gpr,
+++++++++ 			   imx_pcie_grp_offset(imx_pcie),
+++++++++ 			   IMX8MQ_GPR_PCIE_REF_USE_PAD,
+++++++++-			   IMX8MQ_GPR_PCIE_REF_USE_PAD);
++++++++++			   ext ? IMX8MQ_GPR_PCIE_REF_USE_PAD : 0);
+++++++++ 	/*
+++++++++ 	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
+++++++++ 	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+++++++++diff --git a/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch b/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+++++++++new file mode 100644
+++++++++index 0000000..307a464
+++++++++--- /dev/null
++++++++++++ b/newpatches/0002-dt-bindings-pci-fsl-imx6q-pcie-Add-extref-clock-for-.patch
+++++++++@@ -0,0 +1,178 @@
++++++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
++++++++++From: Rudi Heitbaum <rudi@heitbaum.com>
++++++++++Date: Sun, 2 Aug 2026 14:58:57 +1000
++++++++++Subject: [PATCH] dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for
++++++++++ i.MX8MQ
++++++++++
++++++++++i.MX8MQ can drive PCIe REF_CLK either from the internal PLL or from an
++++++++++off-chip oscillator. Allow an optional fifth "extref" clock to describe
++++++++++the latter, matching the name already used for i.MX95.
++++++++++
++++++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
++++++++++---
++++++++++ .../bindings/pci/fsl,imx6q-pcie.yaml          |  8 ++-
++++++++++ _p.diff                                       | 48 +++++++++-----
++++++++++ ...void-dereferencing-a-NULL-clock-name.patch | 63 +++++++++++++++++++
++++++++++ 3 files changed, 102 insertions(+), 17 deletions(-)
++++++++++ create mode 100644 newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++++++++++
++++++++++diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++++++++index e8b8131..8fb0c91 100644
++++++++++--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++++++++@@ -46,7 +46,8 @@ properties:
++++++++++       - description: PCIe PHY clock.
++++++++++       - description: Additional required clock entry for imx6sx-pcie,
++++++++++            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
++++++++++-      - description: PCIe internal reference clock.
+++++++++++      - description: PCIe internal reference clock for imx95-pcie, or the
+++++++++++          external reference clock for imx8mq-pcie.
++++++++++       - description: PCIe additional external reference clock.
++++++++++ 
++++++++++   clock-names:
++++++++++@@ -173,13 +174,16 @@ allOf:
++++++++++     then:
++++++++++       properties:
++++++++++         clocks:
++++++++++-          maxItems: 4
+++++++++++          minItems: 4
+++++++++++          maxItems: 5
++++++++++         clock-names:
+++++++++++          minItems: 4
++++++++++           items:
++++++++++             - const: pcie
++++++++++             - const: pcie_bus
++++++++++             - const: pcie_phy
++++++++++             - const: pcie_aux
+++++++++++            - const: extref  # Optional
++++++++++ 
++++++++++   - if:
++++++++++       properties:
++++++++++diff --git a/_p.diff b/_p.diff
++++++++++index bfe77a4..4b3f428 100644
++++++++++--- a/_p.diff
+++++++++++++ b/_p.diff
++++++++++@@ -1,21 +1,39 @@
++++++++++ ---
++++++++++- drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
++++++++++- 1 file changed, 2 insertions(+), 1 deletion(-)
+++++++++++ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 8 ++++++--
+++++++++++ 1 file changed, 6 insertions(+), 2 deletions(-)
++++++++++ 
++++++++++-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++-index 98e1db7..9a9efc2 100644
++++++++++---- a/drivers/pci/controller/dwc/pci-imx6.c
++++++++++-+++ b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++-@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
++++++++++- 		return dev_err_probe(dev, imx_pcie->num_clks,
++++++++++- 				     "failed to get clocks\n");
++++++++++- 	for (i = 0; i < imx_pcie->num_clks; i++)
++++++++++--		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++++++++-+		if (imx_pcie->clks[i].id &&
++++++++++-+		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++++++++- 			imx_pcie->enable_ext_refclk = true;
+++++++++++diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++++index e8b8131..8fb0c91 100644
+++++++++++--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
++++++++++++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml
+++++++++++@@ -46,7 +46,8 @@ properties:
+++++++++++       - description: PCIe PHY clock.
+++++++++++       - description: Additional required clock entry for imx6sx-pcie,
+++++++++++            imx6sx-pcie-ep, imx8mq-pcie, imx8mq-pcie-ep.
+++++++++++-      - description: PCIe internal reference clock.
++++++++++++      - description: PCIe internal reference clock for imx95-pcie, or the
++++++++++++          external reference clock for imx8mq-pcie.
+++++++++++       - description: PCIe additional external reference clock.
++++++++++  
++++++++++- 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
+++++++++++   clock-names:
+++++++++++@@ -173,13 +174,16 @@ allOf:
+++++++++++     then:
+++++++++++       properties:
+++++++++++         clocks:
+++++++++++-          maxItems: 4
++++++++++++          minItems: 4
++++++++++++          maxItems: 5
+++++++++++         clock-names:
++++++++++++          minItems: 4
+++++++++++           items:
+++++++++++             - const: pcie
+++++++++++             - const: pcie_bus
+++++++++++             - const: pcie_phy
+++++++++++             - const: pcie_aux
++++++++++++            - const: extref  # Optional
+++++++++++ 
+++++++++++   - if:
+++++++++++       properties:
++++++++++ -- 
++++++++++ 2.47.1
++++++++++ 
++++++++++diff --git a/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch b/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++++++++++new file mode 100644
++++++++++index 0000000..0e4359e
++++++++++--- /dev/null
+++++++++++++ b/newpatches/0001-PCI-imx6-Avoid-dereferencing-a-NULL-clock-name.patch
++++++++++@@ -0,0 +1,63 @@
+++++++++++From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+++++++++++From: Rudi Heitbaum <rudi@heitbaum.com>
+++++++++++Date: Sun, 2 Aug 2026 15:59:59 +1000
+++++++++++Subject: [PATCH] PCI: imx6: Avoid dereferencing a NULL clock name
+++++++++++
+++++++++++of_clk_bulk_get() leaves clk_bulk_data::id as NULL for every clock that
+++++++++++has no matching entry in "clock-names", which is legal: a node may list
+++++++++++more "clocks" phandles than it names. The extref scan dereferences that
+++++++++++id unconditionally, so such a node oopses during probe.
+++++++++++
+++++++++++Check clk_bulk_data::id before dereferencing it.
+++++++++++
+++++++++++Fixes: d8574ce57d76 ("PCI: imx6: Add external reference clock input mode support")
+++++++++++Cc: stable@vger.kernel.org
+++++++++++Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+++++++++++---
+++++++++++ _p.diff                               | 22 ++++++++++++++++++++++
+++++++++++ drivers/pci/controller/dwc/pci-imx6.c |  3 ++-
+++++++++++ 2 files changed, 24 insertions(+), 1 deletion(-)
+++++++++++ create mode 100644 _p.diff
+++++++++++
+++++++++++diff --git a/_p.diff b/_p.diff
+++++++++++new file mode 100644
+++++++++++index 0000000..bfe77a4
+++++++++++--- /dev/null
++++++++++++++ b/_p.diff
+++++++++++@@ -0,0 +1,22 @@
++++++++++++---
++++++++++++ drivers/pci/controller/dwc/pci-imx6.c | 3 ++-
++++++++++++ 1 file changed, 2 insertions(+), 1 deletion(-)
++++++++++++
++++++++++++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++++index 98e1db7..9a9efc2 100644
++++++++++++--- a/drivers/pci/controller/dwc/pci-imx6.c
+++++++++++++++ b/drivers/pci/controller/dwc/pci-imx6.c
++++++++++++@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
++++++++++++ 		return dev_err_probe(dev, imx_pcie->num_clks,
++++++++++++ 				     "failed to get clocks\n");
++++++++++++ 	for (i = 0; i < imx_pcie->num_clks; i++)
++++++++++++-		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
+++++++++++++		if (imx_pcie->clks[i].id &&
+++++++++++++		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++++++++++ 			imx_pcie->enable_ext_refclk = true;
++++++++++++ 
++++++++++++ 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
++++++++++++-- 
++++++++++++2.47.1
++++++++++++
++++++++++++
+++++++++++diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+++++++++++index 98e1db7..9a9efc2 100644
+++++++++++--- a/drivers/pci/controller/dwc/pci-imx6.c
++++++++++++++ b/drivers/pci/controller/dwc/pci-imx6.c
+++++++++++@@ -1826,7 +1826,8 @@ static int imx_pcie_probe(struct platform_device *pdev)
+++++++++++ 		return dev_err_probe(dev, imx_pcie->num_clks,
+++++++++++ 				     "failed to get clocks\n");
+++++++++++ 	for (i = 0; i < imx_pcie->num_clks; i++)
+++++++++++-		if (strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
++++++++++++		if (imx_pcie->clks[i].id &&
++++++++++++		    strncmp(imx_pcie->clks[i].id, "extref", 6) == 0)
+++++++++++ 			imx_pcie->enable_ext_refclk = true;
+++++++++++ 
+++++++++++ 	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
++++++diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
++++++index 252f683..d43475a 100644
++++++--- a/sound/soc/codecs/Kconfig
+++++++++ b/sound/soc/codecs/Kconfig
++++++@@ -1856,7 +1856,7 @@ config SND_SOC_RT5640
++++++ 	depends on I2C
++++++ 
++++++ config SND_SOC_RT5645
++++++-	tristate
+++++++	tristate "Realtek RT5645/RT5650 Codec"
++++++ 	depends on I2C
++++++ 
++++++ config SND_SOC_RT5651
