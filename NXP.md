@@ -29,7 +29,8 @@ audio cards.
 
 ```
 card 0: Analog [Coral Analog],   device 0: sai-tx-rx-rt5645-aif1 rt5645-aif1-0
-card 1: Header [40-pin Header],  device 0: sai-tx-rx-dit-hifi dit-hifi-0
+card 1: HDMI   [Coral HDMI],     device 0: sai-tx-rx-i2s-hifi i2s-hifi-0
+card 2: Header [40-pin Header],  device 0: sai-tx-rx-dit-hifi dit-hifi-0
 ```
 
 **The card indices are not stable across boots.** A later boot came up with them
@@ -48,15 +49,45 @@ what its ALSA sink enumerates:
 
 ```
 default:CARD=Analog     Coral Analog, sai-tx-rx-rt5645-aif1 rt5645-aif1-0
+default:CARD=HDMI       Coral HDMI, sai-tx-rx-i2s-hifi i2s-hifi-0
 default:CARD=Header     40-pin Header, sai-tx-rx-dit-hifi dit-hifi-0
 ```
 
 The exposure is to anything hardcoding an index — `amixer -c 0` already caught
 us out, returning nothing because card 0 happened to be the dummy that boot.
-`0025` and `0026` add a third card, `Coral HDMI`, which makes the ordering worse
-before it makes it better. Worth deciding whether the header card earns its
-place on a media appliance at all, given it has no codec and destabilises the
-numbering; that is the only thing `0014` buys.
+`0025` and `0026` add a third card and make the ordering worse. Worth deciding
+whether the header card earns its place on a media appliance at all, given it
+has no codec and destabilises the numbering; that is the only thing `0014` buys.
+
+### HDMI audio
+
+Working: `speaker-test -D default:CARD=HDMI` is audible and Kodi's GUI sounds
+play. Two things had to be right, and neither announced itself:
+
+- **The audio InfoFrame has to be sent explicitly.** An HDMI sink stays muted
+  until it sees one. Registering `hdmi_write_audio_infoframe` on the bridge is
+  not enough — `drm_atomic_helper_connector_hdmi_update_audio_infoframe()` is
+  exported *for drivers to call*, and nothing in the DRM core calls it for you,
+  so the write callback is simply never reached. The symptom is the worst kind:
+  the stream runs to completion with correct timing and no error at any layer.
+  vc4 and it66121 both call it at the tail of their prepare callback.
+- **sai4 needs 32 bit slots.** `hdmi-codec` advertises 24 bit, and with no slot
+  width set `fsl_sai_hw_params()` takes it from the sample width, asking for
+  `48000 * 2 * 24` = 2.304 MHz. `fsl_sai_set_bclk()` only accepts even dividers
+  and 24.576 MHz / 2.304 MHz is 10.67, so `hw_params` returns `-EINVAL` and Kodi
+  retries twice a second forever. 32 bit slots give 3.072 MHz, a ratio of 8.
+  This is what NXP's own `imx-hdmi.c` does (`cpu_priv.slot_width = 32`) and it
+  matches the `TRANS_SMPL_WIDTH_32` the bridge writes to `AUDIO_SRC_CNFG`.
+
+The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
+297000/594000 kHz). Every mode we care about is in it, but an odd one such as
+1024x768@60 logs `pixel clock … is not in the N table` and falls back to the
+594000 entry, which will sound wrong.
+
+**The header card on sai1 has the same 24 bit bug** and failed identically while
+Kodi was cycling devices. It stopped once Kodi settled on HDMI, so it is latent
+rather than fixed — it belongs to `0014`, and refreshing that patch would churn
+six later ones.
 
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
@@ -117,8 +148,8 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | | **0021–0030 — imported HDMI stack** | |
 | `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
-| `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | fills the gap v1 left; to submit |
-| `0026` | phanbell HDMI audio card on SAI4 | needs `0025` |
+| `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; fills the gap v1 left, to submit |
+| `0026` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0025` |
 | | **0031–0040 — WIP and scaffolding** | |
 | `0031` | `dt-bindings: clock: fsl,imx8m-anatop: Allow the syscon compatible` | only exists for `0033` |
 | `0032` | `arm64: dts: imx8mq: Restore the syscon compatible on anatop` | only exists for `0033` |
