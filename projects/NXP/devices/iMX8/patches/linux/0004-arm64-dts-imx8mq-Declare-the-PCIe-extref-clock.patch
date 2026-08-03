@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 0196c618465490603b7b1f438bf231bd48a24de0 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 15:00:04 +1000
 Subject: [PATCH] arm64: dts: imx8mq: Declare the PCIe extref clock
@@ -143,3 +143,6 @@ index c7bbba4..31db96a 100644
  	vph-supply = <&vgen5_reg>;
  	status = "okay";
  };
+-- 
+2.47.1
+

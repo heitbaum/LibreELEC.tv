@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 6ca7c1e1a1ce2be6a308d64a9ed743de1e6cc820 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 15:53:49 +1000
 Subject: [PATCH] dt-bindings: clock: fsl,imx8m-anatop: Allow the syscon
@@ -31,3 +31,6 @@ index bbd22e9..925e33e 100644
  
    reg:
      maxItems: 1
+-- 
+2.47.1
+

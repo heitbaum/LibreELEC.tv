@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 651fbf295d6bc8724f6f080ed475768370b00544 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 14:58:57 +1000
 Subject: [PATCH] dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for
@@ -45,3 +45,6 @@ index e8b8131..8fb0c91 100644
  
    - if:
        properties:
+-- 
+2.47.1
+

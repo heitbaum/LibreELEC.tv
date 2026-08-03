@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 78d11d5050c3f5b6c202e0ff4503b38f38492702 Mon Sep 17 00:00:00 2001
 From: Khem Raj <raj.khem@gmail.com>
 Date: Tue, 7 Mar 2023 21:21:57 -0800
 Subject: [PATCH] PCI: imx6: Provide a clock to the device for i.MX8MQ
@@ -68,3 +68,6 @@ index 5248ed0..af2d7fd 100644
  	/*
  	 * Per the datasheet, the PCIE_VPH is suggested to be 1.8V.  If the
  	 * PCIE_VPH is supplied by 3.3V, the VREG_BYPASS should be cleared
+-- 
+2.47.1
+

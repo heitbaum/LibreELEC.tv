@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 35feb45cc9666d2976906a2914e8e703edb72586 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 15:59:59 +1000
 Subject: [PATCH] PCI: imx6: Avoid dereferencing a NULL clock name
@@ -31,3 +31,6 @@ index 98e1db7..9a9efc2 100644
  			imx_pcie->enable_ext_refclk = true;
  
  	if (imx_check_flag(imx_pcie, IMX_PCIE_FLAG_HAS_PHYDRV)) {
+-- 
+2.47.1
+
