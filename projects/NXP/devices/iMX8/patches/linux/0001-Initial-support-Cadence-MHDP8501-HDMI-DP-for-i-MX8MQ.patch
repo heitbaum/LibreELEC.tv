@@ -2881,7 +2881,7 @@ index 0000000000000..98116ef012fa3
 +
 +	disable_irq_nosync(irq);
 +
-+	mod_delayed_work(system_wq, &mhdp->hotplug_work,
++	mod_delayed_work(system_percpu_wq, &mhdp->hotplug_work,
 +			 msecs_to_jiffies(HOTPLUG_DEBOUNCE_MS));
 +
 +	return IRQ_HANDLED;
