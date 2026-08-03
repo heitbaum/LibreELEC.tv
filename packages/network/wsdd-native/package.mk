@@ -10,6 +10,7 @@ PKG_URL="https://github.com/gershnik/wsdd-native/archive/v${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain libfmt libxml2 spdlog systemd"
 PKG_DEPENDS_UNPACK="argum asio isptr modern-uuid outcome ptl sys_string tomlplusplus"
 PKG_LONGDESC="WS-Discovery host daemon, making the machine visible to Windows Explorer."
+PKG_BUILD_FLAGS="+size"
 
 configure_package() {
   # Every dependency is a LibreELEC package - use the system copies of the
