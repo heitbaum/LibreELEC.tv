@@ -12,7 +12,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 179 insertions(+), 1 deletion(-)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index e34045d10a12..783ea30b88c2 100644
+index 4ad206f5a9d1..9d412e164851 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -21,6 +21,10 @@ memory@40000000 {
@@ -66,7 +66,7 @@ index e34045d10a12..783ea30b88c2 100644
  
  		regulators {
  			buck1: BUCK1 {
-@@ -259,6 +280,95 @@ ldo7: LDO7 {
+@@ -260,6 +281,95 @@ ldo7: LDO7 {
  	};
  };
  
@@ -162,7 +162,7 @@ index e34045d10a12..783ea30b88c2 100644
  &fec1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_fec1>;
-@@ -333,6 +443,54 @@ &wdog1 {
+@@ -334,6 +444,54 @@ &wdog1 {
  };
  
  &iomuxc {
@@ -217,7 +217,7 @@ index e34045d10a12..783ea30b88c2 100644
  	pinctrl_fec1: fec1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
-@@ -366,6 +524,20 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
+@@ -367,6 +525,20 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
  		>;
  	};
  
@@ -238,7 +238,7 @@ index e34045d10a12..783ea30b88c2 100644
  	pinctrl_pmic: pmicirqgrp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
-@@ -478,4 +650,10 @@ pinctrl_wdog: wdoggrp {
+@@ -479,4 +651,10 @@ pinctrl_wdog: wdoggrp {
  			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
  		>;
  	};

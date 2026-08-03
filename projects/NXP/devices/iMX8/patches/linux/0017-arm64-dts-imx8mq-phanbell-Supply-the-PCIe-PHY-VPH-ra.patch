@@ -19,7 +19,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index c1d2a424c040..6897adf0273f 100644
+index 12cc7c83f50e..75fc4b4d4488 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -383,6 +383,7 @@ &pcie0 {
