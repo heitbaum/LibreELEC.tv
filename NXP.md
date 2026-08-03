@@ -119,8 +119,6 @@ Not finished:
   is described in `0011` with `assigned-clocks`, and nothing writes a clock
   controller's registers from a PCI driver any more. The phanbell pcie0 patch
   is upstreamable.
-- **`0016`** is a bring-up aid and should go once nothing more needs switching
-  on and off, folding its enables into the dts.
 - **The lockup detectors** (`13f13f1d7b`) were added to chase the hang and are
   no longer needed. Revert before this config goes near master.
 
@@ -152,8 +150,6 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
 | `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; fills the gap v1 left, to submit |
 | `0026` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0025` |
-| | **0031–0040 — WIP and scaffolding** | |
-| `0034` | bring-up aid: disables pcie0/pcie1/mhdp/dcss | delete when bring-up ends |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
 
@@ -1164,14 +1160,16 @@ build rather than leaving bluetooth quiet. It did not, only because the
 
 ## Testing
 
-### Bring-up switches
+### Bring-up switches - retired
 
-`0016` appends `status = "disabled"` for pcie0, pcie1, mhdp, dcss, hdmi_audio,
-sound-hdmi and sai1 at the end of the phanbell dts, so they win over the earlier
-enables. Delete a block to re-enable one device.
+There is no longer a disable block at the end of the phanbell dts, and
+`bootle.scr` no longer edits the tree: no `fdt set`, no `fdt rm`, and no
+`clk_ignore_unused` or `regulator_ignore_unused` on the command line. Every
+device comes up from the devicetree as shipped, which also means the PCIe hosts
+probe about 0.1s earlier.
 
-Faster: flip them in u-boot with no rebuild. `bootle.scr` already does `fdt addr`
-and `fdt resize`:
+Kept for the next time something needs switching without a rebuild, since
+`bootle.scr` still does `fdt addr` and `fdt resize`:
 
 ```
 setenv fdt_addr 0x43000000
