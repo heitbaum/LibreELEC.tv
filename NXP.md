@@ -41,7 +41,19 @@ already varies by seconds between boots depending on when `imx-sdma` loads.
 Consequence: anything selecting `hw:0`, `default` or "card 0" gets a different
 device from one boot to the next, and one of the two is a dummy `spdif-dit`
 with nothing attached. Refer to them by name — `hw:CARD=Analog,DEV=0` — which
-is stable. Worth deciding whether the header card earns its place on a media
+is stable.
+
+In practice Kodi is fine, because `aplay -L` exposes both by name and that is
+what its ALSA sink enumerates:
+
+```
+default:CARD=Analog     Coral Analog, sai-tx-rx-rt5645-aif1 rt5645-aif1-0
+default:CARD=Header     40-pin Header, sai-tx-rx-dit-hifi dit-hifi-0
+```
+
+The exposure is to anything hardcoding an index — `amixer -c 0` already caught
+us out, returning nothing because card 0 happened to be the dummy that boot.
+Note also there is no HDMI entry, since `0001` ships no MHDP audio driver. Worth deciding whether the header card earns its place on a media
 appliance at all, given it has no codec and destabilises the numbering; that is
 the only thing `0021` buys.
 
