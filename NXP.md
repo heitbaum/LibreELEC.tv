@@ -115,8 +115,10 @@ Not finished:
   `pgc_gpu` killed the board silently in six of thirteen boots; removing that
   one property gave five clean boots in a row. Why the handoff fails here when
   `imx8mq-librem5.dtsi` does the same thing and works is unknown. Problem 4.
-- **`0008`** still blocks the phanbell pcie0 patch from upstreaming; problem 2
-  now explains *why* the old approach worked but not how to replace it.
+- **Problem 2 is closed.** `0031`–`0033` are deleted, the pcie0 reference clock
+  is described in `0011` with `assigned-clocks`, and nothing writes a clock
+  controller's registers from a PCI driver any more. The phanbell pcie0 patch
+  is upstreamable.
 - **`0016`** is a bring-up aid and should go once nothing more needs switching
   on and off, folding its enables into the dts.
 - **The lockup detectors** (`13f13f1d7b`) were added to chase the hang and are
@@ -151,11 +153,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; fills the gap v1 left, to submit |
 | `0026` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0025` |
 | | **0031–0040 — WIP and scaffolding** | |
-| `0031` | `dt-bindings: clock: fsl,imx8m-anatop: Allow the syscon compatible` | only exists for `0033` |
-| `0032` | `arm64: dts: imx8mq: Restore the syscon compatible on anatop` | only exists for `0033` |
-| `0033` | `PCI: imx6: Provide a clock to the device for i.MX8MQ` (anatop writes) | blocker — see problem 2 |
 | `0034` | bring-up aid: disables pcie0/pcie1/mhdp/dcss | delete when bring-up ends |
-| `0035` | describe the pcie0 monitor clocks | experiment to retire `0033` |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
 
@@ -358,7 +356,7 @@ are kept, so this changes one thing rather than two.
 Confirmed: with the display enabled and no `clk_ignore_unused`,
 `clk: Disabling unused clocks` runs, both ports link, and ath10k loads firmware.
 
-### 2. Describing the reference clock in DT does not work
+### 2. Describing the reference clock in DT - RESOLVED
 
 Attempted (and reverted in `0501b138e0`): drop `0008`, put
 `IMX8MQ_CLK_MON_CLK2_OUT` in pcie0's `clocks` so `clk_bulk_prepare_enable()`
@@ -506,12 +504,23 @@ and `MON_CLK2_OUT` in `clocks` gives `0x74[4]` through
 `clk_bulk_prepare_enable()`. So `0033` is now rewriting values that are already
 correct.
 
-Step 2 is dropping `0033`. Both mechanisms are live in step 1, so the registers
-cannot say which one set them — only removing the writes can. If pcie0 stops
-linking, compare the `pcie1_ctrl` / `pcie1_phy` / `pcie1_aux` rows above against
-that boot; if those are intact and it still fails, fall back to instrumenting —
-read the two anatop registers at the end of `imx8mq_pcie_init_phy()` and again
-at link-check time.
+**Step 2 — `0033` deleted — links too.** `PCIe Gen.1 x1 link up` on pcie0,
+`Gen.2` on pcie1, ath10k and the Edge TPU both enumerating, and the snapshot
+above reproduced *byte for byte*: same rates, `0x74 = 0x1B`, `0x7c = 0x07`, with
+no code anywhere in the kernel writing those registers. The clock framework does
+the whole job.
+
+So the premise this problem rested on for a month was wrong. The register writes
+never did anything an `assigned-clocks` description could not; the earlier
+rework simply deleted three assignments it did not realise it was overwriting,
+and the one piece of evidence that would have shown it — the `pcie1_*` rates —
+was never captured, because attention was on the monitor subtree that was
+correct in both cases.
+
+`0031`, `0032` and `0033` are all gone, and the description now lives in the
+pcie0 node in `0011`. anatop is back to plain `"fsl,imx8mq-anatop"`, which means
+`f98c2dfedb73` was never a regression to work around: the clock driver owning
+those registers is exactly what makes the description work.
 
 ### 3. Audio — HDMI audio has no driver; the analog path is the reachable one
 
