@@ -116,6 +116,25 @@ Affects any patch that names the type. Fixed in `0001` (Cadence driver) and in
 *not* affected — its matches were the `drm_atomic_state_helper.h` filename and a
 context line, not the type.
 
+### 7.2 deprecates `system_wq`
+
+`cdns_mhdp8501_irq_thread()` in `0001` queues its hotplug debounce with
+`mod_delayed_work(system_wq, ...)`, which 7.2 flags the first time the HDMI
+hotplug interrupt fires:
+
+```
+workqueue: work func hotplug_work_func enqueued on deprecated workqueue.
+Use system_{percpu|dfl}_wq instead.
+```
+
+`include/linux/workqueue.h:465` marks `system_wq` `__WQ_DEPRECATED` — "use
+system_percpu_wq, this will be removed" — and `workqueue.c:2286` warns once per
+call site. `system_percpu_wq` is the exact equivalent, not a behaviour change:
+`schedule_delayed_work()` now queues there itself (`workqueue.h:856`).
+
+Third 7.2 fix to this imported series, after the `drm_atomic_commit` rename and
+the `devm_drm_bridge_alloc()` conversion.
+
 ### 7.2 requires `devm_drm_bridge_alloc()`
 
 `drm_bridge_add()` now takes a reference, so the bridge must be refcount
