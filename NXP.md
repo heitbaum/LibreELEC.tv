@@ -155,6 +155,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0032` | `arm64: dts: imx8mq: Restore the syscon compatible on anatop` | only exists for `0033` |
 | `0033` | `PCI: imx6: Provide a clock to the device for i.MX8MQ` (anatop writes) | blocker — see problem 2 |
 | `0034` | bring-up aid: disables pcie0/pcie1/mhdp/dcss | delete when bring-up ends |
+| `0035` | describe the pcie0 monitor clocks | experiment to retire `0033` |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
 
@@ -443,10 +444,49 @@ pcie1_aux  / pcie2_aux     25000000
 pcie1_ctrl / pcie2_ctrl   250000000
 ```
 
-Next step, rather than more guessing: instrument `0008` to read the three fields
-back at the end of `imx8mq_pcie_init_phy()` and again at link-check time, then
-diff a working boot against a rework boot. If they match at both points, the
-clock is not the differentiator at all.
+**Likely answer, found by reading the revert back rather than by more boots.**
+The rework wrote this on `&pcie0`:
+
+```dts
+assigned-clocks = <&clk IMX8MQ_CLK_MON_SEL>,
+                  <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
+assigned-clock-parents = <&clk IMX8MQ_CLK_MON_SYS_PLL1_DIV>;
+assigned-clock-rates = <0>, <100000000>;
+```
+
+A property set in a `&label` override **replaces** the whole property; it does
+not add to it. `imx8mq.dtsi:1831` already sets `assigned-clocks` on that node:
+
+```dts
+assigned-clocks = <&clk IMX8MQ_CLK_PCIE1_CTRL>,
+                  <&clk IMX8MQ_CLK_PCIE1_PHY>,
+                  <&clk IMX8MQ_CLK_PCIE1_AUX>;
+assigned-clock-parents = <&clk IMX8MQ_SYS2_PLL_250M>,
+                         <&clk IMX8MQ_SYS2_PLL_100M>,
+                         <&clk IMX8MQ_SYS1_PLL_80M>;
+assigned-clock-rates = <250000000>, <100000000>, <10000000>;
+```
+
+so the rework deleted all three — including `pcie1_phy`, which the controller
+takes its PHY reference from. None of the evidence gathered at the time rules
+that out: `clk_summary` was only ever read for the monitor subtree, and that
+subtree was configured correctly in *both* the working and the failing boot,
+which is precisely why it looked as though the register writes were doing
+something extra.
+
+`0035` lists all five assignments so nothing is dropped. Cross-checked against
+`clk-imx8mq.c`: `MON_SYS_PLL1_DIV` is the divider at anatop `0x7c[2:0]` off
+`sys1_pll_out` (line 389), `MON_SEL` the mux at `0x74[3:0]` (394),
+`MON_CLK2_OUT` the gate at `0x74[4]` (395) — the same three fields `0033`
+pokes — and `sys_pll1_out_monitor` is index 11 in `pllout_monitor_sels`, so the
+mux value the framework writes is the same `0xb`. `hard-wired`, which the
+rework also dropped, is read by nothing in the PCI or DWC code.
+
+Test in two steps: build with `0033` still in place (nothing should change),
+then delete `0033` and see whether pcie0 still links. If it does not, fall back
+to instrumenting `0033` — read the two anatop registers at the end of
+`imx8mq_pcie_init_phy()` and again at link-check time, and diff a working boot
+against a rework boot.
 
 ### 3. Audio — HDMI audio has no driver; the analog path is the reachable one
 
