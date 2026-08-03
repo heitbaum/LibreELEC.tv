@@ -15,15 +15,15 @@ sound-dai phandle, and the parent is the bridge.
 The root clock is the same 24.576 MHz from AUDIO_PLL1 that sai2 uses
 for the analog card, which covers the 48 kHz family.
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 24 +++++++++++++++++++
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 33 +++++++++++++++++++
  arch/arm64/boot/dts/freescale/imx8mq.dtsi     |  1 +
- 2 files changed, 25 insertions(+)
+ 2 files changed, 34 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 2706e58..0b46ac9 100644
+index 2706e58..050f583 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -67,6 +67,22 @@ simple-audio-card,codec {
+@@ -67,6 +67,31 @@ simple-audio-card,codec {
  		};
  	};
  
@@ -34,8 +34,17 @@ index 2706e58..0b46ac9 100644
 +		simple-audio-card,bitclock-master = <&sound_hdmi_cpu>;
 +		simple-audio-card,frame-master = <&sound_hdmi_cpu>;
 +
++		/*
++		 * 32 bit slots regardless of the sample width. sai4 divides
++		 * its 24.576 MHz root by an even integer only, and 24 bit
++		 * samples would ask it for 48000 * 2 * 24 = 2.304 MHz, a
++		 * ratio of 10.67. 32 bit slots give 3.072 MHz, a ratio of 8,
++		 * and match the transmission width the bridge programs.
++		 */
 +		sound_hdmi_cpu: simple-audio-card,cpu {
 +			sound-dai = <&sai4>;
++			dai-tdm-slot-num = <2>;
++			dai-tdm-slot-width = <32>;
 +		};
 +
 +		simple-audio-card,codec {
@@ -46,7 +55,7 @@ index 2706e58..0b46ac9 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -409,6 +425,14 @@ &sai2 {
+@@ -409,6 +434,14 @@ &sai2 {
  	status = "okay";
  };
  
