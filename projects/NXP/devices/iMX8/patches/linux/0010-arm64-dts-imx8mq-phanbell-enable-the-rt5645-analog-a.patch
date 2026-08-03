@@ -1,40 +1,27 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Mon, 3 Aug 2026 00:41:52 +1000
+Date: Mon, 3 Aug 2026 22:30:00 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable the rt5645 analog audio
 
-The Coral Dev Board has a Realtek RT5645 codec on i2c3 at 0x1a driving
-the 3.5mm jack, fed from SAI2. Describe it with simple-audio-card - the
-codec driver is upstream, only the machine glue was missing.
+The Coral has an rt5645 on i2c3 driving the headphone jack, its mic and
+two on-board DMICs, fed by sai2.
 
-Headphone detect and the codec interrupt are both on gpio5 line 4; with
-realtek,jd-mode = <0> the driver reads the line through hp-detect-gpios
-and uses the i2c interrupt as the edge trigger.
+The routing is taken from the vendor kernel's DAPM graph with the micbias
+direction corrected: a supply widget has to be the sink, so it is
+"Headphone Mic" -> "micbias1", not the other way round.
 
-The widgets and routing follow the vendor kernel's DAPM graph on this
-board: the jack fed from HPOL and HPOR, the headset mic tied to
-micbias1, and the two onboard microphones on DMIC L1 and R1. There is
-deliberately no speaker widget, because the vendor card has none either.
-
-Note micbias1 is a supply widget, so it has to be the source rather than
-the sink: snd_soc_dapm_add_path() rejects a non-supply source feeding a
-supply sink. The vendor's 4.14 graph has that pair the other way round.
-
-Only the SAI2 transmit clocks are muxed. fsl_sai defaults to RCR2.SYNC
-set, so the receive side takes its bit and frame clock from the transmit
-side, which is what a codec with a single BCLK/LRCK pair needs.
-
-Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+Depends on the rt5645 Kconfig symbol being user selectable, otherwise
+there is no way to enable the driver this node describes.
 ---
  .../boot/dts/freescale/imx8mq-phanbell.dts    | 58 +++++++++++++++++++
  1 file changed, 58 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 9d412e164851..a0dd2c490600 100644
+index 1e3d818c2a69..ec08ff560263 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -21,6 +21,33 @@ memory@40000000 {
- 		reg = <0x00000000 0x40000000 0 0x40000000>;
+@@ -47,6 +47,33 @@ simple-audio-card,codec {
+ 		};
  	};
  
 +	sound-analog {
@@ -67,7 +54,7 @@ index 9d412e164851..a0dd2c490600 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -293,6 +320,27 @@ &i2c3 {
+@@ -302,6 +329,17 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -82,8 +69,13 @@ index 9d412e164851..a0dd2c490600 100644
 +		realtek,dmic1-data-pin = <2>;
 +		realtek,jd-mode = <0>;
 +	};
-+};
-+
+ };
+ 
+ &sai1 {
+@@ -314,6 +352,16 @@ &sai1 {
+ 	status = "okay";
+ };
+ 
 +&sai2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_sai2>;
@@ -92,11 +84,13 @@ index 9d412e164851..a0dd2c490600 100644
 +	assigned-clock-rates = <24576000>;
 +	fsl,sai-mclk-direction-output;
 +	status = "okay";
- };
- 
- &pcie0 {
-@@ -657,4 +705,14 @@ pinctrl_wifi_reset: wifiresetgrp {
- 			MX8MQ_IOMUXC_NAND_DATA05_GPIO3_IO11		0x16
++};
++
+ &ecspi1 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
+@@ -612,4 +660,14 @@ MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
+ 			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
  		>;
  	};
 +

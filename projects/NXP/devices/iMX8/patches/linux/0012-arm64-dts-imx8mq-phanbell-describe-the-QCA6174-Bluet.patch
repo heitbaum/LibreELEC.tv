@@ -1,38 +1,26 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Mon, 3 Aug 2026 00:58:09 +1000
+Date: Mon, 3 Aug 2026 22:30:00 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: describe the QCA6174 Bluetooth
 
-The Coral Dev Board's QCA6174 has its Bluetooth side on uart2 with flow
-control, and a power line on gpio3 line 6. Describe it with the serdev
-binding so hci_qca can drive it.
+The Bluetooth half of the QCA6174 hangs off uart2 with hardware flow
+control and an enable GPIO. hci_qca drives it at 3 Mbaud, which the imx
+uart cannot reach from the 24 MHz default parent since its divider tops
+out at uartclk/16, so reparent UART2 to SYS1_PLL_80M.
 
-The vendor devicetree does not use serdev - it has a downstream
-"fsl,mxc_bt_rfkill" shim and leaves the rest to userspace hciattach -
-but it does give the wiring. Its bt-power-gpios names gpio3 line 6, and
-its uart2 pinctrl group mixes the four uart pins in with that same GPIO
-as NAND_DATA00_GPIO3_IO6. Note the flow control pins are muxed from the
-UART4 pads, not the UART2 ones.
+clocks = <&pmic> supplies the 32.768 kHz sleep clock.
 
-uart2 has to be reparented off the 25MHz oscillator. hci_qca declares
-oper_speed 3000000 and hci_uart_setup() applies it immediately after the
-115200 init speed, but the imx uart caps out at uartclk/16, so on the
-default parent the host lands at 1.5625MHz while the controller has
-moved to 3MHz. The result is a stream of "Frame reassembly failed
-(-84)" and "command 0xfc00 tx timeout". SYS1_PLL_80M gives 5MHz of
-headroom and follows imx8mq-hummingboard-pulse and
-imx8mq-kontron-pitx-imx8m, which reparent their uarts the same way.
-
-Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+Depends on the PCIe patch, which hogs WL_REG_ON. Without it the combo
+part is unpowered and the firmware download has nothing to talk to.
 ---
  .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
  1 file changed, 32 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 5fed8f223e64..12cc7c83f50e 100644
+index 2b3c604370c7..75fc4b4d4488 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -481,6 +481,23 @@ &uart1 {
+@@ -483,6 +483,23 @@ &uart1 {
  	status = "okay";
  };
  
@@ -56,7 +44,7 @@ index 5fed8f223e64..12cc7c83f50e 100644
  &usdhc1 {
  	pinctrl-names = "default", "state_100mhz", "state_200mhz";
  	pinctrl-0 = <&pinctrl_usdhc1>;
-@@ -629,6 +646,21 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -631,6 +648,21 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  
