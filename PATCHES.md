@@ -349,7 +349,7 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0012` `ASoC: rt5645: Make the Kconfig symbol user selectable` | pending | ready; ASoC tree, independent of everything else here |
 | `0013` phanbell rt5645 analog audio | pending | needs `0011` (appends into the `&i2c3` node it adds) |
 | `0014` phanbell 40-pin header I2S card on sai1 | pending | needs `0013` (anchors on its rt5645 node and `&sai2`) |
-| `0015` phanbell QCA6174 Bluetooth on uart2 | pending | ready; anchors only on mainline phanbell nodes |
+| `0015` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` — applies standalone, but the QCA6174 is a combo part and `0011` hogs `WL_REG_ON` (GPIO3_IO11), which powers the Bluetooth side too |
 | `0016` phanbell keep the GPU rail on (buck3 always-on) | pending | ready; `buck3` is already in mainline phanbell |
 | `0017` phanbell supply the PCIe PHY VPH rail | pending | needs `0011` (adds `vph-supply` to the pcie nodes it creates) |
 | `0018` phanbell do not hardcode a cooling state | pending | ready; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
@@ -360,7 +360,11 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0012`, `0015`, `0016`, `0018`.
+Submittable now, with nothing waiting on them: `0012`, `0016`, `0018`.
+
+Note that `0015`'s dependency is functional, not textual — it applies to a tree
+without `0011` and then fails to download firmware, because nothing has driven
+`WL_REG_ON`. Checking patch context alone does not find that class of dependency.
 
 ### Needs triage
 
