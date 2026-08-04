@@ -25,11 +25,11 @@ already spoken for by AVI, SPD and vendor.
 ---
  drivers/gpu/drm/bridge/cadence/Kconfig        |   2 +-
  drivers/gpu/drm/bridge/cadence/Makefile       |   1 +
- .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 239 ++++++++++++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 240 ++++++++++++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.c   |   6 +-
  .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  34 +++
  .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  19 ++
- 6 files changed, 299 insertions(+), 2 deletions(-)
+ 6 files changed, 300 insertions(+), 2 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
@@ -56,10 +56,10 @@ index ea327287d1c1..94e6cbdaff3c 100644
 +cdns-mhdp8501-y += cdns-mhdp8501-audio.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 new file mode 100644
-index 000000000000..c0ffcd9b5695
+index 000000000000..8178baa3c54e
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,240 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence MHDP8501 HDMI audio
@@ -119,7 +119,8 @@ index 000000000000..c0ffcd9b5695
 +}
 +
 +static void cdns_hdmi_audio_config_i2s(struct cdns_mhdp8501_device *mhdp,
-+				       struct hdmi_codec_params *hparms)
++				       struct hdmi_codec_params *hparms,
++				       unsigned long long char_rate)
 +{
 +	u32 pclk = div_u64(char_rate, 1000);
 +	int idx = cdns_hdmi_audio_n_index(mhdp, pclk);
