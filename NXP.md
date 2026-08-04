@@ -136,7 +136,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0002` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | series 1/3 |
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3 |
 | `0004` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | series 3/3 |
-| `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **ready to submit**, alsa-devel |
+| `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **applied upstream** `588852647b81`, broonie/sound `for-7.2` |
 | `0006` | Keep the GPU rail on | **ready**; fixes `buck3: disabling`, problem 4 |
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | i2c2, i2c3, ecspi1 and the pin hogs | **ready**; depends on nothing |

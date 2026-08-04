@@ -345,7 +345,7 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0002` `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock` | submitted | series 1/3 |
 | `0003` `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | submitted | series 2/3 |
 | `0004` `arm64: dts: imx8mq: Declare the PCIe extref clock` | submitted | series 3/3, 5 boards |
-| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | pending | **ready**; ASoC tree. The symbol is promptless upstream, so `0010`'s codec node has no enableable driver without it |
+| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | **applied** | Mark Brown, [`588852647b81`](https://git.kernel.org/broonie/sound/c/588852647b81) on `broonie/sound.git for-7.2` 2026-08-04. Drop when the kernel is bumped past it; that also satisfies `0010`'s dependency from the base |
 | `0006` phanbell keep the GPU rail on (buck3 always-on) | pending | **ready**; `buck3` is already in mainline phanbell |
 | `0007` phanbell do not hardcode a cooling state | pending | **ready**; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
 | `0008` phanbell i2c2, i2c3, ecspi1 and the pin hogs | pending | **ready**; depends on nothing. Carries the original patch's pmic interrupt retune, which looks like a mistake - see the note below |
@@ -360,17 +360,16 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0005` through `0009` — which is
-why the 0001–0010 range holds exactly the submittable work. `0010` needs only
-`0005`, which goes out in the same batch to a different tree, so it can be posted
-alongside with the dependency stated. Everything from `0011` on is genuinely
-blocked.
+Submittable now, with nothing waiting on them: `0006` through `0009`. `0005` is
+already applied, which also clears `0010` — once the kernel carries
+`588852647b81` the Kconfig half comes from the base and `0010` needs only `0008`.
+Everything from `0011` on is genuinely blocked.
 
 Three of these dependencies are functional rather than textual, and reading patch
 context does not find that class at all. `0012` applies to a tree without `0011`
 and then fails to download firmware, because nothing has driven `WL_REG_ON`.
-`0010` applies without `0005` and describes a codec whose driver cannot be
-enabled, since `SND_SOC_RT5645` is promptless upstream. `0011`'s dependency on
+`0010` applied without `0005` would describe a codec whose driver cannot be
+enabled, since `SND_SOC_RT5645` was promptless upstream until `588852647b81`. `0011`'s dependency on
 `0003` is the same shape: it is about what `REF_USE_PAD` defaults to, so nothing
 in the diff hints at it.
 
