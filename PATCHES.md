@@ -341,7 +341,7 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 
 | Patch | Status | Notes |
 |-------|--------|-------|
-| `0001` `PCI: imx6: Avoid dereferencing a NULL clock name` | submitted | sent standalone 2026-08-02 |
+| `0001` `PCI: imx6: Avoid dereferencing a NULL clock name` | submitted | sent standalone 2026-08-02, `Acked-by: Richard Zhu` (NXP) 2026-08-03. Carries `Fixes: d8574ce57d76` and `Cc: stable`, so it should not wait for the merge window. Awaiting a PCI maintainer |
 | `0002` `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock` | submitted | series 1/3 |
 | `0003` `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | submitted | series 2/3 |
 | `0004` `arm64: dts: imx8mq: Declare the PCIe extref clock` | submitted | series 3/3, 5 boards |
