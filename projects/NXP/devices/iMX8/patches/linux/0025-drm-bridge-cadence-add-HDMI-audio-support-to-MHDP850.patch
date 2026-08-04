@@ -25,15 +25,15 @@ already spoken for by AVI, SPD and vendor.
 ---
  drivers/gpu/drm/bridge/cadence/Kconfig        |   2 +-
  drivers/gpu/drm/bridge/cadence/Makefile       |   1 +
- .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 221 ++++++++++++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 232 ++++++++++++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.c   |   6 +-
  .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  35 +++
  .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  22 ++
- 6 files changed, 285 insertions(+), 2 deletions(-)
+ 6 files changed, 296 insertions(+), 2 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
-index 9352877..594d97f 100644
+index 9352877a9728..594d97f5402a 100644
 --- a/drivers/gpu/drm/bridge/cadence/Kconfig
 +++ b/drivers/gpu/drm/bridge/cadence/Kconfig
 @@ -56,7 +56,7 @@ config DRM_CDNS_MHDP8501
@@ -46,7 +46,7 @@ index 9352877..594d97f 100644
  	depends on OF
  	help
 diff --git a/drivers/gpu/drm/bridge/cadence/Makefile b/drivers/gpu/drm/bridge/cadence/Makefile
-index ea32728..94e6cbd 100644
+index ea327287d1c1..94e6cbdaff3c 100644
 --- a/drivers/gpu/drm/bridge/cadence/Makefile
 +++ b/drivers/gpu/drm/bridge/cadence/Makefile
 @@ -7,3 +7,4 @@ cdns-mhdp8546-y := cdns-mhdp8546-core.o cdns-mhdp8546-hdcp.o
@@ -56,10 +56,10 @@ index ea32728..94e6cbd 100644
 +cdns-mhdp8501-y += cdns-mhdp8501-audio.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 new file mode 100644
-index 0000000..4ab736c
+index 000000000000..31d8b0577f18
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
-@@ -0,0 +1,221 @@
+@@ -0,0 +1,232 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence MHDP8501 HDMI audio
@@ -238,6 +238,17 @@ index 0000000..4ab736c
 +		return -EINVAL;
 +	}
 +
++	/*
++	 * N and CTS come from the TMDS character rate, which is only known
++	 * once a mode is set. ASoC will open the PCM whether or not a sink
++	 * is attached, and a rate of zero would pick an arbitrary entry from
++	 * the table, so refuse rather than program nonsense.
++	 */
++	if (!mhdp->hdmi.char_rate) {
++		dev_dbg(mhdp->dev, "no active mode, not starting audio\n");
++		return -ENODEV;
++	}
++
 +	/* audio samples are carried in the HDMI stream */
 +	cdns_mhdp_reg_write(&mhdp->base, CM_CTRL, 8);
 +
@@ -282,7 +293,7 @@ index 0000000..4ab736c
 +	writel(0, mhdp->regs + FIFO_CNTL);
 +}
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
-index 9549370..27b99a8 100644
+index 9549370957df..27b99a81204f 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
 @@ -237,8 +237,12 @@ static int cdns_mhdp8501_add_bridge(struct cdns_mhdp8501_device *mhdp)
@@ -300,7 +311,7 @@ index 9549370..27b99a8 100644
  
  	drm_bridge_add(&mhdp->bridge);
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
-index d67e7fc..b1f7edd 100644
+index d67e7fc25ede..b1f7eddb6355 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
 @@ -172,6 +172,16 @@
@@ -365,7 +376,7 @@ index d67e7fc..b1f7edd 100644
 +			      struct drm_connector *connector);
  #endif
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
-index b5d83eb..f4cf5ea 100644
+index b5d83eb6cc01..f4cf5ea5cf66 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 @@ -644,6 +644,9 @@ static void cdns_hdmi_bridge_atomic_enable(struct drm_bridge *bridge,
