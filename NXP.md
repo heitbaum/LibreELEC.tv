@@ -211,9 +211,27 @@ skipped, so nothing is misprogrammed.
 analog flood was only ever reachable because HDMI `prepare` was failing: Kodi
 kept cycling devices and hit sai2 on every pass. Now that HDMI opens on the
 first try, Kodi settles there and never touches the analog card, so the bug is
-latent rather than fixed in that build. Verifying `0010` needs either a build
-that carries it, or an explicit open of the analog card at 24 bit
-(`speaker-test` defaults to `S16_LE`, which has always worked — see above).
+latent rather than fixed in that build.
+
+The reproducer, which does not involve Kodi at all:
+
+```sh
+speaker-test -D default:CARD=Analog -F S24_LE -c 2 -t sine -f 440
+```
+
+Note `-F` for the format; `-f` is the sine frequency, and passing a format name
+to it silently clamps to 30 Hz and leaves the default `S16_LE` in place, which
+has always worked and so tests nothing. With `S24_LE` and no slot width pinned:
+
+```
+Stream parameters are 48000Hz, S24_LE, 2 channels
+Unable to set hw params for playback: Invalid argument
+```
+
+with one `fsl-sai 308b0000.sai: failed to derive required Tx rate: 2304000` in
+`dmesg`. That is `fsl_sai_set_bclk()` rejecting the 10.67 divider, isolated from
+device cycling. With `0010` applied the same command should reach `hw_params`.
+Whether it then makes a *sound* is the separate, still-open analog question.
 
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
