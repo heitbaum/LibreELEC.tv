@@ -184,11 +184,28 @@ state as no mode, skips the `CM_I2S_CTRL` N/CTS write when the rate is zero and
 does not warn about a zero rate. Nothing fails, nothing is misprogrammed and
 nothing is logged. `hdmi.char_rate` is gone from `struct _hdmi_data`.
 
-What remains with no sink is `hdmi-audio-codec: HDMI: Unknown ELD version 0`,
-once per open attempt: hdmi-codec parsing an all-zero ELD because there is no
-sink. That is the DRM core's message, not ours. It could be avoided by
-implementing `hdmi_audio_startup` and rejecting there, which fails the open
-rather than the prepare — but that puts the retry loop back, so leave it.
+What remains with no sink is `hdmi-audio-codec: HDMI: Unknown ELD version 0` -
+hdmi-codec parsing an all-zero ELD because there is no sink. That is the DRM
+core's message, not ours. It could be avoided by implementing
+`hdmi_audio_startup` and rejecting there, which fails the open rather than the
+prepare — but that puts the retry loop back, so leave it.
+
+**Verified on hardware, both fixes together (7.2-rc6, build 20260804153445).**
+A boot with no sink attached, the case that used to flood, now logs exactly two
+lines of audio noise:
+
+```
+[   20.419777] hdmi-audio-codec hdmi-audio-codec.5.auto: HDMI: Unknown ELD version 0
+[   20.435084] hdmi-audio-codec hdmi-audio-codec.5.auto: HDMI: Unknown ELD version 0
+```
+
+and nothing else — no `-19` at `snd_soc_dai_prepare()`, no
+`failed to derive required Tx rate: 2304000`, no `pixel clock 0 kHz` warning.
+Note that the ELD message does not repeat either, which was not the prediction:
+because `prepare` now succeeds, Kodi's open succeeds and it stops retrying, so
+the core's message fires twice during device enumeration and never again.
+Kodi then streams into a bridge with no sink, which is harmless — with a zero
+character rate the N/CTS write is skipped, so nothing is misprogrammed.
 
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
