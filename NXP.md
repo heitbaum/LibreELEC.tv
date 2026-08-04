@@ -165,6 +165,14 @@ play. Two things had to be right, and neither announced itself:
   This is what NXP's own `imx-hdmi.c` does (`cpu_priv.slot_width = 32`) and it
   matches the `TRANS_SMPL_WIDTH_32` the bridge writes to `AUDIO_SRC_CNFG`.
 
+`78357d8fcc` is confirmed on hardware: with no display attached the
+`pixel clock 0 kHz is not in the N table` messages are gone. What remains in
+that situation is `hdmi-audio-codec: HDMI: Unknown ELD version 0`, repeated once
+per open attempt, which is hdmi-codec parsing an all-zero ELD because there is
+no sink - the DRM core's message, not ours. It could be avoided by also
+implementing `hdmi_audio_startup` and rejecting there, which would fail the open
+rather than the prepare.
+
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
 1024x768@60 logs `pixel clock … is not in the N table` and falls back to the
