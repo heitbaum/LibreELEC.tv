@@ -18,15 +18,28 @@ muxed to it or hp-detect-gpios and the codec interrupt both point at a
 pad still in its reset function. The board's own devicetree does this
 inside its SAI2 pin group; keep it with the codec instead, since that
 is the device that uses it.
+
+Pin the slot width at 32 bits. The arithmetic is the same as on the
+header card: with no slot width set fsl_sai_hw_params() takes it from
+the sample width, so Kodi's 24 bit open asks for a bit clock of
+48000 * 2 * 24 = 2.304 MHz. fsl_sai_set_bclk() only accepts even
+dividers and 24.576 MHz / 2.304 MHz is 10.67, so hw_params returns
+-EINVAL and Kodi retries several times a second forever.
+
+32 bit slots ask for 3.072 MHz, a ratio of 8, and still carry 16 bit
+at the same clock: rt5645_hw_params() sets the data length from
+params_width() and only writes a BCLK-to-frame ratio for AIF2, so on
+AIF1 the codec takes the width from the register and ignores the
+padding bits.
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 66 +++++++++++++++++++
- 1 file changed, 66 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 74 +++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 1e3d818c2a69..b8e61c7ab8d5 100644
+index 1e3d818c2a69..4a1e629fd6e5 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -47,6 +47,33 @@ simple-audio-card,codec {
+@@ -47,6 +47,41 @@ simple-audio-card,codec {
  		};
  	};
  
@@ -50,6 +63,14 @@ index 1e3d818c2a69..b8e61c7ab8d5 100644
 +
 +		sound_cpu: simple-audio-card,cpu {
 +			sound-dai = <&sai2>;
++			/*
++			 * 32 bit slots regardless of the sample width, for the same
++			 * reason as the header card: sai2 divides its 24.576 MHz root
++			 * by an even integer only, and a 24 bit frame at 48 kHz asks
++			 * for 2.304 MHz, a ratio of 10.67. 32 bit slots give 3.072 MHz.
++			 */
++			dai-tdm-slot-num = <2>;
++			dai-tdm-slot-width = <32>;
 +		};
 +
 +		simple-audio-card,codec {
@@ -60,7 +81,7 @@ index 1e3d818c2a69..b8e61c7ab8d5 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -302,6 +329,19 @@ &i2c3 {
+@@ -302,6 +337,19 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -80,7 +101,7 @@ index 1e3d818c2a69..b8e61c7ab8d5 100644
  };
  
  &sai1 {
-@@ -314,6 +354,16 @@ &sai1 {
+@@ -314,6 +362,16 @@ &sai1 {
  	status = "okay";
  };
  
@@ -97,7 +118,7 @@ index 1e3d818c2a69..b8e61c7ab8d5 100644
  &ecspi1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
-@@ -476,6 +526,12 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
+@@ -476,6 +534,12 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
  		>;
  	};
  
@@ -110,7 +131,7 @@ index 1e3d818c2a69..b8e61c7ab8d5 100644
  	pinctrl_i2c2: i2c2grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_I2C2_SCL_I2C2_SCL			0x4000007f
-@@ -612,4 +668,14 @@ MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
+@@ -612,4 +676,14 @@ MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
  			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
  		>;
  	};
