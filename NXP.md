@@ -230,8 +230,17 @@ Unable to set hw params for playback: Invalid argument
 
 with one `fsl-sai 308b0000.sai: failed to derive required Tx rate: 2304000` in
 `dmesg`. That is `fsl_sai_set_bclk()` rejecting the 10.67 divider, isolated from
-device cycling. With `0010` applied the same command should reach `hw_params`.
-Whether it then makes a *sound* is the separate, still-open analog question.
+device cycling.
+
+**Verified on build 20260804154545, which carries `0010`:** the same command
+reaches `hw_params` and runs, `was set period_size = 8191`, cycling through
+Front Left and Front Right. So 32 bit slots do satisfy the divider at 24 bit,
+and `rt5645_hw_params()` not writing a BCLK-to-frame ratio on AIF1 means the
+codec does not object to the padding. Both audio log floods are now closed.
+
+The card still makes no sound, which is the pre-existing analog problem and
+unrelated to any of this — the SAI now accepts the format it always should
+have, and that is all this fixes.
 
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
