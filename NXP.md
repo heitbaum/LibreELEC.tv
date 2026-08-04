@@ -109,12 +109,36 @@ So the output stage reaches the headphones, and the fault is that the DAC's
 output never arrives at `HPO MIX`, or the DAC is not converting. Note that a
 DAPM path reading `On` with non-zero in/out proves topology, not signal.
 
-The next test is the codec's internal ADC-to-DAC loopback, driving the
-headphones from the on-board PDM mics with the SAI out of the picture
-entirely - `Stereo1 ADC2 Mux` to DMIC, `Sto1 ADC MIX*` on, `DAC1 MIX* Stereo
-ADC Switch` on. Audible mics would put the fault on the I2S link, where one
-assumption is still unverified: the pinmux matches the vendor's pad list, but
-nothing has confirmed the SAI2 TX pin actually toggles.
+Every configuration assumption is confirmed by the board documentation, not
+just by inference from the vendor devicetree. The Coral Dev Board block diagram
+and datasheet give:
+
+- codec **ALC5645**, which is Realtek's product name for the RT5645, so
+  `compatible = "realtek,rt5645"` is right
+- codec attached to **`SA2/I2S`**, so SAI2 is right
+- the **3.5 mm jack** carrying **"HPO and MIC"** - a 4-conductor CTIA headset
+  jack off the headphone outputs - so routing `Headphone Jack` from
+  `HPOL`/`HPOR` is right
+- a separate **4-pin stereo terminal**, which would be the Class-D SPO outputs
+  and is not what a headphone is plugged into
+
+So the devicetree is not the problem, which matches everything measuring
+correct.
+
+The internal ADC-to-DAC loopback (DMIC into `DAC1 MIX` via
+`DAC1 MIX* Stereo ADC Switch`) was tried and is also silent, but that test has
+two failure points in series - the DMIC capture path and the HPO output path -
+so it does not isolate either.
+
+The test that would isolate the output stage uses no DAC, ADC or I2S: a CTIA
+headset's microphone through `BST1` -> `HPOVOL MIXL` -> `HPOVOL` ->
+`HPO MIX (HPVOL Switch)` -> `HP amp` -> `HPOL`, entirely analog. Audible means
+the output stage works and the fault is digital delivery. Silent means the stage
+does not pass signal despite reading unmuted, which the click shows is not the
+amp itself. Not yet run.
+
+One digital-side assumption also remains unverified: the pinmux matches the
+board's pad list, but nothing has confirmed the SAI2 TX pin actually toggles.
 
 Two real defects did come out of the investigation and are fixed: the unmuxed
 hp-detect pad (`fe8d4c3aba`) and HDMI audio programming N/CTS with no active
