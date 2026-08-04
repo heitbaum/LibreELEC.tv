@@ -25,11 +25,11 @@ already spoken for by AVI, SPD and vendor.
 ---
  drivers/gpu/drm/bridge/cadence/Kconfig        |   2 +-
  drivers/gpu/drm/bridge/cadence/Makefile       |   1 +
- .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 232 ++++++++++++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-audio.c  | 239 ++++++++++++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.c   |   6 +-
- .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  35 +++
- .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  22 ++
- 6 files changed, 296 insertions(+), 2 deletions(-)
+ .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  34 +++
+ .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  19 ++
+ 6 files changed, 299 insertions(+), 2 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
@@ -56,10 +56,10 @@ index ea327287d1c1..94e6cbdaff3c 100644
 +cdns-mhdp8501-y += cdns-mhdp8501-audio.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
 new file mode 100644
-index 000000000000..31d8b0577f18
+index 000000000000..c0ffcd9b5695
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-audio.c
-@@ -0,0 +1,232 @@
+@@ -0,0 +1,239 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence MHDP8501 HDMI audio
@@ -102,6 +102,13 @@ index 000000000000..31d8b0577f18
 +{
 +	int i;
 +
++	/*
++	 * Zero means no mode is running, so nothing is being transmitted
++	 * and the value is never used. Do not warn about that.
++	 */
++	if (!pclk)
++		return 0;
++
 +	for (i = 0; i < ARRAY_SIZE(tmds_rate_table); i++)
 +		if (pclk == tmds_rate_table[i])
 +			return i;
@@ -114,7 +121,7 @@ index 000000000000..31d8b0577f18
 +static void cdns_hdmi_audio_config_i2s(struct cdns_mhdp8501_device *mhdp,
 +				       struct hdmi_codec_params *hparms)
 +{
-+	u32 pclk = div_u64(mhdp->hdmi.char_rate, 1000);
++	u32 pclk = div_u64(char_rate, 1000);
 +	int idx = cdns_hdmi_audio_n_index(mhdp, pclk);
 +	int sub_pckt_num = 4, i2s_port_en_val = 0xf;
 +	u32 transmission_type = 0;	/* not required for L-PCM */
@@ -210,7 +217,9 @@ index 000000000000..31d8b0577f18
 +	val |= 4;
 +	writel(val, mhdp->regs + COM_CH_STTS_BITS);
 +
-+	cdns_mhdp_reg_write(&mhdp->base, CM_I2S_CTRL, ncts | 0x4000000);
++	/* N/CTS only mean something while a mode is running */
++	if (pclk)
++		cdns_mhdp_reg_write(&mhdp->base, CM_I2S_CTRL, ncts | 0x4000000);
 +
 +	writel(SMPL2PKT_EN, mhdp->regs + SMPL2PKT_CNTL);
 +	writel(I2S_DEC_START, mhdp->regs + AUDIO_SRC_CNTL);
@@ -231,6 +240,7 @@ index 000000000000..31d8b0577f18
 +			    struct hdmi_codec_params *hparms)
 +{
 +	struct cdns_mhdp8501_device *mhdp = bridge->driver_private;
++	unsigned long long char_rate = 0;
 +
 +	if (fmt->fmt != HDMI_I2S) {
 +		dev_err(mhdp->dev, "invalid format %d, only I2S is supported\n",
@@ -239,20 +249,17 @@ index 000000000000..31d8b0577f18
 +	}
 +
 +	/*
-+	 * N and CTS come from the TMDS character rate, which is only known
-+	 * once a mode is set. ASoC will open the PCM whether or not a sink
-+	 * is attached, and a rate of zero would pick an arbitrary entry from
-+	 * the table, so refuse rather than program nonsense.
++	 * N and CTS derive from the TMDS character rate. Read it from the
++	 * connector state rather than caching it at modeset, so it stays
++	 * correct across a hotplug, and treat no state as no mode.
 +	 */
-+	if (!mhdp->hdmi.char_rate) {
-+		dev_dbg(mhdp->dev, "no active mode, not starting audio\n");
-+		return -ENODEV;
-+	}
++	if (connector->state)
++		char_rate = connector->state->hdmi.tmds_char_rate;
 +
 +	/* audio samples are carried in the HDMI stream */
 +	cdns_mhdp_reg_write(&mhdp->base, CM_CTRL, 8);
 +
-+	cdns_hdmi_audio_config_i2s(mhdp, hparms);
++	cdns_hdmi_audio_config_i2s(mhdp, hparms, char_rate);
 +
 +	/*
 +	 * The sink stays muted until it sees an audio InfoFrame, so this is
@@ -311,7 +318,7 @@ index 9549370957df..27b99a81204f 100644
  
  	drm_bridge_add(&mhdp->bridge);
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
-index d67e7fc25ede..b1f7eddb6355 100644
+index d67e7fc25ede..5ce4b890013f 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
 @@ -172,6 +172,16 @@
@@ -352,15 +359,7 @@ index d67e7fc25ede..b1f7eddb6355 100644
  /* Reference cycles when using lane clock as reference */
  #define LANE_REF_CYC			0x8000
  
-@@ -357,6 +381,7 @@ struct cdns_mhdp8501_device {
- 		struct _hdmi_data {
- 			u32 hdmi_type;
- 			struct cdns_hdmi_i2c *i2c;
-+			unsigned long long char_rate;
- 		} hdmi;
- 	};
- };
-@@ -377,4 +402,14 @@ void cdns_dp_check_link_state(struct cdns_mhdp8501_device *mhdp);
+@@ -377,4 +401,14 @@ void cdns_dp_check_link_state(struct cdns_mhdp8501_device *mhdp);
  
  void cdns_hdmi_handle_hotplug(struct cdns_mhdp8501_device *mhdp);
  struct i2c_adapter *cdns_hdmi_i2c_adapter(struct cdns_mhdp8501_device *mhdp);
@@ -376,20 +375,10 @@ index d67e7fc25ede..b1f7eddb6355 100644
 +			      struct drm_connector *connector);
  #endif
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
-index b5d83eb6cc01..f4cf5ea5cf66 100644
+index b5d83eb6cc01..ed6047ea8a9e 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
-@@ -644,6 +644,9 @@ static void cdns_hdmi_bridge_atomic_enable(struct drm_bridge *bridge,
- 	if (WARN_ON(!hdmi))
- 		return;
- 
-+	/* the audio path derives N/CTS from the character rate */
-+	mhdp->hdmi.char_rate = hdmi->tmds_char_rate;
-+
- 	phy_cfg.hdmi.tmds_char_rate = hdmi->tmds_char_rate;
- 	ret = phy_configure(mhdp->phy, &phy_cfg);
- 	if (ret) {
-@@ -720,6 +723,21 @@ static int cdns_hdmi_bridge_write_hdmi_infoframe(struct drm_bridge *bridge,
+@@ -720,6 +720,21 @@ static int cdns_hdmi_bridge_write_hdmi_infoframe(struct drm_bridge *bridge,
  	return 0;
  }
  
@@ -411,7 +400,7 @@ index b5d83eb6cc01..f4cf5ea5cf66 100644
  static int cdns_hdmi_bridge_atomic_check(struct drm_bridge *bridge,
  					 struct drm_bridge_state *bridge_state,
  					 struct drm_crtc_state *crtc_state,
-@@ -745,5 +763,9 @@ const struct drm_bridge_funcs cdns_hdmi_bridge_funcs = {
+@@ -745,5 +760,9 @@ const struct drm_bridge_funcs cdns_hdmi_bridge_funcs = {
  	.hdmi_write_spd_infoframe = cdns_hdmi_bridge_write_spd_infoframe,
  	.hdmi_clear_hdmi_infoframe = cdns_hdmi_bridge_clear_hdmi_infoframe,
  	.hdmi_write_hdmi_infoframe = cdns_hdmi_bridge_write_hdmi_infoframe,
