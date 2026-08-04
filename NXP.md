@@ -165,13 +165,30 @@ play. Two things had to be right, and neither announced itself:
   This is what NXP's own `imx-hdmi.c` does (`cpu_priv.slot_width = 32`) and it
   matches the `TRANS_SMPL_WIDTH_32` the bridge writes to `AUDIO_SRC_CNFG`.
 
-`78357d8fcc` is confirmed on hardware: with no display attached the
-`pixel clock 0 kHz is not in the N table` messages are gone. What remains in
-that situation is `hdmi-audio-codec: HDMI: Unknown ELD version 0`, repeated once
-per open attempt, which is hdmi-codec parsing an all-zero ELD because there is
-no sink - the DRM core's message, not ours. It could be avoided by also
-implementing `hdmi_audio_startup` and rejecting there, which would fail the open
-rather than the prepare.
+**With no sink attached**, Kodi opens the card anyway and the character rate is
+zero, so the N/CTS lookup has nothing to work with. Two things were wrong about
+the first attempt at this, both now fixed:
+
+- Returning `-ENODEV` from `prepare` made it far worse, not better. ASoC logs a
+  failed `snd_soc_dai_prepare()` at *error* level and Kodi retries the open
+  forever, so six quiet messages became an unbounded flood of roughly ten lines
+  a second. `78357d8fcc`'s claim of being "confirmed on hardware" was measured
+  with no display attached and no Kodi retry loop running; it does not hold.
+- Caching the rate at `atomic_enable` is the wrong place to read it from. After
+  a hotplug the display came up at 171.9 s and the errors were still arriving at
+  210 s, i.e. the cached value stayed zero through a modeset, so audio after a
+  hotplug would have been misprogrammed.
+
+`prepare` now reads `connector->state->hdmi.tmds_char_rate` directly, treats no
+state as no mode, skips the `CM_I2S_CTRL` N/CTS write when the rate is zero and
+does not warn about a zero rate. Nothing fails, nothing is misprogrammed and
+nothing is logged. `hdmi.char_rate` is gone from `struct _hdmi_data`.
+
+What remains with no sink is `hdmi-audio-codec: HDMI: Unknown ELD version 0`,
+once per open attempt: hdmi-codec parsing an all-zero ELD because there is no
+sink. That is the DRM core's message, not ours. It could be avoided by
+implementing `hdmi_audio_startup` and rejecting there, which fails the open
+rather than the prepare — but that puts the retry loop back, so leave it.
 
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
