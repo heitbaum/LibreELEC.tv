@@ -9,12 +9,12 @@ Subject: [PATCH 3/4] arm64: dts: fsl: imx8mq-phanbell.dts: enable DCSS and
  1 file changed, 31 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 11c92ff37ad4..07afd9948f40 100644
+index 2c246ca3b895..9f90123b3f1d 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -117,6 +117,17 @@ pcie1_refclk: pcie1-refclk {
- 		#clock-cells = <0>;
- 		clock-frequency = <100000000>;
+@@ -118,6 +118,17 @@ simple-audio-card,codec {
+ 			sound-dai = <&header_codec>;
+ 		};
  	};
 +
 +	hdmi_connector: connector {
@@ -30,7 +30,7 @@ index 11c92ff37ad4..07afd9948f40 100644
  };
  
  &A53_0 {
-@@ -193,6 +204,32 @@ wl-reg-on {
+@@ -183,6 +194,32 @@ map4 {
  	};
  };
  

@@ -1,26 +1,30 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
-Date: Mon, 3 Aug 2026 22:30:00 +1000
+Date: Wed, 5 Aug 2026 12:00:00 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: describe the QCA6174 Bluetooth
 
 The Bluetooth half of the QCA6174 hangs off uart2 with hardware flow
-control and an enable GPIO. hci_qca drives it at 3 Mbaud, which the imx
-uart cannot reach from the 24 MHz default parent since its divider tops
-out at uartclk/16, so reparent UART2 to SYS1_PLL_80M.
+control and an enable GPIO, and takes its 32.768 kHz sleep clock from the
+PMIC.
 
-clocks = <&pmic> supplies the 32.768 kHz sleep clock.
+hci_qca drives the port at 3 Mbaud. The imx uart cannot reach that from the
+24 MHz default parent because its divider tops out at uartclk/16, so
+reparent UART2 to SYS1_PLL_80M.
 
-Depends on the PCIe patch, which hogs WL_REG_ON. Without it the combo
-part is unpowered and the firmware download has nothing to talk to.
+The radio's WL_REG_ON powers the Bluetooth side as much as the wifi side,
+which is why it is described as a regulator rather than as something local
+to the PCIe controller.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
  1 file changed, 32 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index f1046612bc30..11c92ff37ad4 100644
+index 7860b1814d85..b7053c270478 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -493,6 +493,23 @@ &uart1 {
+@@ -375,6 +375,23 @@ &uart1 {
  	status = "okay";
  };
  
@@ -44,28 +48,35 @@ index f1046612bc30..11c92ff37ad4 100644
  &usdhc1 {
  	pinctrl-names = "default", "state_100mhz", "state_200mhz";
  	pinctrl-0 = <&pinctrl_usdhc1>;
-@@ -647,6 +664,21 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
- 		>;
- 	};
+@@ -425,6 +442,12 @@ &iomuxc {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_hog>;
  
 +	pinctrl_bt: btgrp {
 +		fsl,pins = <
-+			MX8MQ_IOMUXC_NAND_DATA00_GPIO3_IO6	0x19
++			MX8MQ_IOMUXC_NAND_DATA00_GPIO3_IO6		0x19
 +		>;
 +	};
 +
+ 	pinctrl_fec1: fec1grp {
+ 		fsl,pins = <
+ 			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
+@@ -505,6 +528,15 @@ MX8MQ_IOMUXC_UART1_TXD_UART1_DCE_TX		0x49
+ 		>;
+ 	};
+ 
 +	pinctrl_uart2: uart2grp {
 +		fsl,pins = <
-+			MX8MQ_IOMUXC_UART2_RXD_UART2_DCE_RX	0x49
-+			MX8MQ_IOMUXC_UART2_TXD_UART2_DCE_TX	0x49
-+			MX8MQ_IOMUXC_UART4_RXD_UART2_DCE_CTS_B	0x49
-+			MX8MQ_IOMUXC_UART4_TXD_UART2_DCE_RTS_B	0x49
++			MX8MQ_IOMUXC_UART2_RXD_UART2_DCE_RX		0x49
++			MX8MQ_IOMUXC_UART2_TXD_UART2_DCE_TX		0x49
++			MX8MQ_IOMUXC_UART4_RXD_UART2_DCE_CTS_B		0x49
++			MX8MQ_IOMUXC_UART4_TXD_UART2_DCE_RTS_B		0x49
 +		>;
 +	};
 +
- 	pinctrl_uart1: uart1grp {
+ 	pinctrl_usdhc1: usdhc1grp {
  		fsl,pins = <
- 			MX8MQ_IOMUXC_UART1_RXD_UART1_DCE_RX		0x49
+ 			MX8MQ_IOMUXC_SD1_CLK_USDHC1_CLK			0x83
 -- 
 2.47.1
 

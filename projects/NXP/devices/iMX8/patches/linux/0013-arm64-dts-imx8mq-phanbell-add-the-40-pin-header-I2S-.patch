@@ -1,0 +1,88 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Wed, 5 Aug 2026 12:00:00 +1000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: add the 40-pin header I2S card
+
+sai1 goes to the 40-pin expansion header as plain I2S with nothing on the
+far side, which is how the vendor kernel exposes it. linux,spdif-dit stands
+in for the far end, so the card is playback only where the vendor's dummy
+codec gave both directions.
+
+The slot width is pinned at 32 bits for the same reason as the analog
+card.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 42 +++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index da6c46816b5e..2c246ca3b895 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -96,6 +96,28 @@ simple-audio-card,codec {
+ 			sound-dai = <&rt5645>;
+ 		};
+ 	};
++
++	header_codec: spdif-transmitter {
++		compatible = "linux,spdif-dit";
++		#sound-dai-cells = <0>;
++	};
++
++	sound-header {
++		compatible = "simple-audio-card";
++		simple-audio-card,name = "40-pin Header";
++		simple-audio-card,format = "i2s";
++
++		/* 32 bit slots, for the same reason as the analog card */
++		simple-audio-card,cpu {
++			sound-dai = <&sai1>;
++			dai-tdm-slot-num = <2>;
++			dai-tdm-slot-width = <32>;
++		};
++
++		simple-audio-card,codec {
++			sound-dai = <&header_codec>;
++		};
++	};
+ };
+ 
+ &A53_0 {
+@@ -415,6 +437,16 @@ &pcie1 {
+ 	status = "okay";
+ };
+ 
++&sai1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_sai1>;
++	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
++	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
++	assigned-clock-rates = <24576000>;
++	fsl,sai-mclk-direction-output;
++	status = "okay";
++};
++
+ &sai2 {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_sai2>;
+@@ -583,6 +615,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+ 		>;
+ 	};
+ 
++	pinctrl_sai1: sai1grp {
++		fsl,pins = <
++			MX8MQ_IOMUXC_SAI1_MCLK_SAI1_MCLK		0xd6
++			MX8MQ_IOMUXC_SAI1_TXFS_SAI1_TX_SYNC		0xd6
++			MX8MQ_IOMUXC_SAI1_TXC_SAI1_TX_BCLK		0xd6
++			MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0		0xd6
++			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0		0xd6
++		>;
++	};
++
+ 	pinctrl_sai2: sai2grp {
+ 		fsl,pins = <
+ 			MX8MQ_IOMUXC_SAI2_MCLK_SAI2_MCLK		0xd6
+-- 
+2.47.1
+
