@@ -96,10 +96,25 @@ Useful things confirmed by the vendor dump:
 - `RT5645 IF1 DAC1 L/R Mux` are `Slot0`/`Slot1` on the vendor. We never set
   those; worth checking our defaults if this is ever revisited.
 
-Remaining possibilities, in order of cheapness: the headphones themselves, an
-OMTP-wired headset in a CTIA jack, then the jack or codec analog stage being
-dead or unpopulated. Not worth more software effort - treat the analog card as
-non-functional and do not add mixer setup for it to `soundconfig`.
+**But the jack is not dead, and the first version of this note was wrong to
+imply it.** Before `fe8d4c3aba` the board produced an audible click in both ears
+at the end of a stream. A click means the headphone amp was driving the phones,
+so the jack, the amp and the cable all work. What the click actually was is
+jack-detect flapping on the unmuxed pad: the jack-out path in
+`rt5645_jack_detect()` writes `RT5645_HP_VOL` `L_MUTE|R_MUTE` on a live amp, and
+that is what was audible. Once the pad was muxed the reading became stable, the
+transitions stopped, and so did the clicks.
+
+So the output stage reaches the headphones, and the fault is that the DAC's
+output never arrives at `HPO MIX`, or the DAC is not converting. Note that a
+DAPM path reading `On` with non-zero in/out proves topology, not signal.
+
+The next test is the codec's internal ADC-to-DAC loopback, driving the
+headphones from the on-board PDM mics with the SAI out of the picture
+entirely - `Stereo1 ADC2 Mux` to DMIC, `Sto1 ADC MIX*` on, `DAC1 MIX* Stereo
+ADC Switch` on. Audible mics would put the fault on the I2S link, where one
+assumption is still unverified: the pinmux matches the vendor's pad list, but
+nothing has confirmed the SAI2 TX pin actually toggles.
 
 Two real defects did come out of the investigation and are fixed: the unmuxed
 hp-detect pad (`fe8d4c3aba`) and HDMI audio programming N/CTS with no active
