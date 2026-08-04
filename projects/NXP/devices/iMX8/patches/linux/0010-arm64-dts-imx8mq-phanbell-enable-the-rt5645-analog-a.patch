@@ -12,12 +12,18 @@ direction corrected: a supply widget has to be the sink, so it is
 
 Depends on the rt5645 Kconfig symbol being user selectable, otherwise
 there is no way to enable the driver this node describes.
+
+GPIO5_IO4 carries headphone detect, and the SPDIF_RX pad has to be
+muxed to it or hp-detect-gpios and the codec interrupt both point at a
+pad still in its reset function. The board's own devicetree does this
+inside its SAI2 pin group; keep it with the codec instead, since that
+is the device that uses it.
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 58 +++++++++++++++++++
- 1 file changed, 58 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 66 +++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 1e3d818c2a69..ec08ff560263 100644
+index 1e3d818c2a69..b8e61c7ab8d5 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -47,6 +47,33 @@ simple-audio-card,codec {
@@ -54,7 +60,7 @@ index 1e3d818c2a69..ec08ff560263 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -302,6 +329,17 @@ &i2c3 {
+@@ -302,6 +329,19 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -62,6 +68,8 @@ index 1e3d818c2a69..ec08ff560263 100644
 +	rt5645: audio-codec@1a {
 +		compatible = "realtek,rt5645";
 +		reg = <0x1a>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_hp_det>;
 +		#sound-dai-cells = <0>;
 +		interrupt-parent = <&gpio5>;
 +		interrupts = <4 IRQ_TYPE_EDGE_BOTH>;
@@ -72,7 +80,7 @@ index 1e3d818c2a69..ec08ff560263 100644
  };
  
  &sai1 {
-@@ -314,6 +352,16 @@ &sai1 {
+@@ -314,6 +354,16 @@ &sai1 {
  	status = "okay";
  };
  
@@ -89,7 +97,20 @@ index 1e3d818c2a69..ec08ff560263 100644
  &ecspi1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
-@@ -612,4 +660,14 @@ MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
+@@ -476,6 +526,12 @@ MX8MQ_IOMUXC_I2C1_SDA_I2C1_SDA			0x4000007f
+ 		>;
+ 	};
+ 
++	pinctrl_hp_det: hpdetgrp {
++		fsl,pins = <
++			MX8MQ_IOMUXC_SPDIF_RX_GPIO5_IO4		0xd6
++		>;
++	};
++
+ 	pinctrl_i2c2: i2c2grp {
+ 		fsl,pins = <
+ 			MX8MQ_IOMUXC_I2C2_SCL_I2C2_SCL			0x4000007f
+@@ -612,4 +668,14 @@ MX8MQ_IOMUXC_SAI1_TXD0_SAI1_TX_DATA0	0xd6
  			MX8MQ_IOMUXC_SAI1_RXD0_SAI1_RX_DATA0	0xd6
  		>;
  	};

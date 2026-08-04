@@ -20,7 +20,7 @@ for the analog card, which covers the 48 kHz family.
  2 files changed, 34 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 5abe68f57bb1..6ccee1f588e7 100644
+index e76ceb47a234..7adb7947fbf2 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -74,6 +74,31 @@ simple-audio-card,codec {
@@ -55,7 +55,7 @@ index 5abe68f57bb1..6ccee1f588e7 100644
  	busfreq {
  		status = "disabled";
  	};
-@@ -416,6 +441,14 @@ &sai2 {
+@@ -418,6 +443,14 @@ &sai2 {
  	status = "okay";
  };
  

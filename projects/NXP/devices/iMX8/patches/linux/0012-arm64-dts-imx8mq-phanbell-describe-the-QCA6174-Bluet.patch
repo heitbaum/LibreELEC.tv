@@ -17,10 +17,10 @@ part is unpowered and the firmware download has nothing to talk to.
  1 file changed, 32 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 2b3c604370c7..75fc4b4d4488 100644
+index 24c70cd76b0d..9bb1756561b5 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -483,6 +483,23 @@ &uart1 {
+@@ -485,6 +485,23 @@ &uart1 {
  	status = "okay";
  };
  
@@ -44,7 +44,7 @@ index 2b3c604370c7..75fc4b4d4488 100644
  &usdhc1 {
  	pinctrl-names = "default", "state_100mhz", "state_200mhz";
  	pinctrl-0 = <&pinctrl_usdhc1>;
-@@ -631,6 +648,21 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -639,6 +656,21 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  

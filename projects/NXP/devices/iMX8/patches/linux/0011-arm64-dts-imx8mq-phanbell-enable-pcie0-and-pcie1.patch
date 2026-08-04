@@ -22,7 +22,7 @@ Bluetooth side of that combo part needs it as much as the radio does.
  1 file changed, 93 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index ec08ff560263..2b3c604370c7 100644
+index b8e61c7ab8d5..24c70cd76b0d 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -103,6 +103,12 @@ fan: gpio-fan {
@@ -56,7 +56,7 @@ index ec08ff560263..2b3c604370c7 100644
  &i2c1 {
  	clock-frequency = <400000>;
  	pinctrl-names = "default";
-@@ -362,6 +379,62 @@ &sai2 {
+@@ -364,6 +381,62 @@ &sai2 {
  	status = "okay";
  };
  
@@ -119,7 +119,7 @@ index ec08ff560263..2b3c604370c7 100644
  &ecspi1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
-@@ -476,6 +549,20 @@ MX8MQ_IOMUXC_ECSPI2_SS0_GPIO5_IO13		0x19
+@@ -478,6 +551,20 @@ MX8MQ_IOMUXC_ECSPI2_SS0_GPIO5_IO13		0x19
  		>;
  	};
  
@@ -140,7 +140,7 @@ index ec08ff560263..2b3c604370c7 100644
  	pinctrl_ecspi1: ecspi1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_ECSPI1_SCLK_ECSPI1_SCLK		0x82
-@@ -651,6 +738,12 @@ MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
+@@ -659,6 +746,12 @@ MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
  		>;
  	};
  
