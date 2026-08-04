@@ -197,8 +197,31 @@ The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 
 The header card on sai1 had the same 24 bit bug and failed identically while
 Kodi was cycling devices; it went quiet once Kodi settled on HDMI rather than
-being fixed. `0014` now pins 32 bit slots there too, which also lets 16 bit
+being fixed. `0009` now pins 32 bit slots there too, which also lets 16 bit
 through since 1.536 MHz divides 24.576 MHz evenly as well.
+
+### The 24 bit slot width is a property of the SAI, not of any codec
+
+The analog card had the same bug and it went unnoticed for longer, because the
+board is normally used with a display and Kodi settles on HDMI. Booting with no
+sink makes both cards flood at once: `-EINVAL` from `fsl_sai_hw_params()` with
+`failed to derive required Tx rate: 2304000`, several times a second, forever.
+`0010` now pins 32 bit slots as well, so all three cards say the same thing.
+
+That is the right shape for the fix. The constraint is `fsl_sai_set_bclk()`
+rejecting odd dividers off a 24.576 MHz root, so it applies to every card on
+this SoC regardless of what is on the far end — a spdif-dit stand-in, an
+rt5645, or the MHDP bridge. Checked before assuming it was safe for the rt5645:
+`rt5645_hw_params()` computes `bclk_ms` from the frame size but only writes it
+for AIF2 (`RT5645_I2S_BCLK_MS2`). Our card is on AIF1, which gets only
+`I2S_PD1` and the data-length bits, so the codec takes the width from its own
+register and ignores the padding — no ratio for the padding to disagree with.
+
+Consequence worth recording: **the analog card has never been exercised at
+24 bit.** Every test that reached the hardware was `speaker-test`, which is
+`S16_LE`, and 1.536 MHz divides evenly, so 16 bit always got through. Kodi never
+got past `hw_params` on it at all. So this is not the explanation for the
+analog silence — it is the explanation for why Kodi could not even try.
 
 Display, both PCIe ports and wifi come up together, and **the kernel command
 line now carries no workarounds at all** — `clk_ignore_unused` went when `0006`
