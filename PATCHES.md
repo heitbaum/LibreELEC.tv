@@ -334,7 +334,7 @@ it reports untracked patches for the tracked ref (master) only. Classify or drop
 
 `tools/patch-scan.py` only walks `packages/`, so nothing under `projects/` is
 reconciled by it or was tracked here at all. The Coral Dev Board set is the one
-body of work large enough to need rows. It is **dev only** — 18 patches under
+body of work large enough to need rows. It is **dev only** — 19 patches under
 `projects/NXP/devices/iMX8/patches/linux/`, all against linux 7.2-rc5, applying
 with no fuzz and no offsets other than `0021`'s. Full working notes are in
 `NXP.md`; this table is the submission state.
@@ -348,11 +348,12 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | **applied** | Mark Brown, [`588852647b81`](https://git.kernel.org/broonie/sound/c/588852647b81) on `broonie/sound.git for-7.2` 2026-08-04. Drop when the kernel is bumped past it; that also satisfies `0010`'s dependency from the base |
 | `0006` phanbell keep the GPU rail on (buck3 always-on) | pending | **ready**; `buck3` is already in mainline phanbell |
 | `0007` phanbell do not hardcode a cooling state | pending | **ready**; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
-| `0008` phanbell i2c2, i2c3, ecspi1 and the pin hogs | pending | **ready**; depends on nothing. Carries the original patch's pmic interrupt retune, which looks like a mistake - see the note below |
-| `0009` phanbell 40-pin header I2S card on sai1 | pending | **ready**; spdif-dit stand-in, 32 bit slots |
-| `0010` phanbell rt5645 analog audio | pending | needs `0005` and `0008` (appends into its `&i2c3`) |
-| `0011` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Includes the VPH rail |
-| `0012` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` - the QCA6174 is a combo part and `0011` hogs `WL_REG_ON` (GPIO3_IO11), which powers the Bluetooth side as much as the wifi radio |
+| `0008` phanbell enable i2c2 and i2c3 | pending | **ready**; depends on nothing |
+| `0009` phanbell mux the 32 kHz reference clock pad | pending | **ready**; the one hog entry with a real signal behind it |
+| `0010` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
+| `0011` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0010` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
+| `0012` phanbell rt5645 analog audio | pending | needs `0005` and `0008` (appends into its `&i2c3`) |
+| `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
 | `0021` Cadence MHDP8501 HDMI/DP (Sandor Yu, `[PATCH v20 0/8]`) | imported | ~6600 lines, unmerged upstream; carried verbatim, needed three 7.2 fixes |
 | `0022` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs `0021` |
 | `0023` imx8mq-pico-pi DCSS + HDMI (Lukas Rusak) | imported | downstream, needs `0021` |
@@ -360,24 +361,29 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0006` through `0009`. `0005` is
-already applied, which also clears `0010` — once the kernel carries
-`588852647b81` the Kconfig half comes from the base and `0010` needs only `0008`.
-Everything from `0011` on is genuinely blocked.
+Submittable now, with nothing waiting on them: `0006` through `0009`, and `0012`
+since `0005` is already applied — once the kernel carries `588852647b81` the
+Kconfig half comes from the base and `0012` needs only `0008`. `0010`, `0011` and
+everything from `0021` on are genuinely blocked.
 
 Three of these dependencies are functional rather than textual, and reading patch
-context does not find that class at all. `0012` applies to a tree without `0011`
-and then fails to download firmware, because nothing has driven `WL_REG_ON`.
-`0010` applied without `0005` would describe a codec whose driver cannot be
-enabled, since `SND_SOC_RT5645` was promptless upstream until `588852647b81`. `0011`'s dependency on
-`0003` is the same shape: it is about what `REF_USE_PAD` defaults to, so nothing
-in the diff hints at it.
+context does not find that class at all. `0011` applies to a tree without `0010`
+and then fails to download firmware, because nothing has enabled WL_REG_ON.
+`0012` applied without `0005` would describe a codec whose driver cannot be
+enabled, since `SND_SOC_RT5645` was promptless upstream until `588852647b81`.
+`0010`'s dependency on `0003` is the same shape: it is about what `REF_USE_PAD`
+defaults to, so nothing in the diff hints at it.
 
-One oddity carried through from the original Coral patch and deliberately not
-changed: `0008` retunes the pmic interrupt from `IRQ_TYPE_LEVEL_LOW` to
-`GPIO_ACTIVE_LOW`, which is 1, i.e. `IRQ_TYPE_EDGE_RISING`. The board works, so
-it is not fatal, but it reads as a mistake rather than an intent and should be
-settled before `0008` is posted.
+`0008` through `0013` were rebuilt for upstream in `3d25559614`. The old `0008`
+bundled five unrelated changes; what came out of it, and what was dropped as
+downstream-only or certain to be rejected, is recorded in that commit message.
+The pmic `IRQ_TYPE_LEVEL_LOW` → `GPIO_ACTIVE_LOW` retune noted here previously is
+one of the things dropped, so that question is settled.
+
+**Not yet booted.** The rework makes one behavioural change: WL_REG_ON was a
+gpio-hog and is now a `regulator-fixed` consumed as pcie0's `vpcie-supply`. Wifi
+and Bluetooth both depend on it, so a boot test is needed before any of this is
+posted.
 
 ### Needs triage
 
