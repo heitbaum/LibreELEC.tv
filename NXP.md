@@ -59,6 +59,53 @@ us out, returning nothing because card 0 happened to be the dummy that boot.
 whether the header card earns its place on a media appliance at all, given it
 has no codec and destabilises the numbering; that is the only thing `0014` buys.
 
+### Analog audio - silent on this board, on two kernels
+
+The card enumerates, every layer measures correct, and it produces nothing.
+Established on hardware 2026-08-04/05.
+
+On LibreELEC, with the mixer switches set during playback:
+
+- The DAPM graph completes end to end and `bias_level` reads `On` - `AIF1RX`,
+  `DAC1 MIXL`, `Stereo DAC MIXL`, `DAC L1`, `DAC 1`, `HPO MIX`, `HP amp` and
+  `HPOL` all `On` with non-zero in/out counts.
+- SAI2 TX is enabled with an internally generated bit clock at 1.536 MHz,
+  2 slots x 16 bit, I2S framing, channel 0 enabled, FIFO non-empty.
+- Codec registers agree: `0x70` slave, `0x19` volume 0 dB, `0x2a` and `0x45`
+  unmuted, `0x61` I2S1 and both DACs powered, `0x65` LDO2 up.
+- The SAI1 and SAI2 pinmuxes are byte for byte the board's own, decoded from
+  `vendor.dts` against `imx8mq-pinfunc.h`.
+
+**Then the same test was run on Mendel and it is silent too.** The shipped OS,
+its own `google,edgetpu-audio-card` machine driver and its own devicetree, with
+the identical set of switches turned on and the headphone at +1.5 dB, produces
+nothing either. So this is not a regression and not caused by these patches.
+
+Note the vendor's mixer is *also* all-off by default while playing - every
+`HPO`, `SPK`, `SPOL`, `SPOR`, `LOUT`, `OUT MIX` and `PDM` switch. Mendel's audio
+must come from a userspace UCM or PulseAudio profile that a bare root shell does
+not load. So "the vendor is silent" on its own was never hardware evidence; only
+the run with the switches explicitly set is.
+
+Useful things confirmed by the vendor dump:
+
+- `Headphone Jack` (read-only) reads `on`, so the vendor's jack detect sees the
+  headphones. Our muxed pad reads `hi` with `GPIO_ACTIVE_HIGH`, the same sense,
+  which confirms `fe8d4c3aba`. `snd_soc_rt5645.quirk=520` inverts that and must
+  not be used.
+- `RT5645 IF1 DAC1 L/R Mux` are `Slot0`/`Slot1` on the vendor. We never set
+  those; worth checking our defaults if this is ever revisited.
+
+Remaining possibilities, in order of cheapness: the headphones themselves, an
+OMTP-wired headset in a CTIA jack, then the jack or codec analog stage being
+dead or unpopulated. Not worth more software effort - treat the analog card as
+non-functional and do not add mixer setup for it to `soundconfig`.
+
+Two real defects did come out of the investigation and are fixed: the unmuxed
+hp-detect pad (`fe8d4c3aba`) and HDMI audio programming N/CTS with no active
+mode (`78357d8fcc`).
+
+
 ### HDMI audio
 
 Working: `speaker-test -D default:CARD=HDMI` is audible and Kodi's GUI sounds
@@ -141,7 +188,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | i2c2, i2c3, ecspi1 and the pin hogs | **ready**; depends on nothing |
 | `0009` | 40-pin header I2S card on SAI1 | **ready**, **working** |
-| `0010` | rt5645 analog audio via `simple-audio-card` | **working**; needs `0005` and `0008` |
+| `0010` | rt5645 analog audio via `simple-audio-card` | enumerates, **no sound on any kernel** - see above; needs `0005` and `0008` |
 | | **0011–0020 — blocked behind `0003`** | |
 | `0011` | Enable pcie0 and pcie1, with the VPH rail | needs `0003`; carries the monitor clock description |
 | `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `WL_REG_ON` |
