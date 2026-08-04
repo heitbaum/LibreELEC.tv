@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Wed, 5 Aug 2026 12:00:00 +1000
-Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable the rt5645 analog audio
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Enable the rt5645 analog audio
 
 The board has an rt5645 on i2c3 driving the 3.5 mm headphone jack, its
 microphone and two on-board DMICs, fed by sai2.

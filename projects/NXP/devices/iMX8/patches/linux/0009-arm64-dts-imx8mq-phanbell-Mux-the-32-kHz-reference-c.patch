@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Wed, 5 Aug 2026 12:00:00 +1000
-Subject: [PATCH] arm64: dts: imx8mq-phanbell: mux the 32 kHz reference clock
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Mux the 32 kHz reference clock
  pad
 
 GPIO1_IO00 carries the 32.768 kHz reference into ANAMIX on this board, so

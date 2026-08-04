@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Mon, 3 Aug 2026 14:37:04 +1000
-Subject: [PATCH 26/26] arm64: dts: imx8mq-phanbell: enable HDMI audio
+Subject: [PATCH 26/26] arm64: dts: imx8mq-phanbell: Enable HDMI audio
 
 sai4 is wired to the HDMI transmitter inside the SoC, so it needs no
 pinmux, only a root clock. Point a simple-audio-card at it and at the

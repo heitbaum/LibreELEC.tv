@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Wed, 5 Aug 2026 12:00:00 +1000
-Subject: [PATCH] arm64: dts: imx8mq-phanbell: describe the QCA6174 Bluetooth
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Describe the QCA6174 Bluetooth
 
 The Bluetooth half of the QCA6174 hangs off uart2 with hardware flow
 control and an enable GPIO, and takes its 32.768 kHz sleep clock from the

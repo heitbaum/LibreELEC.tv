@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Wed, 5 Aug 2026 12:00:00 +1000
-Subject: [PATCH] arm64: dts: imx8mq-phanbell: enable pcie0 and pcie1
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Enable pcie0 and pcie1
 
 pcie0 carries an Atheros QCA6174 and pcie1 a Google Edge TPU. They take
 their reference clocks from opposite places, which is most of the work here.
