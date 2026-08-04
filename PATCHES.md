@@ -380,10 +380,21 @@ downstream-only or certain to be rejected, is recorded in that commit message.
 The pmic `IRQ_TYPE_LEVEL_LOW` → `GPIO_ACTIVE_LOW` retune noted here previously is
 one of the things dropped, so that question is settled.
 
-**Not yet booted.** The rework makes one behavioural change: WL_REG_ON was a
-gpio-hog and is now a `regulator-fixed` consumed as pcie0's `vpcie-supply`. Wifi
-and Bluetooth both depend on it, so a boot test is needed before any of this is
-posted.
+**Booted clean on 7.2-rc6, build 20260804161745**, which exercises both things the
+rework changed rather than merely rearranged:
+
+- WL_REG_ON went from a gpio-hog to a `regulator-fixed` consumed as pcie0's
+  `vpcie-supply`. ath10k enumerates the QCA6174 and loads firmware, and
+  `QCA setup on UART is completed`, so both halves of the combo part are
+  powered. The intended ordering change is visible: pcie0's host bridge appears
+  at 0.883 s where it used to appear at 0.746 s, i.e. the probe now defers on
+  the regulator instead of racing the hog.
+- the pmic interrupt went back to `IRQ_TYPE_LEVEL_LOW`. `bd718xx-pwrkey`
+  registers and the boot proceeds with no interrupt storm, which was the one way
+  the vendor's edge-triggered value could have been deliberate.
+
+Dropping `ecspi1` and ten of the eleven hogged pins broke nothing, and `hoggrp`
+still resolves with its single remaining pin.
 
 ### Needs triage
 
