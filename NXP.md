@@ -16,8 +16,30 @@ otherwise.
 | pcie0 `33800000` | Atheros QCA6174 wifi `168c:003e`, driven by `ath10k_pci` | internal PLL, SoC drives 100 MHz out on CLK2_P/N |
 | pcie1 `33c00000` | Edge TPU `1ac1:089a`, driven by `apex` (staging, not in our build) | off-chip oscillator on the pad |
 
-pcie0 negotiates Gen1 (`fsl,max-link-speed = <1>`), pcie1 Gen2. Both match what
-the vendor Mendel image does.
+pcie0 negotiates Gen1 (`fsl,max-link-speed = <1>`), pcie1 Gen2. `imx8mq.dtsi`
+sets `<2>` on both controllers, so pcie0's `<1>` is our override and pcie1
+inherits the base value.
+
+**That override matches the endpoint rather than throttling it**, which was worth
+checking because it is not stated anywhere in the datasheet - the only basis on
+record was "the vendor Mendel image does the same". `max_link_speed` in sysfs
+settles it:
+
+| device | max | current |
+|---|---|---|
+| `0000:00:00.0` pcie0 root port | 2.5 GT/s | 2.5 GT/s |
+| `0000:01:00.0` QCA6174 | 2.5 GT/s | 2.5 GT/s |
+| `0001:00:00.0` pcie1 root port | 5.0 GT/s | 5.0 GT/s |
+| `0001:01:00.0` Edge TPU | 5.0 GT/s | 5.0 GT/s |
+
+The QCA6174 advertises 2.5 GT/s as its own capability, so Gen1 is all it can do.
+Note the root port row proves nothing on its own: dwc rewrites the root port's
+`LNKCAP` from `fsl,max-link-speed` (`pci-imx6.c:1023`), so it only ever reports
+back what the devicetree told it. The endpoint row is the evidence.
+
+Keep the property rather than dropping it: without it pcie0 would inherit `<2>`,
+and `pci-imx6.c:1023` would program a Gen2 target speed and attempt a speed
+change that can only fall back.
 
 Mendel binds `hif_pci` (Qualcomm's out-of-tree qcacld) to the wifi; we use
 upstream `ath10k`, which wants entirely different firmware.
