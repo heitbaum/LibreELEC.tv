@@ -83,10 +83,28 @@ has no codec and destabilises the numbering; that is the only thing `0014` buys.
 
 ### Analog audio - WORKING. It was never a hardware, devicetree or driver fault
 
-Resolved on hardware 2026-08-05. Both channels, clean 440 Hz. The card was
-correct throughout; **it had no mixer initialisation**, so it sat at Realtek's
-power-on defaults, which mute the entire DAC-to-headphone path. Fixed by a
-`soundconfig` stanza, `b07e398f62`.
+Resolved on hardware. Both channels, clean 440 Hz. The card was correct
+throughout - **two** things were missing, and each alone leaves it silent with
+everything measuring right:
+
+1. **No mixer initialisation.** The DAC-to-headphone path is muted at Realtek's
+   power-on defaults and nothing unmutes it: `simple-audio-card` sets no mixer
+   state and the DAPM switches along the path are user controls defaulting off.
+   Fixed by a `soundconfig` stanza, `b07e398f62`.
+2. **No initial jack detect.** `rt5645_jack_detect()` force enables the `LDO2`
+   and `Mic Det Power` supplies that `HP amp` depends on, and programs
+   `RT5645_CHARGE_PUMP` away from its `0x0c06` reset value. The only initial
+   detect is the `rt5645_irq(0, rt5645)` at the end of
+   `rt5645_set_jack_detect()`, which needs a machine driver -
+   `simple-audio-card` has none. So state is only ever sampled from an edge on
+   `hp-detect-gpios`, and a headphone already in the socket at boot is never
+   noticed. Fixed by `0014`, `1a5c9410ec`.
+
+Point 2 is why the mixer fix appeared to stop working after a reboot: the
+session that first produced sound had the jack replugged at some point, which
+silently supplied the missing half. With `b07e398f62` alone, a fresh boot gives
+`/proc/interrupts` rt5645 count 0, register `091: 0c06`, and silence; a replug
+takes the count odd and `091` to `0e06` and the card plays.
 
 The working register state, read from
 `/sys/kernel/debug/regmap/2-001a-nocache/registers` *during playback*:
