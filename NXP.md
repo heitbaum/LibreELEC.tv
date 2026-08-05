@@ -81,33 +81,53 @@ us out, returning nothing because card 0 happened to be the dummy that boot.
 whether the header card earns its place on a media appliance at all, given it
 has no codec and destabilises the numbering; that is the only thing `0014` buys.
 
-### Analog audio - silent on this board, on two kernels
+### Analog audio - WORKING. It was never a hardware, devicetree or driver fault
 
-The card enumerates, every layer measures correct, and it produces nothing.
-Established on hardware 2026-08-04/05.
+Resolved on hardware 2026-08-05. Both channels, clean 440 Hz. The card was
+correct throughout; **it had no mixer initialisation**, so it sat at Realtek's
+power-on defaults, which mute the entire DAC-to-headphone path. Fixed by a
+`soundconfig` stanza, `b07e398f62`.
 
-On LibreELEC, with the mixer switches set during playback:
+The working register state, read from
+`/sys/kernel/debug/regmap/2-001a-nocache/registers` *during playback*:
 
-- The DAPM graph completes end to end and `bias_level` reads `On` - `AIF1RX`,
-  `DAC1 MIXL`, `Stereo DAC MIXL`, `DAC L1`, `DAC 1`, `HPO MIX`, `HP amp` and
-  `HPOL` all `On` with non-zero in/out counts.
-- SAI2 TX is enabled with an internally generated bit clock at 1.536 MHz,
-  2 slots x 16 bit, I2S framing, channel 0 enabled, FIFO non-empty.
-- Codec registers agree: `0x70` slave, `0x19` volume 0 dB, `0x2a` and `0x45`
-  unmuted, `0x61` I2S1 and both DACs powered, `0x65` LDO2 up.
-- The SAI1 and SAI2 pinmuxes are byte for byte the board's own, decoded from
-  `vendor.dts` against `imx8mq-pinfunc.h`.
+| reg | value | |
+|---|---|---|
+| `002` | `0808` | `HP_VOL` - mutes (15/7) and channel switch (14/6) all clear |
+| `029` | `8080` | `AD_DA_MIXER` - `DAC1` in (14/6 clear), Stereo ADC out (15/7 set) |
+| `02a` | `1616` | `STO_DAC_MIXER` - L1→L and R1→R only, no cross-mix |
+| `045` | `4000` | `HPO_MIXER` - `HPVOL` in (13 clear), direct `DAC1` out (14 set) |
+| `066` | `0c20` | `PWR_VOL` - `PWR_HV_L` and `PWR_HV_R` both up |
 
-**Then the same test was run on Mendel and it is silent too.** The shipped OS,
-its own `google,edgetpu-audio-card` machine driver and its own devicetree, with
-the identical set of switches turned on and the headphone at +1.5 dB, produces
-nothing either. So this is not a regression and not caused by these patches.
+Three things made this take far longer than it should have:
 
-Note the vendor's mixer is *also* all-off by default while playing - every
-`HPO`, `SPK`, `SPOL`, `SPOR`, `LOUT`, `OUT MIX` and `PDM` switch. Mendel's audio
-must come from a userspace UCM or PulseAudio profile that a bare root shell does
-not load. So "the vendor is silent" on its own was never hardware evidence; only
-the run with the switches explicitly set is.
+- **`0xc8c8` in `HP_VOL` *is* the reset default.** The note that used to be here
+  claimed `0x2a` and `0x45` were "unmuted" and read the DAPM widget states as
+  confirmation. A DAPM widget reading `On` proves the path is *powered*, not that
+  the mixer switches along it are open. Comparing each register against its
+  entry in `rt5645_reg[]` would have found this on day one.
+- **The `HP_VOL` mutes are AUTODISABLE controls on the `HPOVOL` widget.** So the
+  obvious route - `DAC 1 → HPO MIX` via `HPO MIX DAC1 Switch` - leaves the amp
+  muted no matter what you set, because with the `HPOVOL` branch idle DAPM
+  re-asserts the mute bits. The path has to go `DAC L1 → HPOVOL MIXL → HPOVOL →
+  HPO MIX` so the branch is powered. That also puts the headphone volume control
+  in circuit, which the direct switch bypasses.
+- **Turning every switch on is not a safe probe.** It produced a loud squeal that
+  looked like success but was not the DAC at all: `029` read `4040`, i.e. bit 14
+  set (`DAC1` **off**) and bit 15 clear (Stereo ADC **on**). `RECMIXL HPOL` /
+  `RECMIXR HPOR` route the headphone output back into the record mixer, so with
+  the ADC into `DAC1 MIX` the loop oscillates. The tone was never getting
+  through.
+
+**Mendel being silent was never evidence.** Its mixer is also all-off while
+playing - every `HPO`, `SPK`, `SPOL`, `SPOR`, `LOUT`, `OUT MIX` and `PDM`
+switch - so its audio comes from a userspace UCM or PulseAudio profile a bare
+root shell does not load. Same root cause, different distro.
+
+Still true and worth keeping: SAI2 TX runs at 1.536 MHz for 16 bit and 3.072 MHz
+for 24 bit, 2 slots, I2S framing, FIFO non-empty; and the SAI1/SAI2 pinmuxes are
+byte for byte the board's own, decoded from `vendor.dts` against
+`imx8mq-pinfunc.h`.
 
 Useful things confirmed by the vendor dump:
 
@@ -147,17 +167,13 @@ and datasheet give:
 So the devicetree is not the problem, which matches everything measuring
 correct.
 
-The internal ADC-to-DAC loopback (DMIC into `DAC1 MIX` via
-`DAC1 MIX* Stereo ADC Switch`) was tried and is also silent, but that test has
-two failure points in series - the DMIC capture path and the HPO output path -
-so it does not isolate either.
-
-The test that would isolate the output stage uses no DAC, ADC or I2S: a CTIA
-headset's microphone through `BST1` -> `HPOVOL MIXL` -> `HPOVOL` ->
-`HPO MIX (HPVOL Switch)` -> `HP amp` -> `HPOL`, entirely analog. Audible means
-the output stage works and the fault is digital delivery. Silent means the stage
-does not pass signal despite reading unmuted, which the click shows is not the
-amp itself. Not yet run.
+The planned isolation test - a CTIA headset's microphone through `BST1` ->
+`HPOVOL MIXL` -> `HPOVOL` -> `HPO MIX` -> `HP amp` -> `HPOL`, entirely analog -
+was never needed. Enabling `HPOVOL MIXL DAC1` for a different reason (to power
+the branch so the AUTODISABLE mutes would clear) opened the DAC path through the
+same mixer and the card played. The earlier ADC-to-DAC loopback attempt was
+silent for the same reason everything else was: the mutes downstream of it were
+still asserted.
 
 One digital-side assumption also remains unverified: the pinmux matches the
 board's pad list, but nothing has confirmed the SAI2 TX pin actually toggles.
@@ -260,9 +276,10 @@ Front Left and Front Right. So 32 bit slots do satisfy the divider at 24 bit,
 and `rt5645_hw_params()` not writing a BCLK-to-frame ratio on AIF1 means the
 codec does not object to the padding. Both audio log floods are now closed.
 
-The card still makes no sound, which is the pre-existing analog problem and
-unrelated to any of this — the SAI now accepts the format it always should
-have, and that is all this fixes.
+At the time this was measured the card still made no sound, which was the
+pre-existing mixer problem and unrelated to the slot width - the SAI now accepts
+the format it always should have, and that is all this fixes. The silence itself
+was resolved separately; see the analog audio section above.
 
 The N/CTS table only knows the seven CTA rates (25200/27000/54000/74250/148500/
 297000/594000 kHz). Every mode we care about is in it, but an odd one such as
@@ -339,7 +356,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 
 | patch | what | status |
 |---|---|---|
-| | **0001–0010 — submitted upstream 2026-08-02** | |
+| | **0001–0004 — submitted upstream 2026-08-02** | |
 | `0001` | `PCI: imx6: Avoid dereferencing a NULL clock name` | sent standalone |
 | `0002` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | series 1/3 |
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3 |
@@ -347,12 +364,13 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **applied upstream** `588852647b81`, broonie/sound `for-7.2` |
 | `0006` | Keep the GPU rail on | **ready**; fixes `buck3: disabling`, problem 4 |
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
-| `0008` | i2c2, i2c3, ecspi1 and the pin hogs | **ready**; depends on nothing |
-| `0009` | 40-pin header I2S card on SAI1 | **ready**, **working** |
-| `0010` | rt5645 analog audio via `simple-audio-card` | enumerates, **no sound on any kernel** - see above; needs `0005` and `0008` |
-| | **0011–0020 — blocked behind `0003`** | |
-| `0011` | Enable pcie0 and pcie1, with the VPH rail | needs `0003`; carries the monitor clock description |
-| `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `WL_REG_ON` |
+| `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing |
+| `0009` | Mux the 32 kHz reference clock pad | **ready**; depends on nothing |
+| `0012` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0005` and `0008` |
+| `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, consider keeping local |
+| | **0010–0011 — blocked behind `0003`** | |
+| `0010` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
+| `0011` | QCA6174 Bluetooth on uart2 | **working**; needs `0010` for `reg_wlan` |
 | | **0021–0030 — imported HDMI stack** | |
 | `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
@@ -360,6 +378,8 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0026` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0025` |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
+`0008`-`0013` were rebuilt for upstream in `3d25559614`; see `PATCHES.md` for
+what was dropped and why.
 
 ## Verified findings
 
