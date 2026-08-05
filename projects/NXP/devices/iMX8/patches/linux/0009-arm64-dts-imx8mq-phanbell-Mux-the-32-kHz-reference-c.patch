@@ -4,14 +4,13 @@ Date: Wed, 5 Aug 2026 12:00:00 +1000
 Subject: [PATCH] arm64: dts: imx8mq-phanbell: Mux the 32 kHz reference clock
  pad
 
-GPIO1_IO00 carries the 32.768 kHz reference into ANAMIX on this board, so
-it has to be muxed away from its GPIO reset function. Nothing claims the pad
-as a consumer, so it goes in a hog group.
+Mux GPIO1_IO00 as the ANAMIX 32.768 kHz reference input rather than leave
+it in its GPIO reset function. Nothing claims the pad as a consumer, so it
+goes in a hog group.
 
-The vendor devicetree hogs ten further pins alongside it, all GPIOs on the
-40-pin header with no consumer anywhere in the tree. Those only set pad
-configuration on pins the kernel does not otherwise touch, so they are left
-out.
+The vendor devicetree hogs ten further pins alongside it, none of which has
+a consumer anywhere in the tree. Those only set pad configuration on pins
+the kernel does not otherwise touch, so they are left out.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---

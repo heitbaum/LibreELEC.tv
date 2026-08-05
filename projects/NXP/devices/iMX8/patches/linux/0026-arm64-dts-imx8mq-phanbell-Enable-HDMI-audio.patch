@@ -15,20 +15,17 @@ sound-dai phandle, and the parent is the bridge.
 The root clock is the same 24.576 MHz from AUDIO_PLL1 that sai2 uses
 for the analog card, which covers the 48 kHz family.
 
-Declare both audio PLL families. fsl_sai only knows how to move its mclk
-between the 8 kHz and 11.025 kHz families if the node names them as pll8k
-and pll11k, which fsl_asoc_reparent_pll_clocks() then selects between by
-requested rate. Without them the mclk is stuck on whatever
-assigned-clock-rates set, and since fsl_sai advertises 8 kHz to 192 kHz
-continuously, ALSA never resamples and a 44.1 kHz stream fails in
-hw_params instead: 44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by
-that is 8.707.
+Declare both audio PLL families. fsl_sai only moves its mclk between the
+8 kHz and 11.025 kHz families if the node names them as pll8k and pll11k,
+which fsl_asoc_reparent_pll_clocks() then selects between by requested
+rate. Without them the mclk is stuck at whatever assigned-clock-rates set
+while 44100 is still on the advertised rate list, so ALSA is offered a rate
+the clock cannot produce, does not resample, and hw_params fails:
+44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by that is 8.707.
 
 The card needs mclk-fs for that to be reached at all: the reparent
 happens in fsl_sai_set_dai_sysclk(), and simple-audio-card only calls
 set_sysclk when a ratio is given.
-
-Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 
 The cpu dai also needs system-clock-direction-out. Without it
 simple_util_parse_clk() leaves clk_direction at 0, which is
@@ -36,6 +33,8 @@ SND_SOC_CLOCK_IN, and fsl_sai_set_dai_sysclk() opens with
 "if (dir == SND_SOC_CLOCK_IN) return 0". So set_sysclk returns without
 setting the mclk rate and without ever reaching the reparent, silently and
 at every rate.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  .../boot/dts/freescale/imx8mq-phanbell.dts    | 46 +++++++++++++++++++
  arch/arm64/boot/dts/freescale/imx8mq.dtsi     |  1 +

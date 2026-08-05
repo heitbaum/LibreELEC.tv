@@ -7,33 +7,31 @@ The board has an rt5645 on i2c3 driving the 3.5 mm headphone jack, its
 microphone and two on-board DMICs, fed by sai2.
 
 The routing follows the vendor devicetree's DAPM graph with the micbias
-direction corrected: a supply widget has to be the sink, so it is
-"Headphone Mic" -> "micbias1" rather than the other way round.
+pair reordered. micbias1 is a supply widget, and a supply is the source of
+a route rather than its sink - as rt5645's own { "IN1P", NULL, "LDO2" }
+has it - so the sink/source pair is "Headphone Mic", "micbias1".
 
 GPIO5_IO4 carries headphone detect. The pad has to be muxed away from its
 reset function, or both hp-detect-gpios and the codec interrupt point at a
 pad that is still SPDIF_RX. Leaving realtek,jd-mode unset selects the mode
 in which the driver takes jack state from hp-detect-gpios.
 
-The slot width is pinned at 32 bits. With none set fsl_sai_hw_params() takes
-it from the sample width, so a 24 bit open asks for a bit clock of
+The slot width is pinned at 32 bits. With none set fsl_sai_hw_params()
+takes it from the sample width, so a 24 bit open asks for a bit clock of
 48000 * 2 * 24 = 2.304 MHz; fsl_sai_set_bclk() only accepts even dividers
 and 24.576 MHz / 2.304 MHz is 10.67, so hw_params returns -EINVAL. 32 bit
 slots ask for 3.072 MHz, a ratio of 8, and still carry 16 bit at the same
-clock: rt5645_hw_params() takes the data length from params_width() and only
-writes a BCLK-to-frame ratio for AIF2, so on AIF1 the codec ignores the
-padding bits.
+clock: rt5645_hw_params() takes the data length from params_width() and
+only writes a BCLK-to-frame ratio for AIF2, so on AIF1 the codec ignores
+the padding bits.
 
-Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
-
-Declare both audio PLL families. fsl_sai only knows how to move its mclk
-between the 8 kHz and 11.025 kHz families if the node names them as pll8k
-and pll11k, which fsl_asoc_reparent_pll_clocks() then selects between by
-requested rate. Without them the mclk is stuck on whatever
-assigned-clock-rates set, and since fsl_sai advertises 8 kHz to 192 kHz
-continuously, ALSA never resamples and a 44.1 kHz stream fails in
-hw_params instead: 44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by
-that is 8.707.
+Declare both audio PLL families. fsl_sai only moves its mclk between the
+8 kHz and 11.025 kHz families if the node names them as pll8k and pll11k,
+which fsl_asoc_reparent_pll_clocks() then selects between by requested
+rate. Without them the mclk is stuck at whatever assigned-clock-rates set
+while 44100 is still on the advertised rate list, so ALSA is offered a rate
+the clock cannot produce, does not resample, and hw_params fails:
+44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by that is 8.707.
 
 The cpu dai also needs system-clock-direction-out. Without it
 simple_util_parse_clk() leaves clk_direction at 0, which is
@@ -41,6 +39,8 @@ SND_SOC_CLOCK_IN, and fsl_sai_set_dai_sysclk() opens with
 "if (dir == SND_SOC_CLOCK_IN) return 0". So set_sysclk returns without
 setting the mclk rate and without ever reaching the reparent, silently and
 at every rate.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  .../boot/dts/freescale/imx8mq-phanbell.dts    | 84 +++++++++++++++++++
  1 file changed, 84 insertions(+)
