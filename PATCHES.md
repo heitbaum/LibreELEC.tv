@@ -334,7 +334,7 @@ it reports untracked patches for the tracked ref (master) only. Classify or drop
 
 `tools/patch-scan.py` only walks `packages/`, so nothing under `projects/` is
 reconciled by it or was tracked here at all. The Coral Dev Board set is the one
-body of work large enough to need rows. It is **dev only** — 19 patches under
+body of work large enough to need rows. It is **dev only** — 20 patches under
 `projects/NXP/devices/iMX8/patches/linux/`, all against linux 7.2-rc5, applying
 with no fuzz and no offsets other than `0021`'s. Full working notes are in
 `NXP.md`; this table is the submission state.
@@ -353,6 +353,7 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0010` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
 | `0011` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0010` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
 | `0012` phanbell rt5645 analog audio | pending | needs `0005` and `0008` (appends into its `&i2c3`) |
+| `0014` `ASoC: rt5645: Perform the initial jack detect at probe` | pending | **ready**, and an upstream bug rather than a board quirk: any `simple-audio-card` user of rt5645/rt5650 with `hp-detect-gpios` and `jd-mode = 0` is silent until the jack is physically replugged, because nothing calls `rt5645_set_jack_detect()` and so nothing force enables the `LDO2`/`Mic Det Power` supplies `HP amp` depends on. Send to ASoC alongside `0005` |
 | `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
 | `0021` Cadence MHDP8501 HDMI/DP (Sandor Yu, `[PATCH v20 0/8]`) | imported | ~6600 lines, unmerged upstream; carried verbatim, needed three 7.2 fixes |
 | `0022` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs `0021` |
@@ -361,7 +362,7 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0006` through `0009`, and `0012`
+Submittable now, with nothing waiting on them: `0006` through `0009`, `0014`, and `0012`
 since `0005` is already applied — once the kernel carries `588852647b81` the
 Kconfig half comes from the base and `0012` needs only `0008`. `0010`, `0011` and
 everything from `0021` on are genuinely blocked.
@@ -392,6 +393,14 @@ rework changed rather than merely rearranged:
 - the pmic interrupt went back to `IRQ_TYPE_LEVEL_LOW`. `bd718xx-pwrkey`
   registers and the boot proceeds with no interrupt storm, which was the one way
   the vendor's edge-triggered value could have been deliberate.
+
+Audio on the three cards is complete and verified as of 2026-08-06, which took
+four commits beyond the enablement patches - `b07e398f62` (the mixer path is
+muted at reset), `1a5c9410ec`/`0014` (nothing performs the initial jack detect),
+`869864bf5a` (neither audio PLL family was declared) and `1896dce677` (the SAI
+was never marked as the system clock provider, so the mclk rate was never set at
+all). All three cards now play 44.1 kHz natively and 48 kHz. Working notes in
+`NXP.md`.
 
 Dropping `ecspi1` and ten of the eleven hogged pins broke nothing, and `hoggrp`
 still resolves with its single remaining pin.
