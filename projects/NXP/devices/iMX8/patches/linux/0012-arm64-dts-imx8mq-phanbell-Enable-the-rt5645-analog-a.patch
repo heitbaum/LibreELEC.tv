@@ -6,10 +6,12 @@ Subject: [PATCH] arm64: dts: imx8mq-phanbell: Enable the rt5645 analog audio
 The board has an rt5645 on i2c3 driving the 3.5 mm headphone jack, its
 microphone and two on-board DMICs, fed by sai2.
 
-The routing follows the vendor devicetree's DAPM graph with the micbias
-pair reordered. micbias1 is a supply widget, and a supply is the source of
-a route rather than its sink - as rt5645's own { "IN1P", NULL, "LDO2" }
-has it - so the sink/source pair is "Headphone Mic", "micbias1".
+The vendor kernel drives this codec from a machine driver of its own,
+"google,edgetpu-audio-card", so its devicetree carries no widgets or
+routing and the graph here is rebuilt for simple-audio-card. micbias1 is a
+supply widget, and a supply is the source of a route rather than its sink -
+as rt5645's own { "IN1P", NULL, "LDO2" } has it - so the sink/source pair
+is "Headphone Mic", "micbias1".
 
 GPIO5_IO4 carries headphone detect. The pad has to be muxed away from its
 reset function, or both hp-detect-gpios and the codec interrupt point at a
