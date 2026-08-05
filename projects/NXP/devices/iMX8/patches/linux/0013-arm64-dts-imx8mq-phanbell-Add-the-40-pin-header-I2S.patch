@@ -12,15 +12,28 @@ The slot width is pinned at 32 bits for the same reason as the analog
 card.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+
+Declare both audio PLL families. fsl_sai only knows how to move its mclk
+between the 8 kHz and 11.025 kHz families if the node names them as pll8k
+and pll11k, which fsl_asoc_reparent_pll_clocks() then selects between by
+requested rate. Without them the mclk is stuck on whatever
+assigned-clock-rates set, and since fsl_sai advertises 8 kHz to 192 kHz
+continuously, ALSA never resamples and a 44.1 kHz stream fails in
+hw_params instead: 44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by
+that is 8.707.
+
+The card needs mclk-fs for that to be reached at all: the reparent
+happens in fsl_sai_set_dai_sysclk(), and simple-audio-card only calls
+set_sysclk when a ratio is given.
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 42 +++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 54 +++++++++++++++++++
+ 1 file changed, 54 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index da6c46816b5e..2c246ca3b895 100644
+index 4dd4295d8c2d..2a903d956059 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -96,6 +96,28 @@ simple-audio-card,codec {
+@@ -96,6 +96,29 @@ simple-audio-card,codec {
  			sound-dai = <&rt5645>;
  		};
  	};
@@ -34,6 +47,7 @@ index da6c46816b5e..2c246ca3b895 100644
 +		compatible = "simple-audio-card";
 +		simple-audio-card,name = "40-pin Header";
 +		simple-audio-card,format = "i2s";
++		simple-audio-card,mclk-fs = <256>;
 +
 +		/* 32 bit slots, for the same reason as the analog card */
 +		simple-audio-card,cpu {
@@ -49,13 +63,24 @@ index da6c46816b5e..2c246ca3b895 100644
  };
  
  &A53_0 {
-@@ -415,6 +437,16 @@ &pcie1 {
+@@ -415,6 +438,27 @@ &pcie1 {
  	status = "okay";
  };
  
 +&sai1 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_sai1>;
++	/*
++	 * pll8k and pll11k let fsl_sai move the mclk between the two
++	 * audio PLL families, so 44.1 kHz rates work as well as 48 kHz.
++	 */
++	clocks = <&clk IMX8MQ_CLK_SAI1_IPG>,
++		 <&clk IMX8MQ_CLK_SAI1_ROOT>,
++		 <&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_CLK_DUMMY>,
++		 <&clk IMX8MQ_AUDIO_PLL1_OUT>,
++		 <&clk IMX8MQ_AUDIO_PLL2_OUT>;
++	clock-names = "bus", "mclk1", "mclk2", "mclk3",
++		      "pll8k", "pll11k";
 +	assigned-clocks = <&clk IMX8MQ_CLK_SAI1>;
 +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
 +	assigned-clock-rates = <24576000>;
@@ -66,7 +91,7 @@ index da6c46816b5e..2c246ca3b895 100644
  &sai2 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_sai2>;
-@@ -583,6 +615,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -594,6 +638,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  

@@ -25,12 +25,21 @@ writes a BCLK-to-frame ratio for AIF2, so on AIF1 the codec ignores the
 padding bits.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+
+Declare both audio PLL families. fsl_sai only knows how to move its mclk
+between the 8 kHz and 11.025 kHz families if the node names them as pll8k
+and pll11k, which fsl_asoc_reparent_pll_clocks() then selects between by
+requested rate. Without them the mclk is stuck on whatever
+assigned-clock-rates set, and since fsl_sai advertises 8 kHz to 192 kHz
+continuously, ALSA never resamples and a 44.1 kHz stream fails in
+hw_params instead: 44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by
+that is 8.707.
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 72 +++++++++++++++++++
- 1 file changed, 72 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 83 +++++++++++++++++++
+ 1 file changed, 83 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index b7053c270478..da6c46816b5e 100644
+index b7053c270478..4dd4295d8c2d 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -62,6 +62,40 @@ reg_wlan: regulator-wlan {
@@ -93,13 +102,24 @@ index b7053c270478..da6c46816b5e 100644
  };
  
  &fec1 {
-@@ -369,6 +415,16 @@ &pcie1 {
+@@ -369,6 +415,27 @@ &pcie1 {
  	status = "okay";
  };
  
 +&sai2 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_sai2>;
++	/*
++	 * pll8k and pll11k let fsl_sai move the mclk between the two
++	 * audio PLL families, so 44.1 kHz rates work as well as 48 kHz.
++	 */
++	clocks = <&clk IMX8MQ_CLK_SAI2_IPG>,
++		 <&clk IMX8MQ_CLK_SAI2_ROOT>,
++		 <&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_CLK_DUMMY>,
++		 <&clk IMX8MQ_AUDIO_PLL1_OUT>,
++		 <&clk IMX8MQ_AUDIO_PLL2_OUT>;
++	clock-names = "bus", "mclk1", "mclk2", "mclk3",
++		      "pll8k", "pll11k";
 +	assigned-clocks = <&clk IMX8MQ_CLK_SAI2>;
 +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
 +	assigned-clock-rates = <24576000>;
@@ -110,7 +130,7 @@ index b7053c270478..da6c46816b5e 100644
  &uart1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_uart1>;
-@@ -480,6 +536,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
+@@ -480,6 +547,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
  		>;
  	};
  
@@ -123,7 +143,7 @@ index b7053c270478..da6c46816b5e 100644
  	pinctrl_i2c1: i2c1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_I2C1_SCL_I2C1_SCL			0x4000007f
-@@ -521,6 +583,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -521,6 +594,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  

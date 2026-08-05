@@ -14,16 +14,31 @@ sound-dai phandle, and the parent is the bridge.
 
 The root clock is the same 24.576 MHz from AUDIO_PLL1 that sai2 uses
 for the analog card, which covers the 48 kHz family.
+
+Declare both audio PLL families. fsl_sai only knows how to move its mclk
+between the 8 kHz and 11.025 kHz families if the node names them as pll8k
+and pll11k, which fsl_asoc_reparent_pll_clocks() then selects between by
+requested rate. Without them the mclk is stuck on whatever
+assigned-clock-rates set, and since fsl_sai advertises 8 kHz to 192 kHz
+continuously, ALSA never resamples and a 44.1 kHz stream fails in
+hw_params instead: 44100 * 2 * 32 = 2.8224 MHz, and 24.576 MHz divided by
+that is 8.707.
+
+The card needs mclk-fs for that to be reached at all: the reparent
+happens in fsl_sai_set_dai_sysclk(), and simple-audio-card only calls
+set_sysclk when a ratio is given.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 33 +++++++++++++++++++
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 45 +++++++++++++++++++
  arch/arm64/boot/dts/freescale/imx8mq.dtsi     |  1 +
- 2 files changed, 34 insertions(+)
+ 2 files changed, 46 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 9f90123b3f1d..9a5399823e1b 100644
+index 7e4a6a64724d..08d9bb64c0c9 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -119,6 +119,31 @@ simple-audio-card,codec {
+@@ -120,6 +120,32 @@ simple-audio-card,codec {
  		};
  	};
  
@@ -33,6 +48,7 @@ index 9f90123b3f1d..9a5399823e1b 100644
 +		simple-audio-card,format = "i2s";
 +		simple-audio-card,bitclock-master = <&sound_hdmi_cpu>;
 +		simple-audio-card,frame-master = <&sound_hdmi_cpu>;
++		simple-audio-card,mclk-fs = <256>;
 +
 +		/*
 +		 * 32 bit slots regardless of the sample width. sai4 divides its
@@ -55,12 +71,23 @@ index 9f90123b3f1d..9a5399823e1b 100644
  	hdmi_connector: connector {
  		compatible = "hdmi-connector";
  		label = "X11";
-@@ -494,6 +519,14 @@ &sai2 {
+@@ -517,6 +543,25 @@ &sai2 {
  	status = "okay";
  };
  
 +/* sai4 is wired to the HDMI transmitter inside the SoC, so it has no pinmux */
 +&sai4 {
++	/*
++	 * pll8k and pll11k let fsl_sai move the mclk between the two
++	 * audio PLL families, so 44.1 kHz rates work as well as 48 kHz.
++	 */
++	clocks = <&clk IMX8MQ_CLK_SAI4_IPG>,
++		 <&clk IMX8MQ_CLK_SAI4_ROOT>,
++		 <&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_CLK_DUMMY>,
++		 <&clk IMX8MQ_AUDIO_PLL1_OUT>,
++		 <&clk IMX8MQ_AUDIO_PLL2_OUT>;
++	clock-names = "bus", "mclk1", "mclk2", "mclk3",
++		      "pll8k", "pll11k";
 +	assigned-clocks = <&clk IMX8MQ_CLK_SAI4>;
 +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
 +	assigned-clock-rates = <24576000>;
