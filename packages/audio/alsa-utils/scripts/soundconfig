@@ -177,6 +177,27 @@ mixer() {
     # ES8316 headphone jack
     mixer "$card" 'Right Headphone Mixer Right DAC' on
     mixer "$card" 'Left Headphone Mixer Left DAC' on
+
+    # RT5645/RT5650 headphone jack. The whole DAC to headphone path is muted
+    # at reset, so without this the card runs and produces silence. Route via
+    # HPOVOL rather than 'HPO MIX DAC1' - the direct switch bypasses the
+    # headphone volume control, and the HP_VOL mute bits are AUTODISABLE
+    # controls on the HPOVOL widget, so they only clear while that branch is
+    # powered. Deliberately not enabled: 'HPOVOL MIX* BST*'/'INL'/'INR' and
+    # 'RECMIX* HPO*', which close a loopback from the headphone output back
+    # into the record mixer, and 'Stereo DAC MIX* DAC R1'/'DAC L1', which
+    # cross-mix the channels to mono.
+    mixer "$card" 'DAC1 MIXL DAC1' on
+    mixer "$card" 'DAC1 MIXR DAC1' on
+    mixer "$card" 'Stereo DAC MIXL DAC L1' on
+    mixer "$card" 'Stereo DAC MIXR DAC R1' on
+    mixer "$card" 'HPOVOL MIXL DAC1' on
+    mixer "$card" 'HPOVOL MIXR DAC1' on
+    mixer "$card" 'HPOVOL L' on
+    mixer "$card" 'HPOVOL R' on
+    mixer "$card" 'HPO MIX HPVOL' on
+    mixer "$card" 'Headphone Channel' on
+    mixer "$card" 'DAC1' 100%
   fi
 
   exit 0
