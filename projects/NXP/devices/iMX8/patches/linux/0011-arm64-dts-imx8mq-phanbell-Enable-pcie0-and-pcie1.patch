@@ -21,18 +21,14 @@ without any reference to this controller.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 94 +++++++++++++++++++
- 1 file changed, 94 insertions(+)
-
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 2d134eefb765..7860b1814d85 100644
+index b819e644fa54..27837bca7d6e 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -46,6 +46,22 @@ fan: gpio-fan {
- 		pinctrl-0 = <&pinctrl_gpio_fan>;
+@@ -47,6 +47,22 @@ fan: gpio-fan {
  		status = "okay";
  	};
-+
+ 
 +	pcie1_refclk: pcie1-refclk {
 +		compatible = "fixed-clock";
 +		#clock-cells = <0>;
@@ -48,10 +44,11 @@ index 2d134eefb765..7860b1814d85 100644
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&pinctrl_wlan_en>;
 +	};
- };
- 
- &A53_0 {
-@@ -295,6 +311,64 @@ ethphy0: ethernet-phy@0 {
++
+ 	sound-analog {
+ 		compatible = "simple-audio-card";
+ 		simple-audio-card,name = "Coral Analog";
+@@ -342,6 +358,64 @@ ethphy0: ethernet-phy@0 {
  	};
  };
  
@@ -113,10 +110,10 @@ index 2d134eefb765..7860b1814d85 100644
 +	status = "okay";
 +};
 +
- &uart1 {
+ &sai2 {
  	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_uart1>;
-@@ -404,6 +478,20 @@ MX8MQ_IOMUXC_I2C3_SDA_I2C3_SDA			0x4000007f
+ 	pinctrl-0 = <&pinctrl_sai2>;
+@@ -478,6 +552,20 @@ MX8MQ_IOMUXC_I2C3_SDA_I2C3_SDA			0x4000007f
  		>;
  	};
  
@@ -137,7 +134,7 @@ index 2d134eefb765..7860b1814d85 100644
  	pinctrl_pmic: pmicirqgrp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
-@@ -516,4 +604,10 @@ pinctrl_wdog: wdoggrp {
+@@ -600,4 +688,10 @@ pinctrl_wdog: wdoggrp {
  			MX8MQ_IOMUXC_GPIO1_IO02_WDOG1_WDOG_B 0xc6
  		>;
  	};

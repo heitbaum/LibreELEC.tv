@@ -44,16 +44,13 @@ at every rate.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 84 +++++++++++++++++++
- 1 file changed, 84 insertions(+)
-
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index b7053c270478..6bb30e5c5622 100644
+index 2d134eefb765..b819e644fa54 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -62,6 +62,41 @@ reg_wlan: regulator-wlan {
- 		pinctrl-names = "default";
- 		pinctrl-0 = <&pinctrl_wlan_en>;
+@@ -46,6 +46,41 @@ fan: gpio-fan {
+ 		pinctrl-0 = <&pinctrl_gpio_fan>;
+ 		status = "okay";
  	};
 +
 +	sound-analog {
@@ -93,7 +90,7 @@ index b7053c270478..6bb30e5c5622 100644
  };
  
  &A53_0 {
-@@ -288,6 +323,18 @@ &i2c3 {
+@@ -272,6 +307,18 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -112,8 +109,8 @@ index b7053c270478..6bb30e5c5622 100644
  };
  
  &fec1 {
-@@ -369,6 +416,27 @@ &pcie1 {
- 	status = "okay";
+@@ -295,6 +342,27 @@ ethphy0: ethernet-phy@0 {
+ 	};
  };
  
 +&sai2 {
@@ -140,7 +137,7 @@ index b7053c270478..6bb30e5c5622 100644
  &uart1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_uart1>;
-@@ -480,6 +548,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
+@@ -383,6 +451,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
  		>;
  	};
  
@@ -153,7 +150,7 @@ index b7053c270478..6bb30e5c5622 100644
  	pinctrl_i2c1: i2c1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_I2C1_SCL_I2C1_SCL			0x4000007f
-@@ -521,6 +595,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -410,6 +484,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  

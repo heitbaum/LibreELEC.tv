@@ -41,10 +41,10 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  2 files changed, 47 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index b66bd7987a94..ff3b83eecf57 100644
+index b66bd7987a94..150cff4ca22d 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -122,6 +122,33 @@ simple-audio-card,codec {
+@@ -122,6 +122,31 @@ simple-audio-card,codec {
  		};
  	};
  
@@ -54,7 +54,6 @@ index b66bd7987a94..ff3b83eecf57 100644
 +		simple-audio-card,format = "i2s";
 +		simple-audio-card,bitclock-master = <&sound_hdmi_cpu>;
 +		simple-audio-card,frame-master = <&sound_hdmi_cpu>;
-+		simple-audio-card,mclk-fs = <256>;
 +
 +		/*
 +		 * 32 bit slots regardless of the sample width. sai4 divides its
@@ -65,7 +64,6 @@ index b66bd7987a94..ff3b83eecf57 100644
 +		 */
 +		sound_hdmi_cpu: simple-audio-card,cpu {
 +			sound-dai = <&sai4>;
-+			system-clock-direction-out;
 +			dai-tdm-slot-num = <2>;
 +			dai-tdm-slot-width = <32>;
 +		};
@@ -78,23 +76,12 @@ index b66bd7987a94..ff3b83eecf57 100644
  	hdmi_connector: connector {
  		compatible = "hdmi-connector";
  		label = "X11";
-@@ -519,6 +546,25 @@ &sai2 {
+@@ -519,6 +544,14 @@ &sai2 {
  	status = "okay";
  };
  
 +/* sai4 is wired to the HDMI transmitter inside the SoC, so it has no pinmux */
 +&sai4 {
-+	/*
-+	 * pll8k and pll11k let fsl_sai move the mclk between the two
-+	 * audio PLL families, so 44.1 kHz rates work as well as 48 kHz.
-+	 */
-+	clocks = <&clk IMX8MQ_CLK_SAI4_IPG>,
-+		 <&clk IMX8MQ_CLK_SAI4_ROOT>,
-+		 <&clk IMX8MQ_CLK_DUMMY>, <&clk IMX8MQ_CLK_DUMMY>,
-+		 <&clk IMX8MQ_AUDIO_PLL1_OUT>,
-+		 <&clk IMX8MQ_AUDIO_PLL2_OUT>;
-+	clock-names = "bus", "mclk1", "mclk2", "mclk3",
-+		      "pll8k", "pll11k";
 +	assigned-clocks = <&clk IMX8MQ_CLK_SAI4>;
 +	assigned-clock-parents = <&clk IMX8MQ_AUDIO_PLL1_OUT>;
 +	assigned-clock-rates = <24576000>;

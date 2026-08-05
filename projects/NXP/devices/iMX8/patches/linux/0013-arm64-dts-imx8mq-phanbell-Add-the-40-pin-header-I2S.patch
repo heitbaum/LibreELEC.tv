@@ -32,9 +32,6 @@ at every rate.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 55 +++++++++++++++++++
- 1 file changed, 55 insertions(+)
-
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 index 6bb30e5c5622..acf3fa9f01b5 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts

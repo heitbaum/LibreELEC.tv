@@ -17,14 +17,11 @@ to the PCIe controller.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 32 +++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 7860b1814d85..b7053c270478 100644
+index 27837bca7d6e..6bb30e5c5622 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -375,6 +375,23 @@ &uart1 {
+@@ -443,6 +443,23 @@ &uart1 {
  	status = "okay";
  };
  
@@ -48,7 +45,7 @@ index 7860b1814d85..b7053c270478 100644
  &usdhc1 {
  	pinctrl-names = "default", "state_100mhz", "state_200mhz";
  	pinctrl-0 = <&pinctrl_usdhc1>;
-@@ -425,6 +442,12 @@ &iomuxc {
+@@ -493,6 +510,12 @@ &iomuxc {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_hog>;
  
@@ -61,7 +58,7 @@ index 7860b1814d85..b7053c270478 100644
  	pinctrl_fec1: fec1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_ENET_MDC_ENET1_MDC			0x3
-@@ -505,6 +528,15 @@ MX8MQ_IOMUXC_UART1_TXD_UART1_DCE_TX		0x49
+@@ -589,6 +612,15 @@ MX8MQ_IOMUXC_UART1_TXD_UART1_DCE_TX		0x49
  		>;
  	};
  
