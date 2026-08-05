@@ -98,7 +98,10 @@ everything measuring right:
    `rt5645_set_jack_detect()`, which needs a machine driver -
    `simple-audio-card` has none. So state is only ever sampled from an edge on
    `hp-detect-gpios`, and a headphone already in the socket at boot is never
-   noticed. Fixed by `0014`, `1a5c9410ec`.
+   noticed. Fixed by `0014`, `1a5c9410ec`. Confirmed by the one observation that
+   distinguishes it: a clean boot now plays with the rt5645 IRQ count still at
+   **0** in `/proc/interrupts`, i.e. no jack edge ever happened and the probe did
+   the detect itself.
 
 Point 2 is why the mixer fix appeared to stop working after a reboot: the
 session that first produced sound had the jack replugged at some point, which
@@ -341,10 +344,18 @@ Absent the property `clk_direction` stays 0, which is `SND_SOC_CLOCK_IN`, and
 so it returned immediately every time - the mclk rate was never set and the
 reparent was never reached. Silently, with no error, at every rate.
 
-**Verified on hardware.** Both cards now open 44.1 kHz natively -
-`exact rate : 44100` straight to the hardware, no resampling - 48 kHz still
-works, and `sai2` tracks the requested mclk (12288000 after a 48 kHz stream,
-where it used to be frozen at 24576000 no matter what was asked for).
+**Verified on hardware.** Both cards open 44.1 kHz natively -
+`exact rate : 44100` straight to the hardware, no resampling - and 48 kHz still
+works. The reparent is visible during a 44.1 kHz stream:
+
+```
+audio_pll2_out   1  1  ...  722534397  ...  Y   30010000.sai   pll11k
+   sai2          1  1  ...   11289600  ...  Y
+audio_pll1_out   0  0  ...  786431998  ...  N   30010000.sai   pll8k
+```
+
+`sai2` is at 44100 * 256 off PLL2 at /64, with PLL1 idle. Before `1896dce677`
+the mclk was frozen at 24576000 whatever was asked for.
 
 The tell that the mclk was never being set, and which should have been checked
 much earlier: `sai2` sat at exactly 24.576 MHz during 32 kHz *and* 48 kHz
