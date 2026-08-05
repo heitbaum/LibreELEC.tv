@@ -458,11 +458,11 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing. Rates and pad config both corroborated by `/flash/vendor.dts`: i2c2 and i2c3 at `0x186a0` (100 kHz), i2c1 at `0x61a80` (400 kHz), and `i2c2grp`/`i2c3grp` pad config `0x4000007f` |
 | `0009` | Mux the 32 kHz reference clock pad | **ready**; depends on nothing |
 | `0014` | `ASoC: rt5645: Perform the initial jack detect at probe` | **submitted** to ASoC 2026-08-06; no in-tree board meets its two conditions, so it is a no-op upstream |
-| `0012` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0005` and `0008` |
-| `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, consider keeping local |
-| | **0010–0011 — blocked behind `0003`** | |
-| `0010` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
-| `0011` | QCA6174 Bluetooth on uart2 | **working**; needs `0010` for `reg_wlan` |
+| `0010` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0005` and `0008` |
+| | **0011–0012 — blocked behind `0003`** | |
+| `0011` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
+| `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `reg_wlan` |
+| `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, keep local — and last, so it never blocks a prefix |
 | | **0021–0030 — imported HDMI stack** | |
 | `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
 | `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |

@@ -350,9 +350,9 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0007` phanbell do not hardcode a cooling state | pending | **ready**; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
 | `0008` phanbell enable i2c2 and i2c3 | pending | **ready**; depends on nothing |
 | `0009` phanbell mux the 32 kHz reference clock pad | pending | **ready**; the one hog entry with a real signal behind it |
-| `0010` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
-| `0011` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0010` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
-| `0012` phanbell rt5645 analog audio | pending | needs `0005` and `0008` (appends into its `&i2c3`) |
+| `0010` phanbell rt5645 analog audio | pending | needs `0005` and `0008` (appends into its `&i2c3`). Moved ahead of the pcie patches in `30b2660e3f` so the submittable set is a prefix |
+| `0011` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
+| `0012` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
 | `0014` `ASoC: rt5645: Perform the initial jack detect at probe` | submitted | posted to ASoC 2026-08-06. An upstream bug rather than a board quirk: any `simple-audio-card` user of rt5645/rt5650 with `hp-detect-gpios` and `jd-mode = 0` is silent until the jack is physically replugged, because nothing calls `rt5645_set_jack_detect()` and so nothing force enables the `LDO2`/`Mic Det Power` supplies `HP amp` depends on. Sent to ASoC alongside `0005`. **No `Fixes:` and no `Cc: stable`**, and the grep backs that up: no in-tree DTS references `realtek,rt5645` at all, the three `rt5650` boards (mt8173-elm, mt8186-corsola-squirtle/chinchou) all set `realtek,jd-mode = <2>`, no DT anywhere uses `hp-detect-gpios`, and all seven callers of `rt5645_set_jack_detect()` are machine drivers. Both conditions the patch tests are unmet upstream, so it cannot affect a released kernel and is a no-op for every current user |
 | `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
 | `0021` Cadence MHDP8501 HDMI/DP (Sandor Yu, `[PATCH v20 0/8]`) | imported | ~6600 lines, unmerged upstream; carried verbatim, needed three 7.2 fixes |
@@ -362,17 +362,28 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
 | `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
 
-Submittable now, with nothing waiting on them: `0006` through `0009` and `0012`
-since `0005` is already applied — once the kernel carries `588852647b81` the
-Kconfig half comes from the base and `0012` needs only `0008`. `0010`, `0011` and
-everything from `0021` on are genuinely blocked.
+**Submit only a prefix.** Every patch's diff context is generated against the
+state its predecessors leave, so a prefix always applies and an arbitrary subset
+may not — `30b2660e3f` exists because the audio patch had been built on top of
+the pcie ones and applied with fuzz without them. The order now matches the plan:
+
+| patches | when |
+|---|---|
+| `0006`–`0010` | now; `0005` is already applied, so once the kernel carries `588852647b81` the Kconfig half comes from the base and `0010` needs only `0008` |
+| `0011`–`0012` | when `0003` lands |
+| `0013` | keep local; last so it never blocks a prefix |
+| `0021`–`0026` | blocked on the MHDP series |
+
+Verified with `git apply`, which refuses fuzz and so is the real test for
+`git am`: `0001`–`0014` apply in order, `0006`–`0010` apply to a pristine
+`imx8mq-phanbell.dts`, `0011`–`0012` apply on top, and `0013` on top of that.
 
 Three of these dependencies are functional rather than textual, and reading patch
-context does not find that class at all. `0011` applies to a tree without `0010`
+context does not find that class at all. `0012` applies to a tree without `0011`
 and then fails to download firmware, because nothing has enabled WL_REG_ON.
-`0012` applied without `0005` would describe a codec whose driver cannot be
+`0010` applied without `0005` would describe a codec whose driver cannot be
 enabled, since `SND_SOC_RT5645` was promptless upstream until `588852647b81`.
-`0010`'s dependency on `0003` is the same shape: it is about what `REF_USE_PAD`
+`0011`'s dependency on `0003` is the same shape: it is about what `REF_USE_PAD`
 defaults to, so nothing in the diff hints at it.
 
 `0008` through `0013` were rebuilt for upstream in `3d25559614`. The old `0008`
