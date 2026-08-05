@@ -457,6 +457,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing |
 | `0009` | Mux the 32 kHz reference clock pad | **ready**; depends on nothing |
+| `0014` | `ASoC: rt5645: Perform the initial jack detect at probe` | **submitted** to ASoC 2026-08-06; no in-tree board meets its two conditions, so it is a no-op upstream |
 | `0012` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0005` and `0008` |
 | `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, consider keeping local |
 | | **0010–0011 — blocked behind `0003`** | |
