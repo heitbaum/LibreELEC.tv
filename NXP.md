@@ -309,59 +309,67 @@ Kodi was cycling devices; it went quiet once Kodi settled on HDMI rather than
 being fixed. `0009` now pins 32 bit slots there too, which also lets 16 bit
 through since 1.536 MHz divides 24.576 MHz evenly as well.
 
-### 44.1 kHz does not work on any card - diagnosed, not fixed
+### 44.1 kHz - fixed, and it was one missing property
 
-`aplay` a 44.1 kHz wav at any of the three cards and it fails:
+Every card failed on 44.1 kHz content:
 
 ```
-aplay: set_params: Unable to install hw params: ... RATE: 44100
 fsl-sai 308b0000.sai: failed to derive required Tx rate: 2822400
 ```
 
-`fsl_sai` advertises 8 kHz to 192 kHz continuously, so ALSA believes the rate is
-supported and never resamples; the mclk is 24.576 MHz, which only divides evenly
-for the 48 kHz family, and 24.576 / 2.8224 is 8.707.
+Not an `aplay` artefact - Kodi hit it too, on HDMI
+(`30050000.sai`, `sai-tx-rx-i2s-hifi`).
 
-`869864bf5a` names `AUDIO_PLL1_OUT` and `AUDIO_PLL2_OUT` as `pll8k`/`pll11k` on
-sai1, sai2 and sai4 and adds `mclk-fs` to the header and HDMI cards. **That is
-necessary but not sufficient.** Booted: 48 kHz is unaffected on all three cards,
-and 44.1 kHz still fails.
+Two patches were needed:
 
-What the clock tree says after the change - all of this is correct:
+- `869864bf5a` names `AUDIO_PLL1_OUT` and `AUDIO_PLL2_OUT` as `pll8k`/`pll11k`
+  on sai1, sai2 and sai4, so `fsl_asoc_reparent_pll_clocks()` can pick the
+  family matching the requested rate, and adds `mclk-fs` to the header and HDMI
+  cards. Necessary but on its own it changed nothing.
+- `1896dce677` adds **`system-clock-direction-out`** to each card's cpu dai.
+  This is the one that mattered:
 
+```c
+/* simple_util_parse_clk() */
+if (of_property_read_bool(node, "system-clock-direction-out"))
+	simple_dai->clk_direction = SND_SOC_CLOCK_OUT;
 ```
-audio_pll2_out   722534397   308b0000.sai   pll11k
-audio_pll1_out   786431998   308b0000.sai   pll8k
-   sai2           24576000
-      sai2_root_clk 24576000  308b0000.sai   mclk1
-```
 
-Both PLLs are already at the right rates - 786431998 / 32 = 24.576 MHz for the
-48 kHz family, 722534397 / 32 = 22.5792 MHz for the 44.1 kHz family - and both
-are claimed by the SAI under the right names. Nothing needs reprogramming; the
-mux only has to select PLL2.
+Absent the property `clk_direction` stays 0, which is `SND_SOC_CLOCK_IN`, and
+`simple_util_hw_params()` passes it straight to `snd_soc_dai_set_sysclk()`.
+`fsl_sai_set_dai_sysclk()` opens with `if (dir == SND_SOC_CLOCK_IN) return 0`,
+so it returned immediately every time - the mclk rate was never set and the
+reparent was never reached. Silently, with no error, at every rate.
 
-It does not. `sai2`'s parent stays `audio_pll1_out` and its rate stays
-24.576 MHz, with **no** `failed to set clock rate` logged, so
-`fsl_asoc_reparent_pll_clocks()` and the following `clk_set_rate()` both
-returned without doing anything.
+**Verified on hardware.** Both cards now open 44.1 kHz natively -
+`exact rate : 44100` straight to the hardware, no resampling - 48 kHz still
+works, and `sai2` tracks the requested mclk (12288000 after a 48 kHz stream,
+where it used to be frozen at 24576000 no matter what was asked for).
 
-`set_sysclk` is definitely being called, which is worth recording because the
-absence of a rate change looks like the opposite. The failure comes from fsl-sai,
-which runs *after* the codec DAI, and `rt5645_hw_params()` would have failed
-first with "Unsupported clock setting" if `rt5645->sysclk` were unset -
-`rl6231_get_clk_info(0, 44100)` cannot succeed. So the codec received
-44100 * 256 = 11.2896 MHz and `mclk-fs` is working.
+The tell that the mclk was never being set, and which should have been checked
+much earlier: `sai2` sat at exactly 24.576 MHz during 32 kHz *and* 48 kHz
+playback, where `mclk-fs = 256` asks for 8.192 and 12.288 MHz. A rate that never
+moves at any sample rate is not a divider problem.
 
-The suspect is that `mclk1` is `sai2_root_clk`, a *gate*. Reparenting has to
-happen on its parent, the `sai2` composite mux/divider. Confirming that needs
-`sound/soc/fsl/fsl_utils.c`, which is not in the sparse tree used for this work.
+Two theories were checked against the source and discarded on the way here, both
+recorded because each looked convincing:
 
-Not chased further because it may not matter: `aplay` asks for the file's native
-rate and gives up, while Kodi's ALSA sink resamples internally to whatever rate
-it opens. Test Kodi with 44.1 kHz content before changing anything. If it does
-matter, an ALSA config forcing 48 kHz is the cheapest fix and needs no kernel
-change - LibreELEC already patches alsa-lib to read `/run/asound.conf`.
+- *`sai*_root_clk` is a gate without `CLK_SET_RATE_PARENT`, so the rate cannot
+  propagate to the `sai2` mux.* Wrong: `__imx_clk_hw_gate2()` passes
+  `flags | CLK_SET_RATE_PARENT` unconditionally.
+- *The node is missing `mclk0`, which `imx8mq-evk.dts` declares.* Wrong:
+  `fsl_sai` always assigns `mclk_clk[0]` from `mclk_clk[1]` or `bus_clk`
+  (`fsl_sai.c:1600`).
+
+Neither would have been caught without reading the actual source; the first was
+asserted by a summary of `clk-imx8mq.c` and is the kind of thing that nearly
+became a kernel patch.
+
+Also settled along the way, and no longer needed: ALSA's own
+linear-interpolation converter does bridge 44.1 to 48 kHz correctly, via a
+`/run/asound.conf` defining a `plug` with a fixed slave rate. That was the
+fallback plan and is now unnecessary, since the hardware clocks 44.1 kHz
+natively.
 
 ### The 24 bit slot width is a property of the SAI, not of any codec
 
