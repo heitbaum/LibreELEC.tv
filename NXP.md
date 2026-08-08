@@ -442,6 +442,61 @@ a `GPIO_CTRL1` problem. Two silent capture sources sharing only ADC ->
 is better explained by one fault in that shared path than by two unrelated
 front-end faults, so that is the more promising thread of the two.
 
+### The capture path is muted at reset, exactly like the playback path was
+
+The reason both microphones recorded silence was not the front ends at all.
+Every capture mixer is muted out of reset, so DAPM could never complete a
+path and never powered the ADC. Reading `061` during a capture showed
+`PWR_ADC_L`/`PWR_ADC_R` clear, and the codec state was byte for byte the
+same during `arecord` as during playback - the capture stream changed
+nothing.
+
+Two registers said it plainly and had been sitting in earlier dumps:
+
+| reg | reset | meaning |
+|---|---|---|
+| `03c`/`03e` | `007f` | REC_L2/R2_MIXER, all seven sources muted |
+| `027` | `7060` | ADC1 and ADC2 muted on both L and R |
+
+Unmuting them brings the whole chain up:
+
+```sh
+amixer -c Analog sset 'RECMIXL BST1' on
+amixer -c Analog sset 'RECMIXR BST1' on
+amixer -c Analog sset 'Sto1 ADC MIXL ADC1' on
+amixer -c Analog sset 'Sto1 ADC MIXR ADC1' on
+amixer -c Analog sset 'IN1 Boost' 3
+```
+
+after which, during a capture, `064` reads `8804` (`PWR_BST1`, `PWR_MB1`),
+`065` reads `0c02` (both record mixers) and `061` reads `8306`
+(`PWR_ADC_L`/`PWR_ADC_R`). Nothing in the chain is unpowered. This is the
+same class of bug as the playback path being muted at reset, which
+`b07e398f62` fixed for the DAC to headphone chain; the capture side was
+never looked at.
+
+### The headset mic is probably a CTIA/OMTP mismatch
+
+With the chain fully powered it still records silence, and the codec's own
+combo jack measurement agrees there is nothing there: `rt5645_jack_detect()`
+reads `IN1_CTRL3 & 0x7` and treats 1 or 2 as `SND_JACK_HEADSET`, anything
+else as `SND_JACK_HEADPHONE`. It reads **4**, so the codec concluded no
+microphone. `00a` bit 2 shows `CBJ_BST1_EN` was enabled for the measurement,
+so it tried.
+
+The schematic says why that is likely physical. `IN1P_HP_MIC` lands on pin
+11, `IN1P_RING2`, and pin 12 `IN1N_SLEEVE` is marked no-connect. The board
+therefore takes the microphone from ring 2, which is OMTP. A CTIA headset
+puts ground on ring 2 and the mic on the sleeve, so it shorts the only mic
+pin the board has - which produces both a failed detection and a recording
+of digital silence. Not confirmed: the crop shows the codec side, not the
+jack, so which conductor the net actually comes from is still unread. A
+CTIA/OMTP adapter or a headset of the other type settles it in one test.
+
+Note this is independent of the DMIC. The DMICs are silent because
+`I2S2_DAC_PIN_GPIO` will not set, which is a separate and still unexplained
+fault.
+
 ### The 24 bit slot width is a property of the SAI, not of any codec
 
 The analog card had the same bug and it went unnoticed for longer, because the
