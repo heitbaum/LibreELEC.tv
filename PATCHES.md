@@ -117,7 +117,6 @@ Patches that should be sent to the upstream project but have not yet been submit
 | devel/cmake | `0001-disable-free-comp-methods.patch` | Disable SSL_COMP_free_compression_methods for OpenSSL 1.1+ |
 | devel/elfutils | `0001-make-executables-optional.patch` | Add --enable-programs flag (defaults to disabled) |
 | devel/flex | `0001-use-flex-host-for-target-cross-compile.patch` | Use host flex binary for target cross-compile (replaces sed dance) |
-| devel/glibc | `0001-Makerules-install-the-ABI-lib-names-header-from-the-.patch` | Rudi Heitbaum — 2.44 dropped the top-level `.NOTPARALLEL`, so parallel `make install` races `csu/subdir_install` against the top-level install of `gnu/lib-names-<abi>.h`; still unfixed on upstream master and `release/2.44/master`; to submit to libc-alpha |
 | devel/intltool | `0001-fix-regex-expressions.patch` | Fix Perl regex escaping (${ in character classes) in intltool-update.in |
 | devel/libbpf | `0001-fix-crosscompile-and-sysroot.patch` | Fix sysroot-relative prefix in .pc and add -lz to Libs |
 | devel/libcec | `0001-use-snprintf-in-FindAdapters-for-nul-termination.patch` | Rudi Heitbaum — snprintf in FindAdapters to fix gcc-16 -Wstringop-truncation; to submit to Pulse-Eight/libcec |
@@ -296,6 +295,7 @@ Patches already merged in the upstream project — drop on the next version bump
 | addons/addon-depends/network-tools-depends/nmap | `0002-Fix-build-with-OpenSSL-4-x.patch` | Daniel Miller — OpenSSL 4.x build fix ([nmap issue #3375](https://github.com/nmap/nmap/issues/3375)); not in the 7.99 release |
 | devel/crossguid | `0001-pr67-include-missing-cstdint.patch` | Khem Raj (OE) — [upstream PR #67](https://github.com/graeme-hill/crossguid/pull/67) add <cstdint> for GCC 13 |
 | devel/gcem | `0054-fix-cmake-minimum~required.patch` | BartolomeyKant — update CMake minimum to 3.10..3.31 |
+| devel/glibc | `0001-Makerules-install-the-ABI-lib-names-header-from-the-.patch` | Rudi Heitbaum — [BZ 34439](https://sourceware.org/bugzilla/show_bug.cgi?id=34439); **merged** as [`82c0a96b8e`](https://sourceware.org/git/?p=glibc.git;a=commit;h=82c0a96b8e63005a49ba52ddb21993811030613f) on master and cherry-picked to `release/2.44/master` as [`45b8a13c48`](https://sourceware.org/git/?p=glibc.git;a=commit;h=45b8a13c48da92bc5dd6fe102011391dd6847862). Drop on 2.44.1 or 2.45. Upstream's version adds an explanatory comment above the `ifndef subdir`; ours is otherwise identical |
 | devel/gmp | `0001-acinclude.m4-fix-std-c23-build-failure.patch` | upstream GMP hg [18477:8e7bb4ae7a18](https://gmplib.org/repo/gmp/rev/8e7bb4ae7a18) — fix -std=c23 configure test failure |
 | devel/heimdal | `1229-cf-largefile.m4-Fix-build-with-autoconf-2.72.patch` | Bernd Kuhls (Buildroot) — fix for [upstream heimdal issue #1201](https://github.com/heimdal/heimdal/issues/1201) |
 | devel/libevent | `0001-build-with-cmake-4.0.0.patch` | Azat Khuzhin (libevent author) — require CMake 3.1.2 for OpenSSL detection |
