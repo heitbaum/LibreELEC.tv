@@ -1021,15 +1021,34 @@ the *opposite* of what its name suggests; go by the register writes.
 Pad settings are `0xd6` on all five, copied from `imx8mq-mnt-reform2.dts:323`,
 the one in-tree i.MX8MQ board with a SAI2 group.
 
-**Not verified — needs a schematic before this can go upstream:**
+**Answered by the schematic**, `google-coral/electricals`,
+`dev_board/Coral-Dev-Board-baseboard-schematic.pdf`, sheet 5 *AUDIO: Codec,
+Mics & Jack* and sheet 10 *Power Diagram*:
 
 - `avdd-supply` / `cpvdd-supply` are **required** by `realtek,rt5645.yaml` and
-  are omitted, so `devm_regulator_bulk_get()` falls back to dummy regulators and
-  logs `supply avdd not found, using dummy regulator`. **The vendor OS does
-  exactly the same** — its `regulator_summary` shows `2-001a` twice under
-  `regulator-dummy` — so there is no rail to point at and the codec's supplies
-  are presumably hardwired. Still a `dtbs_check` failure, but not a functional
-  gap, and it rules out missing supplies as the cause of anything else.
+  are omitted, so `devm_regulator_bulk_get()` falls back to dummy regulators.
+  Sheet 5 bypasses `ANALOG_1v8`, `AVDD`, `CPVDD` and `DACREF` as one group, and
+  `ANALOG_1v8` is `V1V8` through ferrite FB3. Sheet 10 shows `V1V8 (BB_1V8)`
+  coming from a **baseboard dual DC-DC, an AP3427M off `DCDC_5V`** - *not* from
+  the BD71837 on the SOM. So there is genuinely no PMIC rail to point at, which
+  is why both our tree and the vendor OS show `2-001a` under `regulator-dummy`.
+  The earlier guess that the supplies are hardwired was right. For upstream the
+  correct description is a `regulator-fixed`, always-on, named for the rail:
+  `MICVDD` comes from `ANALOG_3v3`/`BB_3V3` off the same AP3427M, `DBVDD` from
+  `V3V3` and `SPKVDD` from `DCDC_5V`, but only avdd and cpvdd are required.
+- **The headset microphone lands on `IN1P`.** J4 pin 5, the sleeve, per the
+  CTIA note on the sheet, goes `HP_MIC` -> FB12 -> `IN1P_HP_MIC` -> codec pin
+  11 `IN1P_RING2`, biased by `MICBIAS1` through R23 2.2K. rt5645 routes
+  `{ "BST1", NULL, "IN1P" }`, which is the BST1 path reasoned about earlier
+  from the DAPM graph. The card therefore needs `"IN1P", "Headphone Mic"`;
+  without it the microphone is a dead end and only the supply route exists.
+- `HPO_L`/`HPO_R` go through R15/R16 33R and FB4/FB11 to J4 pins 4 and 1, tip
+  and ring1 - confirming `"Headphone Jack"` from `HPOL`/`HPOR`.
+- The `SPDIF_RX` pad is wired to the codec's IRQ pin and annotated *"Used as
+  GPIO for IRQ"* on the sheet, which is why GPIO5_IO4 serves as both the codec
+  interrupt and `hp-detect-gpios`.
+- `SPO_L`/`SPO_R` go to the 4-pin terminal J9, confirming the earlier guess
+  that the Class-D outputs drive it and that it is not the headphone path.
 - No `widgets` / `routing` yet. HPOL/HPOR almost certainly reach the jack and
   the board has a 4-pin speaker terminal that SPOL/SPOR would drive, but that
   is not confirmed, so nothing is asserted. Add them once `amixer` shows what
