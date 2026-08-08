@@ -382,6 +382,46 @@ linear-interpolation converter does bridge 44.1 to 48 kHz correctly, via a
 fallback plan and is now unnecessary, since the hardware clocks 44.1 kHz
 natively.
 
+### The DMICs record silence, and two theories are dead
+
+The board has both microphones - the block diagram shows MIC 1 and MIC 2
+71 mm apart, U3/U4 are `SPK0415HM4H-B` PDM parts on sheet 5 with no `_DNP`
+marking, and a photograph confirms `OSC1` really is unpopulated where the
+schematic marks it `_DNP`, so those markings are reliable. `arecord` still
+captures silence.
+
+Everything measurable on the path is correct, checked during capture:
+
+| reg | value | |
+|---|---|---|
+| `027` | `5840` | ADC2 switches on, ADC1 off, ADC2 source = DMIC |
+| `062` | `8000` | `PWR_ADC_S1F`, the stereo1 ADC filter, powered |
+| `075` | `a488` | `DMIC_1_EN` set, data pin field `00` = GPIO5 |
+| `0c0` | `4080` | `GP2_PIN_DMIC1_SCL` set, `GP5_PIN_DMIC1_SDA` set |
+
+**Theory 1, the binding enum, is a real bug but not the cause.** The two
+enums in `rt5645.h` are named backwards relative to their use: the switch on
+`pdata.dmic1_data_pin` accepts `IN2N`/`GPIO5`/`GPIO11` (1/2/3) from the enum
+named `RT5645_DMIC2_*`, while `realtek,dmic1-data-pin` is documented in the
+binding with the *other* set, `IN2P`/`GPIO6`/`GPIO10`/`GPIO12`.
+`rt5645_parse_dt()` reads the property straight in with no remapping, so the
+binding's enum is simply wrong for that property. Our `= <2>` therefore
+selects GPIO5, and `075` confirms the driver programmed exactly that. Worth
+sending as a documentation fix regardless.
+
+**Theory 2, the I2S2 pin mux, is disproven.** `0c0` bit 4,
+`I2S2_DAC_PIN_GPIO`, reads clear even though the GPIO5 case in
+`rt5645_i2c_probe()` writes it, and the register cache cannot explain it -
+the default table has `{ 0xc0, 0x0000 }`. A debug patch re-asserted the bit
+at the end of the component probe, the `dev_info` proved the code ran, and
+the register still read `4080`. The bit is not settable on this part, so it
+was never the explanation.
+
+Still open. The next thing worth checking is whether `DMIC_DAT` on the
+schematic actually lands on the codec pin that GPIO5 corresponds to - that
+is the one fact never established, and the rendered PDF is too coarse to
+resolve the pin number.
+
 ### The 24 bit slot width is a property of the SAI, not of any codec
 
 The analog card had the same bug and it went unnoticed for longer, because the
