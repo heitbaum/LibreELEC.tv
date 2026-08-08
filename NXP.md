@@ -475,23 +475,30 @@ same class of bug as the playback path being muted at reset, which
 `b07e398f62` fixed for the DAC to headphone chain; the capture side was
 never looked at.
 
-### The headset mic is probably a CTIA/OMTP mismatch
+### The headset mic jack is wired correctly, and the mic is still silent
 
-With the chain fully powered it still records silence, and the codec's own
-combo jack measurement agrees there is nothing there: `rt5645_jack_detect()`
-reads `IN1_CTRL3 & 0x7` and treats 1 or 2 as `SND_JACK_HEADSET`, anything
-else as `SND_JACK_HEADPHONE`. It reads **4**, so the codec concluded no
-microphone. `00a` bit 2 shows `CBJ_BST1_EN` was enabled for the measurement,
-so it tried.
+The jack is a Singatron TRRS wired to CTIA, and sheet 5 states the pinout
+outright: tip left, ring 1 right, **ring 2 ground, sleeve microphone**.
+`HP_MIC` comes off the sleeve through FB12 into `IN1P_HP_MIC` and lands on
+the codec's pin 11. That pin is only *named* `IN1P_RING2` by Realtek - the
+board feeds it from the sleeve, which is right for CTIA. `MICBIAS1` reaches
+the same node through R23 2.2K with R159 100K to ground, a normal bias
+network. So the wiring is standard, a CTIA headset is the correct type, and
+an earlier guess here that the board was OMTP was wrong.
 
-The schematic says why that is likely physical. `IN1P_HP_MIC` lands on pin
-11, `IN1P_RING2`, and pin 12 `IN1N_SLEEVE` is marked no-connect. The board
-therefore takes the microphone from ring 2, which is OMTP. A CTIA headset
-puts ground on ring 2 and the mic on the sleeve, so it shorts the only mic
-pin the board has - which produces both a failed detection and a recording
-of digital silence. Not confirmed: the crop shows the codec side, not the
-jack, so which conductor the net actually comes from is still unread. A
-CTIA/OMTP adapter or a headset of the other type settles it in one test.
+What remains unexplained is that the codec's own combo jack measurement
+disagrees. `rt5645_jack_detect()` reads `IN1_CTRL3 & 0x7` and treats 1 or 2
+as `SND_JACK_HEADSET`, anything else as `SND_JACK_HEADPHONE`. It reads
+**4**, so the codec concluded no microphone, with `00a` bit 2 confirming
+`CBJ_BST1_EN` was enabled for the measurement. That only sets `jack_type`
+and drops the `Mic Det Power` pin though, and `064` bit 15 shows `PWR_BST1`
+powered regardless, so the detection result does not by itself explain
+silence.
+
+Next thing to establish is whether the ADC is receiving anything at all,
+which listening to a played-back file cannot answer. `arecord -V stereo`
+draws a live level meter; that separates "no signal" from "signal too
+quiet", and only the first needs a hardware explanation.
 
 Note this is independent of the DMIC. The DMICs are silent because
 `I2S2_DAC_PIN_GPIO` will not set, which is a separate and still unexplained
