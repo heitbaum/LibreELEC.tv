@@ -52,8 +52,8 @@ v2:
    fsl_sai_set_mclk_rate() and the PLL reparent, and 44.1 kHz then fails
    in hw_params. Tested both ways.
 
- .../boot/dts/freescale/imx8mq-phanbell.dts    | 96 +++++++++++++++++++
- 1 file changed, 96 insertions(+)
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 95 +++++++++++++++++++
+ 1 file changed, 95 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 index 2d134eefb765..af4b9d266451 100644
