@@ -150,6 +150,7 @@ Patches that should be sent to the upstream project but have not yet been submit
 | tools/grub | `0001-build-fix-initialization-discards-const-qualifier-fr.patch` | Rudi Heitbaum — glibc-2.43 C23 const-qualifier build fix (bsearch/memchr/strchr etc.). **master only** — dev dropped it in `60ba085127` and both trees are on grub 2.14, so check whether master can drop it too |
 | addons/addon-depends/rpi_ws281x | `0001-rename-version-to-VERSION-to-avoid-shadowing-cxx20.patch` | Rudi Heitbaum — rename CMake `version` file to avoid shadowing C++20 `<version>` |
 | addons/addon-depends/system-tools-depends/hd-idle | `0001-makefile.patch` | Lukas Rusak — drop `-o root -g root` from install for non-root cross-build |
+| addons/addon-depends/rpi-tools-depends/lg-gpio | `0001-PY_LGPIO-replace-removed-SWIG-Python-2-compatibility.patch` | Rudi Heitbaum — swig 4.5.0 removed the Python 2 compatibility macros from `pyhead.swg`, so the 21 `PyInt_*`/`PyString_*` calls in `PY_LGPIO/lgpio.i` no longer compile; to submit to joan2937/lg |
 
 ### Submitted upstream
 
