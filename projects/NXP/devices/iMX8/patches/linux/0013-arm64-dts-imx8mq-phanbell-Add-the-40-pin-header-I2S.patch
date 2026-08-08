@@ -33,10 +33,10 @@ at every rate.
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 21a62beb2a7a..ec6233e6e145 100644
+index a38be09aa1ad..21321d7fd12a 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -107,6 +107,30 @@ simple-audio-card,codec {
+@@ -106,6 +106,30 @@ simple-audio-card,codec {
  			sound-dai = <&rt5645>;
  		};
  	};
@@ -67,7 +67,7 @@ index 21a62beb2a7a..ec6233e6e145 100644
  };
  
  &A53_0 {
-@@ -428,6 +452,27 @@ &pcie1 {
+@@ -427,6 +451,27 @@ &pcie1 {
  	status = "okay";
  };
  
@@ -95,7 +95,7 @@ index 21a62beb2a7a..ec6233e6e145 100644
  &sai2 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_sai2>;
-@@ -607,6 +652,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -606,6 +651,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  

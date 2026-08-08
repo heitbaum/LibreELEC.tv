@@ -56,12 +56,14 @@ biased from MICBIAS1. Without the route the microphone is a dead end:
 only the micbias supply route existed, so nothing connected it to the
 ADC.
 
-Name the SAI root as the cpu dai's clock. simple_util_parse_clk() falls
-back to the first clock of the DAI node when the cpu node has neither
-clocks nor system-clock-frequency, which is the IPG clock, and
-simple_init_dai() then sets that as the system clock at card init. It is
-replaced at hw_params before any stream starts, so nothing broke, but the
-initial value was meaningless.
+Deliberately no clocks or system-clock-frequency on the cpu dai.
+simple_util_parse_clk() then falls back to the DAI node's first clock, the
+IPG clock, and simple_init_dai() sets that as the system clock once at card
+init. That value is meaningless for the SAI but harmless: hw_params replaces
+it with rate * mclk-fs before any stream starts. Naming a clock here instead
+makes simple_util_hw_params() call clk_set_rate() on it directly, which
+bypasses fsl_sai_set_mclk_rate() and so never reparents between the audio
+PLLs - 44.1 kHz then fails in hw_params.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
@@ -69,7 +71,7 @@ Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
  1 file changed, 96 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 2d134eefb765..6a4cd972c8f7 100644
+index 2d134eefb765..af4b9d266451 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 @@ -37,6 +37,14 @@ reg_usdhc2_vmmc: regulator-usdhc2-vmmc {
@@ -87,7 +89,7 @@ index 2d134eefb765..6a4cd972c8f7 100644
  	fan: gpio-fan {
  		compatible = "gpio-fan";
  		gpio-fan,speed-map = <0 0>, <8600 1>;
-@@ -46,6 +54,43 @@ fan: gpio-fan {
+@@ -46,6 +54,42 @@ fan: gpio-fan {
  		pinctrl-0 = <&pinctrl_gpio_fan>;
  		status = "okay";
  	};
@@ -118,7 +120,6 @@ index 2d134eefb765..6a4cd972c8f7 100644
 +		 */
 +		sound_analog_cpu: simple-audio-card,cpu {
 +			sound-dai = <&sai2>;
-+			clocks = <&clk IMX8MQ_CLK_SAI2_ROOT>;
 +			system-clock-direction-out;
 +			dai-tdm-slot-num = <2>;
 +			dai-tdm-slot-width = <32>;
@@ -131,7 +132,7 @@ index 2d134eefb765..6a4cd972c8f7 100644
  };
  
  &A53_0 {
-@@ -272,6 +317,20 @@ &i2c3 {
+@@ -272,6 +316,20 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -152,7 +153,7 @@ index 2d134eefb765..6a4cd972c8f7 100644
  };
  
  &fec1 {
-@@ -295,6 +354,27 @@ ethphy0: ethernet-phy@0 {
+@@ -295,6 +353,27 @@ ethphy0: ethernet-phy@0 {
  	};
  };
  
@@ -180,7 +181,7 @@ index 2d134eefb765..6a4cd972c8f7 100644
  &uart1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_uart1>;
-@@ -383,6 +463,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
+@@ -383,6 +462,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
  		>;
  	};
  
@@ -193,7 +194,7 @@ index 2d134eefb765..6a4cd972c8f7 100644
  	pinctrl_i2c1: i2c1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_I2C1_SCL_I2C1_SCL			0x4000007f
-@@ -410,6 +496,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -410,6 +495,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  
