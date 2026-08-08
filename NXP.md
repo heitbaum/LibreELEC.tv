@@ -442,6 +442,46 @@ a `GPIO_CTRL1` problem. Two silent capture sources sharing only ADC ->
 is better explained by one fault in that shared path than by two unrelated
 front-end faults, so that is the more promising thread of the two.
 
+### The MHDP series moved to v23, and rebasing onto it found two real bugs
+
+The imported HDMI stack was Sandor Yu's `[PATCH v20 0/8]`. He has not posted
+since 2025-01-08, but the series is not orphaned - **Laurentiu Palcu took it
+over**, posting v21 on 2026-04-07, v22 on 2026-04-24 and v23 on 2026-05-19,
+with Krzysztof Kozlowski, Rob Herring, Luca Ceresoli and Alexander Stein
+reviewing through 2026-05-29. Carrying v20 was three revisions out of date.
+
+v23 fetches with `b4 am 20260519-dcss-hdmi-upstreaming-v23-0-5615524a9c63@oss.nxp.com`
+and **applies clean to 7.2-rc6** - no fuzz, no failures. The three 7.2 fixes
+the v20 import needed are therefore obsolete, and so is the reason `git am`
+could never handle `0021`: the old mbox had been hand-edited without
+regenerating its `index` lines, so `git am -3` refused it as "does not apply
+to blobs recorded in its index".
+
+Two bugs surfaced that v20 had been hiding, both fixed:
+
+**`CONFIG_DRM_DISPLAY_CONNECTOR` was not set.** The phanbell devicetree
+describes the socket as an `hdmi-connector`, which needs that driver.
+Without it the node gets no driver, `of_drm_find_bridge()` on the MHDP
+bridge's output endpoint finds nothing, and `cdns_mhdp8501_probe()` returns
+`-EPROBE_DEFER` about every 35 ms forever. `deferred_probe_initcall()` then
+blocks in `flush_work()` and init never completes - the boot stops after
+PCIe and the hung task detector reports `swapper/0` blocked. v20 completed
+probe without requiring the downstream bridge, so it never showed.
+`initcall_debug` is what found it: `517` is `-EPROBE_DEFER`, and the loop is
+obvious once the return codes are printed.
+
+**`bridge->driver_private` is NULL on v23.** It allocates the bridge with
+`devm_drm_bridge_alloc()` and derives the device with `bridge_to_mhdp()`
+instead. Our HDMI audio patch still used `driver_private` in four places, so
+closing an HDMI stream oopsed in
+`cdns_hdmi_bridge_clear_audio_infoframe()` via `snd_pcm_release` ->
+`hdmi_codec_shutdown`. Kodi's `ActiveAE` thread hit it just by shutting the
+stream down.
+
+Verified on hardware afterwards: all three cards enumerate, HDMI plays
+44.1 kHz, Kodi playback works, and closing the stream leaves nothing in
+`dmesg`.
+
 ### The capture path is muted at reset, exactly like the playback path was
 
 The reason both microphones recorded silence was not the front ends at all.
@@ -594,11 +634,11 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0011` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
 | `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `reg_wlan` |
 | `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, keep local — and last, so it never blocks a prefix |
-| | **0021–0030 — imported HDMI stack** | |
-| `0021` | Cadence MHDP8501 HDMI/DP driver (Sandor Yu, ~6600 lines) | downstream only; needed three 7.2 fixes |
-| `0022`–`0024` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs `0021` |
-| `0025` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; fills the gap v1 left, to submit |
-| `0026` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0025` |
+| | **0021–0033 — imported HDMI stack, now v23** | |
+| `0021`-`0028` | Cadence MHDP8501 HDMI/DP (Laurentiu Palcu, v23) | in active review upstream; applies clean to 7.2-rc6 |
+| `0029`-`0031` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs the MHDP series |
+| `0032` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; v23 still has no audio, so submit it as a follow-up |
+| `0033` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0032` |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
 `0008`-`0013` were rebuilt for upstream in `3d25559614`; see `PATCHES.md` for

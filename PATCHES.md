@@ -337,7 +337,7 @@ it reports untracked patches for the tracked ref (master) only. Classify or drop
 reconciled by it or was tracked here at all. The Coral Dev Board set is the one
 body of work large enough to need rows. It is **dev only** — 20 patches under
 `projects/NXP/devices/iMX8/patches/linux/`, all against linux 7.2-rc5, applying
-with no fuzz and no offsets other than `0021`'s. Full working notes are in
+with no fuzz. Full working notes are in
 `NXP.md`; this table is the submission state.
 
 | Patch | Status | Notes |
@@ -356,12 +356,12 @@ with no fuzz and no offsets other than `0021`'s. Full working notes are in
 | `0012` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
 | `0014` `ASoC: rt5645: Perform the initial jack detect at probe` | submitted | posted to ASoC 2026-08-06. An upstream bug rather than a board quirk: any `simple-audio-card` user of rt5645/rt5650 with `hp-detect-gpios` and `jd-mode = 0` is silent until the jack is physically replugged, because nothing calls `rt5645_set_jack_detect()` and so nothing force enables the `LDO2`/`Mic Det Power` supplies `HP amp` depends on. Sent to ASoC alongside `0005`. **No `Fixes:` and no `Cc: stable`**, and the grep backs that up: no in-tree DTS references `realtek,rt5645` at all, the three `rt5650` boards (mt8173-elm, mt8186-corsola-squirtle/chinchou) all set `realtek,jd-mode = <2>`, no DT anywhere uses `hp-detect-gpios`, and all seven callers of `rt5645_set_jack_detect()` are machine drivers. Both conditions the patch tests are unmet upstream, so it cannot affect a released kernel and is a no-op for every current user |
 | `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
-| `0021` Cadence MHDP8501 HDMI/DP (Sandor Yu, `[PATCH v20 0/8]`) | imported | ~6600 lines, unmerged upstream; carried verbatim, needed three 7.2 fixes |
-| `0022` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs `0021` |
-| `0023` imx8mq-pico-pi DCSS + HDMI (Lukas Rusak) | imported | downstream, needs `0021` |
-| `0024` imx8mq-phanbell DCSS + HDMI | pending | needs `0021` |
-| `0025` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs `0021`; fills the gap Sandor Yu's v1→v2 left, post as a follow-up to that series |
-| `0026` phanbell HDMI audio card on sai4 | pending | needs `0025` and `0024` |
+| `0021`-`0028` Cadence MHDP8501 HDMI/DP (Laurentiu Palcu, `[PATCH v23 0/8]`) | imported | 8 patches, unmerged upstream but in active review. Applies clean to 7.2-rc6, so the three 7.2 fixes the old v20 import needed are gone. Needs `CONFIG_DRM_DISPLAY_CONNECTOR` |
+| `0029` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs the MHDP series |
+| `0030` imx8mq-pico-pi DCSS + HDMI (Lukas Rusak) | imported | downstream, needs the MHDP series |
+| `0031` imx8mq-phanbell DCSS + HDMI | pending | needs the MHDP series; **working** on hardware |
+| `0032` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs the MHDP series. v23 still has no audio, so this remains a real gap and is now worth posting as a follow-up to a **live** series rather than a dead one. Reworked for v23: `bridge_to_mhdp()` not `bridge->driver_private`, which v23 leaves NULL since it allocates the bridge with `devm_drm_bridge_alloc()` |
+| `0033` phanbell HDMI audio card on sai4 | pending | needs `0032` and `0031`; **working** - 44.1 kHz plays and Kodi playback is fine |
 
 **Submit only a prefix.** Every patch's diff context is generated against the
 state its predecessors leave, so a prefix always applies and an arbitrary subset
@@ -373,7 +373,7 @@ the pcie ones and applied with fuzz without them. The order now matches the plan
 | `0006`–`0010` | now; `0005` is already applied, so once the kernel carries `588852647b81` the Kconfig half comes from the base and `0010` needs only `0008` |
 | `0011`–`0012` | when `0003` lands |
 | `0013` | keep local; last so it never blocks a prefix |
-| `0021`–`0026` | blocked on the MHDP series |
+| `0021`–`0033` | blocked on the MHDP series |
 
 Verified with `git apply`, which refuses fuzz and so is the real test for
 `git am`: `0001`–`0014` apply in order, `0006`–`0010` apply to a pristine
