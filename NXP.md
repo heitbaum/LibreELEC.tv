@@ -417,10 +417,30 @@ at the end of the component probe, the `dev_info` proved the code ran, and
 the register still read `4080`. The bit is not settable on this part, so it
 was never the explanation.
 
-Still open. The next thing worth checking is whether `DMIC_DAT` on the
-schematic actually lands on the codec pin that GPIO5 corresponds to - that
-is the one fact never established, and the rendered PDF is too coarse to
-resolve the pin number.
+**The pin choice is confirmed correct.** Sheet 5 zoomed in shows `DMIC_DAT`
+landing on **pin 32, `DACDAT2`**, and the driver's GPIO5 case is precisely
+the one that repurposes that pin: it sets `I2S2_DAC_PIN_GPIO` so the I2S2
+DAC pin becomes a GPIO, then `GP5_PIN_DMIC1_SDA`. So "GPIO5" and "DACDAT2"
+are the same ball, and `realtek,dmic1-data-pin = <2>` is right. The vendor
+value was never the problem.
+
+Which puts all the weight on that one bit. `0c0` reads `4080`: bit 14
+`GP2_PIN_DMIC1_SCL` set, bit 7 `GP5_PIN_DMIC1_SDA` set, bit 4
+`I2S2_DAC_PIN_GPIO` clear. Those are the first and third writes of the
+GPIO5 case landing and the second failing, and they are consecutive
+`regmap_update_bits()` calls, two of them into the same register. Nothing
+explains that in software: `GPIO_CTRL1` is in `readable_register()` rather
+than `volatile_register()` so it is cached normally, the only reset after
+probe is in `i2c_shutdown()`, and no DAPM widget or mixer control uses bit
+4. So either the hardware does not implement that bit on this part, or
+something clears it at runtime after probe. Reading `0c0` immediately after
+boot, before any stream has run, separates the two.
+
+Note the analog microphone through `IN1P` is silent too, and that cannot be
+a `GPIO_CTRL1` problem. Two silent capture sources sharing only ADC ->
+`Stereo1 ADC MIXL` -> `IF_ADC1` -> `RT5645 IF1 ADC Mux` -> AIF1TX -> SAI2 RX
+is better explained by one fault in that shared path than by two unrelated
+front-end faults, so that is the more promising thread of the two.
 
 ### The 24 bit slot width is a property of the SAI, not of any codec
 
