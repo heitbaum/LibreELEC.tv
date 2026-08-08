@@ -583,7 +583,7 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3; needs a v2 - clearing `REF_USE_PAD` when `"extref"` is absent breaks existing devicetrees, and the replacement shape is Frank's call |
 | `0004` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | series 3/3 |
 | `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** `588852647b81` (2026-08-08); drop on the next kernel bump |
-| | **0006–0010 — posted to the imx list 2026-08-08** | |
+| | **0006–0010 — v2 posted to the imx list 2026-08-08** | |
 | `0006` | Keep the GPU rail on | fixes `buck3: disabling`, problem 4 |
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing. Rates and pad config both corroborated by `/flash/vendor.dts`: i2c2 and i2c3 at `0x186a0` (100 kHz), i2c1 at `0x61a80` (400 kHz), and `i2c2grp`/`i2c3grp` pad config `0x4000007f` |
