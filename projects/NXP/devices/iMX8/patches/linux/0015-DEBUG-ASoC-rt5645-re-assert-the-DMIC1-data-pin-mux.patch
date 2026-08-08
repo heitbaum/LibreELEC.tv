@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 8 Aug 2026 14:00:00 +1000
+Subject: [PATCH] DEBUG: ASoC: rt5645: re-assert the DMIC1 data pin mux
+
+NOT FOR SUBMISSION - a probe for one hypothesis, drop once answered.
+
+The Coral's DMIC data line is GPIO5, shared with the I2S2 DAC pin. The
+GPIO5 case in rt5645_i2c_probe() writes three things; reading the hardware
+back shows two of them took and GPIO_CTRL1 bit 4, I2S2_DAC_PIN_GPIO, did
+not, so the pin never leaves I2S2 mode and cannot carry DMIC data. The
+register cache does not explain it - the default table has
+{ 0xc0, 0x0000 }, so regmap_update_bits() would have written it.
+
+Re-assert the bit at the end of the component probe and see whether the
+microphones start working.
+---
+ sound/soc/codecs/rt5645.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/sound/soc/codecs/rt5645.c b/sound/soc/codecs/rt5645.c
+index e7e39671a576..2aea125f1ce8 100644
+--- a/sound/soc/codecs/rt5645.c
++++ b/sound/soc/codecs/rt5645.c
+@@ -3500,6 +3500,18 @@ static int rt5645_probe(struct snd_soc_component *component)
+ 	if (!rt5645->pdata.jd_mode && rt5645->gpiod_hp_det)
+ 		rt5645_irq(0, rt5645);
+ 
++	/*
++	 * DEBUG, NOT FOR SUBMISSION. On the Coral the DMIC data line is
++	 * GPIO5, which is shared with the I2S2 DAC pin, and reading the
++	 * hardware back shows GPIO_CTRL1 bit 4 clear even though the
++	 * GPIO5 case in rt5645_i2c_probe() writes it. Re-assert it here
++	 * to find out whether that is why the microphones are silent.
++	 */
++	regmap_update_bits(rt5645->regmap, RT5645_GPIO_CTRL1,
++			   RT5645_I2S2_DAC_PIN_MASK, RT5645_I2S2_DAC_PIN_GPIO);
++	dev_info(component->dev, "DEBUG: re-asserted I2S2_DAC_PIN_GPIO
++");
++
+ 	return 0;
+ }
+ 
+-- 
+2.47.1
+

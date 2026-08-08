@@ -42,13 +42,52 @@ SND_SOC_CLOCK_IN, and fsl_sai_set_dai_sysclk() opens with
 setting the mclk rate and without ever reaching the reparent, silently and
 at every rate.
 
+The codec's AVDD and CPVDD are required by the binding, so dtbs_check
+fails without them and the driver falls back to dummy regulators. The
+baseboard schematic bypasses ANALOG_1v8, AVDD, CPVDD and DACREF as one
+group, and ANALOG_1v8 is V1V8 through a ferrite. V1V8 comes from a
+baseboard DC-DC rather than from the PMIC on the SOM, so there is no
+regulator on any bus to point at and a fixed always-on regulator is the
+honest description.
+
+Route "Headphone Mic" to IN1P. The jack is a TRRS part wired to CTIA,
+and its sleeve reaches the codec's IN1P_RING2 pin through a ferrite,
+biased from MICBIAS1. Without the route the microphone is a dead end:
+only the micbias supply route existed, so nothing connected it to the
+ADC.
+
+Name the SAI root as the cpu dai's clock. simple_util_parse_clk() falls
+back to the first clock of the DAI node when the cpu node has neither
+clocks nor system-clock-frequency, which is the IPG clock, and
+simple_init_dai() then sets that as the system clock at card init. It is
+replaced at hw_params before any stream starts, so nothing broke, but the
+initial value was meaningless.
+
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
+ .../boot/dts/freescale/imx8mq-phanbell.dts    | 96 +++++++++++++++++++
+ 1 file changed, 96 insertions(+)
+
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-index 2d134eefb765..b819e644fa54 100644
+index 2d134eefb765..6a4cd972c8f7 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
-@@ -46,6 +46,41 @@ fan: gpio-fan {
+@@ -37,6 +37,14 @@ reg_usdhc2_vmmc: regulator-usdhc2-vmmc {
+ 		enable-active-high;
+ 	};
+ 
++	reg_audio_1v8: regulator-audio-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "BB_1V8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		regulator-always-on;
++	};
++
+ 	fan: gpio-fan {
+ 		compatible = "gpio-fan";
+ 		gpio-fan,speed-map = <0 0>, <8600 1>;
+@@ -46,6 +54,43 @@ fan: gpio-fan {
  		pinctrl-0 = <&pinctrl_gpio_fan>;
  		status = "okay";
  	};
@@ -68,6 +107,7 @@ index 2d134eefb765..b819e644fa54 100644
 +		simple-audio-card,routing = "Headphone Jack", "HPOL",
 +					    "Headphone Jack", "HPOR",
 +					    "Headphone Mic", "micbias1",
++					    "IN1P", "Headphone Mic",
 +					    "DMIC L1", "Internal Mic",
 +					    "DMIC R1", "Internal Mic";
 +
@@ -78,6 +118,7 @@ index 2d134eefb765..b819e644fa54 100644
 +		 */
 +		sound_analog_cpu: simple-audio-card,cpu {
 +			sound-dai = <&sai2>;
++			clocks = <&clk IMX8MQ_CLK_SAI2_ROOT>;
 +			system-clock-direction-out;
 +			dai-tdm-slot-num = <2>;
 +			dai-tdm-slot-width = <32>;
@@ -90,7 +131,7 @@ index 2d134eefb765..b819e644fa54 100644
  };
  
  &A53_0 {
-@@ -272,6 +307,18 @@ &i2c3 {
+@@ -272,6 +317,20 @@ &i2c3 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_i2c3>;
  	status = "okay";
@@ -98,6 +139,8 @@ index 2d134eefb765..b819e644fa54 100644
 +	rt5645: audio-codec@1a {
 +		compatible = "realtek,rt5645";
 +		reg = <0x1a>;
++		avdd-supply = <&reg_audio_1v8>;
++		cpvdd-supply = <&reg_audio_1v8>;
 +		pinctrl-names = "default";
 +		pinctrl-0 = <&pinctrl_hp_det>;
 +		#sound-dai-cells = <0>;
@@ -109,7 +152,7 @@ index 2d134eefb765..b819e644fa54 100644
  };
  
  &fec1 {
-@@ -295,6 +342,27 @@ ethphy0: ethernet-phy@0 {
+@@ -295,6 +354,27 @@ ethphy0: ethernet-phy@0 {
  	};
  };
  
@@ -137,7 +180,7 @@ index 2d134eefb765..b819e644fa54 100644
  &uart1 {
  	pinctrl-names = "default";
  	pinctrl-0 = <&pinctrl_uart1>;
-@@ -383,6 +451,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
+@@ -383,6 +463,12 @@ MX8MQ_IOMUXC_GPIO1_IO00_ANAMIX_REF_CLK_32K	0x05
  		>;
  	};
  
@@ -150,7 +193,7 @@ index 2d134eefb765..b819e644fa54 100644
  	pinctrl_i2c1: i2c1grp {
  		fsl,pins = <
  			MX8MQ_IOMUXC_I2C1_SCL_I2C1_SCL			0x4000007f
-@@ -410,6 +484,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
+@@ -410,6 +496,16 @@ MX8MQ_IOMUXC_GPIO1_IO03_GPIO1_IO3	0x41
  		>;
  	};
  
