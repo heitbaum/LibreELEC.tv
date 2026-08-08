@@ -475,32 +475,42 @@ same class of bug as the playback path being muted at reset, which
 `b07e398f62` fixed for the DAC to headphone chain; the capture side was
 never looked at.
 
-### The headset mic works once the capture path is unmuted
+### The capture path now powers, and the headset mic is still silent
 
-Unmuting the record mixer and the ADC1 branch is the whole fix - the headset
-microphone records. The jack is a Singatron TRRS wired to CTIA and sheet 5
-states the pinout outright: tip left, ring 1 right, ring 2 ground, **sleeve
-microphone**. `HP_MIC` comes off the sleeve through FB12 into
-`IN1P_HP_MIC` and lands on the codec's pin 11, which Realtek merely *names*
-`IN1P_RING2`. `MICBIAS1` reaches the same node through R23 2.2K with R159
-100K to ground. So the wiring is standard and a CTIA headset is the right
-type; an earlier guess that the board was OMTP was wrong, and the same
-headset enumerates as a headset microphone on a Windows PC.
+Unmuting the record mixer and the ADC1 branch fixes a real bug but does not
+produce audio. What is verified, from registers read during an open capture:
+`064` reads `8804` so `PWR_BST1` and `PWR_MB1` are on, `065` reads `0c02` so
+both record mixers are on, and `061` reads `8306` so both ADCs are on. Before
+the unmute none of that happened - the codec state during `arecord` was byte
+for byte its state during playback. So the DAPM path completes now and did
+not before.
 
-One loose end that turned out not to matter. The codec's own combo jack
-measurement disagrees: `rt5645_jack_detect()` reads `IN1_CTRL3 & 0x7` and
-treats 1 or 2 as `SND_JACK_HEADSET`, anything else as
-`SND_JACK_HEADPHONE`, and it reads **4** even with `00a` bit 2 confirming
-`CBJ_BST1_EN` was enabled for the measurement. That result only sets
-`jack_type` and drops the `Mic Det Power` pin. `Mic Det Power` is
-`PWR_VOL` bit 5 and is a `NULL` source of `BST1`, but `BST1` also takes
-`IN1P`, `IN1N` and `JD Power`, so it powers regardless - `064` bit 15
-confirms it. The mic therefore works despite the codec believing there
-isn't one. Why the measurement returns 4 on correct wiring is unexplained
-and, since nothing depends on it, not worth chasing.
+`arecord -V stereo` still shows a flat `00%|00%` meter with `IN1 Boost` at 8,
+which is 52 dB. Nothing is reaching the ADC.
 
-The mixer settings are runtime state, so they are applied from
-`packages/audio/alsa-utils/scripts/soundconfig` alongside the playback ones.
+Everything checkable says it should. The jack is a Singatron TRRS wired to
+CTIA and sheet 5 states the pinout outright: tip left, ring 1 right, ring 2
+ground, **sleeve microphone**. `HP_MIC` comes off the sleeve through FB12
+into `IN1P_HP_MIC` and lands on the codec's pin 11, which Realtek merely
+*names* `IN1P_RING2`. `MICBIAS1` reaches the same node through R23 2.2K with
+R159 100K to ground. The same headset enumerates as a headset microphone on a
+Windows PC, so the part is good and is the right type. An earlier guess that
+the board was OMTP was wrong.
+
+The codec agrees with the silence rather than with the schematic:
+`rt5645_jack_detect()` reads `IN1_CTRL3 & 0x7`, treats 1 or 2 as
+`SND_JACK_HEADSET` and anything else as `SND_JACK_HEADPHONE`, and reads
+**4** - with `00a` bit 2 confirming `CBJ_BST1_EN` was enabled for the
+measurement. That was dismissed once on the grounds that it only sets
+`jack_type` and drops `Mic Det Power` while `BST1` powers anyway, which is
+true but beside the point: two independent measurements, the codec's and the
+level meter, both say nothing is on the pin.
+
+The next measurement is physical, not more register reading. `TP19` sits
+directly on `IN1P_HP_MIC`, so a meter there reads the bias: roughly half of
+`MICBIAS1` with a working mic across it, near `MICBIAS1` if the connection is
+open, near zero if it is shorted to ground. That distinguishes a jack or
+connection fault from anything in the codec, and nothing else will.
 
 ### The 24 bit slot width is a property of the SAI, not of any codec
 
