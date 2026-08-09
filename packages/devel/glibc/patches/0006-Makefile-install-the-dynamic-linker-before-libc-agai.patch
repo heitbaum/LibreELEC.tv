@@ -1,0 +1,54 @@
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 9 Aug 2026 21:00:00 +1000
+Subject: [PATCH] Makefile: install the dynamic linker before libc again
+
+The top level carries an ordering rule so that ld.so is in place before
+libc.so is replaced:
+
+  # Make sure that the dynamic linker is installed before libc.
+  $(inst_slibdir)/libc-$(version).so: elf/ldso_install
+
+but libc has been installed as libc.so$(libc.so-version) since commit
+8208be389bce ("Install shared objects under their ABI names").  Nothing
+builds or installs libc-$(version).so any more, so the rule names a
+target that never runs and elf/ldso_install is never pulled in.  It is
+the only reference to that name left in the build system.
+
+The prerequisites of 'install' are therefore evaluated with no edge
+between the top level's own $(inst_slibdir)/libc.so$(libc.so-version)
+and elf/subdir_install, which installs the loader.  Because Makerules
+is included before the 'install: subdir_install' line, libc is in fact
+installed first, leaving a window where the new libc.so is paired with
+the old ld.so.
+
+That window became fatal in 2.44: commit a5ec880f808e ("Consolidate
+pointer guard to use a relro variable instead of the TCB") makes
+libc.so on i386, x86_64, powerpc, s390, sparc and sh reference
+__pointer_chk_guard, which only a matching ld.so defines.  Installing
+2.44 over an older glibc that programs are actively running against
+kills every process started in that window:
+
+  make: symbol lookup error: .../lib/libc.so.6: undefined symbol:
+  __pointer_chk_guard, version GLIBC_PRIVATE
+
+Point the ordering rule at the name libc is actually installed under.
+--- a/Makefile
++++ b/Makefile
+@@ -95,8 +95,15 @@
+ # Explicit dependency so that `make install-headers' works
+ install-headers: install-headers-nosubdir
+ 
+-# Make sure that the dynamic linker is installed before libc.
+-$(inst_slibdir)/libc-$(version).so: elf/ldso_install
++# Make sure that the dynamic linker is installed before libc.  libc is
++# installed under its ABI name since commit 8208be389bce ("Install shared
++# objects under their ABI names"), so naming the old libc-$(version).so
++# here orders nothing: that file is never an install target.
++ifdef libc.so-version
++$(inst_slibdir)/libc.so$(libc.so-version): elf/ldso_install
++else
++$(inst_slibdir)/libc.so: elf/ldso_install
++endif
+ 
+ .PHONY: elf/ldso_install
+ elf/ldso_install:
