@@ -346,7 +346,7 @@ with no fuzz. Full working notes are in
 | `0002` `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock` | submitted | series 1/3. **Awaiting a direction from Frank Li** - see `0003` |
 | `0003` `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | submitted | series 2/3. **Needs a v2 and the shape is not ours to choose.** Frank Li agrees `enable_ext_refclk` is the right direction for i.MX95 alignment but flagged a real backward-compatibility break: on i.MX8MQ the absence of `"extref"` is ambiguous, meaning both "existing devicetree, reference on the pad" and "this board drives REF_CLK from the internal PLL", so clearing `REF_USE_PAD` regresses any devicetree without the new clock. `0004` covers all five in-tree boards, leaving old-DTB-with-new-kernel and out-of-tree devicetrees exposed. A new devicetree property was tried in the NXP tree and rejected, so we asked Frank how he wants the internal-PLL case described rather than proposing a shape (replied 2026-08-08) |
 | `0004` `arm64: dts: imx8mq: Declare the PCIe extref clock` | submitted | series 3/3, 5 boards. May become unnecessary depending on `0003`'s v2 |
-| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** | [`588852647b81`](https://git.kernel.org/torvalds/c/588852647b81), landed 2026-08-08 via `broonie/sound`. Verified: `SND_SOC_RT5645` now reads `tristate "Realtek RT5645/RT5650 Codec"` in Linus's tree. **Drop this patch when the kernel is bumped past it**, which also satisfies `0010`'s dependency from the base. The hash is now a mainline one, so it may be cited in a commit message |
+| `0005` `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline, patch dropped** | [`588852647b81`](https://git.kernel.org/torvalds/c/588852647b81), landed 2026-08-08 via `broonie/sound`. Verified: `SND_SOC_RT5645` now reads `tristate "Realtek RT5645/RT5650 Codec"` in Linus's tree. Dropped from the tree on `linux-7.2`, whose kernel is 7.2-rc7 and so carries it, which also satisfies `0010`'s dependency from the base. It cannot be dropped on a tree still at rc5 or rc6: `SND_SOC_RT5645` goes back to being promptless, `olddefconfig` then silently drops `CONFIG_SND_SOC_RT5645=y` and the analog card disappears with no error. The hash is now a mainline one, so it may be cited in a commit message |
 | `0006` phanbell keep the GPU rail on (buck3 always-on) | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; `buck3` is already in mainline phanbell |
 | `0007` phanbell do not hardcode a cooling state | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; `map1` is in mainline phanbell, `THERMAL_NO_LIMIT` comes via `imx8mq.dtsi` |
 | `0008` phanbell enable i2c2 and i2c3 | submitted | v2 posted to the imx list 2026-08-08 as part of the 5-patch "Google Coral Dev Board enablement" series; depends on nothing |
@@ -363,6 +363,13 @@ with no fuzz. Full working notes are in
 | `0032` `drm: bridge: cadence: add HDMI audio support to MHDP8501` | pending | needs the MHDP series. v23 still has no audio, so this remains a real gap and is now worth posting as a follow-up to a **live** series rather than a dead one. Reworked for v23: `bridge_to_mhdp()` not `bridge->driver_private`, which v23 leaves NULL since it allocates the bridge with `devm_drm_bridge_alloc()` |
 | `0033` phanbell HDMI audio card on sai4 | pending | needs `0032` and `0031`; **working** - 44.1 kHz plays and Kodi playback is fine |
 
+**Where this set lives.** The numbering in these tables is the `linux-7.2`
+branch, which is the current state: kernel 7.2-rc7, `0005` dropped because the
+base carries it, the MHDP series at v23 as `0021`-`0028`, and
+`CONFIG_DRM_DISPLAY_CONNECTOR=y`. `dev` still has the older shape - kernel
+7.2-rc5, `0005` present and the v20 MHDP import as `0021`-`0026` - so read these
+tables against `linux-7.2`, not against `dev`.
+
 **Submit only a prefix.** Every patch's diff context is generated against the
 state its predecessors leave, so a prefix always applies and an arbitrary subset
 may not — `30b2660e3f` exists because the audio patch had been built on top of
@@ -370,7 +377,7 @@ the pcie ones and applied with fuzz without them. The order now matches the plan
 
 | patches | when |
 |---|---|
-| `0006`–`0010` | now; `0005` is already applied, so once the kernel carries `588852647b81` the Kconfig half comes from the base and `0010` needs only `0008` |
+| `0006`–`0010` | now; the kernel carries `588852647b81`, so the Kconfig half comes from the base and `0010` needs only `0008` |
 | `0011`–`0012` | when `0003` lands |
 | `0013` | keep local; last so it never blocks a prefix |
 | `0021`–`0033` | blocked on the MHDP series |

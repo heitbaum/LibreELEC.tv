@@ -622,14 +622,14 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0002` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | series 1/3 |
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3; needs a v2 - clearing `REF_USE_PAD` when `"extref"` is absent breaks existing devicetrees, and the replacement shape is Frank's call |
 | `0004` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | series 3/3 |
-| `0005` | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** `588852647b81` (2026-08-08); drop on the next kernel bump |
+| ~~`0005`~~ | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** `588852647b81`; dropped on `linux-7.2`, whose kernel is 7.2-rc7 |
 | | **0006–0010 — v2 posted to the imx list 2026-08-08** | |
 | `0006` | Keep the GPU rail on | fixes `buck3: disabling`, problem 4 |
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing. Rates and pad config both corroborated by `/flash/vendor.dts`: i2c2 and i2c3 at `0x186a0` (100 kHz), i2c1 at `0x61a80` (400 kHz), and `i2c2grp`/`i2c3grp` pad config `0x4000007f` |
 | `0009` | Mux the 32 kHz reference clock pad | **ready**; depends on nothing |
 | `0014` | `ASoC: rt5645: Perform the initial jack detect at probe` | **submitted** to ASoC 2026-08-06; no in-tree board meets its two conditions, so it is a no-op upstream |
-| `0010` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0005` and `0008` |
+| `0010` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0008`, and the Kconfig half now comes from the base |
 | | **0011–0012 — blocked behind `0003`** | |
 | `0011` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
 | `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `reg_wlan` |
