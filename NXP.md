@@ -451,11 +451,25 @@ with Krzysztof Kozlowski, Rob Herring, Luca Ceresoli and Alexander Stein
 reviewing through 2026-05-29. Carrying v20 was three revisions out of date.
 
 v23 fetches with `b4 am 20260519-dcss-hdmi-upstreaming-v23-0-5615524a9c63@oss.nxp.com`
-and **applies clean to 7.2-rc6** - no fuzz, no failures. The three 7.2 fixes
-the v20 import needed are therefore obsolete, and so is the reason `git am`
-could never handle `0021`: the old mbox had been hand-edited without
-regenerating its `index` lines, so `git am -3` refused it as "does not apply
-to blobs recorded in its index".
+and **applies clean to 7.2-rc6** - no fuzz, no failures. That also disposes of
+the reason `git am` could never handle the old `0021`: the mbox had been
+hand-edited without regenerating its `index` lines, so `git am -3` refused it
+as "does not apply to blobs recorded in its index".
+
+Two of the three 7.2 fixes the v20 import needed are obsolete - the
+`drm_atomic_commit` rename and the `devm_drm_bridge_alloc` conversion, both of
+which v23 has absorbed. **The third is not.** `cdns_mhdp8501_irq_thread()`
+still queues its debounce work with `mod_delayed_work(system_wq, ...)`, and 7.2
+marks `system_wq` `__WQ_DEPRECATED`, so
+
+    workqueue: work func hotplug_work_func enqueued on deprecated workqueue.
+    Use system_{percpu|dfl}_wq instead.
+
+comes back on the first HDMI plug event - seen at 57669 s of uptime on a v23
+build. The fix is the same one line as before, `system_percpu_wq`, and since it
+applies to upstream as posted it is worth sending to Laurentiu. Applying clean
+is not the same as needing no changes, which is what the earlier note here got
+wrong.
 
 Two bugs surfaced that v20 had been hiding, both fixed:
 
