@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 10 Aug 2026 00:00:00 +0000
+Subject: [PATCH] socket: use void cast for CMSG_DATA to allow compile for
+ arm32
+
+When compiling for arm32 the error: cast increases required alignment
+of target type occurs. CMSG_DATA() yields an unsigned char pointer,
+which has an alignment of one, so casting it to a type that needs
+four byte alignment is diagnosed on targets that do not permit
+unaligned access.
+
+lib/socket.c: In function 'rpc_read_from_socket':
+lib/socket.c:721:57: error: cast increases required alignment of target type [-Werror=cast-align]
+  721 |                                 sin->sin_addr.s_addr = ((struct in_pktinfo *)CMSG_DATA(cmsg))->ipi_addr.s_addr;
+      |                                                         ^
+lib/socket.c:726:71: error: cast increases required alignment of target type [-Werror=cast-align]
+  726 |                                 memcpy(&sin6->sin6_addr.s6_addr[0], &((struct in6_pktinfo *)CMSG_DATA(cmsg))->ipi6_addr.s6_addr[0], 16);
+      |                                                                       ^
+
+Cast via (void *) to allow the compile to succeed, as the control
+message buffer is aligned for the largest cmsghdr member. This matches
+the existing (void *) casts used elsewhere in this file.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ lib/socket.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/socket.c b/lib/socket.c
+index 1baf10d..d46d811 100644
+--- a/lib/socket.c
++++ b/lib/socket.c
+@@ -718,12 +718,12 @@ rpc_read_from_socket(struct rpc_context *rpc)
+                         case IPPROTO_IP:
+                                 sin = (struct sockaddr_in *)&rpc->udp_dst;
+                                 sin->sin_family = AF_INET;
+-                                sin->sin_addr.s_addr = ((struct in_pktinfo *)CMSG_DATA(cmsg))->ipi_addr.s_addr;
++                                sin->sin_addr.s_addr = ((struct in_pktinfo *)(void *)CMSG_DATA(cmsg))->ipi_addr.s_addr;
+                                 break;
+                         case IPPROTO_IPV6:
+                                 sin6 = (struct sockaddr_in6 *)&rpc->udp_dst;
+                                 sin6->sin6_family = AF_INET6;
+-                                memcpy(&sin6->sin6_addr.s6_addr[0], &((struct in6_pktinfo *)CMSG_DATA(cmsg))->ipi6_addr.s6_addr[0], 16);
++                                memcpy(&sin6->sin6_addr.s6_addr[0], &((struct in6_pktinfo *)(void *)CMSG_DATA(cmsg))->ipi6_addr.s6_addr[0], 16);
+                                 break;
+                         }
+                         break;
