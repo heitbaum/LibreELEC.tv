@@ -50,6 +50,7 @@
 #include <linux/hwmon.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
+#include <linux/platform_device.h>
 #include <linux/slab.h>
 
 #define NUC_EC_FAN_NAME		"nuc_ec_fan"
@@ -270,10 +271,11 @@ static const struct file_operations transaction_fops = {
 	.release = single_release,
 };
 
-static struct device *nuc_ec_fan_hwmon;
+static struct platform_device *nuc_ec_fan_pdev;
 
 static int __init nuc_ec_fan_init(void)
 {
+	struct device *hwmon;
 	long rpm;
 	int err;
 
@@ -292,11 +294,22 @@ static int __init nuc_ec_fan_init(void)
 		return err;
 	}
 
-	nuc_ec_fan_hwmon =
-		hwmon_device_register_with_info(NULL, NUC_EC_FAN_NAME, NULL,
-						&nuc_ec_fan_chip_info, NULL);
-	if (IS_ERR(nuc_ec_fan_hwmon))
-		return PTR_ERR(nuc_ec_fan_hwmon);
+	/* hwmon_device_register_with_info() rejects a NULL parent when a
+	 * chip_info is supplied, so anchor the sensor on a platform device.
+	 */
+	nuc_ec_fan_pdev = platform_device_register_simple(NUC_EC_FAN_NAME, -1,
+							  NULL, 0);
+	if (IS_ERR(nuc_ec_fan_pdev))
+		return PTR_ERR(nuc_ec_fan_pdev);
+
+	hwmon = devm_hwmon_device_register_with_info(&nuc_ec_fan_pdev->dev,
+						     NUC_EC_FAN_NAME, NULL,
+						     &nuc_ec_fan_chip_info,
+						     NULL);
+	if (IS_ERR(hwmon)) {
+		platform_device_unregister(nuc_ec_fan_pdev);
+		return PTR_ERR(hwmon);
+	}
 
 	nuc_ec_fan_debugfs = debugfs_create_dir(NUC_EC_FAN_NAME, NULL);
 	debugfs_create_file("ecdump", 0400, nuc_ec_fan_debugfs, NULL,
@@ -313,7 +326,7 @@ static int __init nuc_ec_fan_init(void)
 static void __exit nuc_ec_fan_exit(void)
 {
 	debugfs_remove_recursive(nuc_ec_fan_debugfs);
-	hwmon_device_unregister(nuc_ec_fan_hwmon);
+	platform_device_unregister(nuc_ec_fan_pdev);
 }
 
 module_init(nuc_ec_fan_init);
