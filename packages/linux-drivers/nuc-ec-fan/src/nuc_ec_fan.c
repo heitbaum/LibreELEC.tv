@@ -40,6 +40,7 @@
  * debugfs (under /sys/kernel/debug/nuc_ec_fan/)
  * ---------------------------------------------
  *   ecdump        read: hexdump of all 256 EC RAM bytes via ec_read()
+ *   altdump       read: hexdump of the secondary EC channel (alt_channel=1)
  *   transaction   write: "<cmd> <rlen> [wbyte ...]" then read back the reply.
  *                 Requires allow_transaction=1.  Issuing arbitrary EC
  *                 commands can change EC state - use only for discovery.
@@ -47,7 +48,9 @@
 
 #include <linux/acpi.h>
 #include <linux/debugfs.h>
+#include <linux/delay.h>
 #include <linux/hwmon.h>
+#include <linux/io.h>
 #include <linux/module.h>
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
@@ -76,6 +79,36 @@ MODULE_PARM_DESC(divisor, "if non-zero, rpm = divisor / raw (default 0: rpm = ra
 static bool allow_transaction;
 module_param(allow_transaction, bool, 0644);
 MODULE_PARM_DESC(allow_transaction, "allow ec_transaction() probes via debugfs");
+
+/*
+ * Secondary EC channel.
+ *
+ * EC0's _CRS reserves six I/O ports - 0x62/0x66 for the standard ACPI EC
+ * that the kernel drives, plus 0x68/0x6C and 0x6A/0x6E.  /proc/ioports
+ * shows acpi_ec claiming only 0x62 ("EC data") and 0x66 ("EC cmd"); the
+ * other four are reserved by the PNP0C09 device but left unclaimed, so
+ * nothing in the kernel drives them.
+ *
+ * ECCM, the AML field at 0x6E, is polled for an IBF-style busy bit of
+ * 0x02 before a command is written, which is the ordinary ACPI EC
+ * protocol on a different port pair.  That makes 0x6E the command/status
+ * register and 0x6A its data register.
+ *
+ * Reads here use the standard RD_EC (0x80) command rather than any of the
+ * vendor command codes the firmware issues (0x86-0x8B via WECC), which are
+ * writes with unknown side effects.
+ */
+static bool alt_channel;
+module_param(alt_channel, bool, 0644);
+MODULE_PARM_DESC(alt_channel, "enable the secondary EC channel reader");
+
+static unsigned int alt_cmd = 0x6E;
+module_param(alt_cmd, uint, 0644);
+MODULE_PARM_DESC(alt_cmd, "secondary channel command/status port (default 0x6E)");
+
+static unsigned int alt_data = 0x6A;
+module_param(alt_data, uint, 0644);
+MODULE_PARM_DESC(alt_data, "secondary channel data port (default 0x6A)");
 
 static struct dentry *nuc_ec_fan_debugfs;
 static DEFINE_MUTEX(nuc_ec_fan_lock);
@@ -163,6 +196,84 @@ static const struct hwmon_chip_info nuc_ec_fan_chip_info = {
 	.ops = &nuc_ec_fan_hwmon_ops,
 	.info = nuc_ec_fan_info,
 };
+
+/* ACPI EC status register bits, as used on the standard 0x62/0x66 pair. */
+#define EC_SC_OBF		0x01	/* output buffer full - data ready */
+#define EC_SC_IBF		0x02	/* input buffer full - EC still busy */
+#define EC_CMD_RD_EC		0x80	/* read a byte of EC address space */
+
+#define ALT_POLL_US		10
+#define ALT_TIMEOUT_US		10000
+
+static int alt_wait(u8 mask, u8 want)
+{
+	unsigned int waited = 0;
+	u8 sc;
+
+	for (;;) {
+		sc = inb(alt_cmd);
+		if ((sc & mask) == want)
+			return 0;
+		if (waited >= ALT_TIMEOUT_US)
+			return -ETIMEDOUT;
+		udelay(ALT_POLL_US);
+		waited += ALT_POLL_US;
+	}
+}
+
+static int alt_read(u8 addr, u8 *val)
+{
+	int err;
+
+	err = alt_wait(EC_SC_IBF, 0);
+	if (err)
+		return err;
+	outb(EC_CMD_RD_EC, alt_cmd);
+
+	err = alt_wait(EC_SC_IBF, 0);
+	if (err)
+		return err;
+	outb(addr, alt_data);
+
+	err = alt_wait(EC_SC_OBF, EC_SC_OBF);
+	if (err)
+		return err;
+	*val = inb(alt_data);
+
+	return 0;
+}
+
+static int altdump_show(struct seq_file *s, void *unused)
+{
+	u8 buf[NUC_EC_RAM_SIZE];
+	unsigned int i;
+	int err;
+
+	if (!alt_channel) {
+		seq_puts(s, "disabled - set alt_channel=1 to enable\n");
+		return 0;
+	}
+
+	seq_printf(s, "# secondary channel cmd=0x%02x data=0x%02x status=0x%02x\n",
+		   alt_cmd, alt_data, inb(alt_cmd));
+
+	mutex_lock(&nuc_ec_fan_lock);
+	for (i = 0; i < NUC_EC_RAM_SIZE; i++) {
+		err = alt_read(i, &buf[i]);
+		if (err) {
+			mutex_unlock(&nuc_ec_fan_lock);
+			seq_printf(s, "alt_read(0x%02x) failed: %d\n", i, err);
+			return 0;
+		}
+	}
+	mutex_unlock(&nuc_ec_fan_lock);
+
+	for (i = 0; i < NUC_EC_RAM_SIZE; i += 16)
+		seq_printf(s, "%02x: %*ph\n", i, 16, buf + i);
+
+	return 0;
+}
+DEFINE_SHOW_ATTRIBUTE(altdump);
 
 static int ecdump_show(struct seq_file *s, void *unused)
 {
@@ -316,6 +427,8 @@ static int __init nuc_ec_fan_init(void)
 			    &ecdump_fops);
 	debugfs_create_file("transaction", 0600, nuc_ec_fan_debugfs, NULL,
 			    &transaction_fops);
+	debugfs_create_file("altdump", 0400, nuc_ec_fan_debugfs, NULL,
+			    &altdump_fops);
 
 	pr_info(NUC_EC_FAN_NAME ": offset 0x%02x width %u reads %ld rpm\n",
 		offset, width, rpm);
