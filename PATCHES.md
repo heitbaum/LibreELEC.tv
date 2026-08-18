@@ -151,6 +151,7 @@ Patches that should be sent to the upstream project but have not yet been submit
 | addons/addon-depends/rpi_ws281x | `0001-rename-version-to-VERSION-to-avoid-shadowing-cxx20.patch` | Rudi Heitbaum — rename CMake `version` file to avoid shadowing C++20 `<version>` |
 | addons/addon-depends/system-tools-depends/hd-idle | `0001-makefile.patch` | Lukas Rusak — drop `-o root -g root` from install for non-root cross-build |
 | addons/addon-depends/rpi-tools-depends/lg-gpio | `0001-PY_LGPIO-replace-removed-SWIG-Python-2-compatibility.patch` | Rudi Heitbaum — swig 4.5.0 removed the Python 2 compatibility macros from `pyhead.swg`, so the 21 `PyInt_*`/`PyString_*` calls in `PY_LGPIO/lgpio.i` no longer compile; to submit to joan2937/lg |
+| addons/service/tvheadend43 | `0003-transcoding-use-the-new-lavc-supported-config-API.patch` | Rudi Heitbaum — libavcodec 63 (FFmpeg 9.0) dropped the `AVCodec` `pix_fmts`/`sample_fmts`/`supported_samplerates`/`ch_layouts` arrays, so `src/transcoding/codec/codec.c` fails to build against ffmpegx 9.0.1; read them with `avcodec_get_supported_config()` (libavcodec 61.13.100) where it is available; to submit to tvheadend/tvheadend |
 
 ### Submitted upstream
 
