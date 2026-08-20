@@ -2,8 +2,8 @@
 # Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libfyaml"
-PKG_VERSION="v1.0.0-alpha7"
-PKG_SHA256="ce07e69b743e1fbdb0752d62dc6eb5e27ad1bb7396cb1ffd0fad11c049da6be1"
+PKG_VERSION="v1.0.0-beta1"
+PKG_SHA256="ca0ef273821e15673e76b4a2a9643ddac74ab26c41e8899d40311a47836d2216"
 PKG_LICENSE="MIT"
 PKG_SITE="https://github.com/pantoniou/libfyaml"
 PKG_URL="https://github.com/pantoniou/libfyaml/archive/${PKG_VERSION}.tar.gz"
