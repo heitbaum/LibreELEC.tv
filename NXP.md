@@ -466,10 +466,10 @@ marks `system_wq` `__WQ_DEPRECATED`, so
     Use system_{percpu|dfl}_wq instead.
 
 comes back on the first HDMI plug event - seen at 57669 s of uptime on a v23
-build. The fix is the same one line as before, `system_percpu_wq`, and since it
-applies to upstream as posted it is worth sending to Laurentiu. Applying clean
-is not the same as needing no changes, which is what the earlier note here got
-wrong.
+build. The fix is the same one line as before, `system_percpu_wq`, now carried
+as `0034`, and since it applies to upstream as posted it is worth sending to
+Laurentiu. Applying clean is not the same as needing no changes, which is what
+the earlier note here got wrong.
 
 Two bugs surfaced that v20 had been hiding, both fixed:
 
@@ -636,23 +636,24 @@ resumes when it does, and the cards come up. Check `aplay -l`, not the log.
 | `0002` | `dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for i.MX8MQ` | series 1/3 |
 | `0003` | `PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ` | series 2/3; needs a v2 - clearing `REF_USE_PAD` when `"extref"` is absent breaks existing devicetrees, and the replacement shape is Frank's call |
 | `0004` | `arm64: dts: imx8mq: Declare the PCIe extref clock` (5 boards) | series 3/3 |
-| ~~`0005`~~ | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** `588852647b81`; dropped on `linux-7.2`, whose kernel is 7.2-rc7 |
+| ~~`0005`~~ | `ASoC: rt5645: Make the Kconfig symbol user selectable` | **in mainline** `588852647b81`; dropped on `linux-7.2`, whose kernel is now 7.2 final |
 | | **0006–0010 — v2 posted to the imx list 2026-08-08** | |
 | `0006` | Keep the GPU rail on | fixes `buck3: disabling`, problem 4 |
 | `0007` | Do not hardcode a cooling state that may not exist | **ready**; fixes the trip 3 bind failure |
 | `0008` | Enable i2c2 and i2c3 | **ready**; depends on nothing. Rates and pad config both corroborated by `/flash/vendor.dts`: i2c2 and i2c3 at `0x186a0` (100 kHz), i2c1 at `0x61a80` (400 kHz), and `i2c2grp`/`i2c3grp` pad config `0x4000007f` |
 | `0009` | Mux the 32 kHz reference clock pad | **ready**; depends on nothing |
-| `0014` | `ASoC: rt5645: Perform the initial jack detect at probe` | **submitted** to ASoC 2026-08-06; no in-tree board meets its two conditions, so it is a no-op upstream |
+| ~~`0014`~~ | `ASoC: rt5645: Perform the initial jack detect at probe` | **in mainline**; landed between 7.2-rc7 and 7.2 final, so dropped on `linux-7.2` and still required on any rc tree |
 | `0010` | rt5645 analog audio via `simple-audio-card` | **working** (needs the `soundconfig` mixer state, `b07e398f62`); needs `0008`, and the Kconfig half now comes from the base |
 | | **0011–0012 — blocked behind `0003`** | |
 | `0011` | Enable pcie0 and pcie1, with the VPH rail and `reg_wlan` | needs `0003`; carries the monitor clock description |
 | `0012` | QCA6174 Bluetooth on uart2 | **working**; needs `0011` for `reg_wlan` |
 | `0013` | 40-pin header I2S card on SAI1 | **working**; weakest of the set, keep local — and last, so it never blocks a prefix |
-| | **0021–0033 — imported HDMI stack, now v23** | |
+| | **0021–0034 — imported HDMI stack, now v23** | |
 | `0021`-`0028` | Cadence MHDP8501 HDMI/DP (Laurentiu Palcu, v23) | in active review upstream; applies clean to 7.2-rc6 |
 | `0029`-`0031` | evk / pico-pi / phanbell DCSS + HDMI enablement | downstream, needs the MHDP series |
 | `0032` | HDMI audio for MHDP8501 via `DRM_BRIDGE_OP_HDMI_AUDIO` | **working**; v23 still has no audio, so submit it as a follow-up |
 | `0033` | phanbell HDMI audio card on SAI4, 32 bit slots | **working**; needs `0032` |
+| `0034` | `drm: bridge: cadence: use system_percpu_wq for the MHDP` | the one 7.2 fix v23 still needs; submit to Laurentiu as a follow-up |
 
 The whole set applies to pristine 7.2-rc5 with no fuzz and no offsets.
 `0008`-`0013` were rebuilt for upstream in `3d25559614`; see `PATCHES.md` for
