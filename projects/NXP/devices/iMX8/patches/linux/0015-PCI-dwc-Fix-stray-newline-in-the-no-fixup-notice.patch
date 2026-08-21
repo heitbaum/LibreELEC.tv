@@ -14,6 +14,7 @@ and the second carries no device prefix:
 The three sibling messages in the same function all keep the "; " inline
 and end with a single newline. Do the same here.
 
+Fixes: 3b69e1d3815f ("PCI: dwc: Add dw_pcie_parent_bus_offset() checking and debug")
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
