@@ -338,7 +338,7 @@ it reports untracked patches for the tracked ref (master) only. Classify or drop
 
 `tools/patch-scan.py` only walks `packages/`, so nothing under `projects/` is
 reconciled by it or was tracked here at all. The Coral Dev Board set is the one
-body of work large enough to need rows. It is **dev only** — 20 patches under
+body of work large enough to need rows. It is **dev only** — 21 patches under
 `projects/NXP/devices/iMX8/patches/linux/`, all against linux 7.2-rc5, applying
 with no fuzz. Full working notes are in
 `NXP.md`; this table is the submission state.
@@ -358,6 +358,7 @@ with no fuzz. Full working notes are in
 | `0011` phanbell enable pcie0 and pcie1 | pending | needs `0003` - pristine `imx8mq_pcie_init_phy()` sets `REF_USE_PAD` unconditionally, and pcie0 takes REF_CLK from the internal PLL, so it needs that made conditional. `0002` documents the `"extref"` name pcie1 uses. Carries the VPH rail and `reg_wlan` |
 | `0012` phanbell QCA6174 Bluetooth on uart2 | pending | needs `0011` for `reg_wlan` - the QCA6174 is a combo part and WL_REG_ON (GPIO3_IO11) powers the Bluetooth side as much as the wifi radio |
 | `0014` `ASoC: rt5645: Perform the initial jack detect at probe` | **in mainline, patch dropped** | Landed between 7.2-rc7 and 7.2 final - verified absent from both 7.2-rc5 and 7.2-rc7, and present in 7.2 final at `sound/soc/codecs/rt5645.c:3498`, byte-identical to the patch down to the comment. Dropped on `linux-7.2`/`kernel13` alongside `0005`, but it must stay on any tree still at rc5 or rc6, which includes `dev`. The bug: any `simple-audio-card` user of rt5645/rt5650 with `hp-detect-gpios` and `jd-mode = 0` is silent until the jack is physically replugged, because nothing calls `rt5645_set_jack_detect()` and so nothing force enables the `LDO2`/`Mic Det Power` supplies `HP amp` depends on. It carried **no `Fixes:` and no `Cc: stable`**: no in-tree DTS references `realtek,rt5645`, the three `rt5650` boards (mt8173-elm, mt8186-corsola-squirtle/chinchou) all set `realtek,jd-mode = <2>`, and no DT anywhere uses `hp-detect-gpios`, so both conditions it tests were unmet upstream and it could not affect a released kernel |
+| `0015` `PCI: dwc: Fix stray newline in the no-fixup notice` | pending | Rudi Heitbaum — `dw_pcie_parent_bus_offset()` breaks its format string before the semicolon, so the "no fixup was ever needed" note is emitted as two log records and the second carries no device prefix. The three sibling messages in the same function all keep the `"; "` inline with a single trailing newline. Cosmetic only, so no `Fixes:` and no `Cc: stable`. Not a 7.2 regression - the same text is in 6.17.6, 7.1-rc6, 7.2-rc5, 7.2-rc7 and 7.2 final, so it arrived with `use_parent_dt_ranges` and its introducing commit has to be looked up in a git tree if a `Fixes:` is wanted after all. Applies with no fuzz to 7.2-rc5, 7.2-rc7 and 7.2 final, so it can be carried on `dev` and on the PR branch unchanged; to submit to linux-pci |
 | `0013` phanbell 40-pin header I2S card on sai1 | pending | weakest of the set - a dummy card for an expansion header with `linux,spdif-dit` standing in for a codec that is not there. Consider keeping this one local rather than posting it |
 | `0021`-`0028` Cadence MHDP8501 HDMI/DP (Laurentiu Palcu, `[PATCH v23 0/8]`) | imported | 8 patches, unmerged upstream but in active review. Applies clean to 7.2-rc6, so two of the three 7.2 fixes the v20 import needed are gone - the `drm_atomic_commit` rename and the `devm_drm_bridge_alloc` conversion. The third is still needed and is now carried separately as `0034`. Needs `CONFIG_DRM_DISPLAY_CONNECTOR` |
 | `0029` imx8mq-evk DCSS + HDMI (Lucas Stach) | imported | downstream, needs the MHDP series |
@@ -375,6 +376,8 @@ is at v23 as `0021`-`0028`, `0034` carries the one 7.2 fix that import still
 needs, and `CONFIG_DRM_DISPLAY_CONNECTOR=y`. `dev` still has the older shape -
 kernel 7.2-rc5, `0005` and `0014` both still required, and the v20 MHDP import as
 `0021`-`0026` - so read these tables against `linux-7.2`, not against `dev`.
+`0015` is the exception: it is new, it lives on `dev`, and it applies unchanged
+to every 7.2 so it can be carried on either branch.
 
 **Submit only a prefix.** Every patch's diff context is generated against the
 state its predecessors leave, so a prefix always applies and an arbitrary subset
@@ -391,6 +394,8 @@ the pcie ones and applied with fuzz without them. The order now matches the plan
 Verified with `git apply`, which refuses fuzz and so is the real test for
 `git am`: `0001`–`0014` apply in order, `0006`–`0010` apply to a pristine
 `imx8mq-phanbell.dts`, `0011`–`0012` apply on top, and `0013` on top of that.
+`0015` touches `pcie-designware.c`, which nothing else in the set touches, so it
+carries no ordering dependency either way.
 
 Three of these dependencies are functional rather than textual, and reading patch
 context does not find that class at all. `0012` applies to a tree without `0011`

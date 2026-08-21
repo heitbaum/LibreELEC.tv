@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 22 Aug 2026 00:15:00 +1000
+Subject: [PATCH] PCI: dwc: Fix stray newline in the no-fixup notice
+
+dw_pcie_parent_bus_offset() logs a note when a platform that once had a
+cpu_addr_fixup() turns out not to need one. The format string breaks the
+line before the semicolon, so the one message is emitted as two records
+and the second carries no device prefix:
+
+  imx6q-pcie 33800000.pcie: config reg[1] 0x1ff00000 == cpu 0x1ff00000
+  ; no fixup was ever needed for this devicetree
+
+The three sibling messages in the same function all keep the "; " inline
+and end with a single newline. Do the same here.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index ec4722e..a6b7d04 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -1358,7 +1358,7 @@ resource_size_t dw_pcie_parent_bus_offset(struct dw_pcie *pci,
+ 		 * Log a note if devicetree didn't describe a translation.
+ 		 */
+ 		if (reg_addr == cpu_phys_addr)
+-			dev_info(dev, "%s reg[%d] %#010llx == cpu %#010llx\n; no fixup was ever needed for this devicetree\n",
++			dev_info(dev, "%s reg[%d] %#010llx == cpu %#010llx; no fixup was ever needed for this devicetree\n",
+ 				 reg_name, index, reg_addr,
+ 				 (unsigned long long) cpu_phys_addr);
+ 	} else {
+-- 
+2.47.1
+
