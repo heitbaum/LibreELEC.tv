@@ -315,3 +315,15 @@ Progressing, not tracked here: PR #11104 (OpenSSL 4.0.x — master is still on 3
 
 - **Allwinner H700/H618 (sun50iw9/sun50iw10) — A523 SoC** — add support
 - **Qualcomm** — fix broken platform support
+- **Radxa ROCK Pi N10 (RK3399Pro)** — mainline the board and bring up the NPU. The tree
+  already builds for it (`UBOOT_SYSTEM=rock-pi-n10`, u-boot 2026.07 has
+  `rock-pi-n10-rk3399pro_defconfig`, linux 7.1.2 has `rk3399pro-rock-pi-n10.dts`), but the
+  upstream board dts is a 22-line stub: **gpu, i2s0, i2s1, spdif, saradc, tcphy1 and
+  usbdrd3_1 are all left `disabled`**, so there is no GL for Kodi and no audio at all.
+  Vendor wiring, confirmed from the running 4.4 BSP: i2s0 `@ff880000` drives the es8316
+  analog codec and i2s1 `@ff8a0000` drives the HDMI codec. Wifi is an AP6398S (BCM4359C0,
+  SDIO `02d0:4359`) — the vendor DT's `wifi_chip_type = ap6256` is wrong. The NPU is a
+  separate RK1808 die on an internal USB 3.0 link behind `usbdrd3_1`, with no mainline
+  driver and a 22 MB blob set re-pushed every boot, so it is irrelevant to Kodi. Full
+  vendor capture, decompiled device trees and analysis live outside this tree in
+  `rockpin10-bringup` (vendor blobs must not enter LibreELEC history).
