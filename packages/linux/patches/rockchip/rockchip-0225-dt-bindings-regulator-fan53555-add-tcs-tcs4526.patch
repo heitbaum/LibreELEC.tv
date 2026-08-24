@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 22 Aug 2026 18:30:00 +1000
+Subject: [PATCH] dt-bindings: regulator: fan53555: add tcs,tcs4526
+
+The driver has accepted tcs,tcs4526 since commit 5eee5eced95f
+("regulator: fan53555: add tcs4526"), which added the compatible to both
+the of_device_id and i2c_device_id tables for the TCS4526, a chip that
+reports id 0 rather than the TCS4525's id 12.
+
+The binding was converted to DT schema afterwards, in commit 6cea468b680e
+("regulator: dt-bindings: Convert Fairchild FAN53555 to DT schema"), and
+only picked up tcs,tcs4525. No in-tree DTS used the 4526 string at the
+time, so nothing flagged the omission.
+
+RK3399Pro boards use the TCS4526 for vdd_gpu and vdd_cpu_b, so a DTS
+describing them fails dtbs_check today even though the driver binds
+correctly.
+
+Add the missing compatible.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml b/Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml
+--- a/Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml
++++ b/Documentation/devicetree/bindings/regulator/fcs,fan53555.yaml
+@@ -23,6 +23,7 @@
+           - silergy,syr827
+           - silergy,syr828
+           - tcs,tcs4525
++          - tcs,tcs4526
+       - items:
+           - const: rockchip,rk8601
+           - const: rockchip,rk8600
+-- 
+2.51.0
