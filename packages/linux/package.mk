@@ -30,8 +30,8 @@ case "${LINUX}" in
     PKG_PATCH_DIRS="raspberrypi"
     ;;
   rockchip)
-    PKG_VERSION="05f7e89ab9731565d8a62e3b5d1ec206485eeb0b" # 6.19.0
-    PKG_SHA256="9e2cf7d100fba5c8a8d4f68f8a4926e8ae2a9d47ed6506a8796a19b1fb103b09"
+    PKG_VERSION="8d3ae59288f1e7d58d76558a6ee96d533bc5019f" # 7.2.0
+    PKG_SHA256="2aa2222302771165aa398c30bf66aca1a2433dd1a3b36db43e7157689a090a97"
     PKG_URL="https://github.com/chewitt/linux/archive/${PKG_VERSION}.tar.gz"
     PKG_SOURCE_NAME="linux-${LINUX}-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="default rockchip"
@@ -41,11 +41,6 @@ case "${LINUX}" in
     PKG_SHA256="8ba259e8e7b13ec6ef0941c8a39ad90b24bd4a4d6c0010ba6bafb794550ecd03"
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
     PKG_PATCH_DIRS="default"
-    case ${DEVICE} in
-      RK3288|RK3328|RK3399)
-        PKG_PATCH_DIRS+=" rockchip-old"
-        ;;
-    esac
     ;;
 esac
 

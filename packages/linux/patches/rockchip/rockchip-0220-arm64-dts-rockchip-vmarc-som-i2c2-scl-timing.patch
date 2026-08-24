@@ -1,0 +1,42 @@
+From 80272b433e138ef3a2274079685023b9d4bfaf30 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 12:57:17 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-vmarc-som: add i2c2 scl
+ timing
+
+The hym8563 on i2c2 does not ack:
+
+  rtc-hym8563 2-0051: could not init device, -6
+
+It is also the ext_clock for sdio-pwrseq, so wifi does not come up
+either.
+
+i2c2 runs at 400 kHz with no scl edge times. The core defaults both to
+300 ns and rk3x-i2c derives the high period from
+
+  min_high_ns = scl_rise_ns + 600
+
+giving 900 ns, which is short for this bus. It acks at 100 kHz.
+
+Set the edges to the values i2c3 already uses, giving 1050 ns at
+400 kHz.
+
+Tested on a Radxa ROCK Pi N10: rtc0 registers and keeps time across a
+reboot, the sdio card enumerates at SDR104 and wlan0 appears.
+---
+ arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+index 64e6ba3..074f09c 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -296,6 +296,8 @@
+ 
+ &i2c2 {
+ 	clock-frequency = <400000>;
++	i2c-scl-falling-time-ns = <15>;
++	i2c-scl-rising-time-ns = <450>;
+ 	status = "okay";
+ 
+ 	hym8563: rtc@51 {

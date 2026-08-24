@@ -1,0 +1,74 @@
+From 11b8edf8d7c8b38627a43b6b4789c2cdcb44012e Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 16:20:51 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-rock-pi-n10: add analog audio
+
+The Dalang carrier has an es8316 codec on i2c4 driven from i2s0, with the
+headphone jack at J11, but neither was described so the board had no
+analog audio. Describe both and add the graph card that binds them.
+
+The codec is on the carrier, but it cannot be described there today: it
+needs SCLK_I2S_8CH_OUT and the i2s0_2ch_bus pinctrl, neither of which
+exists on the rk3288 rock-pi-n8 that shares the carrier.
+
+Values read from the vendor 4.4 device tree.
+---
+ .../dts/rockchip/rk3399pro-rock-pi-n10.dts    | 42 +++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+index e71b94c..4ab52a5 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+@@ -18,9 +18,51 @@
+ 	chosen {
+ 		stdout-path = "serial2:1500000n8";
+ 	};
++
++	sound: sound {
++		compatible = "audio-graph-card";
++		label = "Analog";
++		dais = <&i2s0_p0>;
++	};
+ };
+ 
+ &bluetooth {
+ 	compatible = "brcm,bcm4329-bt";
+ 	status = "okay";
+ };
++
++&i2c4 {
++	i2c-scl-rising-time-ns = <300>;
++	i2c-scl-falling-time-ns = <15>;
++	status = "okay";
++
++	es8316: codec@11 {
++		compatible = "everest,es8316";
++		reg = <0x11>;
++		clocks = <&cru SCLK_I2S_8CH_OUT>;
++		clock-names = "mclk";
++		#sound-dai-cells = <0>;
++
++		port {
++			es8316_p0_0: endpoint {
++				remote-endpoint = <&i2s0_p0_0>;
++			};
++		};
++	};
++};
++
++&i2s0 {
++	pinctrl-0 = <&i2s0_2ch_bus>;
++	pinctrl-1 = <&i2s0_2ch_bus_bclk_off>;
++	rockchip,capture-channels = <2>;
++	rockchip,playback-channels = <2>;
++	status = "okay";
++
++	i2s0_p0: port {
++		i2s0_p0_0: endpoint {
++			dai-format = "i2s";
++			mclk-fs = <256>;
++			remote-endpoint = <&es8316_p0_0>;
++		};
++	};
++};
