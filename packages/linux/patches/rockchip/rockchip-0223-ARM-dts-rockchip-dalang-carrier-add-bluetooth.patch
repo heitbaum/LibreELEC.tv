@@ -1,0 +1,40 @@
+From f7c6a8d05f5af7555fbef3819a37835076f5f1c8 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 15:51:47 +1000
+Subject: [PATCH] ARM: dts: rockchip: dalang-carrier: add bluetooth
+
+The M.2 E-key socket wires the card's bluetooth side to UART0: RXD, TXD,
+CTS and RTS on pins 32-38, BT_WAKE on 10, BT_HOST on 22, BT_REG_ON on 44
+and the RTC clkout on 52. The wifi side on &sdio0 enumerates itself, but a
+serdev device does not, so it has to be described.
+
+Add the node with what the carrier owns: uart0_rts, which it routes to
+pin 38 but was not claiming, and the clkout that feeds the card's
+32.768 kHz LPO.
+
+Leave it disabled. The module is an option and its control gpios reach the
+socket through the som, so the carrier cannot say a usable device is there.
+---
+ .../boot/dts/rockchip/rockchip-radxa-dalang-carrier.dtsi  | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/rockchip/rockchip-radxa-dalang-carrier.dtsi b/arch/arm/boot/dts/rockchip/rockchip-radxa-dalang-carrier.dtsi
+index cf5e2ed..d5c66cc 100644
+--- a/arch/arm/boot/dts/rockchip/rockchip-radxa-dalang-carrier.dtsi
++++ b/arch/arm/boot/dts/rockchip/rockchip-radxa-dalang-carrier.dtsi
+@@ -112,8 +112,14 @@
+ 
+ &uart0 {
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&uart0_xfer &uart0_cts>;
++	pinctrl-0 = <&uart0_xfer &uart0_cts &uart0_rts>;
+ 	status = "okay";
++
++	bluetooth: bluetooth {
++		clocks = <&hym8563>; /* RTC_CLKO, E-key pin 52 */
++		clock-names = "lpo";
++		status = "disabled";
++	};
+ };
+ 
+ &uart2 {

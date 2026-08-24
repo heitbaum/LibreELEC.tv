@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sat, 22 Aug 2026 21:45:00 +1000
+Subject: [PATCH] drm/rockchip: vop: reject AFBC wider than the decoder can
+ scan out
+
+The AFBC decoder is programmed with hreg_block_split hardcoded to 0, so
+SPLIT mode is never used. As the comment above ROCKCHIP_AFBC_MOD already
+notes, SPLIT "could be enabled via the hreg_block_split register, but is
+not currently handled".
+
+Without it the decoder cannot keep a wide scanout fed. On rk3399 a 1920
+wide AFBC framebuffer is displayed correctly while a 3840 wide one is
+not displayed at all: the screen stays black.
+
+Nothing catches this. vop_plane_atomic_check() validates the AFBC
+format, the source offset and the rotation, but not the width, so the
+atomic commit succeeds and the frame is silently lost. Userspace has no
+way to tell that the configuration it asked for cannot work, and no
+reason to fall back to a linear buffer.
+
+Reject AFBC above the width the decoder can sustain, so the commit fails
+and userspace falls back to linear instead of displaying nothing.
+
+Tested on a Radxa ROCK Pi N10 (rk3399pro): with this applied a 4K
+desktop is displayed instead of a black screen.
+---
+ drivers/gpu/drm/rockchip/rockchip_drm_vop.c | 7 +++++++
+ drivers/gpu/drm/rockchip/rockchip_drm_vop.h | 8 ++++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h b/drivers/gpu/drm/rockchip/rockchip_drm_vop.h
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.h
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.h
+@@ -33,6 +33,14 @@
+ 			| AFBC_FORMAT_MOD_YTR \
+ 	)
+ 
++/*
++ * Without SPLIT mode the AFBC decoder cannot keep a wide scanout fed, so a
++ * wider framebuffer is displayed as a black screen. Reject it in the atomic
++ * check so that userspace falls back to a linear buffer rather than
++ * committing something that never appears.
++ */
++#define ROCKCHIP_AFBC_MAX_WIDTH		2560
++
+ enum vop_data_format {
+ 	VOP_FMT_ARGB8888 = 0,
+ 	VOP_FMT_RGB888,
+diff --git a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c b/drivers/gpu/drm/rockchip/rockchip_drm_vop.c
+--- a/drivers/gpu/drm/rockchip/rockchip_drm_vop.c
++++ b/drivers/gpu/drm/rockchip/rockchip_drm_vop.c
+@@ -883,6 +883,13 @@
+ 				      new_plane_state->rotation);
+ 			return -EINVAL;
+ 		}
++
++		if (drm_rect_width(&new_plane_state->src) >> 16 > ROCKCHIP_AFBC_MAX_WIDTH) {
++			DRM_DEBUG_KMS("AFBC is limited to %d pixels without SPLIT mode, width=%d\n",
++				      ROCKCHIP_AFBC_MAX_WIDTH,
++				      drm_rect_width(&new_plane_state->src) >> 16);
++			return -EINVAL;
++		}
+ 	}
+ 
+ 	return 0;
+-- 
+2.53.0

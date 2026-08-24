@@ -1,0 +1,61 @@
+From 53f9ab0687f517795296adbac236ce1fb2757053 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 16:01:34 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-vmarc-som: add bluetooth
+ gpios
+
+The M.2 E-key socket on the Dalang carrier takes its bluetooth control
+lines through the som, so give them their pins:
+
+  BT,reset_gpio    = <&gpio2 28>  ->  RK_PD4, shutdown-gpios
+  BT,wake_gpio     = <&gpio2 26>  ->  RK_PD2, device-wakeup-gpios
+  BT,wake_host_irq = <&gpio0  5>  ->  RK_PA5, host-wakeup-gpios
+
+Values read from the vendor device tree's bluetooth-platdata node.
+
+The node stays disabled: the module is an option, so nothing here says one
+is fitted.
+---
+ .../dts/rockchip/rk3399pro-vmarc-som.dtsi     | 22 +++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+index 186bead..f8ba5e2 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -48,6 +48,14 @@
+ 	cpu-supply = <&vdd_cpu_l>;
+ };
+ 
++&bluetooth {
++	device-wakeup-gpios = <&gpio2 RK_PD2 GPIO_ACTIVE_HIGH>;
++	host-wakeup-gpios = <&gpio0 RK_PA5 GPIO_ACTIVE_HIGH>;
++	shutdown-gpios = <&gpio2 RK_PD4 GPIO_ACTIVE_HIGH>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&bt_host_wake_l &bt_wake_l &bt_enable_h>;
++};
++
+ &cpu_b0 {
+ 	cpu-supply = <&vdd_cpu_b>;
+ };
+@@ -401,6 +409,20 @@
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&npu_ref_clk>;
+ 
++	bluetooth {
++		bt_enable_h: bt-enable-h {
++			rockchip,pins = <2 RK_PD4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		bt_host_wake_l: bt-host-wake-l {
++			rockchip,pins = <0 RK_PA5 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		bt_wake_l: bt-wake-l {
++			rockchip,pins = <2 RK_PD2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
+ 	hym8563 {
+ 		hym8563_int: hym8563-int {
+ 			rockchip,pins = <4 RK_PD6 0 &pcfg_pull_up>;

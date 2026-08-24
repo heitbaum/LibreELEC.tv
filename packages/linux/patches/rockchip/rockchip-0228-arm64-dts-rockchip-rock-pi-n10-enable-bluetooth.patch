@@ -1,0 +1,27 @@
+From 2d0d56cc829a63d8c2b17db1593d7f05a0bd082c Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 16:01:58 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-rock-pi-n10: enable bluetooth
+
+The Radxa A3 wireless module (AMPAK AP6398S, BCM4359C0) is an option for
+the M.2 E-key socket. The carrier describes the socket and the som its
+gpios, both disabled, so declare the module fitted here.
+
+hci_bcm has no 4359 compatible, so use the generic brcm,bcm4329-bt.
+---
+ arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+index d3c6282..e71b94c 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-rock-pi-n10.dts
+@@ -19,3 +19,8 @@
+ 		stdout-path = "serial2:1500000n8";
+ 	};
+ };
++
++&bluetooth {
++	compatible = "brcm,bcm4329-bt";
++	status = "okay";
++};

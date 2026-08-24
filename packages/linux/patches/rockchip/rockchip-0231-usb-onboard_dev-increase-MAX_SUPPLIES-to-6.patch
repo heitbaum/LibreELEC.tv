@@ -1,0 +1,28 @@
+From 41d8bff70aecab34ccae6c9060ee054e80a32629 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 28 Aug 2026 23:12:06 +1000
+Subject: [PATCH] usb: onboard_dev: increase MAX_SUPPLIES to 6
+
+The rk1808 npu die in an rk3399pro package needs six rail enables raised
+before it will come out of reset, so two is not enough to describe it.
+
+Raise the limit. The array is fixed size in static per-device pdata and in
+onboard_dev_priv, so the cost is a few pointers per entry and nothing is
+allocated per supply.
+---
+ drivers/usb/misc/onboard_usb_dev.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/usb/misc/onboard_usb_dev.h b/drivers/usb/misc/onboard_usb_dev.h
+index 3523f8f..4c6cf0d 100644
+--- a/drivers/usb/misc/onboard_usb_dev.h
++++ b/drivers/usb/misc/onboard_usb_dev.h
+@@ -6,7 +6,7 @@
+ #ifndef _USB_MISC_ONBOARD_USB_DEV_H
+ #define _USB_MISC_ONBOARD_USB_DEV_H
+ 
+-#define MAX_SUPPLIES 2
++#define MAX_SUPPLIES 6
+ 
+ struct onboard_dev_pdata {
+ 	unsigned long reset_us;		/* reset pulse width in us */

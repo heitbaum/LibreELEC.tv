@@ -1,0 +1,129 @@
+From 28f35ca49d83a57bcc8093d07919a7a918ccffe3 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 15:59:15 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-vmarc-som: add the core
+ regulators
+
+vdd_cpu_b and vdd_gpu are tcs4526 regulators on the som's i2c0, alongside
+the rk809. Nothing described them, so the A72 cluster had no cpu-supply
+and could not scale, and the gpu had no mali-supply and stayed off.
+
+Describe both and give the A72 cores, the gpu and the hdmi phy their
+supplies. The hdmi phy takes the always-on analog rails the pcie phy
+already uses, so that describes what is there rather than changing
+behaviour:
+
+  dwhdmi-rockchip ff940000.hdmi: supply avdd-0v9 not found, using dummy regulator
+  dwhdmi-rockchip ff940000.hdmi: supply avdd-1v8 not found, using dummy regulator
+
+Values read from the vendor 4.4 device tree.
+---
+ .../dts/rockchip/rk3399pro-vmarc-som.dtsi     | 66 +++++++++++++++++++
+ 1 file changed, 66 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+index 64e6ba3..2aa6f93 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -47,6 +47,14 @@
+ 	cpu-supply = <&vdd_cpu_l>;
+ };
+ 
++&cpu_b0 {
++	cpu-supply = <&vdd_cpu_b>;
++};
++
++&cpu_b1 {
++	cpu-supply = <&vdd_cpu_b>;
++};
++
+ &emmc_phy {
+ 	status = "okay";
+ };
+@@ -57,7 +65,14 @@
+ 	snps,reset-gpio = <&gpio3 RK_PB7 GPIO_ACTIVE_LOW>;
+ };
+ 
++&gpu {
++	mali-supply = <&vdd_gpu>;
++	status = "okay";
++};
++
+ &hdmi {
++	avdd-0v9-supply = <&vcca_0v9>;
++	avdd-1v8-supply = <&vcca_1v8>;
+ 	ddc-i2c-bus = <&i2c3>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&hdmi_cec>;
+@@ -286,6 +301,46 @@
+ 			};
+ 		};
+ 	};
++
++	vdd_gpu: regulator@10 {
++		compatible = "tcs,tcs4526";
++		reg = <0x10>;
++		fcs,suspend-voltage-selector = <1>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&vsel2_gpio>;
++		regulator-name = "vdd_gpu";
++		regulator-always-on;
++		regulator-boot-on;
++		regulator-min-microvolt = <735000>;
++		regulator-max-microvolt = <1400000>;
++		regulator-ramp-delay = <1000>;
++		vin-supply = <&vcc5v0_sys>;
++		vsel-gpios = <&gpio1 RK_PB6 GPIO_ACTIVE_HIGH>;
++
++		regulator-state-mem {
++			regulator-off-in-suspend;
++		};
++	};
++
++	vdd_cpu_b: regulator@1c {
++		compatible = "tcs,tcs4526";
++		reg = <0x1c>;
++		fcs,suspend-voltage-selector = <1>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&vsel1_gpio>;
++		regulator-name = "vdd_cpu_b";
++		regulator-always-on;
++		regulator-boot-on;
++		regulator-min-microvolt = <712500>;
++		regulator-max-microvolt = <1500000>;
++		regulator-ramp-delay = <2300>;
++		vin-supply = <&vcc5v0_sys>;
++		vsel-gpios = <&gpio1 RK_PC1 GPIO_ACTIVE_HIGH>;
++
++		regulator-state-mem {
++			regulator-off-in-suspend;
++		};
++	};
+ };
+ 
+ &i2c1 {
+@@ -318,6 +373,7 @@
+ 
+ &io_domains {
+ 	status = "okay";
++	audio-supply = <&vcca_1v8>;
+ 	bt656-supply = <&vcca_1v8>;
+ 	gpio1830-supply = <&vccio_3v0>;
+ 	sdmmc-supply = <&vccio_sd>;
+@@ -363,6 +419,16 @@
+ 		};
+ 	};
+ 
++	vsel {
++		vsel1_gpio: vsel1 {
++			rockchip,pins = <1 RK_PC1 RK_FUNC_GPIO &pcfg_pull_down>;
++		};
++
++		vsel2_gpio: vsel2 {
++			rockchip,pins = <1 RK_PB6 RK_FUNC_GPIO &pcfg_pull_down>;
++		};
++	};
++
+ 	vbus_host {
+ 		usb1_en_oc: usb1-en-oc {
+ 			rockchip,pins = <4 RK_PD1 RK_FUNC_GPIO &pcfg_pull_up>;
