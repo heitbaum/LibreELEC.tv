@@ -1,0 +1,14 @@
+[Unit]
+Description=Rockchip RK3399Pro NPU
+ConditionPathExistsGlob=/sys/bus/platform/devices/*usb:device@*
+After=storage.mount
+Requires=storage.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/rk3399pro-npu start
+ExecStop=/usr/bin/rk3399pro-npu stop
+
+[Install]
+WantedBy=multi-user.target

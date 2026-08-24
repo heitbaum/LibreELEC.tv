@@ -1,0 +1,31 @@
+From d795d5b55e234dfa541c7a2b2f93d306ba039043 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 28 Aug 2026 23:12:31 +1000
+Subject: [PATCH] usb: onboard_dev: add the supplies and reset for the rk1808
+
+The rk1808 npu die needs its six rails up and its reset released before it
+appears on the bus. Describe them so the driver does that rather than
+leaving it to userspace.
+
+The rails have no ordering requirement - raising all six together and
+releasing reset 25 ms later brings the die up as reliably as the vendor's
+staggered sequence - so regulator_bulk_enable() enabling them
+concurrently is fine.
+---
+
+diff --git a/drivers/usb/misc/onboard_usb_dev.h b/drivers/usb/misc/onboard_usb_dev.h
+index fb551fd..b252cce 100644
+--- a/drivers/usb/misc/onboard_usb_dev.h
++++ b/drivers/usb/misc/onboard_usb_dev.h
+@@ -135,8 +135,9 @@ static const struct onboard_dev_pdata xmos_xvf3500_data = {
+ };
+ 
+ static const struct onboard_dev_pdata rockchip_rk1808_data = {
+-	.reset_us = 0,
+-	.num_supplies = 0,
++	.reset_us = 25000,
++	.num_supplies = 6,
++	.supply_names = { "vdd", "vddlog", "vddcpu", "vdd0v8", "vcc1v8", "vccio" },
+ 	.is_hub = false,
+ };
+ 

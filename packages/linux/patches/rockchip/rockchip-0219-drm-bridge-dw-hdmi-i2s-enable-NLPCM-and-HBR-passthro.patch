@@ -1,0 +1,180 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 23 Aug 2026 06:45:00 +1000
+Subject: [PATCH] drm/bridge: dw-hdmi: i2s: enable NLPCM and HBR passthrough
+
+The i2s audio path always configures the TX for linear PCM, so a
+receiver is told it is being sent LPCM and a compressed stream is
+ignored. Nothing sets it either way today: dw_hdmi_set_sample_non_pcm()
+has no callers at all, and the only HBR register write lives in
+dw_hdmi_gp_audio_enable(), which platforms on the i2s path such as
+rockchip never reach. Passthrough has never worked here.
+
+A compressed stream is marked by the non audio bit of the IEC channel
+status, which hdmi-codec copies into hparms from the IEC958 control.
+Select the packet layout from it through AUD_CONF2, and take the whole
+subframe rather than the sample width the pcm was opened with, since a
+compressed burst is not samples. Neither NLPCM nor HBR takes the PCUV
+insert bit: that is defined for linear PCM only, where from design id
+0x21 the parity, channel status, user and validity bits are no longer
+carried by the i2s stream and the TX has to insert them.
+
+The control cannot be read in hw_params. alsa-lib sets it from its own
+hw_params hook, which runs after the callback here, so the bit is still
+clear when hw_params looks at it. prepare runs later and is handed the
+same hparms, so the configuration is factored out and run again from
+there: the sampler latches its mode out of the fifo reset at the top of
+the sequence, so writing the mode on its own afterwards is too late.
+
+Tested on a Radxa ROCK Pi N10 (rk3399pro), design id 0x21.
+---
+ .../gpu/drm/bridge/synopsys/dw-hdmi-i2s-audio.c    | 77 ++++++++++++++++++----
+ drivers/gpu/drm/bridge/synopsys/dw-hdmi.h          |  6 ++
+ 2 files changed, 72 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/gpu/drm/bridge/synopsys/dw-hdmi-i2s-audio.c b/drivers/gpu/drm/bridge/synopsys/dw-hdmi-i2s-audio.c
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi-i2s-audio.c
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi-i2s-audio.c
+@@ -12,6 +12,7 @@
+ #include <drm/bridge/dw_hdmi.h>
+ #include <drm/drm_crtc.h>
+ 
++#include <sound/asoundef.h>
+ #include <sound/hdmi-codec.h>
+ 
+ #include "dw-hdmi.h"
+@@ -34,16 +35,20 @@ static inline u8 hdmi_read(struct dw_hdmi_i2s_audio_data *audio, int offset)
+ 	return audio->read(hdmi, offset);
+ }
+ 
+-static int dw_hdmi_i2s_hw_params(struct device *dev, void *data,
+-				 struct hdmi_codec_daifmt *fmt,
+-				 struct hdmi_codec_params *hparms)
++static int dw_hdmi_i2s_config(struct device *dev, void *data,
++			      struct hdmi_codec_daifmt *fmt,
++			      struct hdmi_codec_params *hparms)
+ {
+ 	struct dw_hdmi_i2s_audio_data *audio = data;
+ 	struct dw_hdmi *hdmi = audio->hdmi;
++	unsigned int non_pcm;
+ 	u8 conf0 = 0;
+ 	u8 conf1 = 0;
++	u8 conf2 = 0;
+ 	u8 inputclkfs = 0;
+ 
++	non_pcm = !!(hparms->iec.status[0] & IEC958_AES0_NONAUDIO);
++
+ 	/* it cares I2S only */
+ 	if (fmt->bit_clk_provider | fmt->frame_clk_provider) {
+ 		dev_err(dev, "unsupported clock settings\n");
+@@ -70,14 +75,40 @@ static int dw_hdmi_i2s_hw_params(struct device *dev, void *data,
+ 		/* Fall-thru */
+ 	}
+ 
+-	switch (hparms->sample_width) {
+-	case 16:
+-		conf1 = HDMI_AUD_CONF1_WIDTH_16;
+-		break;
+-	case 24:
+-	case 32:
+-		conf1 = HDMI_AUD_CONF1_WIDTH_24;
+-		break;
++	if (non_pcm) {
++		/*
++		 * TrueHD and DTS-HD MA arrive as 8 channels at 192 kHz and
++		 * need the high bit rate packet layout, everything else is
++		 * sent as non linear pcm. Neither takes the PCUV insert bit,
++		 * which is defined for linear pcm only. A compressed stream
++		 * is not samples either, so the tx has to take the whole
++		 * subframe rather than the sample width the pcm was opened
++		 * with.
++		 */
++		if (hparms->sample_rate == 192000 && hparms->channels == 8)
++			conf2 = HDMI_AUD_CONF2_HBR;
++		else
++			conf2 = HDMI_AUD_CONF2_NLPCM;
++
++		conf1 = HDMI_AUD_CONF1_WIDTH_21;
++	} else {
++		/*
++		 * From design id 0x21 the parity, channel status, user and
++		 * validity bits are no longer carried by the i2s stream and
++		 * the tx has to be asked to insert them.
++		 */
++		if (hdmi_read(audio, HDMI_DESIGN_ID) >= 0x21)
++			conf2 = HDMI_AUD_CONF2_INSERT_PCUV;
++
++		switch (hparms->sample_width) {
++		case 16:
++			conf1 = HDMI_AUD_CONF1_WIDTH_16;
++			break;
++		case 24:
++		case 32:
++			conf1 = HDMI_AUD_CONF1_WIDTH_24;
++			break;
++		}
+ 	}
+ 
+ 	switch (fmt->fmt) {
+@@ -109,10 +140,33 @@ static int dw_hdmi_i2s_hw_params(struct device *dev, void *data,
+ 	hdmi_write(audio, inputclkfs, HDMI_AUD_INPUTCLKFS);
+ 	hdmi_write(audio, conf0, HDMI_AUD_CONF0);
+ 	hdmi_write(audio, conf1, HDMI_AUD_CONF1);
++	hdmi_write(audio, conf2, HDMI_AUD_CONF2);
++	dw_hdmi_set_sample_non_pcm(hdmi, non_pcm);
+ 
+ 	return 0;
+ }
+ 
++static int dw_hdmi_i2s_hw_params(struct device *dev, void *data,
++				 struct hdmi_codec_daifmt *fmt,
++				 struct hdmi_codec_params *hparms)
++{
++	return dw_hdmi_i2s_config(dev, data, fmt, hparms);
++}
++
++/*
++ * alsa-lib sets the IEC958 control from its own hw_params hook, which runs
++ * after the callback above, so the non audio bit is still clear when
++ * hw_params looks at it. prepare runs later and is handed the same hparms,
++ * so run the whole sequence again from here: the sampler latches its mode
++ * out of the fifo reset, and writing the mode afterwards is too late.
++ */
++static int dw_hdmi_i2s_prepare(struct device *dev, void *data,
++			       struct hdmi_codec_daifmt *fmt,
++			       struct hdmi_codec_params *hparms)
++{
++	return dw_hdmi_i2s_config(dev, data, fmt, hparms);
++}
++
+ static int dw_hdmi_i2s_audio_startup(struct device *dev, void *data)
+ {
+ 	struct dw_hdmi_i2s_audio_data *audio = data;
+@@ -180,6 +234,7 @@ static int dw_hdmi_i2s_hook_plugged_cb(struct device *dev, void *data,
+ 
+ static const struct hdmi_codec_ops dw_hdmi_i2s_ops = {
+ 	.hw_params	= dw_hdmi_i2s_hw_params,
++	.prepare	= dw_hdmi_i2s_prepare,
+ 	.audio_startup  = dw_hdmi_i2s_audio_startup,
+ 	.audio_shutdown	= dw_hdmi_i2s_audio_shutdown,
+ 	.get_eld	= dw_hdmi_i2s_get_eld,
+diff --git a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.h b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.h
+--- a/drivers/gpu/drm/bridge/synopsys/dw-hdmi.h
++++ b/drivers/gpu/drm/bridge/synopsys/dw-hdmi.h
+@@ -929,8 +929,14 @@ enum {
+ 	HDMI_AUD_CONF1_MODE_BURST_1 = 0x60,
+ 	HDMI_AUD_CONF1_MODE_BURST_2 = 0x80,
+ 	HDMI_AUD_CONF1_WIDTH_16 = 0x10,
++	HDMI_AUD_CONF1_WIDTH_21 = 0x15,
+ 	HDMI_AUD_CONF1_WIDTH_24 = 0x18,
+ 
++/* AUD_CONF2 field values */
++	HDMI_AUD_CONF2_HBR = 0x1,
++	HDMI_AUD_CONF2_NLPCM = 0x2,
++	HDMI_AUD_CONF2_INSERT_PCUV = 0x4,
++
+ /* AUD_CTS3 field values */
+ 	HDMI_AUD_CTS3_N_SHIFT_OFFSET = 5,
+ 	HDMI_AUD_CTS3_N_SHIFT_MASK = 0xe0,
+-- 
+2.53.0
