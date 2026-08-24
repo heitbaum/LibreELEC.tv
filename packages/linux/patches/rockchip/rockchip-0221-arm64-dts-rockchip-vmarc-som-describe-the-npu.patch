@@ -1,0 +1,243 @@
+From 6b0225e5925f1ea4afff674e65172d0edb6f4571 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 28 Aug 2026 23:11:35 +1000
+Subject: [PATCH] arm64: dts: rockchip: rk3399pro-vmarc-som: describe the npu
+
+The rk1808 npu die in an rk3399pro package hangs off usb3 rather than an
+external port, and it is held off until the main die raises its supplies
+and releases its reset. Nothing described any of that, so the die never
+appeared and the usb controller it sits behind stayed disabled.
+
+Enable that controller as a host, and describe the die as an onboard usb
+device so the driver holds its 24 MHz reference clock - SCLK_WIFI_PMU,
+which nothing else in the system claims.
+
+Describe the rail enables and the reset too. From sheet 12 of the som
+schematic, six gpios enable seven regulators - NPU_PWREN_3 raises both the
+1.8 V rail and the ddr rail through NPU_PWREN_H3:
+
+  gpio0 RK_PA4  NPU_PWREN_1  U2204 lp3985      NPU_VDD_0V8_S0    0.80 V
+  gpio0 RK_PB2  NPU_PWREN_2  U2203 sy8089aac   NPU_VDD_LOG_S0    0.85 V
+  gpio0 RK_PB3  NPU_PWREN_3  U2207 rt9193-18   NPU_VCC_1V8_S3    1.80 V
+                             U2205 sy8089aac   NPU_VCC_DDR_S3
+  gpio1 RK_PC6  NPU_PWREN_4  U2202 sy8088aac   NPU_VDD_CPU_S0    0.85 V
+  gpio1 RK_PC7  NPU_PWREN_5  U2208 rt9193-33   NPU_VCCIO_3V3_S3  3.30 V
+  gpio1 RK_PD0  NPU_PWREN_6  U2206 tcs4525     NPU_VDD_S0
+  gpio1 RK_PA0  CPU_RST_NPU
+
+The core rail is a tcs4525 whose voltage the rk1808 sets over its own i2c,
+which the host cannot reach, so only its enable is described here.
+
+Their order does not matter: raising all six together and releasing reset
+25 ms later brings the die up as reliably as the vendor's staggered
+sequence, so they are plain fixed regulators and the driver may enable
+them as a bulk.
+
+The die takes two identities as it boots, 180a in maskrom and 1808 once
+running. The firmware download between the two is left to userspace.
+---
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+index 46ef524..276e0a7 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -5,6 +5,7 @@
+  * Copyright (c) 2019 Amarula Solutions(India)
+  */
+ 
++#include <dt-bindings/clock/rk3399-cru.h>
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/pinctrl/rockchip.h>
+ #include <dt-bindings/pwm/pwm.h>
+@@ -18,6 +19,78 @@
+ 		mmc1 = &sdmmc;
+ 	};
+ 
++	npu_vdd0v8: regulator-npu-vdd0v8 {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio0 RK_PA4 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vdd0v8_h>;
++		regulator-name = "npu_vdd_0v8_s0";
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
++
++	npu_vddlog: regulator-npu-vddlog {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio0 RK_PB2 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vddlog_h>;
++		regulator-name = "npu_vdd_log_s0";
++		regulator-min-microvolt = <850000>;
++		regulator-max-microvolt = <850000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
++
++	/* NPU_PWREN_3 also enables NPU_VCC_DDR_S3 through NPU_PWREN_H3 */
++	npu_vcc1v8: regulator-npu-vcc1v8 {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio0 RK_PB3 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vcc1v8_h>;
++		regulator-name = "npu_vcc_1v8_s3";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
++
++	npu_vddcpu: regulator-npu-vddcpu {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio1 RK_PC6 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vddcpu_h>;
++		regulator-name = "npu_vdd_cpu_s0";
++		regulator-min-microvolt = <850000>;
++		regulator-max-microvolt = <850000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
++
++	npu_vccio: regulator-npu-vccio {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio1 RK_PC7 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vccio_h>;
++		regulator-name = "npu_vccio_3v3_s3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&vcc5v0_sys>;
++	};
++
++	/* tcs4525; the rk1808 sets its own voltage over the npu's i2c1 */
++	npu_vdd: regulator-npu-vdd {
++		compatible = "regulator-fixed";
++		enable-active-high;
++		gpio = <&gpio1 RK_PD0 GPIO_ACTIVE_HIGH>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&npu_vdd_h>;
++		regulator-name = "npu_vdd_s0";
++		vin-supply = <&vcc5v0_sys>;
++	};
++
+ 	vcc3v3_pcie: regulator-vcc-pcie {
+ 		compatible = "regulator-fixed";
+ 		enable-active-high;
+@@ -397,12 +470,45 @@
+ };
+ 
+ &pinctrl {
++	pinctrl-names = "default";
++	pinctrl-0 = <&npu_ref_clk>;
++
+ 	hym8563 {
+ 		hym8563_int: hym8563-int {
+ 			rockchip,pins = <4 RK_PD6 0 &pcfg_pull_up>;
+ 		};
+ 	};
+ 
++	npu {
++		npu_ref_clk: npu-ref-clk {
++			rockchip,pins = <0 RK_PA2 1 &pcfg_pull_none>;
++		};
++
++		npu_vdd0v8_h: npu-vdd0v8-h {
++			rockchip,pins = <0 RK_PA4 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		npu_vddlog_h: npu-vddlog-h {
++			rockchip,pins = <0 RK_PB2 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		npu_vcc1v8_h: npu-vcc1v8-h {
++			rockchip,pins = <0 RK_PB3 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		npu_vddcpu_h: npu-vddcpu-h {
++			rockchip,pins = <1 RK_PC6 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		npu_vccio_h: npu-vccio-h {
++			rockchip,pins = <1 RK_PC7 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++
++		npu_vdd_h: npu-vdd-h {
++			rockchip,pins = <1 RK_PD0 RK_FUNC_GPIO &pcfg_pull_none>;
++		};
++	};
++
+ 	pcie {
+ 		pcie_pwr: pcie-pwr {
+ 			rockchip,pins = <4 RK_PD4 RK_FUNC_GPIO &pcfg_pull_up>;
+@@ -476,6 +582,10 @@
+ 	status = "okay";
+ };
+ 
++&tcphy1 {
++	status = "okay";
++};
++
+ &tsadc {
+ 	rockchip,hw-tshut-mode = <1>;
+ 	rockchip,hw-tshut-polarity = <1>;
+@@ -500,6 +610,10 @@
+ &u2phy1 {
+ 	status = "okay";
+ 
++	u2phy1_otg: otg-port {
++		status = "okay";
++	};
++
+ 	u2phy1_host: host-port {
+ 		phy-supply = <&vbus_host>;
+ 		status = "okay";
+@@ -526,10 +640,44 @@
+ 	status = "okay";
+ };
+ 
++&usbdrd3_1 {
++	status = "okay";
++};
++
+ &usbdrd_dwc3_0 {
+ 	status = "okay";
+ };
+ 
++&usbdrd_dwc3_1 {
++	dr_mode = "host";
++	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	/*
++	 * The npu is an rk1808 die in the same package, wired to this
++	 * controller rather than to any external port. It will not boot
++	 * until its reference clock is running at 24 MHz, and nothing
++	 * else in the system claims that clock, so describe the die here
++	 * and let the onboard device driver hold it. The rest of the
++	 * bring up is a firmware download over usb, left to userspace.
++	 */
++	npu: device@1 {
++		compatible = "usb2207,180a";
++		reg = <1>;
++		clocks = <&pmucru SCLK_WIFI_PMU>;
++		assigned-clocks = <&pmucru SCLK_WIFI_PMU>;
++		assigned-clock-rates = <24000000>;
++		vdd0v8-supply = <&npu_vdd0v8>;
++		vddlog-supply = <&npu_vddlog>;
++		vcc1v8-supply = <&npu_vcc1v8>;
++		vddcpu-supply = <&npu_vddcpu>;
++		vccio-supply = <&npu_vccio>;
++		vdd-supply = <&npu_vdd>;
++		reset-gpios = <&gpio1 RK_PA0 GPIO_ACTIVE_LOW>;
++	};
++};
++
+ &vbus_host {
+ 	enable-active-high;
+ 	gpio = <&gpio4 RK_PD1 GPIO_ACTIVE_HIGH>; /* USB1_EN_OC# */

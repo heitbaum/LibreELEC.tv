@@ -1,0 +1,24 @@
+From d58880937ca25eb1db53c3309266457af231eacb Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Mon, 24 Aug 2026 11:15:29 +1000
+Subject: [PATCH] Bluetooth: btsdio: Do not bind to non-removable BCM4359
+
+BCM4359 devices on a non-removable SDIO host use a UART connection
+for Bluetooth and the advertised btsdio support as an SDIO function
+should be ignored.
+---
+ drivers/bluetooth/btsdio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/bluetooth/btsdio.c b/drivers/bluetooth/btsdio.c
+index 8325655..0927f29 100644
+--- a/drivers/bluetooth/btsdio.c
++++ b/drivers/bluetooth/btsdio.c
+@@ -295,6 +295,7 @@ static int btsdio_probe(struct sdio_func *func,
+ 		case SDIO_DEVICE_ID_BROADCOM_4345:
+ 		case SDIO_DEVICE_ID_BROADCOM_43455:
+ 		case SDIO_DEVICE_ID_BROADCOM_4356:
++		case SDIO_DEVICE_ID_BROADCOM_4359:
+ 		case SDIO_DEVICE_ID_BROADCOM_CYPRESS_4373:
+ 			return -ENODEV;
+ 		}

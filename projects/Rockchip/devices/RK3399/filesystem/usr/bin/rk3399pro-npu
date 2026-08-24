@@ -1,0 +1,158 @@
+#!/bin/sh
+################################################################################
+#      This file is part of LibreELEC - https://libreelec.tv
+#      Copyright (C) 2026-present Team LibreELEC
+#      SPDX-License-Identifier: GPL-2.0-only
+################################################################################
+
+# Bring the rk3399pro npu up, or power it down when it cannot be used.
+#
+# The kernel powers the die and it enumerates in maskrom as 2207:180a, but it
+# is not usable until its firmware is downloaded, and the download does not
+# survive a power cycle. The firmware is not shipped - it is ~25MB of Rockchip
+# binaries - so if it is not present there is nothing the npu can do and the
+# driver is unbound instead, which drops its six rails and saves the power.
+#
+# To use the npu, put these in NPU_DIR:
+#   upgrade_tool  npu_transfer_proxy            from airockchip/RK3399Pro_npu
+#   MiniLoaderAll.bin  uboot.img  trust.img  boot.img
+
+NPU_DIR="/storage/.config/npu"
+DRV="/sys/bus/platform/drivers/onboard-usb-dev"
+NPU_HOST_IP="10.42.0.100/24"
+
+log() { echo "rk3399pro-npu: $*"; }
+
+# the onboard usb device the kernel made from the dt node
+npu_pdev() {
+  local d
+  for d in /sys/bus/platform/devices/*usb:device@*; do
+    [ -e "${d}" ] && basename "${d}" && return 0
+  done
+  return 1
+}
+
+# product id of the rockchip die, if it is on the bus at all
+npu_id() {
+  local d
+  for d in /sys/bus/usb/devices/[0-9]*-[0-9]*; do
+    [ -f "${d}/idVendor" ] || continue
+    [ "$(cat ${d}/idVendor)" = "2207" ] || continue
+    cat "${d}/idProduct"
+    return 0
+  done
+  return 1
+}
+
+npu_wait_id() {
+  local want="$1" tries="${2:-20}" i=0
+  while [ ${i} -lt ${tries} ]; do
+    [ "$(npu_id)" = "${want}" ] && return 0
+    sleep 1
+    i=$((i + 1))
+  done
+  return 1
+}
+
+have_firmware() {
+  local f
+  for f in upgrade_tool npu_transfer_proxy; do
+    [ -x "${NPU_DIR}/${f}" ] || return 1
+  done
+  for f in MiniLoaderAll.bin uboot.img trust.img boot.img; do
+    [ -f "${NPU_DIR}/${f}" ] || return 1
+  done
+  return 0
+}
+
+npu_load() {
+  local ut="${NPU_DIR}/upgrade_tool"
+  cd "${NPU_DIR}" || return 1
+  "${ut}" db MiniLoaderAll.bin >/dev/null 2>&1 || { log "loader download failed"; return 1; }
+  sleep 1
+  "${ut}" td >/dev/null 2>&1 || { log "td failed"; return 1; }
+  "${ut}" wl 0x40000 uboot.img >/dev/null 2>&1 || { log "uboot write failed"; return 1; }
+  "${ut}" wl 0x40800 trust.img >/dev/null 2>&1 || { log "trust write failed"; return 1; }
+  "${ut}" wl 0x20000 boot.img  >/dev/null 2>&1 || { log "boot write failed"; return 1; }
+  "${ut}" rs 0x40000 0x40800 0x20000 uboot.img trust.img boot.img >/dev/null 2>&1 || { log "reset failed"; return 1; }
+  return 0
+}
+
+start() {
+  local dev
+  dev="$(npu_pdev)" || { log "no onboard usb device - nothing to do"; return 0; }
+
+  if ! have_firmware; then
+    log "no firmware in ${NPU_DIR} - powering the npu down"
+    [ -e "${DRV}/${dev}" ] && echo "${dev}" >"${DRV}/unbind" 2>/dev/null
+    return 0
+  fi
+
+  [ -e "${DRV}/${dev}" ] || echo "${dev}" >"${DRV}/bind" 2>/dev/null
+
+  case "$(npu_id)" in
+    1808) log "npu already running" ;;
+    180a) npu_wait_id 180a 5
+          log "downloading firmware"
+          npu_load || return 1
+          npu_wait_id 1808 20 || { log "npu did not reach runtime"; return 1; }
+          log "npu running" ;;
+    *)    npu_wait_id 180a 20 || { log "npu did not reach maskrom"; return 1; }
+          npu_load || return 1
+          npu_wait_id 1808 20 || { log "npu did not reach runtime"; return 1; }
+          log "npu running" ;;
+  esac
+
+  # Whether the transfer proxy is a daemon depends on which one is installed.
+  # The 1.9.7 that shipped with the 2019 npu image claims the ntb interface,
+  # reads the efuse id and exits. The 2.1.0 that goes with the 2022 image stays
+  # up as the bridge. Background it either way - a one shot exits immediately,
+  # and a daemon keeps running in this unit's cgroup, so it is torn down when
+  # the unit stops rather than being left behind.
+  "${NPU_DIR}/npu_transfer_proxy" >/dev/null 2>&1 &
+
+  npu_net
+  return 0
+}
+
+# A boot.img may expose a usb network function beside the ntb one, which gives
+# the host a link to the npu. The stock image does not, so nothing here is fatal.
+npu_netdev() {
+  local dev n
+  for dev in /sys/bus/usb/devices/[0-9]*-[0-9]*; do
+    [ "$(cat "${dev}/idVendor" 2>/dev/null)" = "2207" ] || continue
+    [ "$(cat "${dev}/idProduct" 2>/dev/null)" = "1808" ] || continue
+    for n in "${dev}"/*:*/net/*; do
+      [ -e "${n}" ] || continue
+      basename "${n}"
+      return 0
+    done
+  done
+  return 1
+}
+
+npu_net() {
+  local n i
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    n="$(npu_netdev)" && break
+    sleep 1
+  done
+  [ -n "${n}" ] || return 0
+
+  ip addr add "${NPU_HOST_IP}" dev "${n}" 2>/dev/null
+  ip link set "${n}" up 2>/dev/null
+  log "npu network on ${n} (${NPU_HOST_IP})"
+}
+
+stop() {
+  local dev
+  dev="$(npu_pdev)" || return 0
+  [ -e "${DRV}/${dev}" ] && echo "${dev}" >"${DRV}/unbind" 2>/dev/null
+  return 0
+}
+
+case "$1" in
+  start) start ;;
+  stop)  stop ;;
+  *)     echo "usage: $0 {start|stop}" >&2; exit 1 ;;
+esac
