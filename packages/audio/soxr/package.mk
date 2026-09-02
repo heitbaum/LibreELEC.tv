@@ -3,11 +3,11 @@
 # Copyright (C) 2016-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="soxr"
-PKG_VERSION="0.1.3"
-PKG_SHA256="b111c15fdc8c029989330ff559184198c161100a59312f5dc19ddeb9b5a15889"
+PKG_VERSION="96a8a450f46ea8d0f2b3812080873ac31b7d501a"
+PKG_SHA256="b3c66ff8df0541ecbb857fb94479cd497455b3b032417af06300444e526c6e69"
 PKG_LICENSE="LGPL-2.1-or-later"
-PKG_SITE="https://sourceforge.net/projects/soxr/"
-PKG_URL="https://downloads.sourceforge.net/project/soxr/${PKG_NAME}-${PKG_VERSION}-Source.tar.xz"
+PKG_SITE="https://github.com/dofuuz/soxr"
+PKG_URL="${PKG_SITE}/archive/${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain cmake:host"
 PKG_LONGDESC="The SoX Resampler library performs one-dimensional sample-rate conversion. It may be used to resample PCM-encoded audio."
 PKG_BUILD_FLAGS="+pic"
@@ -18,10 +18,8 @@ PKG_CMAKE_OPTS_TARGET="-DBUILD_EXAMPLES=OFF \
                        -DBUILD_TESTS=OFF \
                        -DWITH_AVFFT=OFF"
 
-if [ "${TARGET_ARCH}" = "arm" ]; then
-  if target_has_feature neon; then
-    PKG_CMAKE_OPTS_TARGET+=" -DWITH_CR32=OFF"
-  else
-    PKG_CMAKE_OPTS_TARGET+=" -DWITH_CR32S=OFF"
-  fi
+if target_has_feature neon || target_has_feature sse; then
+  PKG_CMAKE_OPTS_TARGET+=" -DWITH_CR32=OFF"
+elif [ "${TARGET_ARCH}" = "arm" ]; then
+  PKG_CMAKE_OPTS_TARGET+=" -DWITH_CR32S=OFF"
 fi
