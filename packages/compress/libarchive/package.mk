@@ -29,6 +29,8 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_POSITION_INDEPENDENT_CODE=1 \
                        -DENABLE_LIBXML2=OFF \
                        -DENABLE_LZ4=ON \
                        -DENABLE_LZMA=ON \
+                       -DLIBLZMA_INCLUDE_DIR=$(get_install_dir xz)/usr/include \
+                       -DLIBLZMA_LIBRARY=$(get_install_dir xz)/usr/lib/liblzma.a \
                        -DENABLE_LZO=ON \
                        -DENABLE_MBEDTLS=OFF \
                        -DENABLE_NETTLE=OFF \
