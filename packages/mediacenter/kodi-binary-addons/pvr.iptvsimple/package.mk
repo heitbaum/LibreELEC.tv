@@ -18,8 +18,5 @@ PKG_LONGDESC="pvr.iptvsimple"
 PKG_IS_ADDON="yes"
 PKG_ADDON_TYPE="xbmc.pvrclient"
 
-pre_configure_target() {
-  ls -la  ../Findlzma.cmake
-  sed -i -e "s#^find_path(LZMA_INCLUDE_DIRS lzma.h#find_path(LZMA_INCLUDE_DIRS lzma.h PATHS $(get_install_dir xz)/usr/include NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH#" \
-         -e "s#^find_library(LZMA_LIBRARIES NAMES lzma liblzma#find_library(LZMA_LIBRARIES NAMES lzma liblzma PATHS $(get_install_dir xz)/usr/lib NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH#" ../Findlzma.cmake
-}
+PKG_CMAKE_OPTS_TARGET="-DLZMA_INCLUDE_DIRS=$(get_install_dir xz)/usr/include \
+                       -DLZMA_LIBRARIES=$(get_install_dir xz)/usr/lib/liblzma.a"
