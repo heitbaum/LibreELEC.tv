@@ -198,6 +198,18 @@ mixer() {
     mixer "$card" 'HPO MIX HPVOL' on
     mixer "$card" 'Headphone Channel' on
     mixer "$card" 'DAC1' 100%
+
+    # RT5645/RT5650 headset microphone. The capture path is muted at reset in
+    # the same way the playback path is: REC_L2/R2_MIXER come up with all seven
+    # sources muted and STO1_ADC_MIXER with every branch muted. With no live
+    # input the record mixer has no complete DAPM path, so the ADC is never
+    # powered and the card records digital silence rather than a quiet signal.
+    # ADC1 is the analog branch; ADC2 is the DMIC one and is left muted.
+    mixer "$card" 'RECMIXL BST1' on
+    mixer "$card" 'RECMIXR BST1' on
+    mixer "$card" 'Sto1 ADC MIXL ADC1' on
+    mixer "$card" 'Sto1 ADC MIXR ADC1' on
+    mixer "$card" 'IN1 Boost' 8
   fi
 
   exit 0
