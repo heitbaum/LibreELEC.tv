@@ -5,8 +5,21 @@ Subject: [PATCH] dt-bindings: pci: fsl,imx6q-pcie: Add extref clock for
  i.MX8MQ
 
 i.MX8MQ can drive PCIe REF_CLK either from the internal PLL or from an
-off-chip oscillator. Allow an optional fifth "extref" clock to describe
-the latter, matching the name already used for i.MX95.
+off-chip oscillator, and its two controllers can differ. Nothing in the
+binding says which a board uses, because the driver has always assumed
+the oscillator and written IMX8MQ_GPR_PCIE_REF_USE_PAD unconditionally.
+
+Allow an optional fifth "extref" clock to name the oscillator, matching
+the name already used for i.MX95, so that a board can state what it is
+wired for.
+
+This changes what an existing description means: a devicetree that omits
+the clock now denotes the internal PLL, where previously the driver
+assumed the oscillator regardless. The change is deliberate. A four-clock
+description cannot express a board whose two controllers take REF_CLK
+from different sources, which is real hardware, so it was never a
+complete account of the wiring. Every in-tree board that relies on the
+oscillator gains the clock later in this series.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
