@@ -3,14 +3,19 @@ From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 15:00:04 +1000
 Subject: [PATCH] arm64: dts: imx8mq: Declare the PCIe extref clock
 
-Boards feeding PCIe REF_CLK from an off-chip oscillator described it as
+Boards feeding PCIe REF_CLK from an off-chip oscillator describe it as
 the "pcie_bus" clock, which the driver never looks up by name and which
-therefore selects nothing. The oscillator was used only because the
-driver forced IMX8MQ_GPR_PCIE_REF_USE_PAD unconditionally.
+therefore selects nothing. The oscillator is used only because the driver
+forces IMX8MQ_GPR_PCIE_REF_USE_PAD unconditionally.
 
-Now that the selection follows the "extref" clock, name the oscillator
-explicitly on every board that depends on it so the behaviour is
-unchanged. The "pcie_bus" entries are left alone.
+Name the oscillator explicitly as the "extref" clock on every board that
+depends on it, so that their behaviour is unchanged once the driver
+starts honouring that clock. The "pcie_bus" entries are left alone.
+
+Nothing reads the new clock until the driver change, so this patch is a
+no-op on its own and is safe to apply by itself. It must land before the
+driver change, not after: in between, a board that needs the oscillator
+would fall back to the internal PLL and lose its link.
 
 Endpoint nodes are not touched: they are all disabled and use a separate
 binding.

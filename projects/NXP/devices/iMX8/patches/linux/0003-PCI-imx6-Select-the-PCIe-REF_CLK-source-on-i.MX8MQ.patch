@@ -3,20 +3,35 @@ From: Rudi Heitbaum <rudi@heitbaum.com>
 Date: Sun, 2 Aug 2026 21:15:00 +1000
 Subject: [PATCH] PCI: imx6: Select the PCIe REF_CLK source on i.MX8MQ
 
-i.MX8MQ has two PCIe REF_CLK sources: an off-chip oscillator and the
-internal PLL. The driver unconditionally selected the oscillator, which
-is what the
+i.MX8MQ takes PCIe REF_CLK either from an off-chip oscillator on the pad
+or from the internal PLL, selected per controller by REF_USE_PAD in
+IOMUXC_GPR_GPR14 and GPR16. imx8mq_pcie_init_phy() sets that bit
+unconditionally for both, which is what the
 
 	/* TODO: This code assumes external oscillator is being used */
 
-comment refers to. Boards wiring an oscillator to the pad describe it as
-the "pcie_bus" clock, but nothing in the driver looks that clock up by
-name, so it does not select anything.
+comment refers to, so only the oscillator is reachable. A board driving
+REF_CLK from the internal PLL cannot work whatever its devicetree says,
+and a board whose two controllers use different sources cannot be
+described at all.
+
+That is real hardware rather than a hypothetical. On the Google Coral Dev
+Board pcie0 carries an Atheros QCA6174 fed from the internal PLL, with
+the SoC driving the 100 MHz reference out to the endpoint itself on
+CLK2_P/N, while pcie1 carries a Google Edge TPU on an off-chip
+oscillator. The two controllers need opposite settings of the same bit at
+the same time.
 
 Reuse the generic enable_ext_refclk flag, set when an "extref" clock is
 supplied, to select between the two, as is already done for i.MX95 in
 commit d8574ce57d76 ("PCI: imx6: Add external reference clock input mode
-support").
+support"). Per the reference manual the bit resets to 0, the internal
+PLL, so the oscillator has always been a driver assumption rather than a
+hardware default.
+
+A devicetree that names no "extref" clock therefore now selects the
+internal PLL. The in-tree boards that need the oscillator are updated in
+the next patch, which has to land first; see the cover letter.
 
 Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
 ---
