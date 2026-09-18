@@ -134,8 +134,6 @@ Patches that should be sent to the upstream project but have not yet been submit
 | devel/quilt | `0001-add-git-style-diff-support.patch` | Add --git option to quilt diff/refresh for git-style patches |
 | devel/quilt | `0002-use-git-diff-for-content-in-git-mode.patch` | Use git diff --no-index for content in --git mode |
 | devel/readline | `0001-display-null-prompt.patch` | Add null check for prompt_invis_chars to prevent SIGSEGV |
-| textproc/xmlstarlet | `0246-fix-compile-with-libxml-2-12-0.patch` | Fix build with libxml2 2.12.0 (remove xmlCleanupGlobals, add headers) |
-| textproc/xmlstarlet | `0900-fix-compile-with-libxml-2-14-0.patch` | Fix build with libxml2 2.14.0 (ATTRIBUTE_UNUSED definition) |
 | tools/crust | `0001-configs-Make-all-H6-devices-use-I2C-PMIC.patch` | Add I2C PMIC config for Allwinner H6 devices (beelink_gs1, orangepi_3) |
 | tools/hdparm | `0001-9.42-cflags.patch` | Remove hardcoded -O2 -W from CFLAGS (let build system control) |
 | tools/syslinux | `0002-fix-build-with-glibc-2.36.patch` | Fix glibc 2.36 compat: define linux/fs.h constants directly |
@@ -165,7 +163,6 @@ Patches that have been submitted to the upstream project and are awaiting merge:
 | network/avahi | `309.patch` | Vladyslav Movchan — [avahi PR #309](https://github.com/avahi/avahi/pull/309) don't-conflict-with-self; **closed unmerged** upstream — carried for the 0.9-rc5 WIP |
 | compress/7-zip | `0008-Fix-Globally-suppress-GCC-16-Warray-bounds-false-pos.patch` | YOKOTA Hiroshi — GCC 16 -Warray-bounds false positive; [sourceforge bug #2604](https://sourceforge.net/p/sevenzip/bugs/2604/) |
 | debug/gdb | `0001-gdbserver-ctrl-c-handling.patch` | Khem Raj — gdbserver SIGINT fix; [GDB Bugzilla #18945](https://sourceware.org/bugzilla/show_bug.cgi?id=18945) |
-| textproc/xmlstarlet | `0001-usage2c.awk-fix-wrong-basename-regexp.patch` | Matthieu Crapet — fix basename regexp; submitted to sourceforge |
 | addons/addon-depends/comskip | `0001-drop-deprecated-ffmpeg8-ticks-per-frame.patch` | Greg Scaffidi — FFmpeg 8 deprecated ticks-per-frame; [PR #187](https://github.com/erikkaashoek/Comskip/pull/187) (open) |
 | addons/addon-depends/comskip | `0002-fix-OutputFrame-declaration-for-gcc15.patch` | Rudi Heitbaum — gcc-15 fix; [PR #177](https://github.com/erikkaashoek/Comskip/pull/177) **merged 2025-04-18** — drop on a comskip release past V0.83 (V0.83 tag predates the merge) |
 | addons/addon-depends/docker/tini | `0233-build-with-cmake-4.0.0.patch` | Rudi Heitbaum — [PR #233](https://github.com/krallin/tini/pull/233) CMake 4.0 build fix; **merged to master** — drop when tini releases past 0.19.0 |
