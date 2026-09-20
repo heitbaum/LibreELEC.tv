@@ -31,6 +31,41 @@ PROJECT=Generic ARCH=x86_64 scripts/build_mt <package-name>
 
 Config loading order: `config/arch.*` → `distributions/*/options` → `projects/*/options` → `projects/*/devices/*/options`. Each level overrides the previous.
 
+### Building on nuc12
+
+Real builds run on nuc12 (`root@192.168.42.63`), not on the workstation. The
+canonical wrapper is `/storage/scripts/build.sh`; run it non-interactively by
+dropping `-it` and adding `--rm`:
+
+```bash
+ssh root@192.168.42.63 'docker run --rm --log-driver none   --workdir /build/LibreELEC.tv --privileged   -v /storage:/storage -v /var/media/DATA:/var/media/DATA   -v /var/media/DATA/home-rudi:/build   resolute:latest bash --login -c "<cmd>"'
+```
+
+Then inside the container:
+
+```bash
+PROJECT=Generic ARCH=x86_64 scripts/clean <package>
+PROJECT=Generic ARCH=x86_64 scripts/build <package>
+```
+
+`scripts/clean` first is what forces the recompile that surfaces warnings —
+without it ccache serves every object and the build reports no diagnostics.
+
+Both `-v /var/media/DATA:/var/media/DATA` and `-v /var/media/DATA/home-rudi:/build`
+are required: `/build` is the workdir, and the native path is what lets the git
+worktrees (`LibreELEC.master`, `LibreELEC.work`, …) resolve — mount only
+`/build` and every worktree reports "not a git repository". The container runs
+as uid 1000 and carries gcc 16 with ASan, but no valgrind, no clang, and gcc has
+no MSan; one-off tools install with `sudo apt update && sudo apt install -y`.
+
+`/build/LibreELEC.tv` is the `dev` tree and is kept warm (~77 GB build dir,
+~92 GB `sources/`). Do not judge a tree cleaned from `ls | wc -l` — busybox `ls`
+on the host hides dotfiles, so `.stamps`, `.ccache` and `.sysroot` are invisible.
+
+Build logs land in `${BUILD}/.threads/logs`; use `tools/find_build_warnings.sh
+[logdir] [all|errors|warnings]` to report on them, with suppressions in
+`tools/find_build_warnings_ignore.conf`.
+
 ## Package System
 
 Every package lives under `packages/<category>/<name>/package.mk`. Key fields:
