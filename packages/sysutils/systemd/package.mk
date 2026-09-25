@@ -216,6 +216,9 @@ post_makeinstall_target() {
   sed -e "s,^.*SplitMode=.*$,SplitMode=none,g" -i ${INSTALL}/etc/systemd/journald.conf
   sed -e "s,^.*SystemMaxUse=.*$,SystemMaxUse=10M,g" -i ${INSTALL}/etc/systemd/journald.conf
 
+  # tune system.conf
+  sed -e "s,^.*RuntimeWatchdogSec=.*$,RuntimeWatchdogSec=60,g" -i ${INSTALL}/etc/systemd/system.conf
+
   # tune logind.conf
   if [ "${LOCAL_LOGIN}" = "yes" ]; then
     sed -e "s,^.*NAutoVTs=.*$,NAutoVTs=2,g" -i ${INSTALL}/etc/systemd/logind.conf
