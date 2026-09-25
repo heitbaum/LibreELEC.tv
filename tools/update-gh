@@ -28,6 +28,138 @@ fi
 
 COMMIT_COUNT=$(git rev-list --count "origin/${GIT_BASE}..${branchname}")
 
+# mainline kernel version (the default LINUX case) carried on a ref
+linux_version() {
+  git show "${1}:packages/linux/package.mk" |
+    sed -n -E 's/^ *PKG_VERSION="([0-9]+\.[0-9]+(\.[0-9]+)?)".*/\1/p' | head -n 1
+}
+
+# 7.2.3 -> 7.2, 7.2 -> 7.2
+linux_series() {
+  [[ "${1}" =~ ^([0-9]+\.[0-9]+) ]] && echo "${BASH_REMATCH[1]}"
+}
+
+linux_pr_body() {
+  local old="${1}" new="${2}" major="${3}" base="${4}"
+  local series="${new}" patch=0 first i count subj
+  local -A pkgs=()
+  local -a order=() done_patches=()
+
+  # 7.2 has no stable patch level, 7.2.3 is series 7.2 patch 3
+  if [[ "${new}" =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+    series="${BASH_REMATCH[1]}"
+    patch="${BASH_REMATCH[2]}"
+  fi
+  first=1
+  [ "${major}" = "no" -a "${old}" != "${series}" ] && first=$((${old##*.} + 1))
+
+  # last "pkg: update to X" per package, in commit order
+  while read -r subj; do
+    if [[ "${subj}" =~ ^([^\ ]+):\ update\ to\ (.*)$ ]]; then
+      [ -n "${pkgs[${BASH_REMATCH[1]}]}" ] || order+=("${BASH_REMATCH[1]}")
+      pkgs[${BASH_REMATCH[1]}]="${subj}"
+    elif [[ "${subj}" =~ ^linux\ \(([^\)]+)\):\ (.*)$ ]]; then
+      [[ "${BASH_REMATCH[2]}" = *.config* ]] && continue
+      i="${BASH_REMATCH[1]##* }"
+      [[ " ${done_patches[*]} " = *" ${i} "* ]] || done_patches+=("${i}")
+    fi
+  done < <(git log --reverse --no-merges --format=%s "${base}..${branchname}")
+
+  echo "### packages updated"
+  for i in "${order[@]}"; do
+    echo "- ${pkgs[${i}]}"
+  done
+  echo
+  echo "### ${series}.x mainline kernel update"
+  for ((i = first; i <= patch; i++)); do
+    echo "- https://cdn.kernel.org/pub/linux/kernel/v${new%%.*}.x/ChangeLog-${series}.${i}"
+  done
+  if [ "${major}" = "yes" ]; then
+    echo
+    for ((i = 1; i <= patch; i++)); do
+      count=$(curl -sfL "https://cdn.kernel.org/pub/linux/kernel/v${new%%.*}.x/ChangeLog-${series}.${i}" |
+        grep -c '^commit ')
+      # the ChangeLog includes the "Linux X.Y.Z" release commit
+      [ "${count:-0}" -gt 0 ] && count=$((count - 1)) || count="TBA"
+      echo "${series}.${i} - ${count} patches"
+    done
+  fi
+  echo
+  echo "### errors / fixes / issues / regressions / todo"
+  echo "- done"
+  if [ ${#done_patches[@]} -gt 0 ]; then
+    echo "  - patches"
+    for i in "${done_patches[@]}"; do
+      echo "    - ${i}"
+    done
+  fi
+  echo
+  echo "### log "
+  echo "- https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/log/?h=linux-${series}.y"
+  echo "- https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git/log/?h=linux-${series}.y"
+  echo "- https://git.kernel.org/pub/scm/linux/kernel/git/stable/stable-queue.git/log/"
+  echo "- https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable-rc.git/log/?h=queue/${series}"
+  echo "- https://linux-regtracking.leemhuis.info/regzbot/mainline/"
+  echo "- https://linux-regtracking.leemhuis.info/regzbot/stable/"
+  echo
+  [ "${major}" = "yes" ] && echo "### ${series} Build tested on all of:" ||
+    echo "### ${new} Build tested on all of:"
+  cat <<EOF
+\`\`\`
+PROJECT=Allwinner ARCH=aarch64 DEVICE=A64 s/build linux
+PROJECT=Allwinner ARCH=arm DEVICE=H3 s/build linux
+PROJECT=Allwinner ARCH=aarch64 DEVICE=H5 s/build linux
+PROJECT=Allwinner ARCH=aarch64 DEVICE=H6 s/build linux
+PROJECT=Allwinner ARCH=aarch64 DEVICE=R40 s/build linux
+PROJECT=Rockchip ARCH=arm DEVICE=RK3288 s/build linux
+PROJECT=Rockchip ARCH=aarch64 DEVICE=RK3328 s/build linux
+PROJECT=Rockchip ARCH=aarch64 DEVICE=RK3399 s/build linux
+PROJECT=NXP ARCH=arm DEVICE=iMX6 s/build linux
+PROJECT=NXP ARCH=aarch64 DEVICE=iMX8 s/build linux
+PROJECT=Qualcomm ARCH=aarch64 DEVICE=Dragonboard s/build linux
+PROJECT=Generic ARCH=x86_64 DEVICE=Generic s/build linux
+PROJECT=Generic ARCH=x86_64 DEVICE=Generic-legacy s/build linux
+PROJECT=Samsung ARCH=arm DEVICE=Exynos s/build linux
+\`\`\`
+
+### ${series}.y Run tested on all of:
+- Allwinner all - tested - TBA - jernejsk
+- Allwinner H6 (Tanix TX6) - TBA - heitbaum
+- Generic Generic (Intel ADL - NUC12) - TBA - heitbaum
+- Generic Generic (AMD 7840HS - SER7) - TBA - heitbaum
+- NXP iMX6 (Cubox-i4Pro) - TBA - heitbaum
+- NXP iMX8 (Coral Dev Board - Phanbell) - TBA - heitbaum
+- Rockchip RK3399pro (Rock Pi N10) - TBA - heitbaum
+- RK all - tested - TBA - knaerzche
+- Samsung Exynos (Hardkernel ODROID XU4) - TBA - heitbaum
+EOF
+}
+
+# a branch that changes the mainline kernel version gets the kernel PR template
+# (compare against the local base branch, which tracks upstream, origin is the
+# fork and its master can lag)
+LINUX_BASE="${GIT_BASE}"
+LINUX_OLD=$(linux_version "${LINUX_BASE}")
+LINUX_NEW=$(linux_version "${branchname}")
+
+if [ -n "${LINUX_NEW}" -a "${LINUX_OLD}" != "${LINUX_NEW}" ]; then
+  # 7.1.x -> 7.2.y is a major (series) bump, 7.2.x -> 7.2.y is a minor
+  if [ "$(linux_series "${LINUX_OLD}")" = "$(linux_series "${LINUX_NEW}")" ]; then
+    LINUX_MAJOR="no"
+    PR_TITLE="Update to linux-${LINUX_NEW}"
+  else
+    LINUX_MAJOR="yes"
+    PR_TITLE="linux: update to $(linux_series "${LINUX_NEW}").y"
+  fi
+  PR_BODY=$(linux_pr_body "${LINUX_OLD}" "${LINUX_NEW}" "${LINUX_MAJOR}" "${LINUX_BASE}")
+  gh pr create --draft --base "${GIT_BASE}" --title "${PR_TITLE}" \
+    --body "${PR_BODY}" --head heitbaum:${branchname} \
+    -R LibreELEC/LibreELEC.tv --label UPDATE --label PACKAGE --label KERNEL \
+    --label ALLWINNER --label ROCKCHIP --label NXP --label SAMSUNG \
+    --label GENERIC --label "LE ${OS_VERSION}" ${DRY_RUN}
+  exit
+fi
+
 case ${branchname} in
   cert)
     gh pr create --base "${GIT_BASE:-master}" \
