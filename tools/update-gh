@@ -74,9 +74,9 @@ linux_pr_body() {
   for ((i = first; i <= patch; i++)); do
     echo "- https://cdn.kernel.org/pub/linux/kernel/v${new%%.*}.x/ChangeLog-${series}.${i}"
   done
-  if [ "${major}" = "yes" ]; then
+  if [ "${first}" -le "${patch}" ]; then
     echo
-    for ((i = 1; i <= patch; i++)); do
+    for ((i = first; i <= patch; i++)); do
       count=$(curl -sfL "https://cdn.kernel.org/pub/linux/kernel/v${new%%.*}.x/ChangeLog-${series}.${i}" |
         grep -c '^commit ')
       # the ChangeLog includes the "Linux X.Y.Z" release commit
