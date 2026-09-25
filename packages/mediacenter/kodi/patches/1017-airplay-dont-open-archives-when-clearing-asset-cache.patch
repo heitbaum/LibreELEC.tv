@@ -1,0 +1,42 @@
+From 5ee36bcaa95044db3761a47dc6c8acc668069fe8 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Fri, 25 Sep 2026 20:13:31 +1000
+Subject: [PATCH] AirPlayServer: don't open archives when clearing the photo
+ asset cache
+
+ClearPhotoAssetCache() lists special://temp/ only to delete the
+airplayasset*.jpg/png files it finds there, but lists it with
+DIR_FLAG_DEFAULTS. Without DIR_FLAG_NO_FILE_DIRS the listing runs
+FilterFileDirectories(), which opens every archive in the directory to
+decide whether to present it as a folder, reading each zip's full
+central directory.
+
+StartServer() calls StopServer(true), so this runs on every start and
+stop of the AirPlay server, including at startup, and on the main
+thread when the setting is toggled. With seven zip files of 65536 to
+133000 entries each in special://temp/, every enable and disable froze
+the GUI for about 4 seconds.
+
+Pass DIR_FLAG_NO_FILE_DIRS, since only plain files are matched.
+
+Signed-off-by: Rudi Heitbaum <rudi@heitbaum.com>
+---
+ xbmc/network/AirPlayServer.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/xbmc/network/AirPlayServer.cpp b/xbmc/network/AirPlayServer.cpp
+index 433a8c7c8d..326d02fefc 100644
+--- a/xbmc/network/AirPlayServer.cpp
++++ b/xbmc/network/AirPlayServer.cpp
+@@ -234,7 +234,7 @@ void ClearPhotoAssetCache()
+   CLog::Log(LOGINFO, "AIRPLAY: Cleaning up photoassetcache");
+   // remove all cached photos
+   CFileItemList items;
+-  XFILE::CDirectory::GetDirectory("special://temp/", items, "", XFILE::DIR_FLAG_DEFAULTS);
++  XFILE::CDirectory::GetDirectory("special://temp/", items, "", XFILE::DIR_FLAG_NO_FILE_DIRS);
+ 
+   for (int i = 0; i < items.Size(); ++i)
+   {
+-- 
+2.47.1.windows.2
+
