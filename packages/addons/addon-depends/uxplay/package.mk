@@ -2,8 +2,8 @@
 # Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="uxplay"
-PKG_VERSION="462153392f2e30937424922039ff9f0cda5e7b1a"
-PKG_SHA256="0f5bf6f2ab3d1ac3ccaf4418afe00137ec1ba97c2a345710202fca40f6a1fb85"
+PKG_VERSION="e3599e8c40ff1abe62146ba8a3e51c937bcf2524"
+PKG_SHA256="b62b32ec09f3ca0b5e3e7d16930a5182d3a1df02ed87be31470bd22c65f6a097"
 PKG_LICENSE="GPL-3.0-or-later"
 PKG_SITE="https://github.com/FDH2/UxPlay"
 PKG_URL="https://github.com/FDH2/UxPlay/archive/${PKG_VERSION}.tar.gz"
