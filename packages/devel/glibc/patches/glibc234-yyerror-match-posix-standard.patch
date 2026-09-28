@@ -1,6 +1,8 @@
---- a/intl/plural.y	2021-09-10 18:28:49.067261327 +1000
-+++ b/intl/plural.y	2021-09-10 18:29:14.597255037 +1000
-@@ -54,8 +54,8 @@
+diff --git a/intl/plural.y b/intl/plural.y
+index 89dd3fd..4ee4784 100644
+--- a/intl/plural.y
++++ b/intl/plural.y
+@@ -59,8 +59,8 @@
  
  %{
  /* Prototypes for local functions.  */
@@ -11,7 +13,7 @@
  
  /* Allocation of expressions.  */
  
-@@ -232,7 +232,7 @@
+@@ -237,7 +237,7 @@ FREE_EXPRESSION (struct expression *exp)
  }
  
  
@@ -20,7 +22,7 @@
  yylex (YYSTYPE *lval, struct parse_args *arg)
  {
    const char *exp = arg->cp;
-@@ -375,7 +375,7 @@
+@@ -380,7 +380,7 @@ yylex (YYSTYPE *lval, struct parse_args *arg)
  }
  
  
@@ -29,3 +31,6 @@
  yyerror (struct parse_args *arg, const char *str)
  {
    /* Do nothing.  We don't print error messages here.  */
+-- 
+2.53.0
+
