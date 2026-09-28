@@ -81,3 +81,6 @@ index 804bfca8ce..50eeefd922 100644
    return std::make_unique<CXkbcommonKeymap>(std::move(xkbKeymap), std::move(xkbComposeTable));
  }
  
+-- 
+2.53.0
+
