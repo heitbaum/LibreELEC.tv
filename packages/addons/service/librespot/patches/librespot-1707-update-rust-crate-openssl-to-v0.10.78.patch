@@ -9,10 +9,10 @@ Supports OpenSSL 4.0.x
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/Cargo.lock b/Cargo.lock
-index 0d2d8419f..4f1702032 100644
+index c135de1b7..db3f8c8fa 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -2440,9 +2440,9 @@ dependencies = [
+@@ -2439,9 +2439,9 @@ dependencies = [
  
  [[package]]
  name = "openssl"
@@ -24,7 +24,7 @@ index 0d2d8419f..4f1702032 100644
  dependencies = [
   "bitflags 2.10.0",
   "cfg-if",
-@@ -2472,9 +2472,9 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
+@@ -2471,9 +2471,9 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
  
  [[package]]
  name = "openssl-sys"
@@ -36,3 +36,6 @@ index 0d2d8419f..4f1702032 100644
  dependencies = [
   "cc",
   "libc",
+-- 
+2.53.0
+
