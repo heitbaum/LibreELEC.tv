@@ -24,6 +24,12 @@ function update_multiple_sha() {
   sha2=$3
   sha3=$4
 
+  # An empty sha shifts the others down a slot, so count them as well.
+  if [ $# -ne 4 ] || [[ ! "${sha1}${sha2}${sha3}" =~ ^[0-9a-f]{192}$ ]]; then
+    sed -e "s|^PKG_VERSION=.*|PKG_VERSION=\"${prevpkgver}\"|" -i "${file}"
+    die "Package version not found: ${pkgname}"
+  fi
+
   sed -i '
 # by default - do not print anything
 /^  "aarch64")$/ {
@@ -59,12 +65,13 @@ function update_multiple_sha() {
 }
 
 function get_sha() {
-  # Download source and print sha256.
-  t=$(mktemp) &&
-    curl -q --location --max-redirs 5 --output "$t" "$1" &&
-    set -- $(sha256sum "$t")
-  echo $1
-  rm "$t"
+  # Download source and print sha256, or nothing if the download fails.
+  t=$(mktemp) || return 1
+  if curl -q --fail --location --max-redirs 5 --output "${t}" "${1}"; then
+    set -- $(sha256sum "${t}")
+    echo "${1}"
+  fi
+  rm -f "${t}"
 }
 
 # Unpack the newly downloaded source and verify that all patches apply cleanly.
@@ -92,6 +99,9 @@ function check_patches() {
     rm -rf "${check_dir}"
     mkdir -p "${check_parent}"
 
+    # update_package() hooks compute the sha without fetching into sources/,
+    # so fetch here - this also verifies the new PKG_SHA256 for this arch.
+    ${SCRIPTS}/get "${PKG_NAME}" || exit 4
     ${SCRIPTS}/extract "${PKG_NAME}" "${check_parent}" >/dev/null 2>&1 || exit 1
     [ ! -d "${check_dir}" ] && exit 0
 
@@ -163,6 +173,10 @@ function check_patches() {
   case ${check_rc} in
     0) ;;
     1) printf "patch-check: extract failed for %s\n" "${pkgname}" >&2 ;;
+    4)
+      printf "patch-check: download failed for %s:\n" "${pkgname}" >&2
+      cat "${logfile}" >&2
+      ;;
     2)
       printf "patch-check: %s has FAILED patches:\n" "${pkgname}" >&2
       cat "${logfile}" >&2
@@ -174,6 +188,7 @@ function check_patches() {
   esac
 
   rm -f "${logfile}"
+  [ ${check_rc} -eq 4 ] && die "${pkgname}: download failed, package.mk left uncommitted"
 }
 
 # Load package-specific update helpers, if present.
