@@ -285,4 +285,4 @@
 #   - yes (always, fail when not available)
 #   - preferred (when available, else build them)
 #   - no (always build them)
-  USE_REUSABLE="no"
+  USE_REUSABLE="preferred"
