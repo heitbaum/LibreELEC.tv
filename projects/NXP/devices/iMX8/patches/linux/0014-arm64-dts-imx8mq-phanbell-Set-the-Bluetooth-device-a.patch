@@ -1,0 +1,60 @@
+From ba2228ce050fd8c22206ac47e0675c7bdce70320 Mon Sep 17 00:00:00 2001
+From: Rudi Heitbaum <rudi@heitbaum.com>
+Date: Sun, 4 Oct 2026 06:52:27 +0000
+Subject: [PATCH] arm64: dts: imx8mq-phanbell: Set the Bluetooth device address
+
+HACK - do not send upstream. The address below belongs to one specific
+board.
+
+qca/nvm_00440302.bin carries the stock ROME address 00:00:00:00:5A:AD.
+btqca's qca_check_bdaddr() reads the controller back, sees that same
+value, and sets HCI_QUIRK_USE_BDADDR_PROPERTY. With no local-bd-address
+in the devicetree hci_dev_setup_sync() then leaves public_addr empty and
+flags the controller HCI_UNCONFIGURED, so hci_dev_open() returns
+-EOPNOTSUPP and bluetoothd never claims it.
+
+Setting the address from userspace with "btmgmt public-addr" is the
+documented way out and it no longer works. On 7.2.7 and 7.2.9 the
+controller accepts the NVM write and echoes the address back, but the
+init HCI_Reset that follows is never transmitted and times out:
+
+  Bluetooth: hci0: QCA setup on UART is completed
+  Bluetooth: hci0: Opcode 0x0c03 failed: -110
+
+The controller is then wedged in HCI_CONFIG, where every mgmt command
+returns Invalid Index, including the one that would recover it. The same
+sequence worked on 7.2.0, so something in the 7.2.1..7.2.9 stable range
+regressed it; the commit has not been identified. Supplying the address
+through the devicetree instead skips the reconfiguration entirely - the
+controller is configured during its first setup and comes up with a
+single firmware load.
+
+The value is the ethernet MAC plus one, which is what the vendor OS
+assigns: Mendel's patched hciattach reads the address out of
+/etc/bluetooth/.bt_nv.bin and injects it into the NVM before download,
+and on this board that file holds 02 00 06 6d a4 b1 5c d9 7c - NVM tag 2,
+length 6, 7C:D9:5C:B1:A4:6D, against eth0's 7C:D9:5C:B1:A4:6C.
+
+The real fix is for the bootloader to fill local-bd-address in from the
+fuses, the way board/sunxi/board.c bluetooth_dt_fixup() does. That needs
+LibreELEC's own u-boot on the board, which currently boots the vendor
+U-Boot 2019.04.1.
+---
+ arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+index 21321d7fd12a..4e8e79205526 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mq-phanbell.dts
+@@ -513,6 +513,7 @@ bluetooth {
+ 		pinctrl-0 = <&pinctrl_bt>;
+ 		enable-gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
+ 		clocks = <&pmic>;
++		local-bd-address = [6d a4 b1 5c d9 7c];
+ 	};
+ };
+ 
+-- 
+2.53.0
+
