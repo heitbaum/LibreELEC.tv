@@ -312,6 +312,7 @@ Patches already merged in the upstream project — drop on the next version bump
 | databases/mariadb-connector-c | `0001-fix-build-error-on-32-bit-systems.patch` | Chad Wagner — cast size_t to ulonglong on 32-bit platforms |
 | debug/libunwind | `0001-fix-multiple-definition.patch` | [upstream commit 0e74e583](https://github.com/libunwind/libunwind/commit/0e74e583) — add arm_search_unwind_table macro |
 | debug/vadumpcaps | `0005-handle-drivers-that-dont-return-any-drm-format-modifi.patch` | Philip Langdale — null check for DRM format modifiers; [upstream issue #4](https://github.com/challlenge/vadumpcaps/issues/4) |
+| addons/addon-depends/chrome-depends/cups | `1740-Fix-destination-enumeration-without-DNS-SD.patch` | Rui Chen — [upstream PR #1740](https://github.com/OpenPrinting/cups/pull/1740), commit `23a183b63a` on `2.4.x`: 2.4.20 uses `num_local`/`local_dests` in `cups_enum_dests()` but only added them to the DNS-SD struct, so a `--with-dnssd=no` build fails ([upstream issue #1739](https://github.com/OpenPrinting/cups/issues/1739)). Drop on a release past 2.4.20 |
 
 ### Dev-only WIP — carried on dev, not on master, not yet classified
 
