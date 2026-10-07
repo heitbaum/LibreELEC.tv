@@ -126,6 +126,16 @@ save_or1k_reusable() {
   mv "${stage}${TOOLCHAIN}" "${dir}"
   rm -rf "${stage}"
 
+  # cc1, lto1 and lto-dump carry over 300MB of debug info each. Only the host
+  # tools are stripped, the host strip cannot read the or1k target objects.
+  local host_machine f
+  host_machine="$(readelf -h /bin/sh | sed -n 's/^ *Machine: *//p')"
+  find "${dir}" -type f | while read -r f; do
+    if [ "$(readelf -h "${f}" 2>/dev/null | sed -n 's/^ *Machine: *//p')" = "${host_machine}" ]; then
+      strip --strip-debug "${f}"
+    fi
+  done
+
   reusable_make_relocatable "${dir}"
 
   {
