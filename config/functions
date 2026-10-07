@@ -1100,6 +1100,24 @@ get_reusable_inputs_hash() {
   done | sed "s|${ROOT}/||" | sha256sum | cut -c1-12
 }
 
+# set the PKG_REUSABLE_* names of the reusable archive of the package: the
+# hash of the recipes of the packages given (the package itself when none are)
+# and of PKG_REUSABLE_KEY, the version, the archive name and its URL. The
+# archive is ${PKG_REUSABLE_ARCHIVE:-${PKG_NAME}}-reusable, and
+# PKG_REUSABLE_VARIANT follows the host in the name.
+reusable_names() {
+  local archive="${PKG_REUSABLE_ARCHIVE:-${PKG_NAME}}"
+  local variant="${PKG_REUSABLE_VARIANT:+-${PKG_REUSABLE_VARIANT}}"
+
+  PKG_REUSABLE_HASH="$(get_reusable_inputs_hash ${@:-${PKG_NAME}})"
+  if [ -n "${PKG_REUSABLE_KEY}" ]; then
+    PKG_REUSABLE_HASH="$(echo "${PKG_REUSABLE_HASH} ${PKG_REUSABLE_KEY}" | sha256sum | cut -c1-12)"
+  fi
+  PKG_REUSABLE_VERSION="${OS_VERSION}-${PKG_VERSION}"
+  PKG_REUSABLE_SOURCE_NAME="${archive}-reusable-${PKG_REUSABLE_VERSION}-${MACHINE_HARDWARE_NAME}${variant}-${PKG_REUSABLE_HASH}.tar.xz"
+  PKG_REUSABLE_URL="${REUSABLE_URL}/${archive}-${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
+}
+
 # pack directory ($3) as archive ($2) of reusable package ($1) in TARGET_IMG,
 # as a reproducible tar.xz with its .sha256. with save-local in BUILD_REUSABLE
 # a copy is kept in sources, for later builds to use.
