@@ -279,6 +279,7 @@
 #   - all (for all host tools to be built)
 #   - cmake:host
 #   - gcc-or1k:host (with binutils-or1k:host)
+#   - gettext:host
 #   - llvm:host
 #   - mesa:host
 #   - cargo:host (with rust:host)
