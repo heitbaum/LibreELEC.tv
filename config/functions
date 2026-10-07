@@ -1119,6 +1119,54 @@ save_reusable() {
   fi
 }
 
+# make a host tool staged in directory ($1), laid out as it installs into
+# ${TOOLCHAIN}, unpackable into any toolchain: give each hard link its own copy,
+# point rpaths into the toolchain relative to $ORIGIN, and replace the toolchain
+# path in text files with a placeholder that reusable_install fills in again.
+# Needs patchelf:host.
+reusable_make_relocatable() {
+  local dir="${1}" f rpath new p
+
+  # one $ORIGIN relative rpath cannot serve links in different directories
+  find "${dir}" -type f -links +1 | while read -r f; do
+    cp -p "${f}" "${f}.tmp" && mv -f "${f}.tmp" "${f}"
+  done
+
+  find "${dir}" -type f | while read -r f; do
+    rpath="$(patchelf --print-rpath "${f}" 2>/dev/null)" || continue
+    [[ ${rpath} == *"${TOOLCHAIN}"* ]] || continue
+    new=""
+    for p in ${rpath//:/ }; do
+      if [[ ${p} == "${TOOLCHAIN}"* ]]; then
+        p="\$ORIGIN/$(realpath -m --relative-to="${f%/*}" "${dir}${p#${TOOLCHAIN}}")"
+      fi
+      new+="${new:+:}${p}"
+    done
+    patchelf --set-rpath "${new}" "${f}" || die "failed to set the rpath of ${f}"
+  done
+
+  grep -rlIF "${TOOLCHAIN}" "${dir}" | while read -r f; do
+    sed -i "s|${TOOLCHAIN}|@REUSABLE_TOOLCHAIN@|g" "${f}"
+    echo "${f#${dir}/}"
+  done >"${dir}/RELOCATE"
+}
+
+# install a host tool unpacked in directory ($1) by reusable_make_relocatable
+# into ${TOOLCHAIN}
+reusable_install() {
+  local dir="${1}" f
+
+  if [ -f "${dir}/RELOCATE" ]; then
+    while read -r f; do
+      sed -i "s|@REUSABLE_TOOLCHAIN@|${TOOLCHAIN}|g" "${dir}/${f}"
+    done <"${dir}/RELOCATE"
+  fi
+
+  mkdir -p "${TOOLCHAIN}"
+  find "${dir}" -mindepth 1 -maxdepth 1 ! -name MANIFEST ! -name RELOCATE \
+    -exec cp -a {} "${TOOLCHAIN}/" \;
+}
+
 get_pkg_version_maj_min() {
   local pkg_version
 
