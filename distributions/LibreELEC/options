@@ -287,3 +287,6 @@
 #   - preferred (when available, else build them)
 #   - no (always build them)
   USE_REUSABLE="no"
+
+# where the reusable host tools are published, as <url>/<release tag>/<archive>
+  REUSABLE_URL="https://github.com/LibreELEC/reusable/releases/download"
