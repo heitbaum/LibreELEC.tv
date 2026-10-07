@@ -12,10 +12,15 @@ PKG_DEPENDS_HOST="toolchain:host expat:host libclc:host libdrm:host llvm:host Ma
 PKG_DEPENDS_TARGET="toolchain expat libdrm Mako:host pyyaml:host"
 PKG_LONGDESC="Mesa is a 3-D graphics library with an API."
 
-# the prebuilt mesa:host tools published by mesa-reusable
-PKG_REUSABLE_VERSION="${OS_VERSION}-${PKG_VERSION}"
-PKG_REUSABLE_SOURCE_NAME="mesa-reusable-${PKG_REUSABLE_VERSION}-${MACHINE_HARDWARE_NAME}.tar"
-PKG_REUSABLE_URL="https://github.com/LibreELEC/mesa-reusable/releases/download/${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
+# the prebuilt mesa:host tools published as mesa-reusable, named after a hash
+# of the recipe so that a stale archive is never used
+if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
+   listcontains "${BUILD_REUSABLE}" "(all|mesa:host)"; then
+  PKG_REUSABLE_HASH="$(get_reusable_inputs_hash mesa)"
+  PKG_REUSABLE_VERSION="${OS_VERSION}-${PKG_VERSION}"
+  PKG_REUSABLE_SOURCE_NAME="mesa-reusable-${PKG_REUSABLE_VERSION}-${MACHINE_HARDWARE_NAME}-${PKG_REUSABLE_HASH}.tar.xz"
+  PKG_REUSABLE_URL="${REUSABLE_URL}/mesa-${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
+fi
 
 get_graphicdrivers
 
@@ -95,7 +100,7 @@ if listcontains "${GRAPHIC_DRIVERS}" "(imagination|iris|panfrost)"; then
   if [ "${USE_REUSABLE}" = "yes" ] ||
      { [ "${USE_REUSABLE}" = "preferred" ] &&
        [ -n "$(get_reusable_sha256 mesa-reusable ${PKG_REUSABLE_SOURCE_NAME} ${PKG_REUSABLE_URL})" ]; }; then
-    PKG_DEPENDS_TARGET+=" mesa-reusable"
+    PKG_DEPENDS_TARGET+=" mesa-reusable:host"
   else
     PKG_DEPENDS_TARGET+=" mesa:host"
   fi
@@ -155,27 +160,30 @@ makeinstall_host() {
               src/panfrost/clc/panfrost_compile"
 
   if listcontains "${BUILD_REUSABLE}" "(all|mesa:host)"; then
-    # Build the reusable mesa:host for both local and to be added to a GitHub release
-    strip ${host_files}
-    upx --lzma ${host_files}
-
-    REUSABLE_SOURCES="${SOURCES}/mesa-reusable"
-    REUSABLE_SOURCE_NAME="${PKG_REUSABLE_SOURCE_NAME}"
-
-    mkdir -p "${TARGET_IMG}"
-
-    tar cf ${TARGET_IMG}/${REUSABLE_SOURCE_NAME} --transform='s|.*/||' ${host_files}
-    sha256sum ${TARGET_IMG}/${REUSABLE_SOURCE_NAME} | \
-      cut -d" " -f1 >${TARGET_IMG}/${REUSABLE_SOURCE_NAME}.sha256
-
-    if listcontains "${BUILD_REUSABLE}" "save-local"; then
-      mkdir -p "${REUSABLE_SOURCES}"
-      cp -p ${TARGET_IMG}/${REUSABLE_SOURCE_NAME} ${REUSABLE_SOURCES}
-      cp -p ${TARGET_IMG}/${REUSABLE_SOURCE_NAME}.sha256 ${REUSABLE_SOURCES}
-      echo "save-local" >${REUSABLE_SOURCES}/${REUSABLE_SOURCE_NAME}.url
-    fi
+    save_mesa_reusable ${host_files}
   fi
 
   mkdir -p "${TOOLCHAIN}/bin"
     cp -a ${host_files} "${TOOLCHAIN}/bin"
+}
+
+# pack the mesa:host tools as the mesa-reusable archive
+save_mesa_reusable() {
+  local dir="${PKG_BUILD}/.reusable/mesa-reusable-${PKG_REUSABLE_VERSION}"
+  local pkg
+
+  rm -rf "${PKG_BUILD}/.reusable"
+  mkdir -p "${dir}/bin"
+    cp -a "${@}" "${dir}/bin"
+    strip "${dir}"/bin/*
+
+  {
+    echo "archive: ${PKG_REUSABLE_SOURCE_NAME}"
+    echo "host: ${MACHINE_HARDWARE_NAME}"
+    for pkg in mesa llvm libclc spirv-tools; do
+      echo "${pkg}: $(get_pkg_version ${pkg})"
+    done
+  } >"${dir}/MANIFEST"
+
+  save_reusable mesa-reusable "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
 }

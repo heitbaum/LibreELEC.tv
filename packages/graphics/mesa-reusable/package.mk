@@ -23,14 +23,19 @@ if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ]; then
   fi
 fi
 
-# neither the version nor the archive comes from this directory, so rebuild
-# when mesa is bumped or a different archive is chosen
-PKG_STAMP="${PKG_VERSION} ${PKG_SHA256}"
+# the archive name already covers what it is built from, so rebuild when a
+# different archive is chosen
+PKG_STAMP="${PKG_SOURCE_NAME} ${PKG_SHA256}"
 
 unpack() {
   [ -f "${SOURCES}/${PKG_NAME}/${PKG_SOURCE_NAME}" ] ||
     die "${PKG_SOURCE_NAME} is not available, set USE_REUSABLE=preferred or no"
 
+  mkdir -p "${PKG_BUILD}"
+  tar --strip-components=1 -xf "${SOURCES}/${PKG_NAME}/${PKG_SOURCE_NAME}" -C "${PKG_BUILD}"
+}
+
+makeinstall_host() {
   mkdir -p ${TOOLCHAIN}/bin
-  tar -xf ${SOURCES}/${PKG_NAME}/${PKG_SOURCE_NAME} -C ${TOOLCHAIN}/bin
+    cp -a ${PKG_BUILD}/bin/* ${TOOLCHAIN}/bin
 }
