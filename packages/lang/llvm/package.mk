@@ -47,6 +47,32 @@ if listcontains "${GRAPHIC_DRIVERS}" "(imagination|iris|panfrost)"; then
   PKG_CMAKE_OPTS_COMMON+=" -DLLVM_SPIRV_INCLUDE_TESTS=OFF"
 fi
 
+# the prebuilt llvm:host published as llvm-reusable. llvm:host builds the
+# backends of the target arch, and the graphic drivers add the spirv translator
+# and clang-tblgen, so the name carries the target arch and the hash covers the
+# recipes and that choice, so that a stale archive is never used
+if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
+   listcontains "${BUILD_REUSABLE}" "(all|llvm:host)"; then
+  PKG_REUSABLE_HASH="$({ get_reusable_inputs_hash llvm spirv-headers spirv-llvm-translator
+                         listcontains "${GRAPHIC_DRIVERS}" "(imagination|iris|panfrost)" && echo spirv
+                         listcontains "${GRAPHIC_DRIVERS}" "imagination" && echo clang-tblgen
+                       } | sha256sum | cut -c1-12)"
+  PKG_REUSABLE_VERSION="${OS_VERSION}-${PKG_VERSION}"
+  PKG_REUSABLE_SOURCE_NAME="llvm-reusable-${PKG_REUSABLE_VERSION}-${MACHINE_HARDWARE_NAME}-${TARGET_ARCH}-${PKG_REUSABLE_HASH}.tar.xz"
+  PKG_REUSABLE_URL="${REUSABLE_URL}/llvm-${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
+fi
+
+# preferred falls back to building llvm:host when no reusable archive is available
+if [ "${USE_REUSABLE}" = "yes" ] ||
+   { [ "${USE_REUSABLE}" = "preferred" ] &&
+     [ -n "$(get_reusable_sha256 llvm-reusable ${PKG_REUSABLE_SOURCE_NAME} ${PKG_REUSABLE_URL})" ]; }; then
+  # llvm:host then only pulls in the archive, llvm:target is still built
+  PKG_REUSABLE="yes"
+  PKG_DEPENDS_HOST="llvm-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|llvm:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
+
 post_unpack() {
   if listcontains "${GRAPHIC_DRIVERS}" "(imagination|iris|panfrost)"; then
     mkdir -p "${PKG_BUILD}"/llvm/projects/{SPIRV-Headers,SPIRV-LLVM-Translator}
@@ -127,6 +153,42 @@ post_makeinstall_host() {
   if listcontains "${GRAPHIC_DRIVERS}" "(imagination|iris|panfrost)"; then
     cp -a bin/llvm-spirv "${TOOLCHAIN}/bin"
   fi
+
+  if listcontains "${BUILD_REUSABLE}" "(all|llvm:host)"; then
+    save_llvm_reusable
+  fi
+}
+
+# pack llvm:host as the llvm-reusable archive: the ninja install and the tools
+# copied above
+save_llvm_reusable() {
+  local stage="${PKG_BUILD}/.reusable/stage"
+  local dir="${PKG_BUILD}/.reusable/llvm-reusable-${PKG_REUSABLE_VERSION}"
+  local tool
+
+  rm -rf "${PKG_BUILD}/.reusable"
+  DESTDIR="${stage}" ninja ${NINJA_OPTS} install
+  for tool in llc llvm-ar llvm-as llvm-config llvm-cov llvm-dis llvm-link llvm-nm \
+              llvm-objcopy llvm-objdump llvm-profdata llvm-readobj llvm-size \
+              llvm-strip llvm-tblgen opt clang-tblgen llvm-spirv; do
+    if [ -f "${TOOLCHAIN}/bin/${tool}" ]; then
+      cp -a "bin/${tool}" "${stage}${TOOLCHAIN}/bin"
+    fi
+  done
+  mv "${stage}${TOOLCHAIN}" "${dir}"
+  rm -rf "${stage}"
+
+  reusable_make_relocatable "${dir}"
+
+  {
+    echo "archive: ${PKG_REUSABLE_SOURCE_NAME}"
+    echo "host: ${MACHINE_HARDWARE_NAME}"
+    echo "target arch: ${TARGET_ARCH}"
+    echo "graphic drivers: ${GRAPHIC_DRIVERS}"
+    echo "llvm: ${PKG_VERSION}"
+  } >"${dir}/MANIFEST"
+
+  save_reusable llvm-reusable "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
 }
 
 pre_configure_target() {
@@ -168,3 +230,14 @@ post_makeinstall_target() {
   rm -rf ${INSTALL}/usr/lib/libLTO.so
   rm -rf ${INSTALL}/usr/share
 }
+
+# with llvm-reusable there is nothing to build for llvm:host. Defined last so
+# that they replace the host steps above.
+if [ "${PKG_REUSABLE}" = "yes" ]; then
+  pre_configure_host() { :; }
+  configure_host() { :; }
+  make_host() { :; }
+  post_make_host() { :; }
+  makeinstall_host() { :; }
+  post_makeinstall_host() { :; }
+fi
