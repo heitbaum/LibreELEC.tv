@@ -128,6 +128,13 @@ save_or1k_reusable() {
   mv "${stage}${TOOLCHAIN}" "${dir}"
   rm -rf "${stage}"
 
+  # cc1, lto1 and lto-dump carry over 300MB of debug info each
+  find "${dir}" -type f | while read -r f; do
+    if [ "$(head -c4 "${f}" | tail -c3)" = "ELF" ]; then
+      strip --strip-debug "${f}"
+    fi
+  done
+
   reusable_make_relocatable "${dir}"
 
   {
