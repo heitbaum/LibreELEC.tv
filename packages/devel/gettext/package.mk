@@ -67,6 +67,18 @@ pre_configure_host() {
   fi
 }
 
+post_configure_host() {
+  local lt
+
+  # libtool adds the toolchain lib dir to the rpath of what links its
+  # libraries, and the relocatable build already finds them from $ORIGIN
+  if listcontains "${BUILD_REUSABLE}" "(all|gettext:host)"; then
+    for lt in $(find . -name libtool); do
+      libtool_remove_rpath "${lt}"
+    done
+  fi
+}
+
 post_makeinstall_host() {
   if listcontains "${BUILD_REUSABLE}" "(all|gettext:host)"; then
     save_gettext_reusable
@@ -105,6 +117,7 @@ save_gettext_reusable() {
 if [ "${PKG_REUSABLE}" = "yes" ]; then
   pre_configure_host() { :; }
   configure_host() { :; }
+  post_configure_host() { :; }
   make_host() { :; }
   makeinstall_host() { :; }
   post_makeinstall_host() { :; }
