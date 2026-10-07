@@ -12,7 +12,7 @@ PKG_DEPENDS_UNPACK="rustc-snapshot rust-std-snapshot cargo-snapshot"
 PKG_LONGDESC="A systems programming language that prevents segfaults, and guarantees thread safety."
 PKG_TOOLCHAIN="manual"
 
-# the prebuilt rust:host and cargo:host published by cargo-reusable, named after
+# the prebuilt rust:host and cargo:host published as cargo-reusable, named after
 # a hash of their recipes so that a stale archive is never used. llvm, gcc,
 # glibc and openssl stay backwards compatible within a release.
 if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
@@ -20,7 +20,7 @@ if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
   PKG_REUSABLE_HASH="$(get_reusable_inputs_hash rust cargo)"
   PKG_REUSABLE_VERSION="${OS_VERSION}-${PKG_VERSION}"
   PKG_REUSABLE_SOURCE_NAME="cargo-reusable-${PKG_REUSABLE_VERSION}-${MACHINE_HARDWARE_NAME}-${TARGET_NAME}-${PKG_REUSABLE_HASH}.tar.xz"
-  PKG_REUSABLE_URL="https://github.com/LibreELEC/cargo-reusable/releases/download/${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
+  PKG_REUSABLE_URL="${REUSABLE_URL}/cargo-${PKG_REUSABLE_VERSION}/${PKG_REUSABLE_SOURCE_NAME}"
 fi
 
 # preferred falls back to building rust:host when no reusable archive is available
