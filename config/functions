@@ -1167,6 +1167,12 @@ reusable_make_relocatable() {
     sed -i "s|${TOOLCHAIN}|@REUSABLE_TOOLCHAIN@|g" "${f}"
     echo "${f#${dir}/}"
   done >"${dir}/RELOCATE"
+
+  # tools built before patchelf leave this to the link, check none was missed
+  if find "${dir}" -type f -exec readelf -d {} \; 2>/dev/null |
+       grep -E "R(UN)?PATH" | grep -qF "${TOOLCHAIN}"; then
+    die "${dir##*/} has an rpath into ${TOOLCHAIN}"
+  fi
 }
 
 # install a host tool unpacked in directory ($1) by reusable_make_relocatable
