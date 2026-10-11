@@ -15,7 +15,7 @@ PKG_LONGDESC="A GNU collection of binary utilities."
 
 PKG_CONFIGURE_OPTS_HOST="--target=${TARGET_NAME} \
                          --with-sysroot=${SYSROOT_PREFIX} \
-                         --with-lib-path=${SYSROOT_PREFIX}/lib:${SYSROOT_PREFIX}/usr/lib \
+                         --with-lib-path==/lib:=/usr/lib \
                          --without-ppl \
                          --enable-static \
                          --without-cloog \
@@ -29,6 +29,16 @@ PKG_CONFIGURE_OPTS_HOST="--target=${TARGET_NAME} \
                          --enable-ld=default \
                          --enable-lto \
                          --disable-nls"
+
+# the prebuilt binutils:host published as binutils-reusable, one per target.
+# The configure options name the toolchain, which is left out of the hash.
+PKG_REUSABLE_VARIANT="${TARGET_NAME}"
+PKG_REUSABLE_KEY="${PKG_CONFIGURE_OPTS_HOST//${TOOLCHAIN}/}"
+if reusable_host_tool binutils binutils-gold; then
+  PKG_DEPENDS_HOST+=" binutils-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|binutils:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
 
 PKG_CONFIGURE_OPTS_TARGET="--target=${TARGET_NAME} \
                          --with-sysroot=${SYSROOT_PREFIX} \
@@ -71,6 +81,26 @@ makeinstall_host() {
   make -C bfd install # fix parallel build with libctf requiring bfd
   # override the makeinfo binary with true - this does not build the documentation
   make HELP2MAN=true MAKEINFO=true install
+
+  if listcontains "${BUILD_REUSABLE}" "(all|binutils:host)"; then
+    save_binutils_reusable
+  fi
+}
+
+# pack binutils:host as the binutils-reusable archive, with the libiberty.h
+# it installs into the sysroot
+save_binutils_reusable() {
+  local dir="${PKG_BUILD}/.reusable/binutils-reusable-${PKG_REUSABLE_VERSION}"
+
+  rm -rf "${dir}" "${dir}.stage"
+  make HELP2MAN=true MAKEINFO=true install DESTDIR="${dir}.stage"
+  mv "${dir}.stage${TOOLCHAIN}" "${dir}"
+  rm -rf "${dir}.stage"
+  mkdir -p "${dir}${SYSROOT_PREFIX#${TOOLCHAIN}}/usr/include"
+    cp ../include/libiberty.h "${dir}${SYSROOT_PREFIX#${TOOLCHAIN}}/usr/include"
+
+  reusable_strip_host_debug "${dir}"
+  reusable_save "${dir}"
 }
 
 make_target() {
