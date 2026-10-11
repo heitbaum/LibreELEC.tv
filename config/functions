@@ -1185,6 +1185,96 @@ reusable_install() {
     -exec cp -a {} "${TOOLCHAIN}/" \;
 }
 
+# set the PKG_REUSABLE_* names of the reusable archive of a host tool, called
+# from the package.mk of that tool. The archive is ${PKG_NAME}-reusable, named
+# after a hash of the recipes of the packages given (the package itself when
+# none are) so that a stale archive is never used. Returns 0 and sets
+# PKG_REUSABLE when the archive is to be used, in which case the package
+# depends on ${PKG_NAME}-reusable:host and scripts/build skips its host build.
+reusable_host_tool() {
+  local tool="${PKG_NAME}"
+
+  if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
+     listcontains "${BUILD_REUSABLE}" "(all|${tool}:host)"; then
+    reusable_names "${@}"
+  fi
+
+  # preferred falls back to building the tool when no archive is available
+  if [ "${USE_REUSABLE}" = "yes" ] ||
+     { [ "${USE_REUSABLE}" = "preferred" ] &&
+       [ -n "$(get_reusable_sha256 ${tool}-reusable ${PKG_REUSABLE_SOURCE_NAME} ${PKG_REUSABLE_URL})" ]; }; then
+    PKG_REUSABLE="yes"
+    return 0
+  fi
+
+  return 1
+}
+
+# stage what the host build in the current directory installs into ${TOOLCHAIN}
+# into directory ($1), laid out as the toolchain
+reusable_stage_install() {
+  local dir="${1}" stage="${1}.stage"
+
+  rm -rf "${dir}" "${stage}"
+  if [ -f build.ninja ]; then
+    DESTDIR="${stage}" ninja ${NINJA_OPTS} install
+  else
+    make install DESTDIR="${stage}"
+  fi
+  mv "${stage}${TOOLCHAIN}" "${dir}"
+  rm -rf "${stage}"
+}
+
+# make a host tool staged in directory ($1) relocatable and save it as the
+# reusable archive named by the PKG_REUSABLE_* variables of the package
+reusable_save() {
+  local dir="${1}"
+
+  reusable_make_relocatable "${dir}"
+  {
+    echo "archive: ${PKG_REUSABLE_SOURCE_NAME}"
+    echo "host: ${MACHINE_HARDWARE_NAME}"
+    echo "${PKG_NAME}: ${PKG_VERSION}"
+  } >"${dir}/MANIFEST"
+
+  save_reusable "${PKG_NAME}-reusable" "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
+}
+
+# set up a <tool>-reusable package for the archive the tool ($1) names: the
+# version, source and checksum, an unpack and a makeinstall_host that installs
+# it into the toolchain. The package can add steps after it.
+reusable_archive_package() {
+  local tool="${1}"
+
+  PKG_VERSION="$(get_pkg_variable ${tool} PKG_REUSABLE_VERSION)"
+  PKG_SOURCE_NAME="$(get_pkg_variable ${tool} PKG_REUSABLE_SOURCE_NAME)"
+  PKG_TOOLCHAIN="manual"
+
+  # only probe when asked to, and leave PKG_URL unset when there is nothing to
+  # get so that scripts/get does not retry a missing archive
+  if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ]; then
+    PKG_URL="$(get_pkg_variable ${tool} PKG_REUSABLE_URL)"
+    PKG_SHA256="$(get_reusable_sha256 ${PKG_NAME} ${PKG_SOURCE_NAME} ${PKG_URL})"
+    [ -n "${PKG_SHA256}" ] || PKG_URL=""
+  fi
+
+  # the archive name covers what it is built from, so rebuild when a
+  # different archive is chosen
+  PKG_STAMP="${PKG_SOURCE_NAME} ${PKG_SHA256}"
+
+  unpack() {
+    [ -f "${SOURCES}/${PKG_NAME}/${PKG_SOURCE_NAME}" ] ||
+      die "${PKG_SOURCE_NAME} is not available, set USE_REUSABLE=preferred or no"
+
+    mkdir -p "${PKG_BUILD}"
+    tar --strip-components=1 -xf "${SOURCES}/${PKG_NAME}/${PKG_SOURCE_NAME}" -C "${PKG_BUILD}"
+  }
+
+  makeinstall_host() {
+    reusable_install "${PKG_BUILD}"
+  }
+}
+
 get_pkg_version_maj_min() {
   local pkg_version
 
