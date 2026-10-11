@@ -62,7 +62,14 @@ if [ -f ${STAMP} ]; then
   rm -f ${STAMP}
 fi
 
-${SCRIPTS}/unpack "${PKG_NAME}" "${PARENT_PKG}"
+# a host tool taken from its reusable archive is installed by the -reusable
+# package it then depends on, so there is nothing to unpack or build here
+reusable_host="no"
+[ "${TARGET}" = "host" -a "${PKG_REUSABLE}" = "yes" ] && reusable_host="yes"
+
+if [ "${reusable_host}" != "yes" ]; then
+  ${SCRIPTS}/unpack "${PKG_NAME}" "${PARENT_PKG}"
+fi
 
 # build dependencies, only when PKG_DEPENDS_? is filled
 unset _pkg_depends
@@ -88,7 +95,7 @@ if is_sequential_build; then
 fi
 
 # virtual packages are not built as they only contain dependencies, so dont go further here
-if [ "${PKG_SECTION}" = "virtual" ]; then
+if [ "${PKG_SECTION}" = "virtual" -o "${reusable_host}" = "yes" ]; then
   PKG_DEEPHASH=$(calculate_stamp)
   for i in PKG_NAME PKG_DEEPHASH BUILD_WITH_DEBUG; do
     echo "STAMP_${i}=\"${!i}\"" >>${STAMP}
