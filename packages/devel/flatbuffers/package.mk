@@ -11,6 +11,13 @@ PKG_DEPENDS_HOST="cmake:host ninja:host"
 PKG_DEPENDS_TARGET="cmake:host ninja:host gcc:host"
 PKG_LONGDESC="An efficient cross platform serialization library for games and other memory constrained apps."
 
+# the prebuilt flatbuffers:host published as flatbuffers-reusable
+if reusable_host_tool; then
+  PKG_DEPENDS_HOST="flatbuffers-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|flatbuffers:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
+
 PKG_CMAKE_OPTS_HOST="-DFLATBUFFERS_CODE_COVERAGE=OFF \
                      -DFLATBUFFERS_BUILD_TESTS=OFF \
                      -DFLATBUFFERS_INSTALL=ON \
@@ -36,4 +43,8 @@ pre_configure_host() {
 post_makeinstall_host() {
   mkdir -p ${TOOLCHAIN}/bin
     cp -PR ${PKG_BUILD}/.${HOST_NAME}/flatc ${TOOLCHAIN}/bin
+
+  if listcontains "${BUILD_REUSABLE}" "(all|flatbuffers:host)"; then
+    reusable_save_install
+  fi
 }
