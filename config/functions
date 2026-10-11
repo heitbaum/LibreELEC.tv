@@ -1239,6 +1239,28 @@ reusable_strip_host_debug() {
     done
 }
 
+# put the ccache wrapper over the bootstrap cross compiler and link its lto
+# plugin for binutils, once gcc:bootstrap is in the toolchain
+setup_gcc_bootstrap() {
+  local gcc_version cross_cc
+
+  gcc_version=$(${TOOLCHAIN}/bin/${TARGET_NAME}-gcc -dumpversion)
+  cross_cc=${TARGET_PREFIX}gcc-${gcc_version}
+
+  rm -f ${TARGET_PREFIX}gcc
+
+  cat >${TARGET_PREFIX}gcc <<EOF
+#!/bin/sh
+CCACHE_COMPILERCHECK="string:$(get_toolchain_key)" ${TOOLCHAIN}/bin/ccache ${cross_cc} "\$@"
+EOF
+
+  chmod +x ${TARGET_PREFIX}gcc
+
+  # install lto plugin for binutils
+  mkdir -p ${TOOLCHAIN}/lib/bfd-plugins
+    ln -sf ../gcc/${TARGET_NAME}/${gcc_version}/liblto_plugin.so ${TOOLCHAIN}/lib/bfd-plugins
+}
+
 # set up the build ccache and write the host-gcc and host-g++ wrappers that
 # compile through it, once ccache:host is in the toolchain
 setup_ccache_host() {

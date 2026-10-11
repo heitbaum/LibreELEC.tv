@@ -71,6 +71,19 @@ PKG_CONFIGURE_OPTS_BOOTSTRAP="${GCC_COMMON_CONFIGURE_OPTS} \
                               --with-newlib \
                               ${TARGET_ARCH_GCC_OPTS}"
 
+# the prebuilt gcc:bootstrap published as gcc-bootstrap-reusable, one per
+# target. Its libgcc is assembled with binutils, so their recipes are in the
+# hash, and the configure options name the toolchain, which is left out.
+PKG_REUSABLE_ARCHIVE="gcc-bootstrap"
+PKG_REUSABLE_TARGETS="bootstrap"
+PKG_REUSABLE_VARIANT="${TARGET_NAME}"
+PKG_REUSABLE_KEY="${PKG_CONFIGURE_OPTS_BOOTSTRAP//${TOOLCHAIN}/}"
+if reusable_host_tool gcc binutils binutils-gold gmp mpfr mpc; then
+  PKG_DEPENDS_BOOTSTRAP+=" gcc-bootstrap-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|gcc:bootstrap)"; then
+  PKG_DEPENDS_BOOTSTRAP+=" patchelf:host"
+fi
+
 PKG_CONFIGURE_OPTS_HOST="${GCC_COMMON_CONFIGURE_OPTS} \
                          --enable-languages=c,c++ \
                          ${OPTS_LIBATOMIC} \
@@ -89,21 +102,14 @@ PKG_CONFIGURE_OPTS_HOST="${GCC_COMMON_CONFIGURE_OPTS} \
 # not change when a patch to gcc or binutils changes what cc1 or as produce, so
 # the wrappers name the compiler by the toolchain key instead
 post_makeinstall_bootstrap() {
-  GCC_VERSION=$(${TOOLCHAIN}/bin/${TARGET_NAME}-gcc -dumpversion)
-  CROSS_CC=${TARGET_PREFIX}gcc-${GCC_VERSION}
+  if listcontains "${BUILD_REUSABLE}" "(all|gcc:bootstrap)"; then
+    local dir="${PKG_BUILD}/.reusable/gcc-bootstrap-reusable-${PKG_REUSABLE_VERSION}"
+    reusable_stage_install "${dir}"
+    reusable_strip_host_debug "${dir}"
+    reusable_save "${dir}"
+  fi
 
-  rm -f ${TARGET_PREFIX}gcc
-
-  cat >${TARGET_PREFIX}gcc <<EOF
-#!/bin/sh
-CCACHE_COMPILERCHECK="string:$(get_toolchain_key)" ${TOOLCHAIN}/bin/ccache ${CROSS_CC} "\$@"
-EOF
-
-  chmod +x ${TARGET_PREFIX}gcc
-
-  # install lto plugin for binutils
-  mkdir -p ${TOOLCHAIN}/lib/bfd-plugins
-    ln -sf ../gcc/${TARGET_NAME}/${GCC_VERSION}/liblto_plugin.so ${TOOLCHAIN}/lib/bfd-plugins
+  setup_gcc_bootstrap
 }
 
 pre_configure_host() {
