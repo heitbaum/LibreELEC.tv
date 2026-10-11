@@ -14,7 +14,21 @@ PKG_LONGDESC="A compiler cache to speed up re-compilation of C/C++ code by cachi
 PKG_TOOLCHAIN="cmake-make"
 PKG_BUILD_FLAGS="+local-cc"
 
+# the prebuilt ccache:host published as ccache-reusable
+if reusable_host_tool; then
+  PKG_DEPENDS_HOST+=" ccache-reusable:host"
+fi
+
 configure_host() {
+  local rpath=""
+
+  # a reusable ccache finds libfmt, libxxhash and libzstd from $ORIGIN, leave
+  # the toolchain path out
+  if listcontains "${BUILD_REUSABLE}" "(all|ccache:host)"; then
+    LDFLAGS="${LDFLAGS/-Wl,-rpath,${TOOLCHAIN}\/lib/}"
+    rpath='$ORIGIN/../lib'
+  fi
+
   # custom cmake build to override the LOCAL_CC/CXX
   cp ${CMAKE_CONF} cmake-ccache.conf
 
@@ -27,27 +41,14 @@ configure_host() {
         -DREDIS_STORAGE_BACKEND=OFF \
         -DENABLE_TESTING=OFF \
         -DDEPS=SYSTEM \
+        -DCMAKE_INSTALL_RPATH="${rpath}" \
         ..
 }
 
 post_makeinstall_host() {
-  # setup ccache
-  if [ -z "${CCACHE_DISABLE}" ]; then
-    CCACHE_DIR="${BUILD_CCACHE_DIR}" ${TOOLCHAIN}/bin/ccache --max-size=${CCACHE_CACHE_SIZE}
-    CCACHE_DIR="${BUILD_CCACHE_DIR}" ${TOOLCHAIN}/bin/ccache --set-config compression_level=${CCACHE_COMPRESSLEVEL}
+  if listcontains "${BUILD_REUSABLE}" "(all|ccache:host)"; then
+    reusable_save_install
   fi
 
-  cat >${TOOLCHAIN}/bin/host-gcc <<EOF
-#!/bin/sh
-${TOOLCHAIN}/bin/ccache ${LOCAL_CC} "\$@"
-EOF
-
-  chmod +x ${TOOLCHAIN}/bin/host-gcc
-
-  cat >${TOOLCHAIN}/bin/host-g++ <<EOF
-#!/bin/sh
-${TOOLCHAIN}/bin/ccache ${LOCAL_CXX} "\$@"
-EOF
-
-  chmod +x ${TOOLCHAIN}/bin/host-g++
+  setup_ccache_host
 }
