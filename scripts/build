@@ -63,9 +63,13 @@ if [ -f ${STAMP} ]; then
 fi
 
 # a host tool taken from its reusable archive is installed by the -reusable
-# package it then depends on, so there is nothing to unpack or build here
+# package it then depends on, so there is nothing to unpack or build here.
+# PKG_REUSABLE_TARGETS names the builds the archive replaces, the host build
+# unless the package says otherwise.
 reusable_host="no"
-[ "${TARGET}" = "host" -a "${PKG_REUSABLE}" = "yes" ] && reusable_host="yes"
+if [ "${PKG_REUSABLE}" = "yes" ] && listcontains "${PKG_REUSABLE_TARGETS:-host}" "${TARGET}"; then
+  reusable_host="yes"
+fi
 
 if [ "${reusable_host}" != "yes" ]; then
   ${SCRIPTS}/unpack "${PKG_NAME}" "${PARENT_PKG}"
