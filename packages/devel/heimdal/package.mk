@@ -13,6 +13,13 @@ PKG_LONGDESC="Kerberos 5, PKIX, CMS, GSS-API, SPNEGO, NTLM, Digest-MD5 and, SASL
 PKG_TOOLCHAIN="autotools"
 PKG_BUILD_FLAGS="-parallel"
 
+# the prebuilt heimdal:host published as heimdal-reusable
+if reusable_host_tool; then
+  PKG_DEPENDS_HOST="heimdal-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|heimdal:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
+
 pre_configure_host() {
   # configure probe for crypt() uses implicit declaration; without this the probe
   # fails and crypt is excluded from the link, causing an undefined reference at build time
@@ -38,4 +45,12 @@ makeinstall_host() {
   mkdir -p ${TOOLCHAIN}/bin
     cp -PR lib/asn1/asn1_compile ${TOOLCHAIN}/bin/heimdal_asn1_compile
     cp -PR lib/com_err/compile_et ${TOOLCHAIN}/bin/heimdal_compile_et
+
+  if listcontains "${BUILD_REUSABLE}" "(all|heimdal:host)"; then
+    local dir="${PKG_BUILD}/.reusable/heimdal-reusable-${PKG_REUSABLE_VERSION}"
+    rm -rf "${PKG_BUILD}/.reusable"
+    mkdir -p "${dir}/bin"
+      cp -PR ${TOOLCHAIN}/bin/heimdal_{asn1_compile,compile_et} "${dir}/bin"
+    reusable_save "${dir}"
+  fi
 }
