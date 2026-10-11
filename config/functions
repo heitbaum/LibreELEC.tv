@@ -1197,23 +1197,46 @@ reusable_install() {
 # none are) so that a stale archive is never used. Returns 0 and sets
 # PKG_REUSABLE when the archive is to be used, in which case the package
 # depends on ${PKG_NAME}-reusable:host and scripts/build skips its host build.
+# A package can set before the call:
+#   PKG_REUSABLE_ARCHIVE  the archive name, ${PKG_NAME} by default
+#   PKG_REUSABLE_TARGETS  the build the archive replaces, host by default
+#   PKG_REUSABLE_VARIANT  added to the name after the host, eg the target
+#   PKG_REUSABLE_KEY      added to the hash, eg the configure options
 reusable_host_tool() {
-  local tool="${PKG_NAME}"
+  local archive="${PKG_REUSABLE_ARCHIVE:-${PKG_NAME}}"
 
   if [ "${USE_REUSABLE}" = "yes" -o "${USE_REUSABLE}" = "preferred" ] ||
-     listcontains "${BUILD_REUSABLE}" "(all|${tool}:host)"; then
+     listcontains "${BUILD_REUSABLE}" "(all|${PKG_NAME}:${PKG_REUSABLE_TARGETS:-host})"; then
     reusable_names "${@}"
   fi
 
   # preferred falls back to building the tool when no archive is available
   if [ "${USE_REUSABLE}" = "yes" ] ||
      { [ "${USE_REUSABLE}" = "preferred" ] &&
-       [ -n "$(get_reusable_sha256 ${tool}-reusable ${PKG_REUSABLE_SOURCE_NAME} ${PKG_REUSABLE_URL})" ]; }; then
+       [ -n "$(get_reusable_sha256 ${archive}-reusable ${PKG_REUSABLE_SOURCE_NAME} ${PKG_REUSABLE_URL})" ]; }; then
     PKG_REUSABLE="yes"
     return 0
   fi
 
   return 1
+}
+
+# strip the debug info from the host programs and shared libraries in
+# directory ($1). The host strip cannot read the objects of other targets, and
+# a target of the same machine as the host keeps its objects and libraries in
+# the tooldir and the sysroot, so those are left as they are.
+reusable_strip_host_debug() {
+  local host_machine f header
+
+  host_machine="$(readelf -h /bin/sh | sed -n 's/^ *Machine: *//p')"
+  find "${1}" -type f ! -path "${1}/${TARGET_NAME}/lib*" ! -path "${1}/${TARGET_NAME}/sysroot/*" |
+    while read -r f; do
+      header="$(readelf -h "${f}" 2>/dev/null)" || continue
+      [[ ${header} =~ Type:\ *(EXEC|DYN) ]] || continue
+      if [ "$(echo "${header}" | sed -n 's/^ *Machine: *//p')" = "${host_machine}" ]; then
+        strip --strip-debug "${f}"
+      fi
+    done
 }
 
 # set up the build ccache and write the host-gcc and host-g++ wrappers that
@@ -1266,13 +1289,13 @@ reusable_save() {
     echo "${PKG_NAME}: ${PKG_VERSION}"
   } >"${dir}/MANIFEST"
 
-  save_reusable "${PKG_NAME}-reusable" "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
+  save_reusable "${PKG_REUSABLE_ARCHIVE:-${PKG_NAME}}-reusable" "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
 }
 
 # stage what the host build in the current directory installs and save it as
 # the reusable archive of the package
 reusable_save_install() {
-  local dir="${PKG_BUILD}/.reusable/${PKG_NAME}-reusable-${PKG_REUSABLE_VERSION}"
+  local dir="${PKG_BUILD}/.reusable/${PKG_REUSABLE_ARCHIVE:-${PKG_NAME}}-reusable-${PKG_REUSABLE_VERSION}"
 
   reusable_stage_install "${dir}"
   reusable_save "${dir}"
