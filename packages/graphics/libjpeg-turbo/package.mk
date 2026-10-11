@@ -13,6 +13,13 @@ PKG_DEPENDS_TARGET="cmake:host ninja:host gcc:host"
 PKG_LONGDESC="A JPEG image codec that uses SIMD instructions."
 PKG_BUILD_FLAGS="+pic +pic:host"
 
+# the prebuilt libjpeg-turbo:host published as libjpeg-turbo-reusable
+if reusable_host_tool; then
+  PKG_DEPENDS_HOST="libjpeg-turbo-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|libjpeg-turbo:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
+
 PKG_CMAKE_OPTS_HOST="-DENABLE_STATIC=ON \
                      -DENABLE_SHARED=OFF \
                      -DWITH_JPEG8=ON \
@@ -35,4 +42,10 @@ fi
 
 post_makeinstall_target() {
   rm -rf ${INSTALL}/usr/bin
+}
+
+post_makeinstall_host() {
+  if listcontains "${BUILD_REUSABLE}" "(all|libjpeg-turbo:host)"; then
+    reusable_save_install
+  fi
 }
