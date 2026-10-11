@@ -12,6 +12,13 @@ PKG_DEPENDS_TARGET="cmake:host ninja:host gcc:host pcre2:host"
 PKG_LONGDESC="A set of functions that implement regular expression pattern matching using the same syntax."
 PKG_BUILD_FLAGS="+pic"
 
+# the prebuilt pcre2:host published as pcre2-reusable
+if reusable_host_tool; then
+  PKG_DEPENDS_HOST="pcre2-reusable:host"
+elif listcontains "${BUILD_REUSABLE}" "(all|pcre2:host)"; then
+  PKG_DEPENDS_HOST+=" patchelf:host"
+fi
+
 PKG_CMAKE_OPTS_HOST="-DBUILD_SHARED_LIBS=OFF \
                      -DBUILD_STATIC_LIBS=ON \
                      -DPCRE2_BUILD_PCRE2_8=ON \
@@ -42,4 +49,10 @@ post_makeinstall_target() {
   cp ${PKG_NAME}-config ${TOOLCHAIN}/bin
   sed -e "s:\(['= ]\)/usr:\\1${PKG_ORIG_SYSROOT_PREFIX}/usr:g" -i ${TOOLCHAIN}/bin/${PKG_NAME}-config
   chmod +x ${TOOLCHAIN}/bin/${PKG_NAME}-config
+}
+
+post_makeinstall_host() {
+  if listcontains "${BUILD_REUSABLE}" "(all|pcre2:host)"; then
+    reusable_save_install
+  fi
 }
