@@ -1246,6 +1246,15 @@ reusable_save() {
   save_reusable "${PKG_NAME}-reusable" "${PKG_REUSABLE_SOURCE_NAME}" "${dir}"
 }
 
+# stage what the host build in the current directory installs and save it as
+# the reusable archive of the package
+reusable_save_install() {
+  local dir="${PKG_BUILD}/.reusable/${PKG_NAME}-reusable-${PKG_REUSABLE_VERSION}"
+
+  reusable_stage_install "${dir}"
+  reusable_save "${dir}"
+}
+
 # set up a <tool>-reusable package for the archive the tool ($1) names: the
 # version, source and checksum, an unpack and a makeinstall_host that installs
 # it into the toolchain. The package can add steps after it.
