@@ -290,7 +290,7 @@
 #   - yes (always, fail when not available)
 #   - preferred (when available, else build them)
 #   - no (always build them)
-  USE_REUSABLE="no"
+  USE_REUSABLE="yes"
 
 # where the reusable host tools are published, as <url>/<release tag>/<archive>
-  REUSABLE_URL="https://github.com/LibreELEC/reusable/releases/download"
+  REUSABLE_URL="https://github.com/heitbaum/reusable/releases/download"
