@@ -11,7 +11,7 @@ package for Generic from building.
 
 ---
 diff --git a/Python/initconfig.c b/Python/initconfig.c
-index a7cd08d..7ea28fa 100644
+index e21cbaa..6520859 100644
 --- a/Python/initconfig.c
 +++ b/Python/initconfig.c
 @@ -619,7 +619,7 @@ int Py_VerboseFlag = 0; /* Needed by import.c */

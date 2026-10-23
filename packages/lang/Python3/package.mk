@@ -3,12 +3,11 @@
 
 PKG_NAME="Python3"
 # When changing PKG_VERSION remember to sync PKG_PYTHON_VERSION!
-PKG_VERSION="3.15.0"
-PKG_SHA256="ba4bed1ba346b916890b76d9e320451420aa69f6408997d33c66482eeae3d575"
+PKG_VERSION="3.15.1"
+PKG_SHA256="673ae7232d84c894729882c8257d300ef2d26523911bfd3917ec8ce7f526f99b"
 PKG_LICENSE="PSF-2.0"
 PKG_SITE="https://www.python.org/"
 PKG_URL="https://www.python.org/ftp/python/${PKG_VERSION}/${PKG_NAME::-1}-${PKG_VERSION}.tar.xz"
-PKG_URL="https://www.python.org/ftp/python/3.15.0/${PKG_NAME::-1}-${PKG_VERSION}.tar.xz"
 PKG_DEPENDS_HOST="zlib:host bzip2:host libffi:host mpdecimal:host util-linux:host autoconf-archive:host openssl:host"
 PKG_DEPENDS_TARGET="autotools:host gcc:host Python3:host sqlite expat zlib bzip2 xz openssl libffi readline mpdecimal ncurses util-linux"
 PKG_LONGDESC="Python3 is an interpreted object-oriented programming language."
