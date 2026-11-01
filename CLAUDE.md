@@ -31,6 +31,41 @@ PROJECT=Generic ARCH=x86_64 scripts/build_mt <package-name>
 
 Config loading order: `config/arch.*` → `distributions/*/options` → `projects/*/options` → `projects/*/devices/*/options`. Each level overrides the previous.
 
+### Building on nuc12
+
+Real builds run on nuc12 (`root@192.168.42.63`), not on the workstation. The
+canonical wrapper is `/storage/scripts/build.sh`; run it non-interactively by
+dropping `-it` and adding `--rm`:
+
+```bash
+ssh root@192.168.42.63 'docker run --rm --log-driver none   --workdir /build/LibreELEC.tv --privileged   -v /storage:/storage -v /var/media/DATA:/var/media/DATA   -v /var/media/DATA/home-rudi:/build   resolute:latest bash --login -c "<cmd>"'
+```
+
+Then inside the container:
+
+```bash
+PROJECT=Generic ARCH=x86_64 scripts/clean <package>
+PROJECT=Generic ARCH=x86_64 scripts/build <package>
+```
+
+`scripts/clean` first is what forces the recompile that surfaces warnings —
+without it ccache serves every object and the build reports no diagnostics.
+
+Both `-v /var/media/DATA:/var/media/DATA` and `-v /var/media/DATA/home-rudi:/build`
+are required: `/build` is the workdir, and the native path is what lets the git
+worktrees (`LibreELEC.master`, `LibreELEC.work`, …) resolve — mount only
+`/build` and every worktree reports "not a git repository". The container runs
+as uid 1000 and carries gcc 16 with ASan, but no valgrind, no clang, and gcc has
+no MSan; one-off tools install with `sudo apt update && sudo apt install -y`.
+
+`/build/LibreELEC.tv` is the `dev` tree and is kept warm (~77 GB build dir,
+~92 GB `sources/`). Do not judge a tree cleaned from `ls | wc -l` — busybox `ls`
+on the host hides dotfiles, so `.stamps`, `.ccache` and `.sysroot` are invisible.
+
+Build logs land in `${BUILD}/.threads/logs`; use `tools/find_build_warnings.sh
+[logdir] [all|errors|warnings]` to report on them, with suppressions in
+`tools/find_build_warnings_ignore.conf`.
+
 ## Package System
 
 Every package lives under `packages/<category>/<name>/package.mk`. Key fields:
@@ -268,7 +303,7 @@ Progressing, not tracked here: PR #11104 (OpenSSL 4.0.x — master is still on 3
   - `projects/` — 307 left; worst: the per-project `update.sh` scripts (53/24/22) and `release` (35)
   - STANDARDS.md — audit the examples themselves
   - counts are `$VAR` occurrences in shell files only, excluding comment lines, single-quoted spans and awk field vars; `packages/` is measured over `package.mk` alone (43 left, 22 of them in the third-party `supervisedthinking/…/makemkv`) — the device-side `.start`/`init`/`installer` scripts under `packages/` are a separate, much larger body of work (~2000)
-- **xmlstarlet** — upstream is dead (SourceForge 1.6.1, 2014) and no maintained *source* fork exists (only distro patch sets — Fedora/Debian/etc.). Provenance is fixed: we pull canonical 1.6.1 from SourceForge (a dev experiment on the archived `dimitern` *python-bindings* `v1.6.8` with a pypi `PKG_SITE` was reverted) and carry libxml2-compat patches `0246` (2.12) and `0900` (2.14) on both master and dev. A dev `0249`–`0252` rework of the compat layer (drop obsolete lifecycle calls, drop parser-default globals, pass entity/DTD parse flags per-call, use the xmlSave API) was tried and then dropped from the tree — dev is back to `0246`/`0900`. Options: (a) fix provenance — **done**; (b) stand up a `LibreELEC/xmlstarlet` fork to consolidate; (c) replace — **blocked**: `config/functions` and `scripts/install_addon` use `xml ed --inplace` / `esc`, not just xpath, so `xmllint` can't substitute. The carried patches are tracked in PATCHES.md. **1.6.1 will hard-break at libxml2 3.0** — it still uses libxml2's deprecated thread-global-state APIs (`xmlIndentTreeOutput`, `xmlLoadExtDtdDefaultValue`, `xmlLineNumbersDefault`, etc.), which 3.0 removes; the real trigger to replace or rework it.
+- **xmlstarlet** — **resolved: we are upstream now.** The old entry here said upstream was dead with no maintained source fork and listed option (b), "stand up a fork to consolidate", as a thing to maybe do. That got done, and not under the LibreELEC org: **github.com/xmlstarlet/xmlstarlet is Rudi's fork and is now the official xmlstarlet**, confirmed as such by the original author and the previous maintainers. The repo describes itself as "now developed and maintained here (formerly SourceForge xmlstar)"; `heitbaum` is the second-largest contributor (119 commits) behind `npostavs` (248, the previous SourceForge maintainer), with `nwellnhof` (libxml2's own maintainer), `hartwork` and `mcrapet` also contributing. So option (b) is **done**, not pending — do not create a `LibreELEC/xmlstarlet`. **1.7.0 released 2026-09-07**, the first release since 1.6.1 in 2014, and LE master already carries it: `upstream/master` is on 1.7.0 and `packages/textproc/xmlstarlet/` has no `patches/` directory at all. It subsumes all three patches we carried — the 2.12 compat fix (`0246`), the 2.14 `ATTRIBUTE_UNUSED` definition (`0900`) and Matthieu Crapet's 2014 `usage2c.awk` basename regexp, verified at the tag as `sub(/^.*\//, "", command_name)`, i.e. the sourceforge submission finally landed once Rudi took the tree over. It also **removes the libxml2 3.0 trigger**: 1.7.0 isolates the deprecated node-deregister calls and is prepared for 3.0, so 1.6.1's coming hard break no longer forces anything. Option (c), replace with `xmllint`, stays **blocked** and is now also pointless: `config/functions:1566` uses `xml ed --inplace` and `:1571` uses `xml esc`, not just xpath, and there is no maintenance argument left for dropping a tool we maintain. **Practical consequence — do not carry xmlstarlet patches in LE again**; a fix goes upstream and comes back in a release. **The only local delta left on dev** is an uncommitted two-line `--disable-install-docs` for host and target (1.7.0 ships its docs prebuilt, so they install with no `xsltproc`/`fop` chain and land docs we do not want on an appliance); that one is an LE-side change for LE master, not something to send upstream. Untested in this checkout: no 1.7.0 tarball in `sources/` — but **LE's exact dependency pair is covered upstream**: `.github/workflows/ci.yml` on master runs `libxml2 2.15.4` with `libxslt 1.1.45` as a non-experimental matrix cell, and pins 2.15.4 as the "newest stable" baseline for both the compiler and the cross-compile matrices. Those are exactly our versions. (The "2.6.27 through 2.15.3" range in the 1.7.0 release notes was true at the tag and has since moved — read the workflow, not the notes.)
 - **meson: cross-compiled python correctness** — cross-compiled Python3 bakes in build-host CFLAGS that break the cross-compiler (https://github.com/LibreELEC/LibreELEC.tv/issues/5535, still open — see also the recent libgpiod issue). NB the sibling bug, cross-compiled meson not using the cross-compiled libraries / failing meson.build tests (#5536), is **closed/fixed** (2026-07-02; regression guard added under `scripts/tests`).
 - **update-pkg** — normalise the tool; remove boilerplate/duplication.
 - **update-scan** — output was noisy because comparison was plain string inequality (`PKG_VERSION != upstream_version`). Full classification and the per-package worklist live in `docs/update-scan-plan.md`. Generic fixes **DONE**: safe `normalise_version()` (leading `v` + zero-pad only — meaning-dependent suffixes are per-package, never global, since e.g. ncurses `6.6-YYYYMMDD` is a real snapshot); `is_prerelease()` filter (suppressed unless `PRERELEASE=yes`); `cosmetic_equal()`/`is_plain_version()`; human table shows anything that differs incl. older-upstream (stale/broken lookups worth a look) while the `AUTO_UPDATE` bot requires `upstream_strictly_newer()` so it never opens a downgrade/pre-release PR; skip unexpanded `${` versions. Remaining (per-package, need config/data not generic logic — see the doc): (A) pin-to-major-series like nvidia (qt5/mariadb/groovy/pngquant/encfs/fuse/mp4v2/protobuf); (B) track a git repo's tags/releases not Anitya (cxxtools/tntnet/dbussy/libmad/libprojectM/media-driver/x264/xf86-video-intel/…); (C) track Kodi's repo (libdvdcss/nav/read); (D) snapshot-optional base is "green" (ncurses/vim); (E) scan-ignore opt-out (rpi-eeprom/spirv-*/tigervnc/libatasmart/crazycat/…); (F) broken lookup (memtester Anitya, mesa-reusable → LE repo); (G) coupled version (heimdal↔samba, spirv↔llvm/glslang).
@@ -298,6 +333,8 @@ Progressing, not tracked here: PR #11104 (OpenSSL 4.0.x — master is still on 3
 - **lbin addon files** (distinct from the rpath/#7602 work above — this is about binary *placement*, not RPATH) — addon binaries that only serve the addon itself should live in `lbin/` inside the addon directory, not in system paths like `/usr/bin`. Mirrors the `lib.private/` pattern already used for addon-private libraries (keeps `LD_LIBRARY_PATH` clean). `nextpvr` is the reference example: `hdhomerun_config` and `comskip` go to `lbin/`, `libmediainfo.so` goes to `lib.private/`. Audit all addons that install to `/usr/bin` or `/usr/sbin` and move addon-only binaries to `lbin/`.
   - **BLOCKER — `lbin` executables lose the execute bit (revisit this mess).** Kodi's addon-install unzip does not preserve the execute bit, and `packages/mediacenter/kodi/scripts/service-addon-wrapper` only `chmod +x`'s `${ADDON_PATH}/bin/*` on enable/post-install — **not `lbin/`**. So any binary in `lbin/` that must *run* ends up non-executable and fails (verified 2026-07 building the lldpd addon; lldpd/lldpcli had to stay in `bin/`). As it stands `lbin/` is only safe for non-executable private files, or the addon must `chmod +x` its own `lbin/*` (e.g. in the `.start` script). This means the "move addon-only binaries to `lbin/`" plan can't work as written — either extend `service-addon-wrapper` to also `chmod +x lbin/*`, or have addons chmod their own. **Check whether `nextpvr`'s `lbin` `comskip`/`hdhomerun_config` actually run** — they may be latently broken or chmod'd elsewhere. Until resolved, keep runnable addon binaries in `bin/`.
 - **sccache** — use for caching build-host compilation; analogous to mesa-reusable (pre-built mesa host tools) but for the full toolchain / host packages. Prior WIP: PR https://github.com/LibreELEC/LibreELEC.tv/pull/5162 (`tools/generate-toolchain` script — packages a versioned aarch64 GCC toolchain as a tarball with SHA256 for distribution). Also: a hacky dev-branch experiment tarring up a built toolchain and validating via hash. End goal: `USE_REUSABLE_TOOLCHAIN=yes` style flag that downloads a pre-built toolchain tarball (same model as mesa-reusable) instead of compiling it from source — needs proper fallback/check logic (mesa-reusable approach needs improvement in this area too).
+
+- **LibreELEC-settings bluetooth agent — modal dialogs block the D-Bus dispatch thread.** The bluez and obex agent handlers call `xbmcgui.Dialog().yesno()` / `xbmc.Keyboard()` directly on the ravel dispatch thread, so an unanswered prompt blocks every other agent method until it is dismissed — `Release`, `RequestConfirmation` and `AuthorizePush` all stop responding, and the agent stays wedged until Kodi restarts. Observed 2026-09-19 on the nuc12 while testing the agent fixes (PR 370 on service.libreelec.settings): a pairing prompt left open wedged the agent, and a Bluetooth file push failed because the peer gave up after ~50s while the accept dialog sat waiting. Peer timeouts are short — Android drops an OPP push at about 50s and a pairing confirmation sooner — so a prompt the user does not reach in time looks like a flaky pairing rather than a timeout. Fix direction: run the dialog off the dispatch thread and return the reply asynchronously (ravel supports coroutine handlers and a `set_result` callback), so the agent keeps serving while the prompt is up. Upstream of LE, in the settings addon.
 
 ### Obsolescence
 
