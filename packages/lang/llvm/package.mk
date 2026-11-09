@@ -223,8 +223,12 @@ pre_configure_target() {
 }
 
 post_makeinstall_target() {
+  # llvm-config reports the paths relative to where it is run from, so it is
+  # copied into the sysroot. it is a host binary, and the $ORIGIN/../lib rpath
+  # that llvm-reusable relocates to would then load the target libc
   mkdir -p ${SYSROOT_PREFIX}/usr/bin
     cp -a ${TOOLCHAIN}/bin/llvm-config ${SYSROOT_PREFIX}/usr/bin
+    patchelf --set-rpath "${TOOLCHAIN}/lib" ${SYSROOT_PREFIX}/usr/bin/llvm-config
 
   rm -rf ${INSTALL}/usr/bin
   rm -rf ${INSTALL}/usr/lib/LLVMHello.so
