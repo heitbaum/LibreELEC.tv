@@ -2,8 +2,8 @@
 # Copyright (C) 2024-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="nvtop"
-PKG_VERSION="3.3.2"
-PKG_SHA256="48a295f3b3a917cc851d1aa8b185c09fde3a1b1e741fc57d7fa96b3671271630"
+PKG_VERSION="3.4.0"
+PKG_SHA256="7979f425dc2b748ff191e3999a0994af6154795e0e8640fae1e177684a296e08"
 PKG_LICENSE="GPL-3.0-or-later"
 PKG_SITE="https://github.com/Syllo/nvtop"
 PKG_URL="https://github.com/Syllo/nvtop/archive/${PKG_VERSION}.tar.gz"
