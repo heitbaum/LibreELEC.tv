@@ -2,8 +2,8 @@
 # Copyright (C) 2025-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="libblockdev"
-PKG_VERSION="3.5.0"
-PKG_SHA256="bccd30e6b5d11504de60d9889ff6a2a25b07a4ec8f04070f2387e168301b3e3a"
+PKG_VERSION="3.6.0"
+PKG_SHA256="9c21338257746cd00c25fcf5975716d016b6d43bfde20ee21f254cbf7d0d2742"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="https://storaged.org"
 PKG_URL="https://github.com/storaged-project/libblockdev/releases/download/${PKG_VERSION}/${PKG_NAME}-${PKG_VERSION}.tar.gz"
