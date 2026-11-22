@@ -168,10 +168,6 @@ devices = \
         'dtb': 'sun50i-h618-orangepi-zero3.dtb',
         'config': 'orangepi_zero3_defconfig',
       },
-      'tanix-tx1': {
-        'dtb': 'sun50i-h313-tanix-tx1.dtb',
-        'config': 'tanix_tx1_defconfig',
-      },
       'transpeed-8k618-t': {
         'dtb': 'sun50i-h618-transpeed-8k618-t.dtb',
         'config': 'transpeed-8k618-t_defconfig',
@@ -377,6 +373,10 @@ devices = \
       'nanopi-m4': {
         'dtb': 'rk3399-nanopi-m4.dtb',
         'config': 'nanopi-m4-rk3399_defconfig'
+      },
+      'nanopi-m4-2gb': {
+        'dtb': 'rk3399-nanopi-m4.dtb',
+        'config': 'nanopi-m4-2gb-rk3399_defconfig'
       },
       'orangepi': {
         'dtb': 'rk3399-orangepi.dtb',

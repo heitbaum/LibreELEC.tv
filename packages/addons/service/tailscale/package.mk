@@ -2,8 +2,8 @@
 # Copyright (C) 2026-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="tailscale"
-PKG_VERSION="1.104.1"
-PKG_REV="10"
+PKG_VERSION="1.104.7"
+PKG_REV="0"
 PKG_ARCH="any"
 PKG_LICENSE="BSD-3-Clause"
 PKG_SITE="https://tailscale.com"
@@ -20,15 +20,15 @@ PKG_ADDON_TYPE="xbmc.service"
 
 case "${ARCH}" in
   "x86_64")
-    PKG_SHA256="108d1d96ecf410d305571e173516f27038f870919a9b89c914a167c6d33a4528"
+    PKG_SHA256="e56693ff74a64f2591b7e819c280635a100aae1ddfb0ef058fcd052b7cd8d16c"
     TAILSCALE_ARCH="amd64"
     ;;
   "arm")
-    PKG_SHA256="aea7ae225989d302444b10b44aa42e89fdfa2a691b4d124ed710b4753518a875"
+    PKG_SHA256="1c753fef45d497491081db37552b7a2a42c7932292743bf6936cb1a42b6bceb0"
     TAILSCALE_ARCH="arm"
     ;;
   "aarch64")
-    PKG_SHA256="f60294374967f3dfd8cf57bbbd474d6cfce32d123e3a8ddeab82a87940daa806"
+    PKG_SHA256="d6bed2720310b328b861f943d7b4016c5358a9bad60575eb51e8143b79068484"
     TAILSCALE_ARCH="arm64"
     ;;
 esac

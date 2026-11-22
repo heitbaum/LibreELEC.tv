@@ -3,8 +3,8 @@
 # Copyright (C) 2017-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="kodi"
-PKG_VERSION="63063c8e67b1f162761763c0cbdb1a5dcfc3a47e"
-PKG_SHA256="5fcb34a6541199426522c72bcc211b6e0a78d59e23ca1b4b6b04cd618ee4712d"
+PKG_VERSION="65c7e7899148c26c07e4b206d1b8269f886bb2a8"
+PKG_SHA256="cce12114318181fc4ce92e6d3b3c7e12c8b7694318d803c97f237cfefa980738"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="http://www.kodi.tv"
 PKG_URL="https://github.com/xbmc/xbmc/archive/${PKG_VERSION}.tar.gz"
@@ -438,6 +438,10 @@ post_makeinstall_target() {
     mkdir -p ${INSTALL}/usr/lib/udev/rules.d/
     cp ${PKG_DIR}/config/70-libinput-ignore-power-button.rules ${INSTALL}/usr/lib/udev/rules.d/
   fi
+
+  # install well-known XDG user directories config file
+  mkdir -p ${INSTALL}/usr/config
+  cp ${PKG_DIR}/config/user-dirs.dirs ${INSTALL}/usr/config
 
   # update addon manifest
   ADDON_MANIFEST=${INSTALL}/usr/share/kodi/system/addon-manifest.xml

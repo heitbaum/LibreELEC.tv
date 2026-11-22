@@ -3,11 +3,11 @@
 
 PKG_NAME="externalhelper"
 PKG_VERSION="0"
-PKG_REV="11"
+PKG_REV="1"
 PKG_LICENSE="GPL-2.0-or-later"
 PKG_SITE="https://libreelec.tv"
 PKG_URL=""
-PKG_DEPENDS_TARGET="toolchain seatd wayland wlroots kanshi cage wayvnc"
+PKG_DEPENDS_TARGET="toolchain seatd wayland wlroots kanshi labwc wayvnc wlopm swayidle wayland-utils wlr-randr"
 PKG_SECTION="tools"
 PKG_SHORTDESC="External programs helper"
 PKG_LONGDESC="Tools to run external programs in a minimal wayland session"
@@ -23,11 +23,15 @@ PKG_ADDON_VERSION="${ADDON_VERSION}.${PKG_REV}"
 addon() {
   mkdir -p "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
     cp -P $(get_install_dir seatd)/usr/bin/{seatd,seatd-launch} "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
-    cp -P $(get_install_dir cage)/usr/bin/cage "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
+    cp -P $(get_install_dir labwc)/usr/bin/labwc "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
     cp -P $(get_install_dir kanshi)/usr/bin/kanshi "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
 	cp -P $(get_install_dir wayvnc)/usr/bin/wayvnc "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
+    cp -P $(get_build_dir wlopm)/wlopm "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
+    cp -P $(get_install_dir swayidle)/usr/bin/swayidle "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
+    cp -P $(get_install_dir wayland-utils)/usr/bin/wayland-info "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
+    cp -P $(get_install_dir wlr-randr)/usr/bin/wlr-randr "${ADDON_BUILD}/${PKG_ADDON_ID}/bin"
 
-    for f in seatd seatd-launch cage kanshi wayvnc; do
+    for f in seatd seatd-launch labwc kanshi wayvnc wlopm swayidle wayland-info wlr-randr; do
       patchelf --add-rpath '${ORIGIN}/../lib.private' "${ADDON_BUILD}/${PKG_ADDON_ID}/bin/${f}"
     done
 
@@ -39,4 +43,6 @@ addon() {
     cp -L $(get_install_dir wayland)/usr/lib/libwayland-{client,server}.so.0 "${ADDON_BUILD}/${PKG_ADDON_ID}/lib.private"
     cp -L $(get_install_dir wlroots)/usr/lib/libwlroots*.so "${ADDON_BUILD}/${PKG_ADDON_ID}/lib.private"
     patchelf --add-rpath '${ORIGIN}/../lib.private' "${ADDON_BUILD}/${PKG_ADDON_ID}/lib.private/"libwlroots*.so
+    cp -L $(get_install_dir pango)/usr/lib/{libpango,libpangocairo,libpangoft2}-1.0.so.0 "${ADDON_BUILD}/${PKG_ADDON_ID}/lib.private"
+    patchelf --add-rpath '${ORIGIN}/../lib.private' "${ADDON_BUILD}/${PKG_ADDON_ID}/lib.private/"libpangocairo-1.0.so.0
 }
