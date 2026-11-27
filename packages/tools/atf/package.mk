@@ -2,8 +2,8 @@
 # Copyright (C) 2018-present Team LibreELEC
 
 PKG_NAME="atf"
-PKG_VERSION="2.15.0"
-PKG_SHA256="67b772aaa58218712c062ccd103f1d53cf74d9543e251f20ac037a6dbf821a10"
+PKG_VERSION="2.16.0"
+PKG_SHA256="d6973fd46089aade8673ad1f0c121d7e08647496bf405595d491290afd415bbe"
 PKG_ARCH="arm aarch64"
 PKG_LICENSE="BSD-3-Clause"
 PKG_SITE="https://github.com/ARM-software/arm-trusted-firmware"
