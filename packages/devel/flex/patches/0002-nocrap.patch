@@ -8,7 +8,7 @@ Subject: [PATCH] nocrap
  1 file changed, 4 deletions(-)
 
 diff --git a/Makefile.am b/Makefile.am
-index 22e99c345528..f5b2569f9c26 100644
+index 378b7c0286bd..786aa755b061 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -49,10 +49,6 @@ dist_noinst_SCRIPTS = \
@@ -23,5 +23,5 @@ index 22e99c345528..f5b2569f9c26 100644
  
  # Convenience targets to build libfl only
 -- 
-2.55.0.windows.5
+2.53.0
 

@@ -8,7 +8,7 @@ Subject: [PATCH] use flex host for target cross compile
  1 file changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/src/Makefile.am b/src/Makefile.am
-index 8730a3870856..b155b9fcf2aa 100644
+index 06e11a44d7ab..9d15706ed677 100644
 --- a/src/Makefile.am
 +++ b/src/Makefile.am
 @@ -55,11 +55,7 @@ flex_SOURCES = \
@@ -23,7 +23,7 @@ index 8730a3870856..b155b9fcf2aa 100644
  
  COMMON_SOURCES = \
  	buf.c \
-@@ -137,10 +133,17 @@ go-flex.h: go-flex.skl mkskel.sh
+@@ -138,10 +134,17 @@ go-flex.h: go-flex.skl mkskel.sh
  # The input and output file names are fixed for deterministic scanner
  # generation. If scan.l is not modified by builders, stage1scan.c should
  # be bit-identical to the scan.c pregenerated on release.
@@ -42,5 +42,5 @@ index 8730a3870856..b155b9fcf2aa 100644
  # Unlike stage1scan.c, we leave stage2scan.c intact when the generation
  # fails. This allow users to examine generation errors.
 -- 
-2.55.0.windows.5
+2.53.0
 
